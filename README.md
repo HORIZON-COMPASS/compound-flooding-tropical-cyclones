@@ -8,5 +8,6 @@ More information about the project can be found at https://compass-climate.eu
 This is work in progress
 
 To-do:
-Add link to the main repo
-Add Zenodo link
+
+-Add link to the main repo
+-Add Zenodo link
