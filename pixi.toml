@@ -17,5 +17,30 @@ repository = "https://github.com/Deltares-research/COMPASS"
 
 
 [dependencies]
+jupyterlab = ">=4.2.1,<4.3" 
+hydromt_sfincs = ">=1.0.2"
+hydromt_wflow = "=0.6.0"
+cartopy = ">=0.20" 
+matplotlib = ">=3.8.4,<3.9" 
+rioxarray = "=0.15.0"
+pandas = "=2.1.1"
+descartes = ">=1.1.0" 
+ffmpeg = ">=7.0.0"  
+geopandas = "=0.14.0"
 
+[feature.py311.dependencies]
+python = "3.11.*"
+
+[feature.dfm.dependencies]
+dfm_tools = "0.23.*"
+
+[environments]
+default = { features = [
+"py311",
+], solve-group = "py311" }
+
+dfm = { features = [
+"py311",
+"dfm",
+], solve-group = "py311" }
 

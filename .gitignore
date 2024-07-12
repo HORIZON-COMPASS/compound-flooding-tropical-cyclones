@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+# Pixi
+.pixi
+
+# Model data
+sfincs_sofala/sfincs_sofala
+sfincs_sofala/tmp_data_export
+
 # Distribution / packaging
 .Python
 build/
