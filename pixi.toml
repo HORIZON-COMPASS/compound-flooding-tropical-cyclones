@@ -31,16 +31,15 @@ geopandas = "=0.14.0"
 [feature.py311.dependencies]
 python = "3.11.*"
 
-[feature.dfm.dependencies]
-dfm_tools = "0.23.*"
+[feature.dfm.pypi-dependencies]
+# dfm-tools = "*"
 
 [environments]
 default = { features = [
 "py311",
 ], solve-group = "py311" }
 
-dfm = { features = [
-"py311",
-"dfm",
-], solve-group = "py311" }
+# dfm = { features = [
+# "py311","dfm",
+# ], solve-group = "py311" }
 
