@@ -1664,7 +1664,7 @@ gtsm_codec_reanalysis_dailymax_v1:
   crs: 4326
 gtsm_codec_reanalysis_hourly_v1:
   data_type: GeoDataset
-  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\waterlevel\reanalysis_waterlevel_hourly_{year}_{month:02d}_v1.nc
+  path: p:\11210471-001-compass\01_Data\GTSM-ERA5-E\06_model_runs\03_postprocessing\timeseries-GTSM-ERA5-hourly\waterlevel\reanalysis_waterlevel_hourly_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
