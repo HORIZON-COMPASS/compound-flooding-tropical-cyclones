@@ -166,9 +166,9 @@ sf.setup_cn_infiltration(
 
 # Specify the simulation time in the model config - not done now
 model_time_config = {
-    "tref": "20150501 000000", #FILL IN THE REFERENCE TIME (can be any date)
-    "tstart": "20150501 000000", #FILL IN THE START TIME OF THE SIMULATION
-    "tstop": "20150508 000000", #FILL IN THE END TIME OF THE SIMULATION
+    "tref": "20190314 000000", #FILL IN THE REFERENCE TIME (can be any date)
+    "tstart": "20190314 000000", #FILL IN THE START TIME OF THE SIMULATION
+    "tstop": "20190323 000000", #FILL IN THE END TIME OF THE SIMULATION
     "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
     "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
 }
@@ -190,8 +190,6 @@ sf.setup_wind_forcing_from_grid(
 sf.setup_pressure_forcing_from_grid(
     press='era5_hourly'
 )
-#%%
-print(sf.forcing.keys())
 
 #%% Set up coastal water level forcing
 # change to locations and timeseries
