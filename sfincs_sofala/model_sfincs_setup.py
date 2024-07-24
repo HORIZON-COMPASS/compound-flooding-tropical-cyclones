@@ -217,6 +217,11 @@ sf.forcing['dis']  # print discharge
 
 # only write forcing
 #sf.write_forcing()
+#%%
+# Add observation points from Eilander et al. (2022)
+# https://zenodo.org/records/7274465 - 2_code/2_experiment/obs_locs.geojson
+obs_points = Path('p:/11210471-001-compass/01_Data/obs_locs.geojson')
+sf.setup_observation_points(locations=obs_points, merge=False)
 
 #%% Plot model summary so far
 _ = sf.plot_basemap(variable='dep', bmap='sat')
