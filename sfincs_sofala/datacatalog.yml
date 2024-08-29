@@ -183,6 +183,18 @@ chirps_global_daily_v2.0:
     source_url: https://www.chc.ucsb.edu/data/chirps
     source_version: v2.0
   crs: 4326
+coastal_coupling_msk:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\waterlevel_coupling\wl_coupling_mask_MZ.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: first buffer location of the coast where to impose the w.l.
+    source_author: Doris Vertegaal
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
 copdem30:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\topography\copdem\copdem.vrt

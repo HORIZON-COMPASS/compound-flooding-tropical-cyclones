@@ -53,7 +53,7 @@ sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro'}]) #Setup topobathy --- her
 # datasets_dep = [{"elevtn": "merit_hydro", "zmin": 0.001}, {"elevtn": "gebco"}]
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
-gdf_include = sf.data_catalog.get_geodataframe('osm_coastlines', bbox=bbox)
+gdf_include = sf.data_catalog.get_geodataframe('coastal_coupling_msk', bbox=bbox) # 'osm_coastlines' can also be used
 
 #Plotting osm there
 fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
