@@ -21,13 +21,12 @@ from hydromt_sfincs import SfincsModel
 #For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
 bbox = [34.33,-20.12,34.95,-19.30] 
 model_res = 100 #By defaulft
-data_catalog  = hydromt.DataCatalog(data_libs = ['datacatalog.yml']) #To correct for the locaiton of the GTSM data
+data_catalog  = hydromt.DataCatalog(data_libs = ['datacatalog.yml']) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
 root_folder  = Path('sfincs_sofala')
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
-
 
 #Define library path - for example if we merge deltares library with us. 
 
@@ -54,7 +53,7 @@ sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro'}]) #Setup topobathy --- her
 # datasets_dep = [{"elevtn": "merit_hydro", "zmin": 0.001}, {"elevtn": "gebco"}]
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
-gdf_include = sf.data_catalog.get_geodataframe('osm_coastlines', bbox=bbox)
+gdf_include = sf.data_catalog.get_geodataframe('coastal_coupling_msk', bbox=bbox) # 'osm_coastlines' can also be used
 
 #Plotting osm there
 fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
@@ -66,7 +65,7 @@ sf.setup_mask_active(
     include_mask = None, # change to None if you don't 
     exclude_mask = gdf_include, 
     drop_area = 1000, 
-    fill_area = 0, 
+    fill_area = 0, # not filling anything? 
     reset_mask = False
 )
 # Plot the mask. Using variable='msk' will display the mask values for the active cells.
@@ -95,11 +94,12 @@ sf.setup_river_inflow(**river_inflow_kwargs)
 #SETUP THE RIVER OUTFLOW
 sf.setup_river_outflow(
                       hydrography="merit_hydro", #rivers = 'rivers_lin2019_v1',
-                      river_upa = 10,
+                      river_upa = 10, # Is don't get this
                       river_width = 4e3,
                       keep_rivers_geom= True)
 
 sf.plot_basemap('basemap.png', bmap='sat')
+#Q: what means src in the plotted map? --> discharge points
 
 #%% We try to get the river bathymetry
 hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
@@ -114,7 +114,7 @@ data_catalog.export_data(
     source_names=source_names,
     meta={"version": "1"},
 )
-#%% For now making dummy rivers
+#%% For now making dummy rivers -- why dummy as it copies rivers_inflow based on merit_hydro?
 gdf_riv = sf.geoms["rivers_inflow"].copy()
 gdf_riv["rivwth"] = 100 # width [m]
 gdf_riv["rivdph"] = 1.5  # depth [m]
@@ -132,19 +132,20 @@ datasets_riv = [{'centerlines': gdf_riv}]
 datasets_rgh = [{"lulc": "vito"}]
 
 #sf.setup_manning_roughness(datasets_rgh = datasets_rgh,  manning_sea = 0.02)
-#%% 
+#%%
+# Does the order determine which dataset to prioritize? 
 datasets_dep = [
     {'elevtn': 'merit_hydro'}, 
-    {'elevtn': 'copdem30', 'zmin' : 0.001}, 
+    {'elevtn': 'copdem30', 'zmin' : 0.001}, # what means zmin argument here?
     {'elevtn': 'gebco'}
 ]
 
-#Create the subgrid where we brun the river bathymetry as well
+#Create the subgrid where we burn the river bathymetry as well
 sf.setup_subgrid(
     datasets_dep= datasets_dep,
     datasets_rgh = datasets_rgh,
     datasets_riv = datasets_riv,
-    nr_subgrid_pixels = 3,  #Fill in number of subgrid files
+    nr_subgrid_pixels = 3,  #Fill in number of subgrid files -- can this be uneven number?
     write_dep_tif=True,  # save a cloud-optimized geotiff of the subgrid topography
     write_man_tif=True,
     nrmax=5000,  # set tile size a bit larger speed up processing (default 2000)
@@ -161,23 +162,44 @@ sf.setup_cn_infiltration(
     'gcn250', antecedent_moisture='dry'
 )
 
-#%% Forcing - Adding waterlevel as a forcing
+#%% Add forcing
 
 # Specify the simulation time in the model config - not done now
-# model_time_config = {
-#     "tref": "YYYYMMDD hhmmss", #FILL IN THE REFERENCE TIME (can be any date)
-#     "tstart": "YYYYMMDD hhmmss", #FILL IN THE START TIME OF THE SIMULATION
-#     "tstop": "YYYYMMDD hhmmss", #FILL IN THE END TIME OF THE SIMULATION
-#     "dtout": ..., #FILL IN THE TIMESTEP OF THE MAP OUTPUT
-#     "dthisout" : ..., #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
-# }
-# sf.setup_config(**model_time_config)
+model_time_config = {
+    "tref": "20190314 000000", #FILL IN THE REFERENCE TIME (can be any date)
+    "tstart": "20190314 000000", #FILL IN THE START TIME OF THE SIMULATION
+    "tstop": "20190323 000000", #FILL IN THE END TIME OF THE SIMULATION
+    "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
+    "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
+}
+sf.setup_config(**model_time_config)
 
-# change to locations and timeseriesa
+#%% Set up rainfall forcing from ERA5
+sf.setup_precip_forcing_from_grid(
+    precip='era5_hourly',
+    aggregate=False
+)
+
+
+#%% Set up wind forcing from ERA5
+sf.setup_wind_forcing_from_grid(
+    wind = 'era5_hourly'
+)
+
+#%% Set up pressure forcing from ERA5
+sf.setup_pressure_forcing_from_grid(
+    press='era5_hourly'
+)
+
+#%% Set up coastal water level forcing
+# change to locations and timeseries
 sf.setup_waterlevel_forcing(
     geodataset='gtsm_codec_reanalysis_hourly_v1',
     buffer=200
 )
+#%% plot all forcings
+_ = sf.plot_forcing()
+
 #%% SETUP THE DISCHARGE
 #Create synthetic discharge timeseries
 q1 = 100
@@ -195,6 +217,11 @@ sf.forcing['dis']  # print discharge
 
 # only write forcing
 #sf.write_forcing()
+#%%
+# Add observation points from Eilander et al. (2022)
+# https://zenodo.org/records/7274465 - 2_code/2_experiment/obs_locs.geojson
+obs_points = Path('p:/11210471-001-compass/01_Data/obs_locs.geojson')
+sf.setup_observation_points(locations=obs_points, merge=False)
 
 #%% Plot model summary so far
 _ = sf.plot_basemap(variable='dep', bmap='sat')
@@ -211,3 +238,4 @@ sf.write()
 # # change the model root (to not overwrite existing model)
 # model_root = 'sfincs_sofala_subgrid'
 # sf.set_root(model_root, mode= 'r+')
+# %%
