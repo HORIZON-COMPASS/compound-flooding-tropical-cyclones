@@ -166,11 +166,11 @@ sf.setup_cn_infiltration(
 
 #%% Add forcing
 
-# Specify the simulation time in the model config - not done now
+# Specify the simulation time in the model config - 14 - 23 march - but 9-16 for now from IbTracks)
 model_time_config = {
-    "tref": "20190314 000000", #FILL IN THE REFERENCE TIME (can be any date)
-    "tstart": "20190314 000000", #FILL IN THE START TIME OF THE SIMULATION
-    "tstop": "20190323 000000", #FILL IN THE END TIME OF THE SIMULATION
+    "tref": "20190309 000000", #FILL IN THE REFERENCE TIME (can be any date)
+    "tstart": "20190309 000000", #FILL IN THE START TIME OF THE SIMULATION
+    "tstop": "20190316 000000", #FILL IN THE END TIME OF THE SIMULATION
     "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
     "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
 }
@@ -196,7 +196,7 @@ sf.setup_pressure_forcing_from_grid(
 #%% Set up coastal water level forcing
 # change to locations and timeseries
 sf.setup_waterlevel_forcing(
-    geodataset='gtsm_codec_reanalysis_hourly_v1',
+    geodataset='dfm_output_MZ_doris', # 'gtsm_codec_reanalysis_hourly_v1'
     buffer=5000
 )
 
