@@ -1070,6 +1070,25 @@ gebco_v2020:
     source_version: 2020
     unit: m+MSL
   crs: 4326
+gebco_v2024:
+  data_type: RasterDataset
+  path: p:/11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    gebco: elevtn
+  meta:
+    category: topography
+    paper_doi: 
+    paper_ref: 
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_url: 
+    source_version: 2024
+    unit: m+MSL
+  crs: 4326
 ghs_pop:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif
