@@ -6,11 +6,13 @@ import cartopy.crs as ccrs
 import cartopy.io.img_tiles as cimgt
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import xarray as xr
 
 import hydromt
 from hydromt.log import setuplog
 from hydromt_sfincs import SfincsModel
-
 
 #%% Sources to help create this script
 # https://deltares.github.io/hydromt_sfincs/latest/_examples/build_from_script.html#
@@ -129,7 +131,7 @@ datasets_riv = [{'centerlines': gdf_riv}]
 #     {'lulc': 'esa_worldcover', 'reclass_table': 'esa_worldcover_mapping'}
 # ] #To check later - in Dirk's paper uses vito - we can change that later - sf.setup_manning_roughness(datasets_rgh = [{'manning':'vito'}],  manning_sea = 0.02)
 
-datasets_rgh = [{"lulc": "vito"}]
+datasets_rgh = [{"lulc": "vito", 'reclass_table': 'vito_mapping'}]
 
 #sf.setup_manning_roughness(datasets_rgh = datasets_rgh,  manning_sea = 0.02)
 #%%
@@ -195,28 +197,45 @@ sf.setup_pressure_forcing_from_grid(
 # change to locations and timeseries
 sf.setup_waterlevel_forcing(
     geodataset='gtsm_codec_reanalysis_hourly_v1',
-    buffer=200
+    buffer=5000
 )
+
+# #%% SETUP THE DISCHARGE - Synthetic discharge for now
+# Generate new time range for discharge that matches the model settings
+tstart = pd.to_datetime(model_time_config["tstart"], format="%Y%m%d %H%M%S")
+tstop = pd.to_datetime(model_time_config["tstop"], format="%Y%m%d %H%M%S")
+new_time = pd.date_range(start=tstart, end=tstop, freq=f'{model_time_config["dtout"]}S')
+
+# Extend discharge data to the time length of the model
+dis = sf.forcing['dis']
+extended_data = np.zeros((len(new_time), dis.sizes['index'])) # extend data length
+extended_data[:dis.sizes['time'], :] = dis.values # add correct time values
+
+# Create new DataArray with extended time
+sf.forcing['dis'] = xr.DataArray(
+    extended_data,
+    coords={
+        'time': new_time,
+        'index': dis.coords['index'],
+        'geometry': dis.coords['geometry'],
+        'uparea': dis.coords['uparea']
+    },
+    dims=['time', 'index']
+)
+
+# Set custom discharge values
+sf.forcing['dis'][:, 0] = 100    # For index 1
+sf.forcing['dis'][:, 1] = 10000  # For index 2
+sf.forcing['dis'][:, 2] = 5000   # For index 3
+sf.forcing['dis'][:, 3] = 2500   # For index 4
+
+# Print to verify
+print(sf.forcing['dis'])
+
 #%% plot all forcings
+sf.write_forcing()
 _ = sf.plot_forcing()
 
-#%% SETUP THE DISCHARGE
-#Create synthetic discharge timeseries
-q1 = 100
-q2 = 1000
-q3 = 500
-q4 = 2500
-discharge = sf.forcing['dis'].copy()
-discharge[:,0] = q1
-discharge[:,1] = q2
-discharge[:,2] = q3
-discharge[:,3] = q4
-
-sf.setup_discharge_forcing(discharge) #set discharge in model using hydroMT function
-sf.forcing['dis']  # print discharge
-
-# only write forcing
-#sf.write_forcing()
 #%%
 # Add observation points from Eilander et al. (2022)
 # https://zenodo.org/records/7274465 - 2_code/2_experiment/obs_locs.geojson
