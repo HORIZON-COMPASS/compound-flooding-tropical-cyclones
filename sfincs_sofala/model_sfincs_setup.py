@@ -51,8 +51,9 @@ sf.setup_grid_from_region(
 fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
 
 # %% We follow the steps from the ini file from Dirk's paper (now called a yml file)
-sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro'}]) #Setup topobathy --- here bathymetry is not used!
-# datasets_dep = [{"elevtn": "merit_hydro", "zmin": 0.001}, {"elevtn": "gebco"}]
+sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
+                            {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]) 
+
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
 gdf_include = sf.data_catalog.get_geodataframe('coastal_coupling_msk', bbox=bbox) # 'osm_coastlines' can also be used
@@ -62,7 +63,7 @@ fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
 gdf_include.to_crs(sf.crs).boundary.plot(ax=ax, color="b", lw=1, ls="--")
 #fig, ax  = sf.plot_basemap(variable='msk', bmap='sat', zoomlevel=10)
 #%% Set up the mask
-sf.setup_mask_active(zmin=0, reset_mask=True)
+sf.setup_mask_active(zmin=-10, reset_mask=True)
 sf.setup_mask_active(
     include_mask = None, # change to None if you don't 
     exclude_mask = gdf_include, 
@@ -74,7 +75,7 @@ sf.setup_mask_active(
 _ = sf.plot_basemap(variable='msk', bmap='sat')
 # %% Assigning the waterlevel downstream boundary condition
 sf.setup_mask_bounds(btype = 'waterlevel',
-                     zmin = 0,
+                     zmin = -10,
                      #zmax = 1,
                      include_mask = 'osm_coastlines',
                      include_mask_buffer = 200, 
@@ -136,10 +137,8 @@ datasets_rgh = [{"lulc": "vito", 'reclass_table': 'vito_mapping'}]
 #sf.setup_manning_roughness(datasets_rgh = datasets_rgh,  manning_sea = 0.02)
 #%%
 # Does the order determine which dataset to prioritize? 
-datasets_dep = [
-    {'elevtn': 'merit_hydro'}, 
-    {'elevtn': 'copdem30', 'zmin' : 0.001}, # what means zmin argument here?
-    {'elevtn': 'gebco'}
+datasets_dep = [[{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
+                 {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]
 ]
 
 #Create the subgrid where we burn the river bathymetry as well
@@ -161,7 +160,7 @@ _ = sf.plot_basemap(fn_out="basemap.png", bmap="sat", zoomlevel=12)
 
 #%% Infiltration data
 sf.setup_cn_infiltration(
-    'gcn250', antecedent_moisture='dry'
+    'gcn250', antecedent_moisture='dry' # can be changed to 'avg' and 'wet'
 )
 
 #%% Add forcing
@@ -247,6 +246,22 @@ _ = sf.plot_basemap(variable='dep', bmap='sat')
 
 #%% Saving the model for now
 sf.write()
+
+#%%
+def print_directory_tree(directory):
+    for root, dirs, files in os.walk(directory):
+        level = root.replace(directory, '').count(os.sep)
+        indent = ' ' * 2 * (level)
+        print('{}{}/'.format(indent, os.path.basename(root)))
+        subindent = ' ' * 2 * (level + 1)
+        for f in files:
+            print(f'{subindent}+ {f}')
+
+print_directory_tree(sf.root)
+
+#%%
+# make a sfincs_log.txt file
+#  run the bat file
 #%% To reload a model already existing
 # logger = setuplog('SFINCS_log_sofala', log_level=20)
 # sf = SfincsModel(data_libs=['datacatalog.yml'], root=root_folder, mode='r', logger=logger)
