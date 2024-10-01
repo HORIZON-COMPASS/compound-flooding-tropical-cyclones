@@ -137,8 +137,8 @@ datasets_rgh = [{"lulc": "vito", 'reclass_table': 'vito_mapping'}]
 #sf.setup_manning_roughness(datasets_rgh = datasets_rgh,  manning_sea = 0.02)
 #%%
 # Does the order determine which dataset to prioritize? 
-datasets_dep = [[{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
-                 {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]
+datasets_dep = [{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
+                 {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}
 ]
 
 #Create the subgrid where we burn the river bathymetry as well
