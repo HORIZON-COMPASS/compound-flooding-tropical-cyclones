@@ -260,8 +260,21 @@ def print_directory_tree(directory):
 print_directory_tree(sf.root)
 
 #%%
-# make a sfincs_log.txt file
-#  run the bat file
+# make a sfincs_log.txt file to write output when running SFINCS
+# Create an empty text file
+file_name = "sfincs_log.txt"
+with open(os.path.join(root_folder, file_name), "w") as file:
+    pass
+
+#%%
+#  create a bat file to run the model on windows
+batch_content = 'call "p:/11210471-001-compass/02_Models/00_executables/SFINCS_v2.1.1_Dollerup_release_exe/sfincs.exe" > sfincs_log.txt'
+
+file_name = 'run_sfincs.bat'
+with open(os.path.join(root_folder, file_name), "w") as file:
+    file.write(batch_content)
+# Now you can run the SFINCS model by opening the bat file on a windows computer
+
 #%% To reload a model already existing
 # logger = setuplog('SFINCS_log_sofala', log_level=20)
 # sf = SfincsModel(data_libs=['datacatalog.yml'], root=root_folder, mode='r', logger=logger)
