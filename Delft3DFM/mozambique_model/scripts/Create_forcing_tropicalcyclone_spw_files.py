@@ -19,7 +19,7 @@ import pandas as pd
 
 #%%
 # specify cyclone name
-tc_name = 'Idai'
+tc_name = 'Kenneth'
 
 #%%
 # Define directory
