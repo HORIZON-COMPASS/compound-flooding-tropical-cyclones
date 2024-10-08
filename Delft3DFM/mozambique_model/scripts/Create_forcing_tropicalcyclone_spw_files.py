@@ -16,10 +16,14 @@ import matplotlib.pyplot as plt
 import os
 import xarray as xr
 import pandas as pd
+import numpy as np
 
 #%%
 # specify cyclone name
-tc_name = 'Kenneth'
+tc_name = 'Idai'
+tc_year = 2019
+
+dir_base = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model'
 
 #%%
 # Define directory
@@ -27,53 +31,74 @@ tc_name = 'Kenneth'
 
 # %%
 # directory where the IBTRACS database is stored
-ds_ibtracs = xr.open_dataset(r'p:\archivedprojects\11205281-tcwise\00_data\IBTrACS.ALL.v04r00_download240223.nc')
+print('Open IBTrACS dataset...')
+ds_ibtracs = xr.open_dataset(r'p:\11210471-001-compass\01_Data\IBTrACS\IBTrACS.ALL.v04r01.nc')
 
 # %%
-# Initialize the tropical cyclone object
-tc = TropicalCyclone(name=tc_name)
+def create_track(ds_tc):
+    # Initialize the tropical cyclone object
+    print('- Initializing tc object...')
+    tc = TropicalCyclone(name=tc_name)
+    tc.nr_radial_bins = 600
+    tc.phi_spiral = 22.6
+    tc.spiderweb_radius = 900
 
-# %%
-#Change default settings
-#tc.background_pressure = 1020
-tc.nr_radial_bins = 600
-tc.phi_spiral = 22.6
-tc.spiderweb_radius = 900
+    # Only keep the data that is not NaN (filtered based on rmw availability)
+    tmp = ds_tc.time.where(~ds_tc.usa_rmw.isnull(),drop=True).values
+    data_time = [pd.to_datetime(i) for i in tmp]
+    data_lon = ds_tc.usa_lon.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
+    data_lat = ds_tc.usa_lat.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
+    data_wind = ds_tc.usa_wind.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
+    data_pres = ds_tc.usa_pres.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
+    data_rmw = ds_tc.usa_rmw.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
+    data_r34 = ds_tc.usa_r34.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
 
-# merge factor
+    # fill in track data
+    print('- Filling in track data...')
+    tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
+                 winds = data_wind.values, pressures = data_pres.values,
+                 rmw = data_rmw.values, r35 = data_r34.values)
+    
+    # functions to improve the data
+    print('- Improve schematization...')
+    tc.account_for_forward_speed()
+    tc.estimate_missing_values()
+
+    return tc
 
 #%%
 # Find the cyclone in the IBTRACS database
+# Note: the record for one cyclone can contain several parts, this is the case for Freddy (2023)
+print(f'Find TC {tc_name} ({tc_year}) in the database...')
+
+ds_ibtracs = ds_ibtracs.where(ds_ibtracs.season == tc_year,drop=True)
+id = []
 for ii,ids in enumerate(ds_ibtracs.storm):
-    if ds_ibtracs.name.values[ii].decode(encoding="utf-8") == tc_name.upper():
-        id = ids.item()
-        break
+    yr = pd.to_datetime(ds_ibtracs.isel(date_time=0).time.values[ii]).year
+    if (ds_ibtracs.name.values[ii].decode(encoding="utf-8") == tc_name.upper()) & (yr == tc_year):
+        id.append(ids.item())
 
 # %%
-# select only the data for this cyclone
-ds_tc = ds_ibtracs.isel(storm=id,drop=True)
-ds_ibtracs.close(); del ds_ibtracs
 
-# %%
-# Only keep the data that is not NaN (filtered based on rmw availability)
-tmp = ds_tc.time.where(~ds_tc.usa_rmw.isnull(),drop=True).values
-data_time = [pd.to_datetime(i) for i in tmp]
-data_lon = ds_tc.usa_lon.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-data_lat = ds_tc.usa_lat.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-data_wind = ds_tc.usa_wind.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-data_pres = ds_tc.usa_pres.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-data_rmw = ds_tc.usa_rmw.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-data_r34 = ds_tc.usa_r34.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
-# %%
-# fill in track data
-tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
-                 winds = data_wind.values, pressures = data_pres.values,
-                 rmw = data_rmw.values, r35 = data_r34.values)
-# %%
-# functions to improve the data
-tc.account_for_forward_speed()
-tc.estimate_missing_values()
-# %%
-# export to spiderweb
-tc.to_spiderweb(os.path.join('..','boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}.spw'))
+for id_track in id:
+    # select only the data for this cyclone
+    ds_tc = ds_ibtracs.isel(storm=id_track,drop=True)
+
+    print(f'Processing TC {tc_name} ({tc_year}),  track {ds_tc.sid} ...') 
+    
+    # crop the length of the dataset for specific cyclones
+    # e.g. Freddy (2023) record is very long, we do not need the part that is far beyond the model domain
+    if (tc_name == 'Freddy') & (tc_year == 2023):
+        ds_tc = ds_tc.where(ds_tc.time > np.datetime64('2023-02-21'),drop=True)
+
+    # create spw file for this specific track
+    tc = create_track(ds_tc)
+
+    # export to spiderweb
+    print('- Saving track...')
+    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{ds_tc.sid.values[0].decode(encoding="utf-8")}.spw'))
+
+    del tc
+
+#ds_ibtracs.close(); del ds_ibtracs
 # %%
