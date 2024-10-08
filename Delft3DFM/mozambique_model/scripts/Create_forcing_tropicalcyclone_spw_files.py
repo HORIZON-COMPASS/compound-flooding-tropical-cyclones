@@ -20,7 +20,7 @@ import numpy as np
 
 #%%
 # specify cyclone name
-tc_name = 'Idai'
+tc_name = 'Kenneth'
 tc_year = 2019
 
 dir_base = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model'
@@ -96,7 +96,7 @@ for id_track in id:
 
     # export to spiderweb
     print('- Saving track...')
-    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{ds_tc.sid.values[0].decode(encoding="utf-8")}.spw'))
+    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{ds_tc.isel(date_time=0).sid.item().decode(encoding="utf-8")}.spw'))
 
     del tc
 
