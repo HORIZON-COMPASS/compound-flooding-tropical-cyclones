@@ -1,4 +1,4 @@
-# This script makes use of the CoastalHazardsToolkit (CHT): https://github.com/Deltares-research/CoastalHazardsToolkit/ (as of 2024 only available for the Deltares research organization on GitHub)
+# This script makes use of the CoastalHazardsToolkit (CHT): https://github.com/Deltares-research/CoastalHazardsToolkit/ 
 # To use the underlying scripts, the CHT needs to be installed locally (pulled from GitHub and pip install -e . in the folder of the repository)
 
 # Script by: n-aleksandrova
