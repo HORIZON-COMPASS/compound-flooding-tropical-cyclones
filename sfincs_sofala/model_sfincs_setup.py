@@ -104,6 +104,12 @@ sf.setup_river_outflow(
 sf.plot_basemap('basemap.png', bmap='sat')
 #Q: what means src in the plotted map? --> discharge points
 
+#%%
+# To check the river network interactively: 
+# Here we can see which segments are present in the river network
+sf.geoms['rivers_inflow'].explore()
+
+
 #%% We try to get the river bathymetry
 hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
 rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)

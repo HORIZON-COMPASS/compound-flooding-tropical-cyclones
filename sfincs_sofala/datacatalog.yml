@@ -1,5 +1,44 @@
 meta:
   root: c:\CODE\COMPASS
+TAMSAT_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\Whole_MZ\01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    rfe_filled: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: TAMSAT data 
+  crs: 4326
+ERA5land_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    tp: precip
+    valid_time: time
+  meta:
+    category: meteo
+    notes: ERA5 land data for precipitation with units converted in hourly rate
+  crs: 4326
 SM2RAIN_ASCAT_monthly_025_v1.4:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\meteo\sm2rain_ascat\SM2RAIN_ASCAT_monthly_025_2007_2020.nc
