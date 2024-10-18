@@ -23,10 +23,11 @@ from hydromt_sfincs import SfincsModel
 #For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
 bbox = [34.33,-20.12,34.95,-19.30] 
 model_res = 100 #By defaulft
-data_catalog  = hydromt.DataCatalog(data_libs = ['datacatalog.yml']) #To correct for the location of the GTSM data
+datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
+data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = Path('sfincs_sofala')
+root_folder  = os.path.join('..','computations','sfincs_sofala_test')
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
@@ -36,7 +37,7 @@ logger = setuplog(logger_name, log_level=10)
 sf = SfincsModel(
     root=root_folder,
     mode="w+",
-    data_libs = ['datacatalog.yml'],
+    data_libs = [datacat],
     logger=logger,
 )
 
@@ -116,7 +117,7 @@ rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)
 #%%
 #We export it to check it
 source_names=["merit_hydro", "rivers_lin2019_v1"]
-folder_name = "tmp_data_export"
+folder_name = os.path.join('..','boundary_conditions',"tmp_data_export")
 data_catalog.export_data(
     data_root=folder_name,
     bbox=bbox,
