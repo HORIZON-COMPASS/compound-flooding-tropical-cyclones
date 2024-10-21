@@ -10,8 +10,10 @@ __pycache__/
 .pixi
 
 # Model data
-sfincs_sofala/sfincs_sofala
-sfincs_sofala/tmp_data_export
+Delft3DFM/mozambique_model/computations
+SFINCS/sfincs_sofala/computations
+Delft3DFM/mozambique_model/results
+SFINCS/sfincs_sofala/results
 
 # Distribution / packaging
 .Python
