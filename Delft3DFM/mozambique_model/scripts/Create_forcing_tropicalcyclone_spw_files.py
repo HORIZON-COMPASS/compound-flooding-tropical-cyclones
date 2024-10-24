@@ -5,8 +5,6 @@
 
 
 # Bugs and to be fixed:
-# - cht_cyclones expects a package called 'fiona', is not installed by default
-# np.NaN needs to be replaced by np.nan for compatibility with numpy 2.0 (in tropical_cyclone.py) - for now downgraded to numpy 1.26.4
 # script says: "self.background_pressure = 1012 Pa" I think the units should not be Pa, but mbar, atm pressure is in the order of 10^5 Pa.
 
 #%%
@@ -20,8 +18,8 @@ import numpy as np
 
 #%%
 # specify cyclone name
-tc_name = 'Kenneth'
-tc_year = 2019
+tc_name = 'Freddy'#'Kenneth' #'Idai'
+tc_year = 2023
 
 dir_base = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model'
 
@@ -42,6 +40,7 @@ def create_track(ds_tc):
     tc.nr_radial_bins = 600
     tc.phi_spiral = 22.6
     tc.spiderweb_radius = 900
+    tc.extend_track = 3
 
     # Only keep the data that is not NaN (filtered based on rmw availability)
     tmp = ds_tc.time.where(~ds_tc.usa_rmw.isnull(),drop=True).values

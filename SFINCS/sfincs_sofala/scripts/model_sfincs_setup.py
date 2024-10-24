@@ -25,11 +25,15 @@ datacat = os.path.join('..','..','datacatalog.yml')
 modelname = 'sfincs_sofala_test'
 coupling_mask = 'coastal_coupling_msk'
 
+#For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
+bbox = [34.33,-20.12,34.95,-19.30] 
+model_res = 100 #By defaulft
+datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
+data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-data_catalog  = hydromt.DataCatalog(data_libs = [datacat])
-root_folder  = os.path.join('..','computations',modelname)
-logger_name = modelname
+root_folder  = os.path.join('..','computations','sfincs_sofala_test')
+logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
 #Define library path - for example if we merge deltares library with us. 
