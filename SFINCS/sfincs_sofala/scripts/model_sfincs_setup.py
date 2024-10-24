@@ -16,19 +16,20 @@ from hydromt_sfincs import SfincsModel
 
 #%% Sources to help create this script
 # https://deltares.github.io/hydromt_sfincs/latest/_examples/build_from_script.html#
-# Pizza course: p:\11208235-013-egyptian-tsunami-mode\SFINCS_course_notebooks\
 
-#%% We select the area for the location 
+#%% User settings
 
-#For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
-bbox = [34.33,-20.12,34.95,-19.30] 
-model_res = 100 #By defaulft
-datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
-data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
+bbox = [34.33,-20.12,34.95,-19.30] # Sofala region 
+model_res = 100 # resolution
+datacat = os.path.join('..','..','datacatalog.yml')
+modelname = 'sfincs_sofala_test'
+coupling_mask = 'coastal_coupling_msk'
+
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','computations','sfincs_sofala_test')
-logger_name = 'SFINCS_log_sofala'
+data_catalog  = hydromt.DataCatalog(data_libs = [datacat])
+root_folder  = os.path.join('..','computations',modelname)
+logger_name = modelname
 logger = setuplog(logger_name, log_level=10)
 
 #Define library path - for example if we merge deltares library with us. 
@@ -53,11 +54,11 @@ fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
 
 # %% We follow the steps from the ini file from Dirk's paper (now called a yml file)
 sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
-                            {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]) 
+                            {'elevtn': 'gebco_v2024', 'reproj_method': 'bilinear'}]) #'offset': 'mdt_cnes_cls18',
 
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
-gdf_include = sf.data_catalog.get_geodataframe('coastal_coupling_msk', bbox=bbox) # 'osm_coastlines' can also be used
+gdf_include = sf.data_catalog.get_geodataframe(coupling_mask, bbox=bbox) # 'osm_coastlines' can also be used
 
 #Plotting osm there
 fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')

@@ -38,8 +38,8 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
-# [feature.dfm.pypi-dependencies]
-# dfm-tools = "*"
+[feature.dfm.pypi-dependencies] # this does not work yet
+dfm_tools = "*"
 
 [environments]
 default = { features = [
@@ -50,7 +50,7 @@ compass-sfincs = { features = [
 "py311", "sfincs","dataviz",
 ], solve-group = "py311" }
 
-# dfm = { features = [
-# "py311","dfm",
-# ], solve-group = "py311" }
+dfm = { features = [
+"py311","dfm","dataviz",
+], solve-group = "py311" }
 
