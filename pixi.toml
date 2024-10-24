@@ -19,10 +19,18 @@ repository = "https://github.com/Deltares-research/COMPASS"
 
 [tasks]
 
+[host-dependencies]
+pip = "*"
+
 [dependencies]
 jupyterlab = ">=4.2.1,<4.3"
 descartes = ">=1.1.0" 
 cftime = ">=1.6.4"
+numpy = ">=1.26.4,<1.27"
+matplotlib = ">=3.8.4,<3.9"
+xarray = ">=2023.9.0"
+setuptools = ">=61"
+python-build = "*"
 
 [feature.py311.dependencies]
 python = "3.11.*"
@@ -30,7 +38,6 @@ python = "3.11.*"
 [feature.dataviz.dependencies]
 ffmpeg = ">=7.0.0" 
 cartopy = ">=0.20.0" 
-matplotlib = ">=3.8.4,<3.9" 
 
 [feature.sfincs.dependencies]
 hydromt = ">=0.10.0"
@@ -38,8 +45,11 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
-# [feature.dfm.pypi-dependencies]
-# dfm-tools = "*"
+[feature.cht.pypi-dependencies]
+cht_cyclones = "*"
+
+[feature.dfm.pypi-dependencies]
+dfm-tools = "*"
 
 [environments]
 default = { features = [
@@ -47,10 +57,14 @@ default = { features = [
 ], solve-group = "py311" }
 
 compass-sfincs = { features = [
-"py311", "sfincs","dataviz",
+"py311","sfincs","dataviz",
 ], solve-group = "py311" }
 
-# dfm = { features = [
-# "py311","dfm",
-# ], solve-group = "py311" }
+compass-cht = { features = [
+"py311","cht",
+], solve-group = "py311" }
+
+compass-dfm = { features = [
+"py311","dfm",
+], solve-group = "py311" }
 
