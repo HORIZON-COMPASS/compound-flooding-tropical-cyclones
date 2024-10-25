@@ -20,17 +20,23 @@ setup_dep:
   - elevtn: gebco_v2024        # 2nd eleveation dataset (to be merged with the first)
     reproj_method: bilinear
 
-# setup_mask_active:
+setup_mask_active:
+  zmin: -10
+  reset_mask: True
+
+#setup_mask_active:
 #  exclude_mask: coastal_coupling_msk   
 #  drop_area: 1000
+#  fill_area: 0
+#  reset_mask: False
 
-# setup_mask_bounds:
-#  btype: waterlevel            # Set waterlevel boundaries
-#  zmin: -10
-#  zmax: -1
-#  include_mask: osm_coastlines
-#  include_mask_buffer: 200         
-#  reset_bounds: True  
+setup_mask_bounds:
+  btype: waterlevel            # Set waterlevel boundaries
+  zmin: -10
+  zmax: -1
+  include_mask: osm_coastlines
+  include_mask_buffer: 200         
+  reset_bounds: True  
 
 # setup_river_inflow:
 #   hydrography: merit_hydro
