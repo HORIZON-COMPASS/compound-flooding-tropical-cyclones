@@ -84,6 +84,15 @@ for id_track in id:
     ds_tc = ds_ibtracs.isel(storm=id_track,drop=True)
 
     print(f'Processing TC {tc_name} ({tc_year}),  track {ds_tc.sid} ...') 
+
+    # drop unnecessary variables
+    sid = ds_tc.sid.item().decode(encoding="utf-8")
+    keys = list(ds_tc.keys()) # remove all variables except water level
+    keyslist = ['usa_lon','usa_lat','usa_wind','usa_pres','usa_rmw','usa_r34'] # these are the variables to keep
+    for kk in keyslist:
+        keys.remove(kk)
+    ds_tc = ds_tc.drop_vars(keys)
+
     
     # crop the length of the dataset for specific cyclones
     # e.g. Freddy (2023) record is very long, we do not need the part that is far beyond the model domain
@@ -95,7 +104,7 @@ for id_track in id:
 
     # export to spiderweb
     print('- Saving track...')
-    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{ds_tc.isel(date_time=0).sid.item().decode(encoding="utf-8")}.spw'))
+    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{sid}.spw'))
 
     del tc
 
