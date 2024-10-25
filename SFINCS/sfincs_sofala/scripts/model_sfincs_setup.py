@@ -32,7 +32,7 @@ datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
 data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','computations','sfincs_sofala_test')
+root_folder  = os.path.join('..','computations','sfincs_sofala_test2')
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 

@@ -46,22 +46,22 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
-[feature.cht.pypi-dependencies]
-cht_cyclones = { url = "https://github.com/Deltares-research/cht_cyclones/archive/refs/tags/v1.0.1.tar.gz"}
-fiona = "*"
+# [feature.cht.pypi-dependencies]
+# cht_cyclones = { url = "https://github.com/Deltares-research/cht_cyclones/archive/refs/tags/v1.0.1.tar.gz"}
+# fiona = "*"
 
-[feature.dfm.dependencies]
+# [feature.dfm.dependencies]
 # copernicusmarine = "=1.3.3"
 # netcdf4 = ">=1.5.4"
 # scipy = ">=1.6.0"
 # dask = ">=2023.9.0"
-setuptools = ">=61"
-python-build = "*"
-multiurl = "=0.3.2"
+# setuptools = ">=61"
+# python-build = "*"
+# multiurl = "=0.3.2"
 
-[feature.dfm.pypi-dependencies]
+#[feature.dfm.pypi-dependencies]
 # dfm_tools = "*"
-dfm_tools = {url = "https://github.com/Deltares/dfm_tools/archive/refs/tags/v0.30.0.tar.gz"}
+#dfm_tools = {url = "https://github.com/Deltares/dfm_tools/archive/refs/tags/v0.30.0.tar.gz"}
 
 [environments]
 default = { features = [
@@ -72,11 +72,11 @@ compass-sfincs = { features = [
 "py311","sfincs","dataviz",
 ], solve-group = "py311" }
 
-compass-cht = { features = [
-"py311","cht",
-], solve-group = "py311" }
+#compass-cht = { features = [
+#"py311","cht",
+#], solve-group = "py311" }
 
-compass-dfm = { features = [
-"py39","dfm",
-], solve-group = "py39"}
+#compass-dfm = { features = [
+#"py39","dfm",
+#], solve-group = "py39"}
 

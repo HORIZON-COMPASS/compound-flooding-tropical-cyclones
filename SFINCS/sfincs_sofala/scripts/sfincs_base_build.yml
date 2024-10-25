@@ -4,10 +4,9 @@ global:
 setup_config:
   tref: 20190309 000000
   tstart: 20190309 000000
-  tstop: 20190316 000000
+  tstop: 20190319 000000
   dtout: 3600
   dthisout: 3600
-  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038.spw
 
 setup_grid_from_region:
   res: 100                     # model resolution
@@ -21,48 +20,35 @@ setup_dep:
   - elevtn: gebco_v2024        # 2nd eleveation dataset (to be merged with the first)
     reproj_method: bilinear
 
-setup_mask_active:
-  exclude_mask: coastal_coupling_msk   
-  drop_area: 1000
+# setup_mask_active:
+#  exclude_mask: coastal_coupling_msk   
+#  drop_area: 1000
 
-setup_mask_bounds:
-  btype: waterlevel            # Set waterlevel boundaries
-  zmin: -10
-  zmax: -1
-  include_mask: osm_coastlines
-  include_mask_buffer: 200         
-  reset_bounds: True  
+# setup_mask_bounds:
+#  btype: waterlevel            # Set waterlevel boundaries
+#  zmin: -10
+#  zmax: -1
+#  include_mask: osm_coastlines
+#  include_mask_buffer: 200         
+#  reset_bounds: True  
 
-setup_river_inflow:
-  hydrography: merit_hydro
-  river_upa: 500
-  river_len: 1000
-  keep_rivers_geom: True
+# setup_river_inflow:
+#   hydrography: merit_hydro
+#   river_upa: 500
+#   river_len: 1000
+#   keep_rivers_geom: True
 
-setup_river_outflow:
-  hydrography: merit_hydro
-  river_upa: 10
-  river_len: 4000
-  keep_rivers_geom: True
+# setup_river_outflow:
+#   hydrography: merit_hydro
+#   river_upa: 10
+#   river_len: 4000
+#   keep_rivers_geom: True
 
-setup_cn_infiltration:
-  cn: gcn250  
-  antecedent_moisture: dry
-
-setup_precip_forcing_from_grid:
-  precip: era5_hourly
-  aggregate: False
-
-setup_waterlevel_forcing:
-  geodataset: dfm_output_MZ_doris
-  buffer: 5000
-
-setup_observation_points:
-  locations: p://11210471-001-compass//01_Data//obs_locs.geojson
-  merge: False
+# setup_cn_infiltration:
+#   cn: gcn250  
+#   antecedent_moisture: dry
 
 # setup subgrid
-# setup discharge
 
 
           

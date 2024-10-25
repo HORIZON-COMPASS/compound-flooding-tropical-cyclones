@@ -1,0 +1,18 @@
+global:
+  data_libs: ..//..//datacatalog.yml           # add optional paths to data_catalog yml files
+
+setup_config:
+  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038.spw
+
+setup_precip_forcing_from_grid:
+  precip: era5_hourly
+  aggregate: False
+
+setup_waterlevel_forcing:
+  geodataset: dfm_output_MZ_doris
+  buffer: 5000
+
+# setup discharge
+
+
+          
