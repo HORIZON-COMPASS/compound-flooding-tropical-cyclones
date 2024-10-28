@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import xarray as xr
+import shutil
 
 import hydromt
 from hydromt.log import setuplog
@@ -22,7 +23,7 @@ from hydromt_sfincs import SfincsModel
 bbox = [34.33,-20.12,34.95,-19.30] # Sofala region 
 model_res = 100 # resolution
 datacat = os.path.join('..','..','datacatalog.yml')
-modelname = 'sfincs_sofala_test2'
+modelname = 'sfincs_sofala_test_with_spw2'
 coupling_mask = 'coastal_coupling_msk_v2'
 model_res = 100 #By defaulft
 
@@ -118,14 +119,14 @@ hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
 rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)
 #%%
 #We export it to check it
-source_names=["merit_hydro", "rivers_lin2019_v1"]
-folder_name = os.path.join('..','boundary_conditions',"tmp_data_export")
-data_catalog.export_data(
-    data_root=folder_name,
-    bbox=bbox,
-    source_names=source_names,
-    meta={"version": "1"},
-)
+# source_names=["merit_hydro", "rivers_lin2019_v1"]
+# folder_name = os.path.join('..','boundary_conditions',"tmp_data_export")
+# data_catalog.export_data(
+#     data_root=folder_name,
+#     bbox=bbox,
+#     source_names=source_names,
+#     meta={"version": "1"},
+# )
 #%% For now making dummy rivers -- why dummy as it copies rivers_inflow based on merit_hydro?
 gdf_riv = sf.geoms["rivers_inflow"].copy()
 gdf_riv["rivwth"] = 100 # width [m]
@@ -192,14 +193,24 @@ sf.setup_precip_forcing_from_grid(
 
 
 #%% Set up wind forcing from ERA5
-sf.setup_wind_forcing_from_grid(
-    wind = 'era5_hourly'
-)
+# sf.setup_wind_forcing_from_grid(
+#     wind = 'era5_hourly'
+# )
 
 #%% Set up pressure forcing from ERA5
-sf.setup_pressure_forcing_from_grid(
-    press='era5_hourly'
-)
+# sf.setup_pressure_forcing_from_grid(
+#    press='era5_hourly'
+# )
+
+# Set up spiderweb forcing
+spwfile = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model\boundary_conditions\meteo\TC\tc_IDAI_2019063S18038.spw'
+shutil.copyfile(spwfile, os.path.join(root_folder,os.path.basename(spwfile)))
+spw_forcing_config = {
+    "spwfile": os.path.basename(spwfile),
+    "storemeteo": 1,
+    "utmzone": '36s',
+}
+sf.setup_config(**spw_forcing_config)
 
 #%% Set up coastal water level forcing
 # change to locations and timeseries
