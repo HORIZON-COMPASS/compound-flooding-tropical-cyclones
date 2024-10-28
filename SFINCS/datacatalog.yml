@@ -383,6 +383,21 @@ dfm_output_MZ_doris:
   meta:
     category: ocean
   crs: 4326
+dfm_output_MZB_Idai:
+  data_type: GeoDataset
+  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Idai_area_MZB_500m_gebco2024/output/mozambique_spw_Idai_area_MZB_500m_gebco2024_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
 dtu10mdt:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\topography\dtu10mdt\DTU10MDT_1min_float32.tif

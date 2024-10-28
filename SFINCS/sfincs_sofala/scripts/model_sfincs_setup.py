@@ -23,12 +23,9 @@ bbox = [34.33,-20.12,34.95,-19.30] # Sofala region
 model_res = 100 # resolution
 datacat = os.path.join('..','..','datacatalog.yml')
 modelname = 'sfincs_sofala_test2'
-coupling_mask = 'coastal_coupling_msk'
-
-#For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
-bbox = [34.33,-20.12,34.95,-19.30] 
+coupling_mask = 'coastal_coupling_msk_v2'
 model_res = 100 #By defaulft
-datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
+
 data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
@@ -181,7 +178,7 @@ sf.setup_cn_infiltration(
 model_time_config = {
     "tref": "20190309 000000", #FILL IN THE REFERENCE TIME (can be any date)
     "tstart": "20190309 000000", #FILL IN THE START TIME OF THE SIMULATION
-    "tstop": "20190316 000000", #FILL IN THE END TIME OF THE SIMULATION
+    "tstop": "20190319 060000", #FILL IN THE END TIME OF THE SIMULATION
     "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
     "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
 }
@@ -207,8 +204,8 @@ sf.setup_pressure_forcing_from_grid(
 #%% Set up coastal water level forcing
 # change to locations and timeseries
 sf.setup_waterlevel_forcing(
-    geodataset='dfm_output_MZ_doris', # 'gtsm_codec_reanalysis_hourly_v1'
-    buffer=5000
+    geodataset='dfm_output_MZB_Idai', 
+    buffer=1000
 )
 
 # #%% SETUP THE DISCHARGE - Synthetic discharge for now
@@ -235,10 +232,10 @@ sf.forcing['dis'] = xr.DataArray(
 )
 
 # Set custom discharge values
-sf.forcing['dis'][:, 0] = 100    # For index 1
-sf.forcing['dis'][:, 1] = 10000  # For index 2
-sf.forcing['dis'][:, 2] = 5000   # For index 3
-sf.forcing['dis'][:, 3] = 2500   # For index 4
+sf.forcing['dis'][:, 0] = 0    # For index 1
+sf.forcing['dis'][:, 1] = 0  # For index 2
+sf.forcing['dis'][:, 2] = 0   # For index 3
+sf.forcing['dis'][:, 3] = 0   # For index 4
 
 # Print to verify
 print(sf.forcing['dis'])
