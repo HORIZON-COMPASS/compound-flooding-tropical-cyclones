@@ -246,6 +246,18 @@ coastal_coupling_msk_v2:
     source_url: none
     source_version: 1.0
   crs: 4326
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: p:/11210471-001-compass/01_Data/obs_locs.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
 copdem30:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\topography\copdem\copdem.vrt
