@@ -22,7 +22,7 @@ from hydromt_sfincs import SfincsModel
 bbox = [34.33,-20.12,34.95,-19.30] # Sofala region 
 model_res = 100 # resolution
 datacat = os.path.join('..','..','datacatalog.yml')
-modelname = 'sfincs_sofala_test'
+modelname = 'sfincs_sofala_test2'
 coupling_mask = 'coastal_coupling_msk'
 
 #For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
@@ -32,7 +32,7 @@ datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
 data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','computations','sfincs_sofala_test2')
+root_folder  = os.path.join('..','computations',modelname)
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
@@ -62,17 +62,17 @@ sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro', 'zmin': 0.001},
 
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
-gdf_include = sf.data_catalog.get_geodataframe(coupling_mask, bbox=bbox) # 'osm_coastlines' can also be used
+# gdf_include = sf.data_catalog.get_geodataframe(coupling_mask, bbox=bbox) # 'osm_coastlines' can also be used
 
 #Plotting osm there
-fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
-gdf_include.to_crs(sf.crs).boundary.plot(ax=ax, color="b", lw=1, ls="--")
+# fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
+# gdf_include.to_crs(sf.crs).boundary.plot(ax=ax, color="b", lw=1, ls="--")
 #fig, ax  = sf.plot_basemap(variable='msk', bmap='sat', zoomlevel=10)
 #%% Set up the mask
 sf.setup_mask_active(zmin=-10, reset_mask=True)
 sf.setup_mask_active(
     include_mask = None, # change to None if you don't 
-    exclude_mask = gdf_include, 
+    exclude_mask = coupling_mask, 
     drop_area = 1000, 
     fill_area = 0, # not filling anything? 
     reset_mask = False
