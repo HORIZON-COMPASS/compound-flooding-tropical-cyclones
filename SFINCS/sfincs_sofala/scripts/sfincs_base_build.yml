@@ -1,13 +1,6 @@
 global:
   data_libs: ..//..//datacatalog.yml           # add optional paths to data_catalog yml files
 
-setup_config:
-  tref: 20190309 000000
-  tstart: 20190309 000000
-  tstop: 20190319 000000
-  dtout: 3600
-  dthisout: 3600
-
 setup_grid_from_region:
   res: 100                     # model resolution
   crs: utm                     # model CRS (must be UTM zone)
@@ -22,13 +15,8 @@ setup_dep:
 
 setup_mask_active:
   zmin: -10
+  exclude_mask: coastal_coupling_msk_v2   
   reset_mask: True
-
-#setup_mask_active:
-#  exclude_mask: coastal_coupling_msk   
-#  drop_area: 1000
-#  fill_area: 0
-#  reset_mask: False
 
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
@@ -37,6 +25,26 @@ setup_mask_bounds:
   include_mask: osm_coastlines
   include_mask_buffer: 200         
   reset_bounds: True  
+
+setup_subgrid:
+  datasets_dep:
+  - elevtn: merit_hydro       
+    zmin: 0.001              
+  - elevtn: gebco_v2024       
+    reproj_method: bilinear
+  datasets_rgh:
+  - lulc: vito
+    reclass_table: vito_mapping
+#    datasets_riv = datasets_riv,
+  nr_subgrid_pixels: 3  
+  write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
+  write_man_tif: True
+  nrmax: 5000  # set tile size a bit larger speed up processing (default 2000)
+
+setup_cn_infiltration:
+  cn: gcn250  
+  antecedent_moisture: dry
+
 
 # setup_river_inflow:
 #   hydrography: merit_hydro
@@ -50,11 +58,30 @@ setup_mask_bounds:
 #   river_len: 4000
 #   keep_rivers_geom: True
 
-# setup_cn_infiltration:
-#   cn: gcn250  
-#   antecedent_moisture: dry
 
-# setup subgrid
+### the below text to be moved in a separate .yml file
 
+# set time of simulation
+setup_config:
+  tref: 20190309 000000
+  tstart: 20190309 000000
+  tstop: 20190319 060000
+  dtout: 3600
+  dthisout: 3600
+  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038.spw
+  storemeteo: 1
+  utmzone: 36s
 
-          
+setup_precip_forcing_from_grid:
+  precip: era5_hourly
+  aggregate: False
+
+setup_waterlevel_forcing:
+  geodataset: dfm_output_MZB_Idai
+  buffer: 1000
+  merge: False
+
+setup_observation_points:
+  locations: obs_points_sofala
+  merge: False
+

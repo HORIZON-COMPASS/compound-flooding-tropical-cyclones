@@ -1,0 +1,30 @@
+global:
+  data_libs: ..//..//datacatalog.yml           # add optional paths to data_catalog yml files
+
+# set time of simulation
+setup_config:
+  tref: 20190309 000000
+  tstart: 20190309 000000
+  tstop: 20190319 060000
+  dtout: 3600
+  dthisout: 3600
+  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038.spw
+  storemeteo: 1
+
+setup_precip_forcing_from_grid:
+  precip: era5_hourly
+  aggregate: False
+
+setup_waterlevel_forcing:
+  geodataset: dfm_output_MZB_Idai
+  buffer: 1000
+  merge: False
+
+setup_observation_points:
+  locations: obs_points_sofala
+  merge: False
+
+# setup discharge
+
+
+          
