@@ -1,5 +1,7 @@
 global:
-  data_libs: ..//..//datacatalog.yml           # add optional paths to data_catalog yml files
+  data_libs:  # add optional paths to data_catalog yml files
+  - ..//datacatalog_general.yml           
+  - ..//datacatalog_wl_forcing.yml 
 
 setup_grid_from_region:
   res: 100                     # model resolution
@@ -15,7 +17,7 @@ setup_dep:
 
 setup_mask_active:
   zmin: -10
-  exclude_mask: coastal_coupling_msk_v2   
+  exclude_mask: coastal_coupling_msk_MZB   
   reset_mask: True
 
 setup_mask_bounds:
@@ -58,30 +60,4 @@ setup_cn_infiltration:
 #   river_len: 4000
 #   keep_rivers_geom: True
 
-
-### the below text to be moved in a separate .yml file
-
-# set time of simulation
-setup_config:
-  tref: 20190309 000000
-  tstart: 20190309 000000
-  tstop: 20190319 060000
-  dtout: 3600
-  dthisout: 3600
-  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038.spw
-  storemeteo: 1
-  utmzone: 36s
-
-setup_precip_forcing_from_grid:
-  precip: era5_hourly
-  aggregate: False
-
-setup_waterlevel_forcing:
-  geodataset: dfm_output_MZB_Idai
-  buffer: 1000
-  merge: False
-
-setup_observation_points:
-  locations: obs_points_sofala
-  merge: False
 

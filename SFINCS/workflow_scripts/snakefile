@@ -1,0 +1,61 @@
+### Import some useful python library
+import os
+#import shutil
+#import itertools
+#import numpy as np
+#from datetime import datetime
+#from snakemake.io import Wildcards
+
+
+#inputs
+runname = 'Idai'
+
+# determine input parameters
+if runname == 'Idai':
+    model = 'sfincs_test_Idai'
+    arg_bbox = "'bbox': [34.33,-20.12,34.95,-19.30]"   # TODO: how to streamline this?
+    forcing_yml = 'sfincs_Idai_forcing.yml'
+elif runname == 'Freddy2':
+    model = 'sfincs_test_Freddy2'
+    arg_bbox = "'bbox': [36.7,-18.35,37.41,-17.64]"   # TODO: how to streamline this?
+    forcing_yml = 'sfincs_Freddy2_forcing.yml'
+
+dir_run = os.path.join('..','sfincs_sofala','computations',model)
+
+rule all:
+    input:
+        os.path.join(dir_run,"sfincs_map.nc"),
+        os.path.join(dir_run,"sfincs_his.nc")
+
+rule make_base_model:
+    output: 
+        os.path.join(dir_run,"sfincs.msk")
+    shell:
+        'hydromt build sfincs {dir_run} --region "{{{arg_bbox}}}" -i sfincs_base_build.yml --force-overwrite -v'
+
+rule add_forcing:
+    input: 
+        os.path.join(dir_run,"sfincs.msk")
+    output:
+        os.path.join(dir_run,"sfincs.bzs")
+    shell:
+        'hydromt update sfincs {dir_run} -i {forcing_yml} -v'
+
+rule add_batchfile:
+    input:
+        os.path.join(dir_run,"sfincs.bzs")
+    params:
+        dir_run = dir_run
+    output:
+        os.path.join(dir_run,"run_sfincs.bat")
+    script:
+        'add_batchfile.py'
+
+rule run_sfincs_model:
+    input:
+        batchfile = os.path.join(dir_run,"run_sfincs.bat")
+    output:
+        os.path.join(dir_run,"sfincs_map.nc"),
+        os.path.join(dir_run,"sfincs_his.nc")        
+    shell:
+        'run {input.batchfile}'

@@ -1,0 +1,50 @@
+meta:
+  root: c:\CODE\COMPASS
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_sofala.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 3036
+obs_points_Freddy1:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy1.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Freddy1 model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 3036
+obs_points_Freddy2:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy2.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Freddy2 model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 3036
+obs_points_Kenneth:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Kenneth.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Kenneth model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 3036
