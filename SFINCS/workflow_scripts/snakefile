@@ -21,6 +21,7 @@ elif runname == 'Freddy2':
     forcing_yml = 'sfincs_Freddy2_forcing.yml'
 
 dir_run = os.path.join('..','sfincs_sofala','computations',model)
+rmfile = os.path.join(dir_run,'hydromt_data.yml')
 
 rule all:
     input:
@@ -31,10 +32,12 @@ rule make_base_model:
     output: 
         os.path.join(dir_run,"sfincs.msk")
     shell:
-        'hydromt build sfincs {dir_run} --region "{{{arg_bbox}}}" -i sfincs_base_build.yml --force-overwrite -v'
+        '''
+        hydromt build sfincs {dir_run} --region "{{{arg_bbox}}}" -i sfincs_base_build.yml --force-overwrite -v && del {rmfile}
+        '''
 
 rule add_forcing:
-    input: 
+    input:
         os.path.join(dir_run,"sfincs.msk")
     output:
         os.path.join(dir_run,"sfincs.bzs")
@@ -58,4 +61,4 @@ rule run_sfincs_model:
         os.path.join(dir_run,"sfincs_map.nc"),
         os.path.join(dir_run,"sfincs_his.nc")        
     shell:
-        'run {input.batchfile}'
+        'cd {dir_run} && run_sfincs.bat'
