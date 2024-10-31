@@ -1,7 +1,7 @@
 global:
   data_libs:  # add optional paths to data_catalog yml files
   - ..//datacatalog_general.yml           
-  - ..//datacatalog_wl_forcing.yml 
+  - ..//datacatalog_SFINCS_coastal_coupling.yml
 
 setup_grid_from_region:
   res: 100                     # model resolution

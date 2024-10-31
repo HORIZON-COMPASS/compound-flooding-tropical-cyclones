@@ -1,8 +1,8 @@
 global:
   data_libs: 
   - ..//datacatalog_general.yml    
-  - ..//datacatalog_wl_forcing.yml          # add optional paths to data_catalog yml files
-  - ..//datacatalog_geom.yml 
+  - ..//datacatalog_SFINCS_coastal_coupling.yml      # add optional paths to data_catalog yml files
+  - ..//datacatalog_SFINCS_obspoints.yml 
 
 # set time of simulation
 setup_config:
