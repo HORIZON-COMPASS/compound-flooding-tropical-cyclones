@@ -20,6 +20,7 @@ import numpy as np
 # specify cyclone name
 tc_name = 'Freddy'#'Kenneth' #'Idai'
 tc_year = 2023
+extend_days = 9
 
 dir_base = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model'
 
@@ -40,7 +41,7 @@ def create_track(ds_tc):
     tc.nr_radial_bins = 600
     tc.phi_spiral = 22.6
     tc.spiderweb_radius = 900
-    tc.extend_track = 3
+    tc.extend_track = extend_days+1
 
     # Only keep the data that is not NaN (filtered based on rmw availability)
     tmp = ds_tc.time.where(~ds_tc.usa_rmw.isnull(),drop=True).values
@@ -57,11 +58,6 @@ def create_track(ds_tc):
     tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
                  winds = data_wind.values, pressures = data_pres.values,
                  rmw = data_rmw.values, r35 = data_r34.values)
-    
-    # functions to improve the data
-    print('- Improve schematization...')
-    tc.account_for_forward_speed()
-    tc.estimate_missing_values()
 
     return tc
 
