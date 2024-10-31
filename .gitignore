@@ -14,6 +14,8 @@ Delft3DFM/mozambique_model/computations
 SFINCS/sfincs_sofala/computations
 Delft3DFM/mozambique_model/results
 SFINCS/sfincs_sofala/results
+SFINCS_Wave/sfincs_sofala/computations
+SFINCS_Wave/sfincs_sofala/results
 
 # Distribution / packaging
 .Python
