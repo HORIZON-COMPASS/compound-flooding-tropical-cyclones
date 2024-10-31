@@ -1,27 +1,3 @@
-# esa_worldcover:
-#   data_type: RasterDataset
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\LU\esa-worldcover.vrt
-#   driver: raster
-#   kwargs:
-#     chunks:
-#     x: 36000
-#     y: 36000
-#   filesystem: local
-#   meta:
-#     category: landuse
-#     source_license: CC BY 4.0
-#     source_url: https://doi.org/10.5281/zenodo.5571936
-#     source_version: v100
-#   crs: 4326
-  
-# esa_worldcover_mapping:
-#   data_type: DataFrame
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\LU\esa_worldcover_mapping.csv
-#   driver: csv
-#   meta:
-#     category: landuse
-#     notes: Manning Roughness values for each ESA World Cover class
-
 gebco:
   data_type: RasterDataset
   path: C:\Intern\SFINCS_Wave\COMPASS\SFINCS_Wave\boundary_conditions\topo\gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
@@ -41,21 +17,6 @@ gebco:
     source_version: 2020
     unit: m+MSL
   crs: 4326
-
-# delta_dtm:
-#   data_type: RasterDataset
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\Delta_DTM_Sofala\mozambique_merged_output.tif
-#   driver: raster
-#   filesystem: local
-#   meta:
-#     category: topography
-#     paper_doi: 10.4121/1da2e70f-6c4d-4b03-86bd-b53e789cc629  # DOI for Delta DTM dataset
-#     paper_ref: Deltares (2020)
-#     source_license: https://data.4tu.nl/info/en/legal/policies  # License for the dataset
-#     source_url: https://data.4tu.nl/datasets/1da2e70f-6c4d-4b03-86bd-b53e789cc629  # Direct link to dataset
-#     source_version: 2020  # Year the dataset was released
-#     unit: m+MSL  # Assuming the unit is meters above Mean Sea Level (adjust if needed)
-#   crs: 4326  # CRS: WGS84, adjust if necessary
 
 era5_hourly:
   data_type: RasterDataset
@@ -105,52 +66,4 @@ dfm_output_wl_open:
   meta:
     category: Boundary condition
   crs: 4326
-
-# wltot_0.2hs:
-#   data_type: GeoDataset
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\combined_WL\0.2hs\combined_wl_swh.nc
-#   driver: netcdf
-#   filesystem: local
-#   meta:
-#     category: Boundary condition
-#   crs: 4326
-
-# wltot_stockdon:
-#   data_type: GeoDataset
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\combined_WL\Stockdon\combined_wl_swh.nc
-#   driver: netcdf
-#   filesystem: local
-#   meta:
-#     category: Boundary condition
-#   crs: 4326
-
-# mdt_cnes_cls18:
-#   data_type: RasterDataset
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\MDT\MDT_CNES_CLS18_global_filled.tif
-#   driver: raster
-#   driver_kwargs:
-#     chunks:
-#       x: 720
-#       y: 720
-#   meta:
-#     category: topography
-#     paper_doi: 10.5194/os-17-789-2021
-#     paper_ref: Mulet et al (2021)
-#     source_url: https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/mdt.html
-#     source_version: 18
-#     unit: m+GOCO05S
-#   crs: 4326
-
-# osm_coastlines:
-#   crs: 4326
-#   data_type: GeoDataFrame
-#   driver: vector
-#   meta:
-#     category: geography
-#     source_author: OpenStreetMap
-#     source_info: OpenStreetMap coastlines water polygons, last updated 2020-01-09T05:29
-#     source_license: ODbL
-#     source_url: https://osmdata.openstreetmap.de/data/coastlines.html
-#   version: 1.0
-#   path: C:\Intern\SFINCS_Sofala\boundary_conditions\OSM_Coastline\clipped_osm_coastline.gpkg
 
