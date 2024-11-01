@@ -18,11 +18,7 @@ TAMSAT_Idai:
     lon: longitude   
   meta:
     category: meteo
-    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
-    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
-    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
-    source_license: https://creativecommons.org/licenses/by/4.0/
-    source_url: https://research.reading.ac.uk/tamsat/data-access/
+    notes: TAMSAT data 
   crs: 4326
 ERA5land_Idai:
   data_type: RasterDataset
@@ -226,18 +222,6 @@ chirps_global_daily_v2.0:
     source_url: https://www.chc.ucsb.edu/data/chirps
     source_version: v2.0
   crs: 4326
-coastal_coupling_msk:
-  data_type: GeoDataFrame
-  path: p:\11210471-001-compass\01_Data\waterlevel_coupling\wl_coupling_mask_MZ.geojson
-  driver: vector
-  meta:
-    category: geography
-    notes: first buffer location of the coast where to impose the w.l.
-    source_author: Doris Vertegaal
-    source_license: na
-    source_url: none
-    source_version: 1.0
-  crs: 4326
 copdem30:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\topography\copdem\copdem.vrt
@@ -360,21 +344,6 @@ corine_2018_v2020_u1:
     source_license: https://land.copernicus.eu/pan-european/corine-land-cover/clc2018?tab=metadata
     source_url: https://land.copernicus.eu/pan-european/corine-land-cover/clc2018
     source_version: v.2020_20u1
-dfm_output_MZ_doris:
-  data_type: GeoDataset
-  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Idai_areaBeira_500m_gebco2023_doris/output/mozambique_spw_Idai_areaBeira_500m_gebco2023_doris_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
 dtu10mdt:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\topography\dtu10mdt\DTU10MDT_1min_float32.tif
@@ -2735,6 +2704,20 @@ soilgrids_v2.0:
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
+TAMSAT_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
+  driver: netcdf
+  rename:
+    rfe_filled: precip
+  meta:
+    category: meteo
+    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
+    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
+    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
+    source_license: https://creativecommons.org/licenses/by/4.0/
+    source_url: https://research.reading.ac.uk/tamsat/data-access/
+  crs: 4326
 vito:
   data_type: RasterDataset
   path: p:\wflow_global\hydromt\landuse\vito\ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif

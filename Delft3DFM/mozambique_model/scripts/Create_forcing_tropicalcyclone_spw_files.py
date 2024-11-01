@@ -5,8 +5,6 @@
 
 
 # Bugs and to be fixed:
-# - cht_cyclones expects a package called 'fiona', is not installed by default
-# np.NaN needs to be replaced by np.nan for compatibility with numpy 2.0 (in tropical_cyclone.py) - for now downgraded to numpy 1.26.4
 # script says: "self.background_pressure = 1012 Pa" I think the units should not be Pa, but mbar, atm pressure is in the order of 10^5 Pa.
 
 #%%
@@ -20,8 +18,9 @@ import numpy as np
 
 #%%
 # specify cyclone name
-tc_name = 'Kenneth'
-tc_year = 2019
+tc_name = 'Freddy'#'Kenneth' #'Idai'
+tc_year = 2023
+extend_days = 9
 
 dir_base = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model'
 
@@ -42,6 +41,7 @@ def create_track(ds_tc):
     tc.nr_radial_bins = 600
     tc.phi_spiral = 22.6
     tc.spiderweb_radius = 900
+    tc.extend_track = extend_days+1
 
     # Only keep the data that is not NaN (filtered based on rmw availability)
     tmp = ds_tc.time.where(~ds_tc.usa_rmw.isnull(),drop=True).values
@@ -58,11 +58,6 @@ def create_track(ds_tc):
     tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
                  winds = data_wind.values, pressures = data_pres.values,
                  rmw = data_rmw.values, r35 = data_r34.values)
-    
-    # functions to improve the data
-    print('- Improve schematization...')
-    tc.account_for_forward_speed()
-    tc.estimate_missing_values()
 
     return tc
 
@@ -85,6 +80,15 @@ for id_track in id:
     ds_tc = ds_ibtracs.isel(storm=id_track,drop=True)
 
     print(f'Processing TC {tc_name} ({tc_year}),  track {ds_tc.sid} ...') 
+
+    # drop unnecessary variables
+    sid = ds_tc.sid.item().decode(encoding="utf-8")
+    keys = list(ds_tc.keys()) # remove all variables except water level
+    keyslist = ['usa_lon','usa_lat','usa_wind','usa_pres','usa_rmw','usa_r34'] # these are the variables to keep
+    for kk in keyslist:
+        keys.remove(kk)
+    ds_tc = ds_tc.drop_vars(keys)
+
     
     # crop the length of the dataset for specific cyclones
     # e.g. Freddy (2023) record is very long, we do not need the part that is far beyond the model domain
@@ -96,7 +100,7 @@ for id_track in id:
 
     # export to spiderweb
     print('- Saving track...')
-    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{ds_tc.isel(date_time=0).sid.item().decode(encoding="utf-8")}.spw'))
+    tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{sid}.spw'))
 
     del tc
 

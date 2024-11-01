@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import xarray as xr
+import shutil
 
 import hydromt
 from hydromt.log import setuplog
@@ -16,18 +17,20 @@ from hydromt_sfincs import SfincsModel
 
 #%% Sources to help create this script
 # https://deltares.github.io/hydromt_sfincs/latest/_examples/build_from_script.html#
-# Pizza course: p:\11208235-013-egyptian-tsunami-mode\SFINCS_course_notebooks\
 
-#%% We select the area for the location 
+#%% User settings
 
-#For now we select the same initial bbox as Dirk's paper. Later this should be more flexible
-bbox = [34.33,-20.12,34.95,-19.30] 
+bbox = [34.33,-20.12,34.95,-19.30] # Sofala region 
+model_res = 100 # resolution
+datacat = os.path.join('..','..','datacatalog.yml')
+modelname = 'sfincs_sofala_test_with_spw2'
+coupling_mask = 'coastal_coupling_msk_v2'
 model_res = 100 #By defaulft
-datacat = os.path.join('..','boundary_conditions','datacatalog.yml')
+
 data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','computations','sfincs_sofala_test')
+root_folder  = os.path.join('..','computations',modelname)
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
@@ -53,21 +56,21 @@ fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
 
 # %% We follow the steps from the ini file from Dirk's paper (now called a yml file)
 sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
-                            {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]) 
+                            {'elevtn': 'gebco_v2024', 'reproj_method': 'bilinear'}]) #'offset': 'mdt_cnes_cls18',
 
 _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
-gdf_include = sf.data_catalog.get_geodataframe('coastal_coupling_msk', bbox=bbox) # 'osm_coastlines' can also be used
+# gdf_include = sf.data_catalog.get_geodataframe(coupling_mask, bbox=bbox) # 'osm_coastlines' can also be used
 
 #Plotting osm there
-fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
-gdf_include.to_crs(sf.crs).boundary.plot(ax=ax, color="b", lw=1, ls="--")
+# fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
+# gdf_include.to_crs(sf.crs).boundary.plot(ax=ax, color="b", lw=1, ls="--")
 #fig, ax  = sf.plot_basemap(variable='msk', bmap='sat', zoomlevel=10)
 #%% Set up the mask
 sf.setup_mask_active(zmin=-10, reset_mask=True)
 sf.setup_mask_active(
     include_mask = None, # change to None if you don't 
-    exclude_mask = gdf_include, 
+    exclude_mask = coupling_mask, 
     drop_area = 1000, 
     fill_area = 0, # not filling anything? 
     reset_mask = False
@@ -116,14 +119,14 @@ hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
 rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)
 #%%
 #We export it to check it
-source_names=["merit_hydro", "rivers_lin2019_v1"]
-folder_name = os.path.join('..','boundary_conditions',"tmp_data_export")
-data_catalog.export_data(
-    data_root=folder_name,
-    bbox=bbox,
-    source_names=source_names,
-    meta={"version": "1"},
-)
+# source_names=["merit_hydro", "rivers_lin2019_v1"]
+# folder_name = os.path.join('..','boundary_conditions',"tmp_data_export")
+# data_catalog.export_data(
+#     data_root=folder_name,
+#     bbox=bbox,
+#     source_names=source_names,
+#     meta={"version": "1"},
+# )
 #%% For now making dummy rivers -- why dummy as it copies rivers_inflow based on merit_hydro?
 gdf_riv = sf.geoms["rivers_inflow"].copy()
 gdf_riv["rivwth"] = 100 # width [m]
@@ -176,7 +179,7 @@ sf.setup_cn_infiltration(
 model_time_config = {
     "tref": "20190309 000000", #FILL IN THE REFERENCE TIME (can be any date)
     "tstart": "20190309 000000", #FILL IN THE START TIME OF THE SIMULATION
-    "tstop": "20190316 000000", #FILL IN THE END TIME OF THE SIMULATION
+    "tstop": "20190319 060000", #FILL IN THE END TIME OF THE SIMULATION
     "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
     "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
 }
@@ -190,20 +193,30 @@ sf.setup_precip_forcing_from_grid(
 
 
 #%% Set up wind forcing from ERA5
-sf.setup_wind_forcing_from_grid(
-    wind = 'era5_hourly'
-)
+# sf.setup_wind_forcing_from_grid(
+#     wind = 'era5_hourly'
+# )
 
 #%% Set up pressure forcing from ERA5
-sf.setup_pressure_forcing_from_grid(
-    press='era5_hourly'
-)
+# sf.setup_pressure_forcing_from_grid(
+#    press='era5_hourly'
+# )
+
+# Set up spiderweb forcing
+spwfile = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model\boundary_conditions\meteo\TC\tc_IDAI_2019063S18038.spw'
+shutil.copyfile(spwfile, os.path.join(root_folder,os.path.basename(spwfile)))
+spw_forcing_config = {
+    "spwfile": os.path.basename(spwfile),
+    "storemeteo": 1,
+    "utmzone": '36s',
+}
+sf.setup_config(**spw_forcing_config)
 
 #%% Set up coastal water level forcing
 # change to locations and timeseries
 sf.setup_waterlevel_forcing(
-    geodataset='dfm_output_MZ_doris', # 'gtsm_codec_reanalysis_hourly_v1'
-    buffer=5000
+    geodataset='dfm_output_MZB_Idai', 
+    buffer=1000
 )
 
 # #%% SETUP THE DISCHARGE - Synthetic discharge for now
@@ -230,10 +243,10 @@ sf.forcing['dis'] = xr.DataArray(
 )
 
 # Set custom discharge values
-sf.forcing['dis'][:, 0] = 100    # For index 1
-sf.forcing['dis'][:, 1] = 10000  # For index 2
-sf.forcing['dis'][:, 2] = 5000   # For index 3
-sf.forcing['dis'][:, 3] = 2500   # For index 4
+sf.forcing['dis'][:, 0] = 0    # For index 1
+sf.forcing['dis'][:, 1] = 0  # For index 2
+sf.forcing['dis'][:, 2] = 0   # For index 3
+sf.forcing['dis'][:, 3] = 0   # For index 4
 
 # Print to verify
 print(sf.forcing['dis'])

@@ -14,6 +14,7 @@ Delft3DFM/mozambique_model/computations
 SFINCS/sfincs_sofala/computations
 Delft3DFM/mozambique_model/results
 SFINCS/sfincs_sofala/results
+SFINCS/workflow_scripts/.snakemake
 
 # Distribution / packaging
 .Python
