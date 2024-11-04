@@ -8,7 +8,7 @@ authors = [
     'Doris Vertegaal <doris.Vertegaal@deltares.nl>',
 ]
 channels = ["conda-forge","bioconda"]
-platforms = ["win-64"]
+platforms = ["win-64","linux-64"]
 readme = "README.md"
 license = "MIT"
 license-file = "LICENSE"
