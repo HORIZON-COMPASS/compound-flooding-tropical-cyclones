@@ -1,0 +1,10 @@
+# Defining parameters to run the snakemake pipeline
+
+
+
+dir_runs:    ../sfincs_sofala/computations
+
+runname: "Idai"
+bbox: "[34.33,-20.12,34.95,-19.30]"
+
+

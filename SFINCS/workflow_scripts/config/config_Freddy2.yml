@@ -1,0 +1,9 @@
+# Defining parameters to run the snakemake pipeline
+
+
+
+dir_runs:    ../sfincs_sofala/computations
+
+runname: "Freddy2"
+bbox: "[36.7,-18.35,37.41,-17.64]"
+
