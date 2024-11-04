@@ -1,0 +1,14 @@
+<PAMDataset>
+  <Subdataset name="swh">
+    <PAMDataset>
+      <PAMRasterBand band="1">
+        <Metadata>
+          <MDI key="STATISTICS_MAXIMUM">1.3725472688675</MDI>
+          <MDI key="STATISTICS_MEAN">0.99919347159834</MDI>
+          <MDI key="STATISTICS_MINIMUM">0.52380764484406</MDI>
+          <MDI key="STATISTICS_STDDEV">0.1798694278606</MDI>
+        </Metadata>
+      </PAMRasterBand>
+    </PAMDataset>
+  </Subdataset>
+</PAMDataset>

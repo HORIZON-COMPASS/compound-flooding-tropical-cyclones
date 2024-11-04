@@ -27,6 +27,9 @@ jupyterlab = ">=4.2.1,<4.3"
 [feature.py311.dependencies]
 python = "3.11.*"
 
+[feature.py39.dependencies]
+python = "3.9.*"
+
 [feature.dataviz.dependencies]
 ffmpeg = ">=7.0.0" 
 cartopy = ">=0.20.0" 
@@ -38,6 +41,14 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
+[feature.sfincsqt.pypi-dependencies]
+hydromt_sfincs = { path = "../hydromt_sfincs_insiders",editable = true}
+ipykernel = '*'
+jupyter = '*'
+matplotlib = '*'
+mapbox_earcut = "*"
+cartopy = "*" 
+
 [feature.dfm.pypi-dependencies]
 dfm-tools = ">=0.31.0"
 
@@ -46,6 +57,4 @@ cht-cyclones = ">=0.0.1, <0.0.2"
 
 [environments]
 default = { features = ["py311"]}
-compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
-compass-dfm = { features = ["py311","dfm"]}
-compass-cht = { features = ["py311","cht"]}
+compass-sfincs-qt = { features = ["py311","sfincsqt"]}
