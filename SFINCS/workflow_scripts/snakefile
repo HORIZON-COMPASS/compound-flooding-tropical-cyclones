@@ -4,9 +4,16 @@ from snakemake.io import Wildcards
 
 # Parsing the config file
 dir_run = config['dir_runs']
+platform = config['platform']
+
+curdir = os.getcwd()
+
+#if platform=='win':
+#    batfile = 
 
 def get_argbbox(wildcards):
-    return config['bbox']
+    arg_bbox = "{" + "'bbox': "+ config['bbox'] + "}"
+    return arg_bbox
 
 rule all:
     input:
@@ -21,14 +28,17 @@ rule make_base_model:
     output: 
         msk_file = "{dir_allruns}"+"/sfincs_{runname}"+"/sfincs.msk"
     shell:
-        'hydromt build sfincs {params.dir_run} --region {bbox: {params.arg_bbox}} -i sfincs_base_build.yml --force-overwrite -v && del {params.rmfile}'
+        '''
+        hydromt build sfincs {params.dir_run} --region "{params.arg_bbox}" -i sfincs_base_build.yml --force-overwrite -v 
+        del {params.rmfile} || rm {params.rmfile}
+        '''
 
 rule add_forcing:
     input:
         msk_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.msk"
     params:
         dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
-        forcing_yml = 'sfincs_"+ {runname} +"_forcing.yml'
+        forcing_yml = "sfincs_"+"{runname}"+"_forcing.yml"
     output:
         bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
     shell:
@@ -48,9 +58,13 @@ rule run_sfincs_model:
     input:
         batchfile = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
     params:
-        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}"
+        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
+        currentdir = curdir
     output:
         mapout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
         hisout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"     
     shell:
-        'cd {params.dir_run} && run_sfincs.bat'
+#        '(cd {params.dir_run} && run_sfincs.bat) ||
+        'cd {params.currentdir} && run_sfincs_job_h7.sh {params.dir_run}'
+
+
