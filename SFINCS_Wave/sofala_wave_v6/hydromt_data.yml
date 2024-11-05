@@ -1,0 +1,78 @@
+dfm_output_wl_open:
+  data_type: GeoDataset
+  path: c:\Users\aleksand\git_projects\COMPASS\SFINCS_Wave\boundary_conditions\dfm_output\dfm_wl.nc
+  driver: netcdf
+  filesystem: local
+  meta:
+    category: Boundary condition
+  crs: 4326
+era5_hourly:
+  data_type: RasterDataset
+  path: c:\Users\aleksand\git_projects\COMPASS\SFINCS_Wave\boundary_conditions\meteo\era5_{variable}_2019-03.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    d2m: temp_dew
+    msl: press_msl
+    ssrd: kin
+    t2m: temp
+    tisr: kout
+    tp: precip
+    u10n: wind10_u
+    v10n: wind10_v
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    precip: 1000
+    press_msl: 0.01
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  crs: 4326
+gebco:
+  data_type: RasterDataset
+  path: c:\Users\aleksand\git_projects\COMPASS\SFINCS_Wave\boundary_conditions\topo\gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    gebco: elevtn
+  meta:
+    category: topography
+    paper_doi: 10.5285/a29c5465-b138-234d-e053-6c86abc040b9
+    paper_ref: Weatherall et al (2020)
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_url: https://www.bodc.ac.uk/data/open_download/gebco/gebco_2020/geotiff/
+    source_version: 2020
+    unit: m+MSL
+  crs: 4326
+obs.geojson:
+  data_type: GeoDataFrame
+  provider: user
+  path: boundary_conditions\gis\obs.geojson
+  driver: vector
+  driver_kwargs:
+    assert_gtype: Point
+wavemaker.gpkg:
+  data_type: GeoDataFrame
+  provider: user
+  path: boundary_conditions\gis\wavemaker.gpkg
+  driver: vector

@@ -1,0 +1,107 @@
+
+ ----------- Welcome to SFINCS -----------
+
+  @@@@@  @@@@@@@ @@ @@  @@   @@@@   @@@@@ 
+ @@@ @@@ @@@@@@@ @@ @@@ @@ @@@@@@@ @@@ @@@
+ @@@     @@      @@ @@@ @@ @@   @@ @@@    
+  @@@@@  @@@@@@  @@ @@@@@@ @@       @@@@@ 
+     @@@ @@      @@ @@ @@@ @@   @@     @@@
+ @@@ @@@ @@      @@ @@  @@  @@@@@@ @@@ @@@
+  @@@@@  @@      @@ @@   @   @@@@   @@@@@ 
+
+              ..............              
+          ......:@@@@@@@@:......          
+       ..::::..@@........@@.:::::..       
+     ..:::::..@@..::..::..@@.::::::..     
+    .::::::..@@............@@.:::::::.    
+   .::::::..@@..............@@.:::::::.   
+  .::::::::..@@............@@..::::::::.  
+ .:::::::::...@@.@..@@..@.@@..::::::::::. 
+ .:::::::::...:@@@..@@..@@@:..:::::::::.. 
+ ............@@.@@..@@..@@.@@............ 
+ ^^^~~^^~~^^@@..............@@^^^~^^^~~^^ 
+ .::::::::::@@..............@@.:::::::::. 
+  .......:.@@.....@.....@....@@.:.......  
+   .::....@@......@.@@@.@....@@.....::.   
+    .:::~@@.:...:.@@...@@.:.:.@@~::::.    
+     .::~@@@@@@@@@@.....@@@@@@@@@~::.     
+       ..:~~~~~~~:.......:~~~~~~~:..      
+          ......................          
+              ..............              
+
+ -----------------------------------------
+
+ Build-Revision: $Rev: v2.1.1-Dollerup
+ Build-Date:     $Date: 2024-08-28
+
+ Reading input file ...
+ Info : Running SFINCS in regular mode ...
+ Turning on process: Viscosity
+ Turning on process: Dynamic waves
+ Advection scheme : First-order upwind
+ Reading meteo data ...
+ Reading spiderweb file ...
+ Converting spiderweb coordinates to utm zone ...
+ Reading FEWS compatible NetCDF type wind input ...
+ Reading FEWS compatible NetCDF type barometric pressure input ...
+ Info : Preparing SFINCS grid on quadtree mesh ...
+ Turning on process: Wind
+ Turning on process: Atmospheric pressure
+ Turning on flag: meteo3d
+ Reading QuadTree netCDF file ...
+ Quadtree grid info - nr_levels :    2
+ Quadtree grid info -        x0 :   627524.0    
+ Quadtree grid info -        y0 :   7797659.    
+ Quadtree grid info -        dx :   200.0000    
+ Quadtree grid info -        dy :   200.0000    
+ Quadtree grid info -      mmax :         560
+ Quadtree grid info -      nmax :         671
+ Quadtree grid info -  rotation :  -38.52200    
+ Number of refinement transitions :         1288
+ Number of active z points    :      1216518
+ Number of active u/v points  :      2431860
+ Number of cells in level   1 :    93384
+ Number of cells in level   2 :  1124584
+ Viscosity - nuvisc  = [   1.000000     -    2.000000     ]
+ Reading water level boundaries ...
+ Reading observation points ...
+ Coupling with SnapWave ...
+ SnapWave: IG waves turned ON!
+ SnapWave: IG bc determination using Herbers turned ON!
+ Initializing SnapWave domain ...
+ Number of active SnapWave nodes :       432683
+ Number of active SnapWave cells :       431491
+ Reading upwind neighbors file ...
+ SnapWave: Error! Something went wrong with reading in upwfile, determine again 
+ from scratch ...
+ Getting surrounding points ...
+ Finding upwind neighbors ...
+ Number of boundary SnapWave nodes :          684
+ Reading wave boundary locations ...
+ Reading wave boundaries ...
+ Input wave boundary points found:            2
+ Reading wavemaker polyline file ...
+ Number of wavemaker polylines found :            1
+ Number of wavemaker u/v points :         1317
+ Setting wave makers ...
+ Setting wave maker flags ...
+ Initializing output ...
+
+ ---------- Starting simulation ----------
+ ---- Using 8 of 8 available threads -----
+
+Snapwave: iter =      4 %ok =    100.000 loop =   13.45s
+Computing SnapWave at t =        0.0 s took  18.89 seconds
+   0% complete,       - s remaining ...
+Snapwave: iter =      2 %ok =    100.000 loop =    2.84s
+Computing SnapWave at t =      602.3 s took   5.38 seconds
+Snapwave: iter =      3 %ok =    100.000 loop =    3.08s
+Computing SnapWave at t =     1201.4 s took   5.56 seconds
+Snapwave: iter =      3 %ok =    100.000 loop =    3.77s
+Computing SnapWave at t =     1800.9 s took   6.55 seconds
+Snapwave: iter =      2 %ok =    100.000 loop =    2.98s
+Computing SnapWave at t =     2402.4 s took   5.27 seconds
+Snapwave: iter =      2 %ok =    100.000 loop =    3.59s
+Computing SnapWave at t =     3003.0 s took   5.91 seconds
+Snapwave: iter =      2 %ok =    100.000 loop =    4.11s
+Computing SnapWave at t =     3602.3 s took   6.64 seconds
