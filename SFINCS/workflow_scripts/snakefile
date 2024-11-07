@@ -44,19 +44,23 @@ rule add_forcing:
     shell:
         'hydromt update sfincs {params.dir_run} -i {params.forcing_yml} -v'
 
-rule add_batchfile:
-    input:
-        bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
-    params:
-        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}"
-    output:
-        ("{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat")
-    script:
-        'add_batchfile.py'
+# rule - check the inp file? for e.g: formatting in linux
+
+
+# rule add_batchfile:
+#     input:
+#         bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
+#     params:
+#         dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}"
+#     output:
+#         ("{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat")
+#     script:
+#         'add_batchfile.py'
 
 rule run_sfincs_model:
     input:
-        batchfile = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
+#        batchfile = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
+        bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs"
     params:
         dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
         currentdir = curdir
@@ -64,7 +68,9 @@ rule run_sfincs_model:
         mapout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
         hisout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"     
     shell:
+        '''
+        docker image ls 
+        docker run --mount src={params.dir_run},target=/data,type=bind deltares/sfincs-cpu:sfincs-v2.0.3-Cauberg sfincs
+        '''
 #        '(cd {params.dir_run} && run_sfincs.bat) ||
-        'cd {params.currentdir} && run_sfincs_job_h7.sh {params.dir_run}'
-
-
+#        'cd {params.currentdir} && run_sfincs_job_h7.sh {params.dir_run}'
