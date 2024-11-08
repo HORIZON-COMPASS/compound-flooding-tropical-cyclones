@@ -2,7 +2,7 @@ meta:
   root: c:\CODE\COMPASS
 TAMSAT_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\Whole_MZ\01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
+  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -22,7 +22,7 @@ TAMSAT_Idai:
   crs: 4326
 ERA5land_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp.nc
+  path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp_long.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -1818,6 +1818,38 @@ hydro_reservoirs:
     notes: GRanD.v1.1_HydroLAKES.v10_JRC.2016
     source_author: Alessia Matano
     source_version: 1.0
+  crs: 4326
+isimip_TC_rain_er11_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
+  driver: netcdf
+  rename:
+    rain: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: cut to the region and corrected latitudes
+    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
+    paper_ref: Vogt (2024); Frieler et al. (2024)
+    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
+    source_url: https://data.isimip.org/files/bee34b58-e554-4064-aead-f10064796d6b/
+  crs: 4326
+isimip_TC_rain_h08_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
+  driver: netcdf
+  rename:
+    rain: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: cut to the region and corrected latitudes 
+    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
+    paper_ref: Vogt (2024); Frieler et al. (2024)
+    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
+    source_url: https://data.isimip.org/files/86726b5f-c1ae-4146-ad2c-678820d8c523/
   crs: 4326
 koppen_geiger:
   data_type: RasterDataset
