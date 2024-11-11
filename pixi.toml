@@ -7,7 +7,7 @@ authors = [
     'Anais Couasnon <anais.couasnon@deltares.nl>',
     'Doris Vertegaal <doris.Vertegaal@deltares.nl>',
 ]
-channels = ["conda-forge"]
+channels = ["conda-forge", "bioconda"]
 platforms = ["win-64"]
 readme = "README.md"
 license = "MIT"
@@ -43,9 +43,12 @@ cht-cyclones = ">=0.0.1, <0.0.2"
 [feature.dfm.pypi-dependencies]
 dfm-tools = ">=0.31.0"
 
+[feature.snakemake.dependencies]
+snakemake = "*"
+
 [environments]
 default = { features = ["py311"]}
-compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
+compass-sfincs = { features = ["py311", "sfincs","dataviz","snakemake"]}
 compass-dfm = { features = ["py311","dfm"]}
 compass-cht = { features = ["py311","cht"]}
 

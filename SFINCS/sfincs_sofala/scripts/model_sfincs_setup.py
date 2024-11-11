@@ -22,12 +22,14 @@ from hydromt_sfincs import SfincsModel
 
 bbox = [34.33,-20.12,34.95,-19.30] # Sofala region 
 model_res = 100 # resolution
-datacat = os.path.join('..','..','datacatalog.yml')
-modelname = 'sfincs_sofala_test_with_spw2'
-coupling_mask = 'coastal_coupling_msk_v2'
+datacat_general = os.path.join('..','..','datacatalog_general.yml')
+datacat_coastal_coupling = os.path.join('..','..','datacatalog_SFINCS_coastal_coupling.yml')
+datacat_obspoints = os.path.join('..','..','datacatalog_SFINCS_obspoints.yml')
+modelname = 'sfincs_MZ_TAMSAT'
+coupling_mask = 'coastal_coupling_msk_MZB'
 model_res = 100 #By defaulft
 
-data_catalog  = hydromt.DataCatalog(data_libs = [datacat]) #To correct for the location of the GTSM data
+data_catalog  = hydromt.DataCatalog(data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
 root_folder  = os.path.join('..','computations',modelname)
@@ -40,7 +42,7 @@ logger = setuplog(logger_name, log_level=10)
 sf = SfincsModel(
     root=root_folder,
     mode="w+",
-    data_libs = [datacat],
+    data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints],
     logger=logger,
 )
 
@@ -80,7 +82,7 @@ _ = sf.plot_basemap(variable='msk', bmap='sat')
 # %% Assigning the waterlevel downstream boundary condition
 sf.setup_mask_bounds(btype = 'waterlevel',
                      zmin = -10,
-                     #zmax = 1,
+                    #  zmax = -1,
                      include_mask = 'osm_coastlines',
                      include_mask_buffer = 200, 
                      reset_bounds = True)
@@ -187,7 +189,7 @@ sf.setup_config(**model_time_config)
 
 #%% Set up rainfall forcing from ERA5
 sf.setup_precip_forcing_from_grid(
-    precip='era5_hourly',
+    precip='TAMSAT_Idai',
     aggregate=False
 )
 
@@ -203,7 +205,7 @@ sf.setup_precip_forcing_from_grid(
 # )
 
 # Set up spiderweb forcing
-spwfile = r'p:\11210471-001-compass\02_Models\Delft3DFM\mozambique_model\boundary_conditions\meteo\TC\tc_IDAI_2019063S18038.spw'
+spwfile = r'p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw'
 shutil.copyfile(spwfile, os.path.join(root_folder,os.path.basename(spwfile)))
 spw_forcing_config = {
     "spwfile": os.path.basename(spwfile),

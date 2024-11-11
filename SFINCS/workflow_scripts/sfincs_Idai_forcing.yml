@@ -11,13 +11,19 @@ setup_config:
   tstop: 20190325 060000
   dtout: 3600
   dthisout: 3600
-  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038_ext9d.spw
-  storemeteo: 1
+  # spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038_ext9d.spw
+  # storemeteo: 1
   utmzone: 36s
 
 setup_precip_forcing_from_grid:
   precip: era5_hourly
   aggregate: False
+
+setup_wind_forcing_from_grid:
+  wind: era5_hourly
+
+setup_pressure_forcing_from_grid:
+  press: era5_hourly
 
 setup_waterlevel_forcing:
   geodataset: dfm_output_MZB_Idai
