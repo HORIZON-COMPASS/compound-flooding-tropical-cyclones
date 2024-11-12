@@ -7,6 +7,7 @@ from pathlib import Path
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import shutil
+import pandas as pd
 
 #%%
 # Define output folder and model name
@@ -149,5 +150,36 @@ fiat_model.write()
 #%%
 fiat_model_new = FiatModel(root=model_folder, mode="r", data_libs=[data_catalog], logger=logger)
 fiat_model_new.read()
-# %%
+
+#%% Some bug fixes to make the model run
+# First for the buildings file
+# Load the GeoPackage file
+gdf = gpd.read_file(f'{model_folder}/exposure/buildings.gpkg')
+
+# Rename the 'Object ID' column to 'object_id'
+gdf.rename(columns={'Object ID': 'object_id'}, inplace=True)
+
+# Save the changes back to the file
+gdf.to_file(f'{model_folder}/exposure/buildings.gpkg', driver="GPKG")
+
+
+# And secondly for the exposure csv file
+# Load the CSV file
+df = pd.read_csv(f"{model_folder}/exposure/exposure.csv")
+
+# Rename columns
+df = df.rename(columns={
+    "Object ID": "object_id",
+    "Primary Object Type": "primary_object_type",
+    "Secondary Object Type": "secondary_object_type",
+    "Max Potential Damage: Total": "max_damage_total",
+    "Ground Floor Height": "ground_flht",
+    "Extraction Method": "extract_method",
+    "Ground Elevation": "ground_elevtn",
+    "Damage Function: Total": "fn_damage_total"
+})
+
+# Save the updated DataFrame to a new CSV
+df.to_csv(f"{model_folder}/exposure/exposure.csv", index=False)
+#%%
 # To run the model, use the "execute_fiat_example.ipynb" script
