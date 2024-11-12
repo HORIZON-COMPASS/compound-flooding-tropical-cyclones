@@ -7,7 +7,7 @@ These scripts are based on the online examples of HydroMT-FIAT and Delft-FIAT
 HydroMT-FIAT: https://deltares.github.io/hydromt_fiat/latest/index.html
 Delft-FIAT: https://deltares.github.io/Delft-FIAT/stable/
 
-## First, install the hydromt-fiat-dev-compass and fiat-dev-compass environments from Pixi:
+## First, install the compass-fiat-hydromt and compass-fiat environments from Pixi:
 * install pixi on your computer: open Windows PowerShell, and run (source: https://pixi.sh/latest/):
 `iwr -useb https://pixi.sh/install.ps1 | iex`
 * Navigate to your repository folder in PowerShell (e.g., C:/COMPASS/)
