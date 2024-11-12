@@ -70,8 +70,8 @@ unit = "meters"
 crs = "EPSG:4326"
 
 # Set up hazard parameters
-path_map = (Path(os.path.abspath("")).resolve().parent / "data" / "floodmap_example" / "floodmap.tif")
-crs_flood = "EPSG:32736"    # original crs
+path_map = (Path(os.path.abspath("")).resolve().parent / "data" / "floodmap_example" / "floodmap.tif") # change this to your own floodmap
+crs_flood = "EPSG:32736"    # original crs of floodmap
 map_type = "max_depth"
 # not sure about vertical ref but the default "datum" does not give different result than "DEM"
 
