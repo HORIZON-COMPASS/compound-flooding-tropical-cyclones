@@ -52,10 +52,6 @@ country = "Mozambique"
 # region = gpd.GeoDataFrame.from_features(area_of_interest, crs="EPSG:4326")
 
 #%%
-# Save the GeoDataFrame as GeoJSON
-region.to_file("region.geojson", driver='GeoJSON')
-
-#%%
 ### Setup vulnerability parameters ###
 vulnerability_fn = "jrc_vulnerability_curves"
 vulnerability_identifiers_and_linking_fn = "jrc_vulnerability_curves_linking"
