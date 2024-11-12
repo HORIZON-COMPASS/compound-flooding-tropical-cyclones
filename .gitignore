@@ -12,9 +12,11 @@ __pycache__/
 # Model data
 Delft3DFM/mozambique_model/computations
 SFINCS/sfincs_sofala/computations
+DelftFIAT/computations
 Delft3DFM/mozambique_model/results
 SFINCS/sfincs_sofala/results
 SFINCS/workflow_scripts/.snakemake
+DelftFIAT/scripts/cache
 
 # Distribution / packaging
 .Python
