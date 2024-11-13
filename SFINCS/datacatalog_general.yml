@@ -1,25 +1,5 @@
 meta:
   root: c:\CODE\COMPASS
-TAMSAT_Idai:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 160
-      longitude: 150
-      time: 30
-    combine: by_coords
-    decode_times: true
-    parallel: true
-  rename:
-    rfe_filled: precip 
-    lat: latitude
-    lon: longitude   
-  meta:
-    category: meteo
-    notes: TAMSAT data 
-  crs: 4326
 ERA5land_Idai:
   data_type: RasterDataset
   path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp_long.nc
@@ -142,6 +122,32 @@ chirps:
     precipitation: precip
   unit_add:
     time: 86400
+  meta:
+    category: meteo
+    paper_doi: 10.1038/sdata.2015.66
+    paper_ref: Funk et al (2015)
+    source_license: CC
+    source_url: https://www.chc.ucsb.edu/data/chirps
+    source_version: v2.0
+  crs: 4326
+chirps_hourly:
+  data_type: RasterDataset
+  path: p:\wflow_global\hydromt\meteo\chirps_africa_daily_v2.0\CHIRPS_rainfall_{year}.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 160
+      lon: 150
+      time: 20
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  unit_add:
+    time: 86400
+  unit_mult:
+    precip: 0.04166667 # 1/24 to correct from daily to hourly
   meta:
     category: meteo
     paper_doi: 10.1038/sdata.2015.66
@@ -1821,7 +1827,7 @@ hydro_reservoirs:
   crs: 4326
 isimip_TC_rain_er11_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_2019063S18038.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -1835,14 +1841,50 @@ isimip_TC_rain_er11_Idai:
     source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
     source_url: https://data.isimip.org/files/bee34b58-e554-4064-aead-f10064796d6b/
   crs: 4326
-isimip_TC_rain_h08_Idai:
+isimip_TC_rain_er11_Idai_hourly:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_2019063S18038.nc
   driver: netcdf
   rename:
     rain: precip 
     lat: latitude
     lon: longitude   
+  unit_mult:
+    precip: 0.333333 # 1/3 to correct from 3-hourly to hourly
+  meta:
+    category: meteo
+    notes: cut to the region and corrected latitudes
+    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
+    paper_ref: Vogt (2024); Frieler et al. (2024)
+    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
+    source_url: https://data.isimip.org/files/bee34b58-e554-4064-aead-f10064796d6b/
+  crs: 4326
+isimip_TC_rain_h08_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_2019063S18038.nc
+  driver: netcdf
+  rename:
+    rain: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: cut to the region and corrected latitudes 
+    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
+    paper_ref: Vogt (2024); Frieler et al. (2024)
+    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
+    source_url: https://data.isimip.org/files/86726b5f-c1ae-4146-ad2c-678820d8c523/
+  crs: 4326
+isimip_TC_rain_h08_Idai_hourly:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_2019063S18038.nc
+  driver: netcdf
+  rename:
+    rain: precip 
+    lat: latitude
+    lon: longitude 
+  unit_mult:
+    precip: 0.333333 # 1/3 to correct from 3-hourly to hourly  
   meta:
     category: meteo
     notes: cut to the region and corrected latitudes 
@@ -2740,8 +2782,44 @@ TAMSAT_Idai:
   data_type: RasterDataset
   path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
   driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
   rename:
-    rfe_filled: precip
+    rfe_filled: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
+    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
+    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
+    source_license: https://creativecommons.org/licenses/by/4.0/
+    source_url: https://research.reading.ac.uk/tamsat/data-access/
+  crs: 4326
+TAMSAT_Idai_hourly:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    rfe_filled: precip 
+    lat: latitude
+    lon: longitude  
+  unit_mult:
+    precip: 0.04166667 # 1/24 to correct from daily to hourly
   meta:
     category: meteo
     notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
