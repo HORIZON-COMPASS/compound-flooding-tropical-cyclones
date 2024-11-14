@@ -1,15 +1,8 @@
 meta:
-<<<<<<< HEAD
-  root: c:\CODE\COMPASS
+  root: /p/
 obs_points_sofala:
   data_type: GeoDataFrame
-  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_sofala.geojson
-=======
-  root: p:\
-obs_points_sofala:
-  data_type: GeoDataFrame
-  path: 11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_sofala.geojson
->>>>>>> origin/sfincs-workflow-setup-dev
+  path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson
   driver: vector
   meta:
     category: geography
@@ -21,11 +14,7 @@ obs_points_sofala:
   crs: 3036
 obs_points_Freddy1:
   data_type: GeoDataFrame
-<<<<<<< HEAD
-  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy1.geojson
-=======
-  path: 11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy1.geojson
->>>>>>> origin/sfincs-workflow-setup-dev
+  path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy1.geojson
   driver: vector
   meta:
     category: geography
@@ -37,11 +26,7 @@ obs_points_Freddy1:
   crs: 3036
 obs_points_Freddy2:
   data_type: GeoDataFrame
-<<<<<<< HEAD
-  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy2.geojson
-=======
-  path: 11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy2.geojson
->>>>>>> origin/sfincs-workflow-setup-dev
+  path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy2.geojson
   driver: vector
   meta:
     category: geography
@@ -53,11 +38,7 @@ obs_points_Freddy2:
   crs: 3036
 obs_points_Kenneth:
   data_type: GeoDataFrame
-<<<<<<< HEAD
-  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Kenneth.geojson
-=======
-  path: 11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Kenneth.geojson
->>>>>>> origin/sfincs-workflow-setup-dev
+  path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Kenneth.geojson
   driver: vector
   meta:
     category: geography

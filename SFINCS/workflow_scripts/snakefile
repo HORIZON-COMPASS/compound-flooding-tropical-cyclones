@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### Import some useful python library
 import os
 #import shutil
@@ -34,10 +35,46 @@ rule make_base_model:
     shell:
         '''
         hydromt build sfincs {dir_run} --region "{{{arg_bbox}}}" -i sfincs_base_build.yml --force-overwrite -v && del {rmfile}
+=======
+### Import some useful python libraries
+import os
+from snakemake.io import Wildcards
+
+# Parsing the config file
+dir_run = config['dir_runs']
+platform = config['platform']
+
+curdir = os.getcwd()
+
+#if platform=='win':
+#    batfile = 
+
+def get_argbbox(wildcards):
+    arg_bbox = "{" + "'bbox': "+ config['bbox'] + "}"
+    return arg_bbox
+
+rule all:
+    input:
+        expand(("{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc"), dir_allruns=config['dir_runs'], runname=config['runname']),
+        expand(("{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"), dir_allruns=config['dir_runs'], runname=config['runname'])
+
+rule make_base_model:
+    params:
+        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
+        rmfile = "{dir_allruns}"+"/sfincs_"+"{runname}/"+"hydromt_data.yml",
+        arg_bbox = get_argbbox
+    output: 
+        msk_file = "{dir_allruns}"+"/sfincs_{runname}"+"/sfincs.msk"
+    shell:
+        '''
+        hydromt build sfincs {params.dir_run} --region "{params.arg_bbox}" -i sfincs_base_build.yml --force-overwrite -v 
+        del {params.rmfile} || rm {params.rmfile}
+>>>>>>> origin/sfincs-workflow-setup-dev
         '''
 
 rule add_forcing:
     input:
+<<<<<<< HEAD
         os.path.join(dir_run,"sfincs.msk")
     output:
         os.path.join(dir_run,"sfincs.bzs")
@@ -62,3 +99,44 @@ rule run_sfincs_model:
         os.path.join(dir_run,"sfincs_his.nc")        
     shell:
         'cd {dir_run} && run_sfincs.bat'
+=======
+        msk_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.msk"
+    params:
+        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
+        forcing_yml = "sfincs_"+"{runname}"+"_forcing.yml"
+    output:
+        bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
+    shell:
+        'hydromt update sfincs {params.dir_run} -i {params.forcing_yml} -v'
+
+# rule - check the inp file? for e.g: formatting in linux
+
+
+# rule add_batchfile:
+#     input:
+#         bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
+#     params:
+#         dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}"
+#     output:
+#         ("{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat")
+#     script:
+#         'add_batchfile.py'
+
+rule run_sfincs_model:
+    input:
+#        batchfile = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
+        bzs_file = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs.bzs"
+    params:
+        dir_run = "{dir_allruns}"+"/sfincs_"+"{runname}",
+        currentdir = curdir
+    output:
+        mapout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
+        hisout = "{dir_allruns}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"     
+    shell:
+        '''
+        docker image ls 
+        docker run --mount src={params.dir_run},target=/data,type=bind deltares/sfincs-cpu:sfincs-v2.0.3-Cauberg sfincs
+        '''
+#        '(cd {params.dir_run} && run_sfincs.bat) ||
+#        'cd {params.currentdir} && run_sfincs_job_h7.sh {params.dir_run}'
+>>>>>>> origin/sfincs-workflow-setup-dev
