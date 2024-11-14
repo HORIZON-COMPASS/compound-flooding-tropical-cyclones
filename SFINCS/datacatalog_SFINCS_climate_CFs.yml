@@ -1,0 +1,21 @@
+meta:
+  root: c:\CODE\COMPASS
+ERA5land_Idai_CF7%:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\ERA5_land\era5_land_idai_CF_7%.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    tp: precip
+    valid_time: time
+  meta:
+    category: meteo
+    notes: ERA5 land data for precipitation with units converted in hourly rate and mm
+  crs: 4326
