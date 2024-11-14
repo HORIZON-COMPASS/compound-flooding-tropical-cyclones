@@ -25,14 +25,15 @@ model_res = 100 # resolution
 datacat_general = os.path.join('..','..','datacatalog_general.yml')
 datacat_coastal_coupling = os.path.join('..','..','datacatalog_SFINCS_coastal_coupling.yml')
 datacat_obspoints = os.path.join('..','..','datacatalog_SFINCS_obspoints.yml')
-modelname = 'sfincs_MZ_TAMSAT'
+datacat_clim_CFs = os.path.join('..','..','datacatalog_SFINCS_climate_CFs.yml')
+modelname = 'sfincs_MZ_ERA5Land_CF7%_compd'
 coupling_mask = 'coastal_coupling_msk_MZB'
 model_res = 100 #By defaulft
 
-data_catalog  = hydromt.DataCatalog(data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints]) #To correct for the location of the GTSM data
+data_catalog  = hydromt.DataCatalog(data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints, datacat_clim_CFs]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','computations',modelname)
+root_folder  = os.path.join('..','..','..','..','..','sfincs_models','counterfactuals',modelname)
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
@@ -42,7 +43,7 @@ logger = setuplog(logger_name, log_level=10)
 sf = SfincsModel(
     root=root_folder,
     mode="w+",
-    data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints],
+    data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints, datacat_clim_CFs],
     logger=logger,
 )
 
@@ -181,7 +182,7 @@ sf.setup_cn_infiltration(
 model_time_config = {
     "tref": "20190309 000000", #FILL IN THE REFERENCE TIME (can be any date)
     "tstart": "20190309 000000", #FILL IN THE START TIME OF THE SIMULATION
-    "tstop": "20190319 060000", #FILL IN THE END TIME OF THE SIMULATION
+    "tstop": "20190323 060000", #FILL IN THE END TIME OF THE SIMULATION
     "dtout": 3600, #FILL IN THE TIMESTEP OF THE MAP OUTPUT
     "dthisout" : 3600, #FILL IN THE TIMESTEP OF THE SCALAR OUTPUT
 }
@@ -189,30 +190,30 @@ sf.setup_config(**model_time_config)
 
 #%% Set up rainfall forcing from ERA5
 sf.setup_precip_forcing_from_grid(
-    precip='TAMSAT_Idai',
+    precip='ERA5land_Idai_CF7%',
     aggregate=False
 )
 
 
 #%% Set up wind forcing from ERA5
-# sf.setup_wind_forcing_from_grid(
-#     wind = 'era5_hourly'
-# )
+sf.setup_wind_forcing_from_grid(
+    wind = 'era5_hourly'
+)
 
 #%% Set up pressure forcing from ERA5
-# sf.setup_pressure_forcing_from_grid(
-#    press='era5_hourly'
-# )
+sf.setup_pressure_forcing_from_grid(
+   press='era5_hourly'
+)
 
 # Set up spiderweb forcing
-spwfile = r'p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw'
-shutil.copyfile(spwfile, os.path.join(root_folder,os.path.basename(spwfile)))
-spw_forcing_config = {
-    "spwfile": os.path.basename(spwfile),
-    "storemeteo": 1,
-    "utmzone": '36s',
-}
-sf.setup_config(**spw_forcing_config)
+# spwfile = r'p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw'
+# shutil.copyfile(spwfile, os.path.join(root_folder,os.path.basename(spwfile)))
+# spw_forcing_config = {
+#     "spwfile": os.path.basename(spwfile),
+#     "storemeteo": 1,
+#     "utmzone": '36s',
+# }
+# sf.setup_config(**spw_forcing_config)
 
 #%% Set up coastal water level forcing
 # change to locations and timeseries
