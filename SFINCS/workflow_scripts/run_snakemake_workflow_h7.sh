@@ -1,16 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
-#SBATCH --output=output_log.log     # Standard output and error log
+#SBATCH --output=output_log_%j.log     # Standard output and error log
 #SBATCH --time=0-0:30:00 #0-2:00:00           # Job duration (hh:mm:ss)
 #SBATCH --partition test #4vcpu
+#SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
-##SBATCH --mail-user=natalia.aleksandrova@deltares.nl
-##SBATCH --mail-type=ALL
 
 module load pixi
 
 #Going to the folder where git checkout is
-ROOT="/p/11210471-001-compass/02_Models/workflow_test/COMPASS"
+ROOT="/u/aleksand/COMPASS"
 cd "${ROOT}"
 
 # Installing pixi environment

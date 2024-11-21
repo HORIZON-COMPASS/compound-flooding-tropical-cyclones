@@ -1,7 +1,8 @@
 meta:
-  roots:
-    - /p/
-    - p:/
+  root: /p/
+# roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
+#    - /p/  
+#    - p:/
 TAMSAT_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/TAMSAT/Idai/Whole_MZ/01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
@@ -1086,7 +1087,7 @@ gebco_v2020:
   crs: 4326
 gebco_v2024:
   data_type: RasterDataset
-  path: p:/11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
   driver: raster
   driver_kwargs:
     chunks:
@@ -2813,7 +2814,7 @@ vito_2019_v3.0.1:
 vito_mapping:
   data_type: DataFrame
   provider: user
-  path: p:/11210471-001-compass/01_Data/lulc/vito_mapping.csv
+  path: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0

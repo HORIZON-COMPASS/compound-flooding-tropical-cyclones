@@ -3,6 +3,8 @@
 
 
 dir_runs:    ../sfincs_sofala/computations
+dir_spw:     /p/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
+file_spw:   tc_IDAI_2019063S18038_ext9d.spw
 
 runname: "Idai"
 bbox: "[34.33,-20.12,34.95,-19.30]"

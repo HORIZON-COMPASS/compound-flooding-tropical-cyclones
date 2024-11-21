@@ -1,7 +1,8 @@
 meta:
-  roots:
-    - /p/
-    - p:/
+  root: /p/
+# roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
+#    - /p/  
+#    - p:/
 obs_points_sofala:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson

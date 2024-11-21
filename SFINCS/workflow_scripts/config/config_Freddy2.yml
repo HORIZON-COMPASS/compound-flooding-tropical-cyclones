@@ -3,6 +3,8 @@
 
 
 dir_runs:    ../sfincs_sofala/computations
+dir_spw:     /p/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
+file_spw:   tc_FREDDY_2023061S22036_ext9d.spw
 
 runname: "Freddy2"
 bbox: "[36.7,-18.35,37.41,-17.64]"
