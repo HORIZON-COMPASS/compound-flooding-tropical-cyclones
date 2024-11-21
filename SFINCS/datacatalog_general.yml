@@ -1028,6 +1028,13 @@ gdp_world:
     source_license: CC BY-4.0
     source_version: 1.0
   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 gdp_world_v1:
   data_type: GeoDataFrame
   path: wflow_global\hydromt\socio_economic\gdp_world\World_countries_GDPpcPPP.fgb
