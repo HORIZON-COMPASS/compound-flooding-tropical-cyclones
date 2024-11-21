@@ -1,8 +1,10 @@
 meta:
-  root: p:\
+  roots:
+    - /p/
+    - p:/
 coastal_coupling_msk_MZB:
   data_type: GeoDataFrame
-  path: 11210471-001-compass\01_Data\Coastal_boundary\coastal_bnd_MZB_5mMSL_polygon.geojson
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
   driver: vector
   meta:
     category: geography
