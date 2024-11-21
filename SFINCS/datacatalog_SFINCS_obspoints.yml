@@ -1,4 +1,5 @@
 meta:
+<<<<<<< HEAD
   root: /p/
 # roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
 #    - /p/  
@@ -6,6 +7,12 @@ meta:
 obs_points_sofala:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson
+=======
+  root: c:\CODE\COMPASS
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_sofala.geojson
+>>>>>>> main
   driver: vector
   meta:
     category: geography
@@ -17,7 +24,11 @@ obs_points_sofala:
   crs: 3036
 obs_points_Freddy1:
   data_type: GeoDataFrame
+<<<<<<< HEAD
   path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy1.geojson
+=======
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy1.geojson
+>>>>>>> main
   driver: vector
   meta:
     category: geography
@@ -29,7 +40,11 @@ obs_points_Freddy1:
   crs: 3036
 obs_points_Freddy2:
   data_type: GeoDataFrame
+<<<<<<< HEAD
   path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy2.geojson
+=======
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Freddy2.geojson
+>>>>>>> main
   driver: vector
   meta:
     category: geography
@@ -41,7 +56,11 @@ obs_points_Freddy2:
   crs: 3036
 obs_points_Kenneth:
   data_type: GeoDataFrame
+<<<<<<< HEAD
   path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Kenneth.geojson
+=======
+  path: p:\11210471-001-compass\01_Data\sfincs_obs_points\obs_locs_Kenneth.geojson
+>>>>>>> main
   driver: vector
   meta:
     category: geography
