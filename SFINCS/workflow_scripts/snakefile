@@ -4,12 +4,8 @@ from snakemake.io import Wildcards
 
 # Parsing the config file
 dir_run = config['dir_runs']
-platform = config['platform']
 
 curdir = os.getcwd()
-
-#if platform=='win':
-#    batfile = 
 
 def get_argbbox(wildcards):
     arg_bbox = "{" + "'bbox': "+ config['bbox'] + "}"
