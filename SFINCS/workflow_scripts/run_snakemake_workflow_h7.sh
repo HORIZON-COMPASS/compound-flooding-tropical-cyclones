@@ -9,7 +9,7 @@
 module load pixi
 
 #Going to the folder where git checkout is
-ROOT="/u/aleksand/COMPASS"
+ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
 cd "${ROOT}"
 
 # Installing pixi environment
@@ -21,10 +21,10 @@ source hook.sh
 cd SFINCS/workflow_scripts
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile --configfile config/config_Idai.yml 
+snakemake --unlock -s snakefile_dict --configfile config/config_general.yml 
 
 # running workflow with snakemake
-snakemake --configfile config/config_Idai.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
-snakemake -s snakefile --configfile config/config_Idai.yml --cores 4 --rerun-triggers mtime 
+snakemake -s snakefile_dict --configfile config/config_general.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
+snakemake -n -s snakefile_dict --configfile config/config_general.yml --cores 4 --forcerun
 
 exit
