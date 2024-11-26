@@ -1,0 +1,35 @@
+global:
+  data_libs: 
+  - ..//datacatalog_general.yml    
+  - ..//datacatalog_SFINCS_coastal_coupling.yml             
+  - ..//datacatalog_SFINCS_obspoints.yml
+
+# set time of simulation
+setup_config:
+  tref: 20230221 000000
+  tstart: 20230221 000000
+  tstop: 20230305 060000
+  dtout: 3600
+  dthisout: 3600
+  spwfile: tc_FREDDY_2023036S12118_ext9d.spw
+  storemeteo: 1
+  utmzone: 36s
+
+setup_precip_forcing_from_grid:
+  precip: era5_hourly
+  aggregate: False
+
+setup_waterlevel_forcing:
+  geodataset: dfm_output_MZB_Freddy1
+  buffer: 1000
+  merge: False
+
+setup_observation_points:
+  locations: obs_points_Freddy1
+  merge: False
+
+
+# setup discharge
+
+
+          
