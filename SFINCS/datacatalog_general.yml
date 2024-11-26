@@ -5,11 +5,7 @@ meta:
 #    - p:/
 TAMSAT_Idai:
   data_type: RasterDataset
-<<<<<<< HEAD
-  path: 11210471-001-compass/01_Data/TAMSAT/Idai/Whole_MZ/01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
-=======
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
->>>>>>> main
+  path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -29,11 +25,7 @@ TAMSAT_Idai:
   crs: 4326
 ERA5land_Idai:
   data_type: RasterDataset
-<<<<<<< HEAD
-  path: 11210471-001-compass/01_Data/ERA5_land/units_corrected/era5land_tp.nc
-=======
-  path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp_long.nc
->>>>>>> main
+  path: 11210471-001-compass/01_Data/ERA5_land/units_corrected/era5land_tp_long.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -2749,11 +2741,7 @@ soilgrids_v2.0:
     source_version: 2020
 TAMSAT_Idai:
   data_type: RasterDataset
-<<<<<<< HEAD
   path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
-=======
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
->>>>>>> main
   driver: netcdf
   rename:
     rfe_filled: precip
