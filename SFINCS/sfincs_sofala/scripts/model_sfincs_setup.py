@@ -26,14 +26,17 @@ datacat_general = os.path.join('..','..','datacatalog_general.yml')
 datacat_coastal_coupling = os.path.join('..','..','datacatalog_SFINCS_coastal_coupling.yml')
 datacat_obspoints = os.path.join('..','..','datacatalog_SFINCS_obspoints.yml')
 datacat_clim_CFs = os.path.join('..','..','datacatalog_SFINCS_climate_CFs.yml')
-modelname = 'sfincs_MZ_ERA5Land_CF7%_compd'
+modelname = 'sfincs_MZ_coastal_MDT_noSLR'
+TC = 'Idai'
+scenario = 'counterfactuals' # counterfactuals or factuals
+CF_drivers = 'single_drivers' # or compound_drivers
 coupling_mask = 'coastal_coupling_msk_MZB'
 model_res = 100 #By defaulft
 
 data_catalog  = hydromt.DataCatalog(data_libs = [datacat_general, datacat_coastal_coupling, datacat_obspoints, datacat_clim_CFs]) #To correct for the location of the GTSM data
 
 #%% Specify root_folder and logger_name
-root_folder  = os.path.join('..','..','..','..','..','sfincs_models','counterfactuals',modelname)
+root_folder  = os.path.join('..','..','..','..','..','sfincs_models',TC,scenario,CF_drivers,modelname)
 logger_name = 'SFINCS_log_sofala'
 logger = setuplog(logger_name, log_level=10)
 
@@ -55,13 +58,13 @@ sf.setup_grid_from_region(
     crs='utm' # automatically the closest UTM zone is selected (unit is in meters), 
 )
 #%% Plot model region
-fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
+# fig, ax = sf.plot_basemap(plot_region=True,bmap='sat')
 
 # %% We follow the steps from the ini file from Dirk's paper (now called a yml file)
 sf.setup_dep(datasets_dep= [{'elevtn': 'merit_hydro', 'zmin': 0.001}, 
-                            {'elevtn': 'gebco_v2024', 'reproj_method': 'bilinear'}]) #'offset': 'mdt_cnes_cls18',
+                            {'elevtn': 'gebco_v2024', 'offset': 'mdt_cnes_cls18', 'reproj_method': 'bilinear'}]) #'offset': 'mdt_cnes_cls18',
 
-_ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
+# _ = sf.plot_basemap(variable='dep',bmap='sat', plot_region=True) #Plotting the outcome
 #%% We call osm - to be used later to define the waterlevel boundary conditions
 # gdf_include = sf.data_catalog.get_geodataframe(coupling_mask, bbox=bbox) # 'osm_coastlines' can also be used
 
@@ -79,7 +82,7 @@ sf.setup_mask_active(
     reset_mask = False
 )
 # Plot the mask. Using variable='msk' will display the mask values for the active cells.
-_ = sf.plot_basemap(variable='msk', bmap='sat')
+# _ = sf.plot_basemap(variable='msk', bmap='sat')
 # %% Assigning the waterlevel downstream boundary condition
 sf.setup_mask_bounds(btype = 'waterlevel',
                      zmin = -10,
@@ -88,7 +91,7 @@ sf.setup_mask_bounds(btype = 'waterlevel',
                      include_mask_buffer = 200, 
                      reset_bounds = True)
 # Inspect the updated mask. Mask value 2 means waterlevel boundary, mask value 3 means outflow boundary
-_ = sf.plot_basemap(variable='msk', bmap='sat')
+# _ = sf.plot_basemap(variable='msk', bmap='sat')
 
 #%% Setup river inflow and outflow
 river_inflow_kwargs = dict(
@@ -108,18 +111,18 @@ sf.setup_river_outflow(
                       river_width = 4e3,
                       keep_rivers_geom= True)
 
-sf.plot_basemap('basemap.png', bmap='sat')
+# sf.plot_basemap('basemap.png', bmap='sat')
 #Q: what means src in the plotted map? --> discharge points
 
 #%%
 # To check the river network interactively: 
 # Here we can see which segments are present in the river network
-sf.geoms['rivers_inflow'].explore()
+# sf.geoms['rivers_inflow'].explore()
 
 
 #%% We try to get the river bathymetry
-hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
-rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)
+# hydro = sf.data_catalog.get_rasterdataset('merit_hydro', bbox=bbox)
+# rivers = sf.data_catalog.get_geodataframe('rivers_lin2019_v1', bbox=bbox)
 #%%
 #We export it to check it
 # source_names=["merit_hydro", "rivers_lin2019_v1"]
@@ -166,10 +169,10 @@ sf.setup_subgrid(
 )
 
 # we can plot the 2D subgrid variables
-_ = sf.plot_basemap(variable="subgrid.z_zmin", plot_bounds=False, bmap="sat", zoomlevel=12)
+# _ = sf.plot_basemap(variable="subgrid.z_zmin", plot_bounds=False, bmap="sat", zoomlevel=12)
 
 # Use predefined plotting function 'plot_basemap' to show your full SFINCS model setup
-_ = sf.plot_basemap(fn_out="basemap.png", bmap="sat", zoomlevel=12)
+# _ = sf.plot_basemap(fn_out="basemap.png", bmap="sat", zoomlevel=12)
 
 #%% Infiltration data
 sf.setup_cn_infiltration(
@@ -189,10 +192,10 @@ model_time_config = {
 sf.setup_config(**model_time_config)
 
 #%% Set up rainfall forcing from ERA5
-sf.setup_precip_forcing_from_grid(
-    precip='ERA5land_Idai_CF7%',
-    aggregate=False
-)
+# sf.setup_precip_forcing_from_grid(
+    # precip='ERA5land_Idai_CF7%',
+    # aggregate=False
+# )
 
 
 #%% Set up wind forcing from ERA5
@@ -218,7 +221,8 @@ sf.setup_pressure_forcing_from_grid(
 #%% Set up coastal water level forcing
 # change to locations and timeseries
 sf.setup_waterlevel_forcing(
-    geodataset='dfm_output_MZB_Idai', 
+    geodataset='dfm_output_MZB_Idai_noSLR2015', 
+    offset = 'mdt_cnes_cls18',
     buffer=1000
 )
 
@@ -298,7 +302,7 @@ with open(os.path.join(root_folder, file_name), "w") as file:
     file.write(batch_content)
 # Now you can run the SFINCS model by opening the bat file on a windows computer
 
-#%% To reload a model already existing
+w#%% To reload a model already existing
 # logger = setuplog('SFINCS_log_sofala', log_level=20)
 # sf = SfincsModel(data_libs=['datacatalog.yml'], root=root_folder, mode='r', logger=logger)
 # sf.read()
