@@ -8,6 +8,7 @@ from hydromt_sfincs import SfincsModel, utils
 
 # We read the snakemake parameters
 mapfile = snakemake.input.mapfile
+hisfile = snakemake.input.hisfile
 outfile = snakemake.output.figure
 dir_run = snakemake.params.dir_run
 datacat = snakemake.params.datacat
@@ -20,14 +21,14 @@ datacat = snakemake.params.datacat
 print("------- Checking what we got ------")
 print("Model run directory: ", dir_run)
 print("mapfile: ", mapfile)
-print("Output figure: ", outfile)
+print("Output figure basemap: ", outfile)
 
 # select the model and datacatalog
 sfincs_root = dir_run
 mod = SfincsModel(sfincs_root, mode="r")
 
-#mod.data_catalog.from_yml(datacat)
-mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
+mod.data_catalog.from_yml(datacat)
+#mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
 
 # select our highest-resolution elevation dataset
 depfile = join(sfincs_root, "subgrid", "dep_subgrid.tif")
@@ -41,7 +42,7 @@ mod.read_results()
 
 ### PLOT BASEMAP
 fig, ax = mod.plot_basemap(
-    fn_out=os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_basemap.png'), 
+    fn_out=os.path.join(os.path.abspath(os.path.dirname(outfile)),os.path.basename(outfile)), 
     plot_geoms=True, 
     figsize=(8, 6))
 
@@ -84,7 +85,7 @@ fig, ax = mod.plot_basemap(
 tstart = np.datetime_as_string(mod.results['zs'].time.values[0],'m').replace('T',' ')
 tend = np.datetime_as_string(mod.results['zs'].time.values[-1],'m').replace('T',' ')
 ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
-fig.savefig(os.path.abspath(outfile.replace('.png',f'_{tstart}-{tend}.png')))
+fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
 
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
@@ -122,19 +123,18 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
     figname_ext = f'period_{tstart}_to_{tend}'
     for r in ((":", ""), (" ", "_"), ("-", "")):
         figname_ext = figname_ext.replace(*r)
-    fig.savefig(os.path.abspath(outfile).replace('.png',f'_{figname_ext}.png'))
+    fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.png'))
 
 
 ### PLOT TIMESERIES OUTPUT POINTS
 hisfile = os.path.join(dir_run,"sfincs_his.nc")
 ds_his = xr.open_dataset(hisfile)
 ds_his["station_id"] = ds_his["station_id"].astype(int)
-ds_his["point_h"] = ds_his["point_zs"] - ds_his["point_zb"]
 
 for ii,loc_id in enumerate(ds_his['station_id'].values):
     fig, ax = plt.subplots(1,1,figsize=(10,5))
-    ax.plot(ds_his.time,ds_his['point_h'].isel(stations=ii),color='r',label=f'')
+    ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
     ax.grid()
-    ax.set_title(f"Timeseries of water levels \n Location: {loc_id}, initial height: {ds_his['point_zb'].isel(stations=ii).values:.1f} m")
+    ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
     ax.set_ylabel("Inundation height [m]")
-    fig.savefig(os.path.abspath(outfile).replace('.png',f'_ts_loc_{loc_id}.png'))
+    fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))

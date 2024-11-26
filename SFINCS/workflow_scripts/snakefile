@@ -1,79 +1,55 @@
-<<<<<<< HEAD
 ### Import some useful python libraries
 import os
 from snakemake.io import Wildcards
 
 curdir = os.getcwd()
 
-def get_argbbox(wildcards):
-    arg_bbox = "{" + "'bbox': "+ config['bbox'] + "}"
+def get_bbox(wildcards):
+    prebbox = config["runname_ids"][wildcards.runname]["bbox"]
+    arg_bbox = "{" + "'bbox': "+ prebbox + "}"
     return arg_bbox
+
+def get_file_spw(wildcards):
+    return config["runname_ids"][wildcards.runname]["file_spw"]
+
+def get_path_spw_ori(wildcards):
+    file_spw = config["runname_ids"][wildcards.runname]["file_spw"]
+    path_spw_ori = config['dir_spw']+"/"+ file_spw
+    return path_spw_ori
+
+def get_path_spw_run(wildcards):
+    file_spw = config["runname_ids"][wildcards.runname]["file_spw"]
+    path_spw_run = config['dir_runs'] + "/sfincs_" + config["runname_ids"][wildcards.runname]["tc_name"] + "/"+ file_spw
+    return path_spw_run
+
+def get_datacatalog(wildcards):
+    return config['datacatalog']
 
 rule all:
     input:
-        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc"), dir_run=config['dir_runs'], runname=config['runname']), 
-        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"), dir_run=config['dir_runs'], runname=config['runname'])
+        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"), dir_run=config['dir_runs'], runname=config["runname_ids"])
 
 rule make_base_model:
     params:
         dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
         rmfile = "{dir_run}"+"/sfincs_"+"{runname}/"+"hydromt_data.yml",
-        arg_bbox = get_argbbox
+        arg_bbox = get_bbox
     output: 
         msk_file = "{dir_run}"+"/sfincs_{runname}"+"/sfincs.msk"
     shell:
         '''
-        hydromt build sfincs {params.dir_run} --region "{params.arg_bbox}" -i sfincs_base_build.yml --force-overwrite -v 
+        hydromt build sfincs {params.dir_run} --region "{params.arg_bbox}" -i config_sfincs/sfincs_base_build.yml --force-overwrite -v 
         del {params.rmfile} || rm {params.rmfile}
-=======
-### Import some useful python library
-import os
-#import shutil
-#import itertools
-#import numpy as np
-#from datetime import datetime
-#from snakemake.io import Wildcards
-
-
-#inputs
-runname = 'Idai'
-
-# determine input parameters
-if runname == 'Idai':
-    model = 'sfincs_test_Idai'
-    arg_bbox = "'bbox': [34.33,-20.12,34.95,-19.30]"   # TODO: how to streamline this?
-    forcing_yml = 'sfincs_Idai_forcing.yml'
-elif runname == 'Freddy2':
-    model = 'sfincs_test_Freddy2'
-    arg_bbox = "'bbox': [36.7,-18.35,37.41,-17.64]"   # TODO: how to streamline this?
-    forcing_yml = 'sfincs_Freddy2_forcing.yml'
-
-dir_run = os.path.join('..','sfincs_sofala','computations',model)
-rmfile = os.path.join(dir_run,'hydromt_data.yml')
-
-rule all:
-    input:
-        os.path.join(dir_run,"sfincs_map.nc"),
-        os.path.join(dir_run,"sfincs_his.nc")
-
-rule make_base_model:
-    output: 
-        os.path.join(dir_run,"sfincs.msk")
-    shell:
-        '''
-        hydromt build sfincs {dir_run} --region "{{{arg_bbox}}}" -i sfincs_base_build.yml --force-overwrite -v && del {rmfile}
->>>>>>> main
         '''
 
 rule add_forcing:
     input:
-<<<<<<< HEAD
         msk_file = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs.msk"
     params:
         dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
-        forcing_yml = "sfincs_"+"{runname}"+"_forcing.yml",
-        path_spw_ori = config['dir_spw']+"/"+config['file_spw'],
-        path_spw_run = "{dir_run}"+"/sfincs_"+"{runname}/"+config['file_spw']
+        forcing_yml = "config_sfincs/sfincs_"+"{runname}"+"_forcing.yml",
+        path_spw_ori = get_path_spw_ori,
+        path_spw_run = get_path_spw_run
     output:
         bzs_file = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
     shell:
@@ -111,29 +87,15 @@ rule run_sfincs_model:
         docker run --mount src={params.dir_run},target=/data,type=bind deltares/sfincs-cpu:latest sfincs
         '''
 #        '(cd {params.dir_run} && run_sfincs.bat)
-=======
-        os.path.join(dir_run,"sfincs.msk")
-    output:
-        os.path.join(dir_run,"sfincs.bzs")
-    shell:
-        'hydromt update sfincs {dir_run} -i {forcing_yml} -v'
 
-rule add_batchfile:
+rule sfincs_plot_floodmap:
     input:
-        os.path.join(dir_run,"sfincs.bzs")
+        mapfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
+        hisfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"
     params:
-        dir_run = dir_run
+        dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
+        datacat = get_datacatalog
     output:
-        os.path.join(dir_run,"run_sfincs.bat")
+        figure = "{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"  
     script:
-        'add_batchfile.py'
-
-rule run_sfincs_model:
-    input:
-        batchfile = os.path.join(dir_run,"run_sfincs.bat")
-    output:
-        os.path.join(dir_run,"sfincs_map.nc"),
-        os.path.join(dir_run,"sfincs_his.nc")        
-    shell:
-        'cd {dir_run} && run_sfincs.bat'
->>>>>>> main
+        "postprocess/sfincs_postprocess.py" 
