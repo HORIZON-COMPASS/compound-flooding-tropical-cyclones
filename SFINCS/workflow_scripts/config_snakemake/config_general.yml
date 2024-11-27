@@ -2,7 +2,7 @@
 
 
 
-dir_runs:    ../computations
+dir_runs:    /p/11210471-001-compass/computations/a_test
 dir_spw:     /p/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
 datacatalog: ../datacatalog_general.yml
 runname_ids: 
