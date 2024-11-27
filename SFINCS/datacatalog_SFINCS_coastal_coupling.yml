@@ -1,8 +1,11 @@
 meta:
-  root: c:\CODE\COMPASS
+  root: /p/
+# roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
+#    - /p/  
+#    - p:/
 coastal_coupling_msk_MZB:
   data_type: GeoDataFrame
-  path: p:\11210471-001-compass\01_Data\Coastal_boundary\coastal_bnd_MZB_5mMSL_polygon.geojson
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
   driver: vector
   meta:
     category: geography
@@ -14,7 +17,7 @@ coastal_coupling_msk_MZB:
   crs: 4326
 obs_points_sofala:
   data_type: GeoDataFrame
-  path: p:/11210471-001-compass/01_Data/obs_locs.geojson
+  path: 11210471-001-compass/01_Data/obs_locs.geojson
   driver: vector
   meta:
     category: geography
@@ -26,7 +29,7 @@ obs_points_sofala:
   crs: 4326
 dfm_output_MZB_Idai:
   data_type: GeoDataset
-  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Idai_area_MZB_500m_gebco2024/output/mozambique_spw_Idai_area_MZB_500m_gebco2024_0000_his.nc
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Idai_area_MZB_500m_gebco2024/output/mozambique_spw_Idai_area_MZB_500m_gebco2024_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -41,7 +44,7 @@ dfm_output_MZB_Idai:
   crs: 4326
 dfm_output_MZB_Kenneth:
   data_type: GeoDataset
-  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Kenneth_area_MZB_500m_gebco2024/output/mozambique_spw_Kenneth_area_MZB_500m_gebco2024_0000_his.nc
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Kenneth_area_MZB_500m_gebco2024/output/mozambique_spw_Kenneth_area_MZB_500m_gebco2024_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -56,7 +59,7 @@ dfm_output_MZB_Kenneth:
   crs: 4326
 dfm_output_MZB_Freddy1:
   data_type: GeoDataset
-  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy1_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy1_area_MZB_500m_gebco2024_0000_his.nc
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy1_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy1_area_MZB_500m_gebco2024_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -71,7 +74,7 @@ dfm_output_MZB_Freddy1:
   crs: 4326
 dfm_output_MZB_Freddy2:
   data_type: GeoDataset
-  path: p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy2_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy2_area_MZB_500m_gebco2024_0000_his.nc
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy2_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy2_area_MZB_500m_gebco2024_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
