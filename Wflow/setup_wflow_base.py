@@ -14,13 +14,14 @@ yml_file = "wflow_build_sofala.yml"
 opt = configread(yml_file, abs_path=True)  # read settings from ini file
 kwargs = opt.pop("global", {})
 model_root = "wflow_sofala"
-bbox = [36.7,-18.35,37.41,-17.64]
+bbox = [36.68,-18.35,37.41,-17.64]
+data_cat = r'c:\Git_repos\COMPASS\SFINCS\datacatalog_general.yml'
 
 mod = WflowModel(
-    root=model_root, data_libs=["deltares_data"], mode="w+", logger=logger, **kwargs
+    root=model_root, data_libs=[data_cat], mode="w+", logger=logger, **kwargs
 )
 
 # %% BUILD MODEL
-mod.build(region={"basin": bbox, "outlets": True}, opt=opt)
+mod.build(region={"basin": r"c:\Git_repos\COMPASS\SFINCS\sfincs_sofala\computations\sfincs_CLI_Freddy2\gis\region.geojson"}, opt=opt)
 
 # %%
