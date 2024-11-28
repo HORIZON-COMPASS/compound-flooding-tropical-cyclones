@@ -1,5 +1,5 @@
 setup_config:                 # options parsed to wflow ini file <section>.<option>
-  starttime: "2023-01-01T00:00:00"
+  starttime: "2023-03-01T00:00:00"
   endtime: "2023-03-31T00:00:00"
   timestepsecs: 3600
   input.path_forcing: inmaps.nc

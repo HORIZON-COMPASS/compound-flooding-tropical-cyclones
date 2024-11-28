@@ -45,7 +45,7 @@ setup_outlets:
 setup_gauges:
   gauges_fn: "../SFINCS/sfincs_sofala/computations/sfincs_CLI_Freddy2/gis/src.geojson"  # placeholder for gauges vector file
   snap_to_river: True
-  snap_uparea: True
+  snap_uparea: False
   derive_subcatch: False
   index_col: index
   basename: locs
