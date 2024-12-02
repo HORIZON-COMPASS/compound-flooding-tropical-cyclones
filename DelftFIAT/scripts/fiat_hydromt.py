@@ -11,12 +11,12 @@ import pandas as pd
 
 #%%
 # Define output folder and model name
-model_root = "computations"  # where to save the FIAT model
-model_name = "example" # name of the case study
+# model_root = "computations"  # where to save the FIAT model
+model_name = "sfincs_idai_test" # name of the case study
 
 #%%
 # Set up data catalog and hydromt logger
-model_folder = (Path(os.path.abspath("")).resolve().parent / model_root / model_name)  # path to model folder
+model_folder = (Path(os.path.join("p:/11210471-001-compass/03_Runs/FIAT/", model_name)))  # path to model folder
 data_catalog = (Path(os.path.abspath("")).resolve().parent / "hydromt_fiat_catalog_global.yml") # path to data catalog
 logger_name = "hydromt_fiat"  # name of the logger
 logger = setuplog(logger_name, log_level=10) # setup logger
@@ -67,7 +67,7 @@ unit = "meters"
 crs = "EPSG:4326"
 
 # Set up hazard parameters
-path_map = (Path(os.path.abspath("")).resolve().parent / "data" / "floodmap_example" / "floodmap.tif") # change this to your own floodmap
+path_map = (r"p:\11210471-001-compass\03_Runs\sfincs_Idai\gis\floodmap_masked.tif") # change this to your own floodmap
 crs_flood = "EPSG:32736"    # original crs of floodmap
 map_type = "max_depth"
 # not sure about vertical ref but the default "datum" does not give different result than "DEM"
