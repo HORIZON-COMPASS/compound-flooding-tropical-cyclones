@@ -12,12 +12,18 @@ pixi.lock
 
 # Model data
 Delft3DFM/mozambique_model/computations
-SFINCS/sfincs_sofala/computations
 DelftFIAT/computations
-Delft3DFM/mozambique_model/results
-SFINCS/sfincs_sofala/results
-SFINCS/workflow_scripts/.snakemake
 DelftFIAT/scripts/cache
+SFINCS/computations
+Delft3DFM/mozambique_model/results
+SFINCS/results
+SFINCS/workflow_scripts/.snakemake
+SFINCS/workflow_scripts/.nfs*
+SFINCS/workflow_scripts/test_*
+SFINCS/workflow_scripts/dag.png
+SFINCS/workflow_scripts/*.dot
+SFINCS/workflow_scripts/hook.sh
+hook.sh
 
 # Distribution / packaging
 .Python

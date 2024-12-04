@@ -1,8 +1,8 @@
 global:
   data_libs: 
   - ..//datacatalog_general.yml    
-  - ..//datacatalog_SFINCS_coastal_coupling.yml      # add optional paths to data_catalog yml files
-  - ..//datacatalog_SFINCS_obspoints.yml 
+  - ..//datacatalog_SFINCS_coastal_coupling.yml             
+  - ..//datacatalog_SFINCS_obspoints.yml
 
 # set time of simulation
 setup_config:
@@ -11,7 +11,7 @@ setup_config:
   tstop: 20190325 060000
   dtout: 3600
   dthisout: 3600
-  spwfile: p://11210471-001-compass//02_Models//Delft3DFM//mozambique_model//boundary_conditions//meteo//TC//tc_IDAI_2019063S18038_ext9d.spw
+  spwfile: tc_IDAI_2019063S18038_ext9d.spw
   storemeteo: 1
   utmzone: 36s
 

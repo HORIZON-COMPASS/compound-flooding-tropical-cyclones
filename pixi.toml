@@ -7,8 +7,8 @@ authors = [
     'Anais Couasnon <anais.couasnon@deltares.nl>',
     'Doris Vertegaal <doris.Vertegaal@deltares.nl>',
 ]
-channels = ["conda-forge"]
-platforms = ["win-64"]
+channels = ["conda-forge","bioconda"]
+platforms = ["win-64","linux-64"]
 readme = "README.md"
 license = "MIT"
 license-file = "LICENSE"
@@ -45,6 +45,11 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
+[feature.snake.dependencies]
+snakemake = ">=8.10.6,<8.11"
+graphviz = "*"
+pygraphviz = "*"
+
 [feature.cht.pypi-dependencies]
 cht-cyclones = ">=0.0.1, <0.0.2"
 
@@ -53,7 +58,8 @@ dfm-tools = ">=0.31.0"
 
 [environments]
 default = { features = ["py311"]}
-compass-sfincs = { features = ["py311","sfincs","dataviz"]}
+compass-sfincs = { features = ["py311", "sfincs","dataviz"],solve-group='sfincs'}
+compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake"],solve-group='sfincs'}
 compass-dfm = { features = ["py311","dfm"]}
 compass-fiat-hydromt = { features = ["py311","hydromt_fiat"]}
 compass-fiat = { features = ["py311","fiat"]}
