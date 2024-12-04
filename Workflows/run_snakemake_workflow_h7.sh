@@ -25,7 +25,7 @@ cd SFINCS/workflow_scripts
 snakemake --unlock -s snakefile_dict --configfile config/config_general.yml 
 
 # running workflow with snakemake
-snakemake -s snakefile --configfile config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
-snakemake -s snakefile --configfile config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files # --forceall --cores 4
+snakemake -s snakefile_sfincs.smk --configfile config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
+snakemake -s snakefile_sfincs.smk --configfile config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files # --forceall --cores 4
 
 exit
