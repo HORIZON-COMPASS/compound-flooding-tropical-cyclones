@@ -8,6 +8,7 @@ __pycache__/
 
 # Pixi
 .pixi
+pixi.lock
 
 # Model data
 Delft3DFM/mozambique_model/computations
