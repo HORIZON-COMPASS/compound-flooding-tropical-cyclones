@@ -31,6 +31,14 @@ ffmpeg = ">=7.0.0"
 cartopy = ">=0.20.0" 
 matplotlib = ">=3.8.4,<3.9" 
 
+[feature.hydromt_fiat.pypi-dependencies]
+matplotlib = "*"
+hydromt-fiat = { git = "https://github.com/Deltares/hydromt_fiat.git"}
+
+[feature.fiat.dependencies]
+delft_fiat = "*"
+pandas="*"
+
 [feature.sfincs.dependencies]
 hydromt = ">=0.10.0, <1.0.0"
 hydromt_sfincs = ">=1.1.0"
@@ -53,5 +61,7 @@ default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"],solve-group='sfincs'}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake"],solve-group='sfincs'}
 compass-dfm = { features = ["py311","dfm"]}
+compass-fiat-hydromt = { features = ["py311","hydromt_fiat"]}
+compass-fiat = { features = ["py311","fiat"]}
 compass-cht = { features = ["py311","cht"]}
 

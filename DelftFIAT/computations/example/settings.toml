@@ -1,0 +1,37 @@
+[output]
+path = "output"
+
+[output.csv]
+name = "output.csv"
+
+[output.geom]
+name1 = "spatial.gpkg"
+
+[vulnerability]
+file = "vulnerability/vulnerability_curves.csv"
+unit = "meters"
+
+[exposure]
+damage_unit = "$"
+
+[exposure.csv]
+file = "exposure/exposure.csv"
+
+[exposure.geom]
+crs = "EPSG:4326"
+unit = "meters"
+file1 = "exposure/buildings.gpkg"
+
+[hazard]
+return_periods = "None"
+file = "hazard\\floodmap.nc"
+crs = "EPSG:32736"
+elevation_reference = "datum"
+risk = false
+
+[hazard.settings]
+subset = "floodmap"
+var_as_band = false
+
+[global]
+crs = "EPSG:4326"
