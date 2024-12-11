@@ -1,18 +1,25 @@
 # %%
 from os.path import basename, join, exists
 
-import pandas as pd
+import os
 from hydromt.config import configread
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
-
+import geopandas as gpd
 # %%
 if "snakemake" in locals():
-    model_dir = snakemake.params.model_dir
-    config_file = snakemake.inputs.config_file
+    model_dir = snakemake.params.dir_model
+    config_file = snakemake.input.config_file
     data_cat = snakemake.params.data_cat
     bbox = snakemake.params.arg_bbox
-    region_geom = snakemake.inputs.region_geom
+    region_geom = snakemake.input.region_geom
+    dir_sfincs_model = snakemake.input.dir_sfincs_model
+else:
+    model_dir = r"p:/11210471-001-compass\02_Models\sofala\Idai\wflow"
+    config_file = r"c:\Git_repos\COMPASS\Workflows\config_wflow\wflow_build_sofala.yml"
+    data_cat = r"c:\Git_repos\COMPASS\Workflows\data_catalogs/datacatalog_general.yml"
+    bbox = [34.33,-20.12,34.95,-19.30]
+    # region_geom = snakemake.input.region_geom
 
 if not exists(model_dir):
     os.mkdir(model_dir)
@@ -20,15 +27,28 @@ if not exists(model_dir):
 logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
 
 
+
 opt = configread(config_file, abs_path=True)  # read settings from ini file
 kwargs = opt.pop("global", {})
 
+opt['setup_gauges'] = {
+    'gauges_fn': join(dir_sfincs_model, "gis", "src.geojson"),
+    'snap_to_river': True,
+    'snap_uparea': False,
+    'derive_subcatch': False,
+    'index_col': 'index',
+    'basename': 'locs'
+}
 
+#%%
+
+region = gpd.read_file(region_geom).to_crs(epsg = '4326')
+
+
+#%%
 mod = WflowModel(
     root=model_dir, data_libs=[data_cat], mode="w+", logger=logger, **kwargs
 )
 
 # %% BUILD MODEL
-mod.build(region={"basin": region_geom}, opt=opt)
-
-# %%
+mod.build(region={"basin": region}, opt=opt)

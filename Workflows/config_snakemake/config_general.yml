@@ -4,7 +4,7 @@
 root_dir:    p:/11210471-001-compass
 dir_runs:    ../03_Runs
 dir_spw:     02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
-datacatalog: ../datacatalog_general.yml
+datacatalog: data_catalogs/datacatalog_general.yml
 runname_ids: 
     Idai:
         tc_name: Idai

@@ -15,7 +15,8 @@ Delft3DFM/mozambique_model/computations
 SFINCS/computations
 Delft3DFM/mozambique_model/results
 SFINCS/results
-SFINCS/workflow_scripts/.snakemake
+*.snakemake
+*.svg
 SFINCS/workflow_scripts/.nfs*
 SFINCS/workflow_scripts/test_*
 SFINCS/workflow_scripts/dag.png

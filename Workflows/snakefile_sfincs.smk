@@ -27,7 +27,7 @@ def get_datacatalog(wildcards):
 
 rule all:
     input:
-        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"), dir_run=config['dir_runs'], runname=config["runname_ids"])
+        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"), dir_run=config['dir_runs'], runname= config["runname_ids"])
 
 rule make_base_model:
     params:
