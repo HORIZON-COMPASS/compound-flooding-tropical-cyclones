@@ -13,7 +13,8 @@ from hydromt_wflow import WflowModel
 logger = setuplog("update", "./hydromt.log", log_level=10)
 # wflow_root = r"p:\11208614-de-370a\01_models\Humber\wflow"
 if "snakemake" in locals():
-    wflow_root = snakemake.params.wflow_root
+    wflow_root_noforcing = snakemake.params.wflow_root_noforcing
+    wflow_root_forcing = snakemake.params.wflow_root_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
@@ -29,15 +30,15 @@ if "snakemake" in locals():
 
 # %% Setup forcing Warmup
 mod = WflowModel(
-    root=wflow_root,
+    root=wflow_root_noforcing,
     data_libs=[data_cat],
     mode="r",
     logger=logger,
 )
 mod.read()
-start_time_object = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S")
 start_time_warmup = datetime.strftime(
-    start_time_object - timedelta(days=365), "%Y-%m-%d %H:%M:%S"
+    start_time_object - timedelta(days=365), "%Y%m%d %H%M%S"
 )
 end_time_warmup = start_time
 opt = {
@@ -47,7 +48,7 @@ opt = {
         "timestepsecs": 86400,
         "model.reinit": True,
         "state.path_output": join(
-            wflow_root, "events", "instate", "instates.nc"
+            wflow_root_forcing, "events", "instate", "instates.nc"
         ),
         "input.path_static": "..\staticmaps.nc",
     },
@@ -67,7 +68,7 @@ opt = {
     },
 }
 
-mod.set_root(join(wflow_root, "warmup"), mode="w+")
+mod.set_root(join(wflow_root_forcing, "warmup"), mode="w+")
 mod.setup_config(**opt["setup_config"])
 mod.setup_precip_forcing(**opt["setup_precip_forcing"])
 mod.setup_temp_pet_forcing(**opt["setup_temp_pet_forcing"])

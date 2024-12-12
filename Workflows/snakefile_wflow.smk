@@ -74,12 +74,13 @@ rule update_forcing_wflow_warmup:
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "inmaps_warmup.nc"),
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "wflow_sbm.toml"),
     params:
-        wflow_root = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
+        wflow_root_noforcing = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
+        wflow_root_forcing= join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
         start_time = get_start_time,
         end_time = get_end_time,
         data_cat = config['datacatalog'],
     script:
-        join(curdir, "scripts", "update_forcing_wflow_warmup.py")
+        join(curdir, "scripts", "preprocessing", "update_forcing_wflow_warmup.py")
 
 # update wflow forcing for event
 rule update_forcing_wflow_event:
@@ -90,12 +91,14 @@ rule update_forcing_wflow_event:
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "inmaps.nc"),
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "wflow_sbm.toml"),
     params:
-        wflow_root = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
+        wflow_root_noforcing = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
+        wflow_root_forcing= join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
         start_time = get_start_time,
         end_time = get_end_time,
-        forcing = "{forcing}"
+        forcing = "{forcing}",
+        data_cat = config['datacatalog'],
     script:
-        join(curdir, "scripts", "update_forcing_wflow_event.py")
+        join(curdir, "scripts","preprocessing", "update_forcing_wflow_event.py")
 
 rule run_wflow_warmup:
     input:

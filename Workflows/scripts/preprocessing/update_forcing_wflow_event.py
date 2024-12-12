@@ -11,7 +11,8 @@ from hydromt_wflow import WflowModel
 logger = setuplog("update", "./hydromt.log", log_level=10)
 # wflow_root = r"p:\11208614-de-370a\01_models\Humber\wflow"
 if "snakemake" in locals():
-    wflow_root = snakemake.params.wflow_root
+    wflow_root_noforcing = snakemake.params.wflow_root_noforcing
+    wflow_root_forcing = snakemake.params.wflow_root_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
@@ -30,7 +31,7 @@ if "snakemake" in locals():
 # %% Setup forcing
 
 mod = WflowModel(
-    root=wflow_root,
+    root=wflow_root_noforcing,
     data_libs=[data_cat],
     mode="r",
     logger=logger,
@@ -58,7 +59,7 @@ opt = {
     },
 }
 
-mod.set_root(join(wflow_root, "events"), mode="w+")
+mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing(fn_out=join(mod.root, "inmaps.nc"))
 mod.write_config()
