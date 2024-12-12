@@ -19,7 +19,7 @@ pixi shell-hook --environment compass-wflow > hook.sh
 source hook.sh
 
 # Navigate to directory where the scripts are
-cd SFINCS/workflow_scripts
+cd Workflows
 
 #Unlocking the directory for snakemake
 snakemake --unlock -s snakefile_wflow.smk --configfile config/config_general.yml 
