@@ -36,11 +36,11 @@ mod = WflowModel(
     logger=logger,
 )
 mod.read()
-start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S")
+start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S") - timedelta(days=2) #Start wflow 2 days before sfincs
 start_time_warmup = datetime.strftime(
-    start_time_object - timedelta(days=365), "%Y%m%d %H%M%S"
+    start_time_object - timedelta(days=365), "%Y-%m-%dT%H:%M:%S"
 )
-end_time_warmup = start_time
+end_time_warmup = datetime.strftime(start_time_object, "%Y-%m-%dT%H:%M:%S")
 opt = {
     "setup_config": {
         "starttime": start_time_warmup,
@@ -50,7 +50,7 @@ opt = {
         "state.path_output": join(
             wflow_root_forcing, "events", "instate", "instates.nc"
         ),
-        "input.path_static": "..\staticmaps.nc",
+        "input.path_static": join(wflow_root_noforcing, "staticmaps.nc"),
     },
     "setup_precip_forcing": {
         "precip_fn": "era5_daily",

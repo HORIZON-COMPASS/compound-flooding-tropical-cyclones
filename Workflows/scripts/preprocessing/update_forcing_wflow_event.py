@@ -5,6 +5,8 @@ import pandas as pd
 from hydromt.config import configread
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
+from datetime import datetime as datetime
+from datetime import timedelta
 
 # %%
 # model and data paths/
@@ -29,6 +31,10 @@ if "snakemake" in locals():
 #     meteo_option = "ERA5"
 
 # %% Setup forcing
+start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S") - timedelta(days=2)
+end_time_object = datetime.strptime(end_time, "%Y%m%d %H%M%S")
+start_time = datetime.strftime(start_time_object, "%Y-%m-%dT%H:%M:%S")
+end_time = datetime.strftime(end_time_object, "%Y-%m-%dT%H:%M:%S")
 
 mod = WflowModel(
     root=wflow_root_noforcing,
@@ -44,7 +50,7 @@ opt = {
         "endtime": end_time,
         "timestepsecs": 3600,
         "model.reinit": False,
-        "input.path_static": "..\staticmaps.nc",
+        "input.path_static": join(wflow_root_noforcing, "staticmaps.nc"),
     },
     "setup_precip_forcing": {
         "precip_fn": meteo_fn,

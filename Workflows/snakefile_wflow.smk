@@ -45,7 +45,7 @@ rule all:
     # input:
         # expand(join(root_dir, "02_Models", get_region("{runname}"), "{runname}", "wflow", 'wflow_sbm.toml'), runname=runname_ids)
     input:
-        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "run_default", "output_scalar.nc"), zip, region=regions, runname=runname_ids, forcing=forcing),
+        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"), zip, region=regions, runname=runname_ids, forcing=forcing),
         
 
 rule make_base_model:
@@ -71,7 +71,7 @@ rule update_forcing_wflow_warmup:
         toml_file = join(root_dir, "02_Models", "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, "02_Models", "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
     output:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "inmaps_warmup.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "inmaps.nc"),
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
@@ -88,8 +88,8 @@ rule update_forcing_wflow_event:
         toml_file = join(root_dir, "02_Models", "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, "02_Models", "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
     output:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "inmaps.nc"),
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "wflow_sbm.toml"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "inmaps.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
         wflow_root_forcing= join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
@@ -102,30 +102,22 @@ rule update_forcing_wflow_event:
 
 rule run_wflow_warmup:
     input:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "inmaps_warmup.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "inmaps.nc"),
         toml = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "wflow_sbm.toml"),
     output:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "outstate", "outstates.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "instate", "instates.nc"),
     params:
         exe = join(root_dir, "02_Models", "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
     shell:
         "{params.exe} {input.toml}"
 
-rule copy_state_wflow:
-    input:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "warmup", "outstate", "outstates.nc"),
-    output:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "instate", "instates.nc"),
-    shell:
-       "copy {input} {output}"
-
 rule run_wflow_event:
     input:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "instate", "instates.nc"),
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "inmaps.nc"),
-        toml = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "wflow_sbm.toml"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "instate", "instates.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "inmaps.nc"),
+        toml = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "wflow_sbm.toml"),
     output:
-        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "event", "run_default", "output_scalar.nc"),
+        join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, "02_Models", "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
     shell:
