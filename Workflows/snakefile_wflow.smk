@@ -4,7 +4,10 @@ from snakemake.io import Wildcards
 from os.path import join
 
 curdir = os.getcwd()
-root_dir = config['root_dir']
+if os.name == 'nt': #Running on windows
+    root_dir = join("p:",config['root_dir'])
+elif os.name == "posix": #Running on linux
+    root_dir = join("/p", config['root_dir'])
 dir_runs = config['dir_runs']
 
 def get_region(test):
@@ -33,7 +36,10 @@ def get_bbox(wildcards):
 #     return join(root_dir, "02_Models", config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
 
 def get_datacatalog(wildcards):
-    return config['datacatalog']
+    if os.name == 'nt': #Running on windows
+        return "data_catalogs/datacatalog_general.yml"
+    elif os.name == "posix": #Running on linux
+        return "data_catalogs/datacatalog_general_linux.yml"
 
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 runname_ids = list(config['runname_ids'].keys())  #
@@ -55,7 +61,7 @@ rule make_base_model:
         dir_sfincs_model = "c:/Git_repos/COMPASS/03_Runs/sfincs_{runname}",
     params:
         dir_model = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
-        data_cat = config['datacatalog'],
+        data_cat = get_datacatalog,
         arg_bbox = get_bbox,
     output: 
         toml_file = join(root_dir, "02_Models", "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
@@ -78,7 +84,7 @@ rule update_forcing_wflow_warmup:
         wflow_root_forcing= join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
         start_time = get_start_time,
         end_time = get_end_time,
-        data_cat = config['datacatalog'],
+        data_cat = get_datacatalog,
     script:
         join(curdir, "scripts", "preprocessing", "update_forcing_wflow_warmup.py")
 
@@ -96,7 +102,7 @@ rule update_forcing_wflow_event:
         start_time = get_start_time,
         end_time = get_end_time,
         forcing = "{forcing}",
-        data_cat = config['datacatalog'],
+        data_cat = get_datacatalog,
     script:
         join(curdir, "scripts","preprocessing", "update_forcing_wflow_event.py")
 
@@ -108,8 +114,11 @@ rule run_wflow_warmup:
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "instate", "instates.nc"),
     params:
         exe = join(root_dir, "02_Models", "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
+        julia_env_fn = "~/.julia/environments/v1.9"
     shell:
-        "{params.exe} {input.toml}"
+        """
+        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        """
 
 rule run_wflow_event:
     input:
@@ -120,5 +129,8 @@ rule run_wflow_event:
         join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, "02_Models", "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
+        julia_env_fn = "~/.julia/environments/v1.9",
     shell:
-        "{params.exe} {input.toml}"
+        """
+        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        """

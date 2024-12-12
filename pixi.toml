@@ -37,6 +37,10 @@ hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 
+[feature.wflow.dependencies]
+hydromt = ">=0.10.0, <1.0.0"
+hydromt_wflow = ">=0.7.0"
+
 [feature.snake.dependencies]
 snakemake = ">=8.10.6,<8.11"
 graphviz = "*"
@@ -54,4 +58,5 @@ compass-sfincs = { features = ["py311", "sfincs","dataviz"],solve-group='sfincs'
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake"],solve-group='sfincs'}
 compass-dfm = { features = ["py311","dfm"]}
 compass-cht = { features = ["py311","cht"]}
+compass-wflow = { features = ["py311", "sfincs","wflow"]}
 
