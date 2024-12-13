@@ -39,7 +39,7 @@ def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return "data_catalogs/datacatalog_general.yml"
     elif os.name == "posix": #Running on linux
-        return "data_catalogs/datacatalog_general_linux.yml"
+        return "data_catalogs/datacatalog_general___linux.yml"
 
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 runname_ids = list(config['runname_ids'].keys())  #
