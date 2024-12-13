@@ -22,10 +22,10 @@ source hook.sh
 cd Workflows
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_wflow.smk --configfile config/config_general.yml 
+snakemake --unlock -s snakefile_wflow.smk --configfile config_snakemake/config_general.yml 
 
 # running workflow with snakemake
 snakemake -s snakefile_wflow.smk --configfile config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
-snakemake -s snakefile_wflow.smk --configfile config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files # --forceall --cores 4
+snakemake -s snakefile_wflow.smk --configfile config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files  --forceall # --cores 4
 
 exit

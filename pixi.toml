@@ -58,5 +58,5 @@ compass-sfincs = { features = ["py311", "sfincs","dataviz"],solve-group='sfincs'
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake"],solve-group='sfincs'}
 compass-dfm = { features = ["py311","dfm"]}
 compass-cht = { features = ["py311","cht"]}
-compass-wflow = { features = ["py311", "sfincs","wflow"]}
+compass-wflow = { features = ["py311", "sfincs","wflow", "snake"]}
 
