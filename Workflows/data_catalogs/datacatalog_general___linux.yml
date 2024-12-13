@@ -2129,6 +2129,13 @@ modis_mcd15a3h_v006:
     source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
     source_version: MCD15A3H V006
   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 osm_coastlines:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/geography/osm/osm_coastlines-db.fgb
