@@ -1,62 +1,78 @@
 ### Import some useful python libraries
 import os
 from snakemake.io import Wildcards
+from os.path import join
 
 curdir = os.getcwd()
+if os.name == 'nt': #Running on windows
+    root_dir = join("p:/",config['root_dir'])
+elif os.name == "posix": #Running on linux
+    root_dir = join("/p", config['root_dir'])
 
 def get_bbox(wildcards):
-    prebbox = config["runname_ids"][wildcards.runname]["bbox"]
-    arg_bbox = "{" + "'bbox': "+ prebbox + "}"
-    return arg_bbox
-
-def get_file_spw(wildcards):
-    return config["runname_ids"][wildcards.runname]["file_spw"]
+    bbox = config["runname_ids"][wildcards.runname]["bbox"]
+    return bbox
 
 def get_path_spw_ori(wildcards):
     file_spw = config["runname_ids"][wildcards.runname]["file_spw"]
-    path_spw_ori = config['dir_spw']+"/"+ file_spw
+    path_spw_ori = join(root_dir, config['dir_spw'], file_spw)
     return path_spw_ori
 
-def get_path_spw_run(wildcards):
-    file_spw = config["runname_ids"][wildcards.runname]["file_spw"]
-    path_spw_run = config['dir_runs'] + "/sfincs_" + config["runname_ids"][wildcards.runname]["tc_name"] + "/"+ file_spw
-    return path_spw_run
+
+def get_file_spw(wildcards):
+    # Returns the file name for the .spw file (e.g., tc_FREDDY_2023061S22036_ext9d.spw)
+    return config['runname_ids'][wildcards.runname]['file_spw']
 
 def get_datacatalog(wildcards):
-    return config['datacatalog']
+    if os.name == 'nt': #Running on windows
+        return [
+            join(curdir, "data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, "data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+            join(curdir, "data_catalogs", "datacatalog_SFINCS_obspoints.yml")
+        ]
+    elif os.name == "posix": #Running on linux
+        return [
+            join(curdir, "data_catalogs", "datacatalog_general___linux.yml"), 
+            join(curdir, "data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
+            join(curdir, "data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+        ]
+
+regions = [value['region'] for key, value in config['runname_ids'].items()]
+spw_files = [value['file_spw'] for key, value in config['runname_ids'].items()]
+runname_ids = list(config['runname_ids'].keys())  #
+forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
 
 rule all:
     input:
-        expand(("{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"), dir_run=config['dir_runs'], runname= config["runname_ids"])
+        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing, spw_file = spw_files)
 
 rule make_base_model:
     params:
-        dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
-        rmfile = "{dir_run}"+"/sfincs_"+"{runname}/"+"hydromt_data.yml",
-        arg_bbox = get_bbox
+        arg_bbox = get_bbox,
+        dir_model_sfincs = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
+        data_cats = get_datacatalog
+    input:
+        config_file = join(curdir, "config_sfincs", "sfincs_base_build.yml"),
     output: 
-        msk_file = "{dir_run}"+"/sfincs_{runname}"+"/sfincs.msk"
-    shell:
-        '''
-        hydromt build sfincs {params.dir_run} --region "{params.arg_bbox}" -i config_sfincs/sfincs_base_build.yml --force-overwrite -v 
-        del {params.rmfile} || rm {params.rmfile}
-        '''
+        msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk")
+    script:
+        join("scripts", "model_building", "sfincs", "setup_sfincs_base.py")
+
 
 rule add_forcing:
     input:
-        msk_file = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs.msk"
+        msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk"),
+        spw_file_in = get_path_spw_ori,
     params:
-        dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
+        dir_run_no_forcing = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
+        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
         forcing_yml = "config_sfincs/sfincs_"+"{runname}"+"_forcing.yml",
-        path_spw_ori = get_path_spw_ori,
-        path_spw_run = get_path_spw_run
+        data_cats = get_datacatalog,
     output:
-        bzs_file = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs.bzs" 
-    shell:
-        '''
-        cp {params.path_spw_ori} {params.path_spw_run}
-        hydromt update sfincs {params.dir_run} -i {params.forcing_yml} -v
-        '''
+        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs"),
+    script:
+        join("scripts", "preprocessing", "update_sfincs_coastal_forcing.py")
+
 
 # rule - check the inp file? for e.g: formatting in linux
 
@@ -74,28 +90,28 @@ rule add_forcing:
 rule run_sfincs_model:
     input:
 #        batchfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
-        bzs_file = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs.bzs"
+        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs") 
     params:
-        dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
+        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
         currentdir = curdir
     output:
-        mapout = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
-        hisout = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"     
+        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),     
     shell:
         '''
         docker image ls 
-        docker run --mount src={params.dir_run},target=/data,type=bind deltares/sfincs-cpu:latest sfincs
+        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs
         '''
 #        '(cd {params.dir_run} && run_sfincs.bat)
 
 rule sfincs_plot_floodmap:
     input:
-        mapfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_map.nc",
-        hisfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/sfincs_his.nc"
+        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"), 
     params:
-        dir_run = "{dir_run}"+"/sfincs_"+"{runname}",
+        dir_run = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
         datacat = get_datacatalog
     output:
-        figure = "{dir_run}"+"/sfincs_"+"{runname}"+"/plot_output/sfincs_basemap.png"  
+        figure = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png")  
     script:
-        "postprocess/sfincs_postprocess.py" 
+        join(curdir, "scripts", "postprocessing", "sfincs_postprocess.py")

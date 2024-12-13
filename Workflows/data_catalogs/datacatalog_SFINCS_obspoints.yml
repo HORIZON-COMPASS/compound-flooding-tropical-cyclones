@@ -1,5 +1,5 @@
 meta:
-  root: /p/
+  root: p:/
 # roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
 #    - /p/  
 #    - p:/

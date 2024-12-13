@@ -1,10 +1,3 @@
-global:
-  data_libs:  # add optional paths to data_catalog yml files
-#  - ..//datacatalog_general___linux.yml           
-#  - ..//datacatalog_SFINCS_coastal_coupling___linux.yml
-  - data_catalogs//datacatalog_general.yml           
-  - data_catalogs//datacatalog_SFINCS_coastal_coupling.yml
-
 setup_grid_from_region:
   res: 100                     # model resolution
   crs: utm                     # model CRS (must be UTM zone)

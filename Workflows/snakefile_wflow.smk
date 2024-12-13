@@ -5,7 +5,7 @@ from os.path import join
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    root_dir = join("p:",config['root_dir'])
+    root_dir = join("p:/",config['root_dir'])
 elif os.name == "posix": #Running on linux
     root_dir = join("/p", config['root_dir'])
 dir_runs = config['dir_runs']
