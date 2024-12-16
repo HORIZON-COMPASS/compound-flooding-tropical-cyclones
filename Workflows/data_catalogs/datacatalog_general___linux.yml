@@ -1,8 +1,28 @@
 meta:
-  root: c:\CODE\COMPASS
+  root: /p/
+TAMSAT_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/TAMSAT/Idai/Whole_MZ/01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    rfe_filled: precip 
+    lat: latitude
+    lon: longitude   
+  meta:
+    category: meteo
+    notes: TAMSAT data 
+  crs: 4326
 ERA5land_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ERA5_land\units_corrected\era5land_tp_long.nc
+  path: 11210471-001-compass/01_Data/ERA5_land/units_corrected/era5land_tp.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -21,7 +41,7 @@ ERA5land_Idai:
   crs: 4326
 SM2RAIN_ASCAT_monthly_025_v1.4:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\sm2rain_ascat\SM2RAIN_ASCAT_monthly_025_2007_2020.nc
+  path: wflow_global/hydromt/meteo/sm2rain_ascat/SM2RAIN_ASCAT_monthly_025_2007_2020.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -41,7 +61,7 @@ SM2RAIN_ASCAT_monthly_025_v1.4:
   crs: 4326
 SM2RAIN_ASCAT_monthly_05_v1.4:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\sm2rain_ascat\SM2RAIN_ASCAT_monthly_05_2007_2020.nc
+  path: wflow_global/hydromt/meteo/sm2rain_ascat/SM2RAIN_ASCAT_monthly_05_2007_2020.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -61,7 +81,7 @@ SM2RAIN_ASCAT_monthly_05_v1.4:
   crs: 4326
 basin_atlas_level12_v10:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\hydro_atlas\basin_atlas_v10.gpkg
+  path: wflow_global/hydromt/hydrography/hydro_atlas/basin_atlas_v10.gpkg
   driver: vector
   driver_kwargs:
     layer: BasinATLAS_v10_lev12
@@ -76,7 +96,7 @@ basin_atlas_level12_v10:
   crs: 4326
 chelsa:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chelsa_clim_v1.2\CHELSA_bio10_12.tif
+  path: wflow_global/hydromt/meteo/chelsa_clim_v1.2/CHELSA_bio10_12.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -92,7 +112,7 @@ chelsa:
   crs: 4326
 chelsa_v1.2:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chelsa_clim_v1.2\CHELSA_bio10_12.tif
+  path: wflow_global/hydromt/meteo/chelsa_clim_v1.2/CHELSA_bio10_12.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -108,7 +128,7 @@ chelsa_v1.2:
   crs: 4326
 chirps:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chirps_africa_daily_v2.0\CHIRPS_rainfall_{year}.nc
+  path: wflow_global/hydromt/meteo/chirps_africa_daily_v2.0/CHIRPS_rainfall_{year}.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -122,32 +142,6 @@ chirps:
     precipitation: precip
   unit_add:
     time: 86400
-  meta:
-    category: meteo
-    paper_doi: 10.1038/sdata.2015.66
-    paper_ref: Funk et al (2015)
-    source_license: CC
-    source_url: https://www.chc.ucsb.edu/data/chirps
-    source_version: v2.0
-  crs: 4326
-chirps_hourly:
-  data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chirps_africa_daily_v2.0\CHIRPS_rainfall_{year}.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      lat: 160
-      lon: 150
-      time: 20
-    combine: by_coords
-    decode_times: true
-    parallel: true
-  rename:
-    precipitation: precip
-  unit_add:
-    time: 86400
-  unit_mult:
-    precip: 0.04166667 # 1/24 to correct from daily to hourly
   meta:
     category: meteo
     paper_doi: 10.1038/sdata.2015.66
@@ -158,7 +152,7 @@ chirps_hourly:
   crs: 4326
 chirps_africa_daily_v2.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chirps_africa_daily_v2.0\CHIRPS_rainfall_{year}.nc
+  path: wflow_global/hydromt/meteo/chirps_africa_daily_v2.0/CHIRPS_rainfall_{year}.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -182,7 +176,7 @@ chirps_africa_daily_v2.0:
   crs: 4326
 chirps_global:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chirps_global_daily_v2.0\chirps-v2.0.{year}.days_p05.nc
+  path: wflow_global/hydromt/meteo/chirps_global_daily_v2.0/chirps-v2.0.{year}.days_p05.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -206,7 +200,7 @@ chirps_global:
   crs: 4326
 chirps_global_daily_v2.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\chirps_global_daily_v2.0\chirps-v2.0.{year}.days_p05.nc
+  path: wflow_global/hydromt/meteo/chirps_global_daily_v2.0/chirps-v2.0.{year}.days_p05.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -230,7 +224,7 @@ chirps_global_daily_v2.0:
   crs: 4326
 copdem30:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -246,7 +240,7 @@ copdem30:
     source_version: '2021_1'
 copdem30_mask:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem_mask.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem_mask.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -262,7 +256,7 @@ copdem30_mask:
     source_version: '2021_1'
 copdem30_mask_v2021.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem_mask.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem_mask.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -278,7 +272,7 @@ copdem30_mask_v2021.1:
     source_version: '2021_1'
 copdem30_masked:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem_masked.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem_masked.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -293,7 +287,7 @@ copdem30_masked:
     source_version: '2021_1'
 copdem30_masked_v2021.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem_masked.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem_masked.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -308,7 +302,7 @@ copdem30_masked_v2021.1:
     source_version: '2021_1'
 copdem30_v2021.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\copdem\copdem.vrt
+  path: wflow_global/hydromt/topography/copdem/copdem.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -324,7 +318,7 @@ copdem30_v2021.1:
     source_version: '2021_1'
 corine:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\corine\CLC2018_CLC2018_V2018_20.tif
+  path: wflow_global/hydromt/landuse/corine/CLC2018_CLC2018_V2018_20.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -338,7 +332,7 @@ corine:
     source_version: v.2020_20u1
 corine_2018_v2020_u1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\corine\CLC2018_CLC2018_V2018_20.tif
+  path: wflow_global/hydromt/landuse/corine/CLC2018_CLC2018_V2018_20.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -352,7 +346,7 @@ corine_2018_v2020_u1:
     source_version: v.2020_20u1
 dtu10mdt:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\dtu10mdt\DTU10MDT_1min_float32.tif
+  path: wflow_global/hydromt/topography/dtu10mdt/DTU10MDT_1min_float32.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -368,7 +362,7 @@ dtu10mdt:
   crs: 4326
 dtu10mdt_egm96:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\dtu10mdt\DTU10MDT_1min_egm96.tif
+  path: wflow_global/hydromt/topography/dtu10mdt/DTU10MDT_1min_egm96.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -384,7 +378,7 @@ dtu10mdt_egm96:
   crs: 4326
 eobs:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\*\{variable}_ens_mean_0.1deg_reg_v22.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/*/{variable}_ens_mean_0.1deg_reg_v22.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -411,7 +405,7 @@ eobs:
   crs: 4326
 eobs_orography:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v22.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v22.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -429,7 +423,7 @@ eobs_orography:
   crs: 4326
 eobs_orography_v20.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v20.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v20.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -447,7 +441,7 @@ eobs_orography_v20.0e:
   crs: 4326
 eobs_orography_v22.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v22.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v22.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -465,7 +459,7 @@ eobs_orography_v22.0e:
   crs: 4326
 eobs_orography_v23.1e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v23.1e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v23.1e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -483,7 +477,7 @@ eobs_orography_v23.1e:
   crs: 4326
 eobs_orography_v24.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v24.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v24.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -501,7 +495,7 @@ eobs_orography_v24.0e:
   crs: 4326
 eobs_orography_v25.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\elev_ens_0.1deg_reg_v25.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/elev_ens_0.1deg_reg_v25.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -519,7 +513,7 @@ eobs_orography_v25.0e:
   crs: 4326
 eobs_v22.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\*\{variable}_ens_mean_0.1deg_reg_v22.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/*/{variable}_ens_mean_0.1deg_reg_v22.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -546,7 +540,7 @@ eobs_v22.0e:
   crs: 4326
 eobs_v23.1e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\*\{variable}_ens_mean_0.1deg_reg_v23.1e.nc
+  path: wflow_global/hydromt/meteo/eobs/*/{variable}_ens_mean_0.1deg_reg_v23.1e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -573,7 +567,7 @@ eobs_v23.1e:
   crs: 4326
 eobs_v24.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\*\{variable}_ens_mean_0.1deg_reg_v24.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/*/{variable}_ens_mean_0.1deg_reg_v24.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -600,7 +594,7 @@ eobs_v24.0e:
   crs: 4326
 eobs_v25.0e:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\eobs\*\{variable}_ens_mean_0.1deg_reg_v25.0e.nc
+  path: wflow_global/hydromt/meteo/eobs/*/{variable}_ens_mean_0.1deg_reg_v25.0e.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -627,7 +621,7 @@ eobs_v25.0e:
   crs: 4326
 era5:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5_daily\nc_merged\era5_{year}*_daily.nc
+  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}*_daily.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -670,7 +664,7 @@ era5:
   crs: 4326
 era5_daily:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5_daily\nc_merged\era5_{year}*_daily.nc
+  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}*_daily.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -713,7 +707,7 @@ era5_daily:
   crs: 4326
 era5_daily_zarr:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5_daily.zarr
+  path: wflow_global/hydromt/meteo/era5_daily.zarr
   driver: zarr
   driver_kwargs:
     chunks: auto
@@ -750,7 +744,7 @@ era5_daily_zarr:
   crs: 4326
 era5_hourly:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5\{variable}\era5_{variable}_{year}*_hourly.nc
+  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}*_hourly.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -789,7 +783,7 @@ era5_hourly:
   crs: 4326
 era5_hourly_zarr:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5.zarr
+  path: wflow_global/hydromt/meteo/era5.zarr
   driver: zarr
   driver_kwargs:
     chunks: auto
@@ -822,7 +816,7 @@ era5_hourly_zarr:
   crs: 4326
 era5_ocean:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\ocean\era5\{variable}\era5_{variable}_{year}_hourly.nc
+  path: wflow_global/hydromt/ocean/era5/{variable}/era5_{variable}_{year}_hourly.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -842,7 +836,7 @@ era5_ocean:
   crs: 4326
 era5_orography:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\era5\meta\era5_orography_2018.nc
+  path: wflow_global/hydromt/meteo/era5/meta/era5_orography_2018.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -862,7 +856,7 @@ era5_orography:
   crs: 4326
 esa_worldcover:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\esa_worldcover\esa-worldcover.vrt
+  path: wflow_global/hydromt/landuse/esa_worldcover/esa-worldcover.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -876,7 +870,7 @@ esa_worldcover:
   crs: 4326
 esa_worldcover_2020_v100:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\esa_worldcover\esa-worldcover.vrt
+  path: wflow_global/hydromt/landuse/esa_worldcover/esa-worldcover.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -891,13 +885,13 @@ esa_worldcover_2020_v100:
 esa_worldcover_mapping:
   data_type: DataFrame
   provider: user
-  path: SFINCS_tutorial\02_hands-on\local_data\esa_worldcover_mapping.csv
+  path: SFINCS_tutorial/02_hands-on/local_data/esa_worldcover_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
 fabdem:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\fabdem\fabdem.vrt
+  path: wflow_global/hydromt/topography/fabdem/fabdem.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -915,7 +909,7 @@ fabdem:
   crs: 4326
 gadm:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\gadm\version4_1\gadm_level0.fgb
+  path: wflow_global/hydromt/geography/gadm/version4_1/gadm_level0.fgb
   driver: vector
   meta:
     category: geography
@@ -928,7 +922,7 @@ gadm:
   crs: 4326
 gadm_level0:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\gadm\version4_1\gadm_level0.fgb
+  path: wflow_global/hydromt/geography/gadm/version4_1/gadm_level0.fgb
   driver: vector
   meta:
     category: geography
@@ -941,7 +935,7 @@ gadm_level0:
   crs: 4326
 gadm_level1:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\gadm\version4_1\gadm_level1.fgb
+  path: wflow_global/hydromt/geography/gadm/version4_1/gadm_level1.fgb
   driver: vector
   meta:
     category: geography
@@ -954,7 +948,7 @@ gadm_level1:
   crs: 4326
 gadm_level2:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\gadm\version4_1\gadm_level2.fgb
+  path: wflow_global/hydromt/geography/gadm/version4_1/gadm_level2.fgb
   driver: vector
   meta:
     category: geography
@@ -967,7 +961,7 @@ gadm_level2:
   crs: 4326
 gadm_level3:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\gadm\version4_1\gadm_level3.fgb
+  path: wflow_global/hydromt/geography/gadm/version4_1/gadm_level3.fgb
   driver: vector
   meta:
     category: geography
@@ -980,7 +974,7 @@ gadm_level3:
   crs: 4326
 gcn250:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\gcn250\GCN250_*.tif
+  path: wflow_global/hydromt/landuse/gcn250/GCN250_*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1000,7 +994,7 @@ gcn250:
     source_version: v1
 gcn250_v1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\gcn250\GCN250_*.tif
+  path: wflow_global/hydromt/landuse/gcn250/GCN250_*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1020,7 +1014,7 @@ gcn250_v1:
     source_version: v1
 gdp_world:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\socio_economic\gdp_world\World_countries_GDPpcPPP.fgb
+  path: wflow_global/hydromt/socio_economic/gdp_world/World_countries_GDPpcPPP.fgb
   driver: vector
   rename:
     GDP: gdp
@@ -1036,7 +1030,7 @@ gdp_world:
   crs: 4326
 gdp_world_v1:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\socio_economic\gdp_world\World_countries_GDPpcPPP.fgb
+  path: wflow_global/hydromt/socio_economic/gdp_world/World_countries_GDPpcPPP.fgb
   driver: vector
   rename:
     GDP: gdp
@@ -1052,7 +1046,7 @@ gdp_world_v1:
   crs: 4326
 gebco:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\bathymetry\gebco\gebco.vrt
+  path: wflow_global/hydromt/bathymetry/gebco/gebco.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1071,7 +1065,7 @@ gebco:
   crs: 4326
 gebco_v2020:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\bathymetry\gebco\gebco.vrt
+  path: wflow_global/hydromt/bathymetry/gebco/gebco.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1090,7 +1084,7 @@ gebco_v2020:
   crs: 4326
 gebco_v2024:
   data_type: RasterDataset
-  path: p:/11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
   driver: raster
   driver_kwargs:
     chunks:
@@ -1109,7 +1103,7 @@ gebco_v2024:
   crs: 4326
 ghs_pop:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1124,7 +1118,7 @@ ghs_pop:
   crs: ESRI:54009
 ghs_pop_2015_4326_v2019a:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_POP_E2015_GLOBE_R2019A_4326_9ss_V1_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_POP_E2015_GLOBE_R2019A_4326_9ss_V1_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1141,7 +1135,7 @@ ghs_pop_2015_4326_v2019a:
   crs: 4326
 ghs_pop_2015_54009_v2019a:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1156,7 +1150,7 @@ ghs_pop_2015_54009_v2019a:
   crs: ESRI:54009
 ghs_smod:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_V2_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_V2_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1173,7 +1167,7 @@ ghs_smod:
   crs: ESRI:54009
 ghs_smod_2015_54009_v2016a:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_SMOD_POP2015_GLOBE_R2016A_54009_1k_v1_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_SMOD_POP2015_GLOBE_R2016A_54009_1k_v1_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1189,7 +1183,7 @@ ghs_smod_2015_54009_v2016a:
   crs: ESRI:54009
 ghs_smod_2015_54009_v2019a:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\ghs\GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_V2_0.tif
+  path: wflow_global/hydromt/socio_economic/ghs/GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_V2_0.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1206,7 +1200,7 @@ ghs_smod_2015_54009_v2019a:
   crs: ESRI:54009
 globcover:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\globcover\GLOBCOVER_L4_200901_200912_V2.3.tif
+  path: wflow_global/hydromt/landuse/globcover/GLOBCOVER_L4_200901_200912_V2.3.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1222,7 +1216,7 @@ globcover:
   crs: 4326
 globcover_2009_v2.3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\globcover\GLOBCOVER_L4_200901_200912_V2.3.tif
+  path: wflow_global/hydromt/landuse/globcover/GLOBCOVER_L4_200901_200912_V2.3.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1238,7 +1232,7 @@ globcover_2009_v2.3:
   crs: 4326
 glofas_era5_v31:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydro\glofas_era5\glofas_v31_{year}.nc
+  path: wflow_global/hydromt/hydro/glofas_era5/glofas_v31_{year}.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -1261,7 +1255,7 @@ glofas_era5_v31:
   crs: 4326
 glofas_uparea:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydro\glofas_era5\glofas_v31_uparea.tif
+  path: wflow_global/hydromt/hydro/glofas_era5/glofas_v31_uparea.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1282,7 +1276,7 @@ glofas_uparea:
   crs: 4326
 glw_buffaloes:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Bf_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Bf_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1299,7 +1293,7 @@ glw_buffaloes:
   crs: 4326
 glw_buffaloes_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Bf_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Bf_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1316,7 +1310,7 @@ glw_buffaloes_v3:
   crs: 4326
 glw_cattle:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ct_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ct_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1333,7 +1327,7 @@ glw_cattle:
   crs: 4326
 glw_cattle_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ct_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ct_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1350,7 +1344,7 @@ glw_cattle_v3:
   crs: 4326
 glw_chicken:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ch_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ch_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1367,7 +1361,7 @@ glw_chicken:
   crs: 4326
 glw_chicken_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ch_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ch_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1384,7 +1378,7 @@ glw_chicken_v3:
   crs: 4326
 glw_ducks:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Dk_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Dk_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1401,7 +1395,7 @@ glw_ducks:
   crs: 4326
 glw_ducks_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Dk_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Dk_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1418,7 +1412,7 @@ glw_ducks_v3:
   crs: 4326
 glw_goats:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Gt_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Gt_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1435,7 +1429,7 @@ glw_goats:
   crs: 4326
 glw_goats_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Gt_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Gt_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1452,7 +1446,7 @@ glw_goats_v3:
   crs: 4326
 glw_horses:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ho_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ho_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1469,7 +1463,7 @@ glw_horses:
   crs: 4326
 glw_horses_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Ho_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Ho_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1486,7 +1480,7 @@ glw_horses_v3:
   crs: 4326
 glw_pigs:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Pg_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Pg_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1503,7 +1497,7 @@ glw_pigs:
   crs: 4326
 glw_pigs_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Pg_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Pg_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1520,7 +1514,7 @@ glw_pigs_v3:
   crs: 4326
 glw_sheeps:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Sh_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Sh_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1537,7 +1531,7 @@ glw_sheeps:
   crs: 4326
 glw_sheeps_v3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\glw\5_Sh_2010_Da.tif
+  path: wflow_global/hydromt/socio_economic/glw/5_Sh_2010_Da.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1554,7 +1548,7 @@ glw_sheeps_v3:
   crs: 4326
 grdc:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydro\grdc\GRDC_Stations.csv
+  path: wflow_global/hydromt/hydro/grdc/GRDC_Stations.csv
   driver: csv
   driver_kwargs:
     index_col: grdc_no
@@ -1568,7 +1562,7 @@ grdc:
   crs: 4326
 grip_roads:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\infrastructure\grip\GRIP4_world.fgb
+  path: wflow_global/hydromt/infrastructure/grip/GRIP4_world.fgb
   driver: vector
   rename:
     GP_RTP: road_type
@@ -1583,7 +1577,7 @@ grip_roads:
   crs: 4326
 grip_roads_v4:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\infrastructure\grip\GRIP4_world.fgb
+  path: wflow_global/hydromt/infrastructure/grip/GRIP4_world.fgb
   driver: vector
   rename:
     GP_RTP: road_type
@@ -1598,7 +1592,7 @@ grip_roads_v4:
   crs: 4326
 grwl:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\grwl\GRWL_vector_V01.01\grwl.fgb
+  path: wflow_global/hydromt/hydrography/grwl/GRWL_vector_V01.01/grwl.fgb
   driver: vector
   meta:
     category: surface water
@@ -1609,7 +1603,7 @@ grwl:
     source_version: 1.01
 grwl_mask:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydrography\grwl\tindex.gpkg
+  path: wflow_global/hydromt/hydrography/grwl/tindex.gpkg
   driver: raster_tindex
   driver_kwargs:
     chunks:
@@ -1628,7 +1622,7 @@ grwl_mask:
     source_version: 1.01
 grwl_mask_v1.01:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydrography\grwl\tindex.gpkg
+  path: wflow_global/hydromt/hydrography/grwl/tindex.gpkg
   driver: raster_tindex
   driver_kwargs:
     chunks:
@@ -1647,7 +1641,7 @@ grwl_mask_v1.01:
     source_version: 1.01
 grwl_v1.01:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\grwl\GRWL_vector_V01.01\grwl.fgb
+  path: wflow_global/hydromt/hydrography/grwl/GRWL_vector_V01.01/grwl.fgb
   driver: vector
   meta:
     category: surface water
@@ -1658,7 +1652,7 @@ grwl_v1.01:
     source_version: 1.01
 gswo:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydrography\gswo\occur.vrt
+  path: wflow_global/hydromt/hydrography/gswo/occur.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1673,7 +1667,7 @@ gswo:
     source_version: v1_1_2019
 gswo_v2019:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\hydrography\gswo\occur.vrt
+  path: wflow_global/hydromt/hydrography/gswo/occur.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1688,7 +1682,7 @@ gswo_v2019:
     source_version: v1_1_2019
 gtsm_codec_reanalysis_10min_v1:
   data_type: GeoDataset
-  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\{variable}\reanalysis_{variable}_10min_{year}_{month:02d}_v1.nc
+  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/{variable}/reanalysis_{variable}_10min_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -1708,7 +1702,7 @@ gtsm_codec_reanalysis_10min_v1:
   crs: 4326
 gtsm_codec_reanalysis_dailymax_v1:
   data_type: GeoDataset
-  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\{variable}\reanalysis_{variable}_dailymax_{year}_{month:02d}_v1.nc
+  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/{variable}/reanalysis_{variable}_dailymax_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -1728,7 +1722,7 @@ gtsm_codec_reanalysis_dailymax_v1:
   crs: 4326
 gtsm_codec_reanalysis_hourly_v1:
   data_type: GeoDataset
-  path: p:\11210471-001-compass\01_Data\GTSM-ERA5-E\06_model_runs\03_postprocessing\TS_extension_hourly\surge\reanalysis_surge_hourly_{year}_03_v1.nc
+  path: 11210471-001-compass/01_Data/GTSM-ERA5-E/06_model_runs/03_postprocessing/TS_extension_hourly/surge/reanalysis_surge_hourly_{year}_03_v1.nc
   driver_kwargs:
     chunks:
       stations: 10
@@ -1747,7 +1741,7 @@ gtsm_codec_reanalysis_hourly_v1:
   crs: 4326
 guf_bld_2012:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\infrastructure\guf\GUF04_DLR_v02.vrt
+  path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1762,7 +1756,7 @@ guf_bld_2012:
   crs: 4326
 guf_bld_2012_v02:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\infrastructure\guf\GUF04_DLR_v02.vrt
+  path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1777,7 +1771,7 @@ guf_bld_2012_v02:
   crs: 4326
 hydro_lakes:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\lakes\lake-db.fgb
+  path: wflow_global/hydromt/hydrography/lakes/lake-db.fgb
   driver: vector
   rename:
     Depth_avg: Depth_avg
@@ -1797,7 +1791,7 @@ hydro_lakes:
   crs: 4326
 hydro_reservoirs:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\reservoirs\reservoir-db.fgb
+  path: wflow_global/hydromt/hydrography/reservoirs/reservoir-db.fgb
   driver: vector
   nodata: -99
   rename:
@@ -1825,77 +1819,9 @@ hydro_reservoirs:
     source_author: Alessia Matano
     source_version: 1.0
   crs: 4326
-isimip_TC_rain_er11_Idai:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_2019063S18038.nc
-  driver: netcdf
-  rename:
-    rain: precip 
-    lat: latitude
-    lon: longitude   
-  meta:
-    category: meteo
-    notes: cut to the region and corrected latitudes
-    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
-    paper_ref: Vogt (2024); Frieler et al. (2024)
-    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
-    source_url: https://data.isimip.org/files/bee34b58-e554-4064-aead-f10064796d6b/
-  crs: 4326
-isimip_TC_rain_er11_Idai_hourly:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_2019063S18038.nc
-  driver: netcdf
-  rename:
-    rain: precip 
-    lat: latitude
-    lon: longitude   
-  unit_mult:
-    precip: 0.333333 # 1/3 to correct from 3-hourly to hourly
-  meta:
-    category: meteo
-    notes: cut to the region and corrected latitudes
-    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
-    paper_ref: Vogt (2024); Frieler et al. (2024)
-    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
-    source_url: https://data.isimip.org/files/bee34b58-e554-4064-aead-f10064796d6b/
-  crs: 4326
-isimip_TC_rain_h08_Idai:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_2019063S18038.nc
-  driver: netcdf
-  rename:
-    rain: precip 
-    lat: latitude
-    lon: longitude   
-  meta:
-    category: meteo
-    notes: cut to the region and corrected latitudes 
-    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
-    paper_ref: Vogt (2024); Frieler et al. (2024)
-    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
-    source_url: https://data.isimip.org/files/86726b5f-c1ae-4146-ad2c-678820d8c523/
-  crs: 4326
-isimip_TC_rain_h08_Idai_hourly:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_2019063S18038.nc
-  driver: netcdf
-  rename:
-    rain: precip 
-    lat: latitude
-    lon: longitude 
-  unit_mult:
-    precip: 0.333333 # 1/3 to correct from 3-hourly to hourly  
-  meta:
-    category: meteo
-    notes: cut to the region and corrected latitudes 
-    paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
-    paper_ref: Vogt (2024); Frieler et al. (2024)
-    source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
-    source_url: https://data.isimip.org/files/86726b5f-c1ae-4146-ad2c-678820d8c523/
-  crs: 4326
 koppen_geiger:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\climate_classification_v2017\Map_KG-Global.tif
+  path: wflow_global/hydromt/meteo/climate_classification_v2017/Map_KG-Global.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1911,7 +1837,7 @@ koppen_geiger:
   crs: 4326
 lake_atlas_pol_v10:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\hydro_atlas\lake_atlas_v10.gpkg
+  path: wflow_global/hydromt/hydrography/hydro_atlas/lake_atlas_v10.gpkg
   driver: vector
   driver_kwargs:
     layer: LakeATLAS_v10_pol
@@ -1928,7 +1854,7 @@ lake_atlas_pol_v10:
   crs: 4326
 mdt_cnes_cls18:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\mdt_cnes_cls18\MDT_CNES_CLS18_global_filled.tif
+  path: wflow_global/hydromt/topography/mdt_cnes_cls18/MDT_CNES_CLS18_global_filled.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -1944,7 +1870,7 @@ mdt_cnes_cls18:
   crs: 4326
 merit:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit\merit.nc
+  path: wflow_global/hydromt/topography/merit/merit.nc
   driver: netcdf
   driver_kwargs:
     drop_variables: projection
@@ -1963,7 +1889,7 @@ merit:
   crs: 4326
 merit_hydro:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro\*.vrt
+  path: wflow_global/hydromt/topography/merit_hydro/*.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -1988,7 +1914,7 @@ merit_hydro:
   crs: 4326
 merit_hydro_ihu:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro_ihu\30sec\*.tif
+  path: wflow_global/hydromt/topography/merit_hydro_ihu/30sec/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2013,7 +1939,7 @@ merit_hydro_ihu:
   crs: 4326
 merit_hydro_ihu_30sec_v1.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro_ihu\30sec\*.tif
+  path: wflow_global/hydromt/topography/merit_hydro_ihu/30sec/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2038,7 +1964,7 @@ merit_hydro_ihu_30sec_v1.0:
   crs: 4326
 merit_hydro_ihu_index:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\topography\merit_hydro_ihu\30sec\basins.gpkg
+  path: wflow_global/hydromt/topography/merit_hydro_ihu/30sec/basins.gpkg
   driver: vector
   meta:
     category: topography
@@ -2049,7 +1975,7 @@ merit_hydro_ihu_index:
   crs: 4326
 merit_hydro_index:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\topography\merit_hydro\basin_index.fgb
+  path: wflow_global/hydromt/topography/merit_hydro/basin_index.fgb
   driver: vector
   meta:
     category: topography
@@ -2059,7 +1985,7 @@ merit_hydro_index:
   crs: 4326
 merit_hydro_index_v1.0:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\topography\merit_hydro\basin_index.fgb
+  path: wflow_global/hydromt/topography/merit_hydro/basin_index.fgb
   driver: vector
   meta:
     category: topography
@@ -2069,7 +1995,7 @@ merit_hydro_index_v1.0:
   crs: 4326
 merit_hydro_patch:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro\patches\*.vrt
+  path: wflow_global/hydromt/topography/merit_hydro/patches/*.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -2094,7 +2020,7 @@ merit_hydro_patch:
   crs: 4326
 merit_hydro_patch_v1.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro\patches\*.vrt
+  path: wflow_global/hydromt/topography/merit_hydro/patches/*.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -2119,7 +2045,7 @@ merit_hydro_patch_v1.0:
   crs: 4326
 merit_hydro_v1.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit_hydro\*.vrt
+  path: wflow_global/hydromt/topography/merit_hydro/*.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -2144,7 +2070,7 @@ merit_hydro_v1.0:
   crs: 4326
 merit_v1.0.3:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\topography\merit\merit.nc
+  path: wflow_global/hydromt/topography/merit/merit.nc
   driver: netcdf
   driver_kwargs:
     drop_variables: projection
@@ -2163,7 +2089,7 @@ merit_v1.0.3:
   crs: 4326
 modis_lai:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\modis\MODIS_MCD15A3H_LAI\*.tif
+  path: wflow_global/hydromt/landuse/modis/MODIS_MCD15A3H_LAI/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2184,7 +2110,7 @@ modis_lai:
   crs: 4326
 modis_mcd15a3h_v006:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\modis\MODIS_MCD15A3H_LAI\*.tif
+  path: wflow_global/hydromt/landuse/modis/MODIS_MCD15A3H_LAI/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2203,9 +2129,16 @@ modis_mcd15a3h_v006:
     source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
     source_version: MCD15A3H V006
   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 osm_coastlines:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\osm\osm_coastlines-db.fgb
+  path: wflow_global/hydromt/geography/osm/osm_coastlines-db.fgb
   driver: vector
   rename:
     fid: coastline_id
@@ -2219,7 +2152,7 @@ osm_coastlines:
   crs: 4326
 osm_coastlines_v20200109:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\osm\osm_coastlines-db.fgb
+  path: wflow_global/hydromt/geography/osm/osm_coastlines-db.fgb
   driver: vector
   rename:
     fid: coastline_id
@@ -2233,7 +2166,7 @@ osm_coastlines_v20200109:
   crs: 4326
 osm_landareas:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\osm\osm_landareas-db.fgb
+  path: wflow_global/hydromt/geography/osm/osm_landareas-db.fgb
   driver: vector
   rename:
     fid: land_id
@@ -2247,7 +2180,7 @@ osm_landareas:
   crs: 4326
 osm_landareas_v20200109:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\osm\osm_landareas-db.fgb
+  path: wflow_global/hydromt/geography/osm/osm_landareas-db.fgb
   driver: vector
   rename:
     fid: land_id
@@ -2290,16 +2223,16 @@ pcr_globwb:
   nodata: -9999
   variants:
   - version: '1990'
-    path: p:\wflow_global\hydromt\hydro\pcr_globwb\glob_1990.zarr
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_1990.zarr
   - version: '1995'
-    path: p:\wflow_global\hydromt\hydro\pcr_globwb\glob_1995.zarr
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_1995.zarr
   - version: '2000'
-    path: p:\wflow_global\hydromt\hydro\pcr_globwb\glob_2000.zarr
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_2000.zarr
   - version: '2005'
-    path: p:\wflow_global\hydromt\hydro\pcr_globwb\glob_2005.zarr
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_2005.zarr
 rgi:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\rgi\rgi.fgb
+  path: wflow_global/hydromt/hydrography/rgi/rgi.fgb
   driver: vector
   rename:
     C3S_ID: C3S_id
@@ -2317,7 +2250,7 @@ rgi:
   crs: 4326
 rgi_v0.6:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\rgi\rgi.fgb
+  path: wflow_global/hydromt/hydrography/rgi/rgi.fgb
   driver: vector
   rename:
     C3S_ID: C3S_id
@@ -2335,7 +2268,7 @@ rgi_v0.6:
   crs: 4326
 river_atlas_v10:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\hydro_atlas\river_atlas_v10.gpkg
+  path: wflow_global/hydromt/hydrography/hydro_atlas/river_atlas_v10.gpkg
   driver: vector
   rename:
     dis_m3_pyr: Dis_avg
@@ -2350,7 +2283,7 @@ river_atlas_v10:
   crs: 4326
 rivers_lin2019_v1:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\hydrography\rivers_lin2019\rivers_ge30m.fgb
+  path: wflow_global/hydromt/hydrography/rivers_lin2019/rivers_ge30m.fgb
   driver: vector
   rename:
     width_m: rivwth
@@ -2364,7 +2297,7 @@ rivers_lin2019_v1:
     source_version: 1
 simard:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\simard\sdat_10023_canopy_height_simard.tif
+  path: wflow_global/hydromt/landuse/simard/sdat_10023_canopy_height_simard.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2378,7 +2311,7 @@ simard:
   crs: 4326
 simard_v2011:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\simard\sdat_10023_canopy_height_simard.tif
+  path: wflow_global/hydromt/landuse/simard/sdat_10023_canopy_height_simard.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2392,7 +2325,7 @@ simard_v2011:
   crs: 4326
 soilgrids:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\soil\soilgrids_v1.0\*_250m_ll.tif
+  path: wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2467,13 +2400,13 @@ soilgrids:
     ph_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia\
-      \ (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database\
-      \ distribution version 2.0, european commission and the European soil bureau\n\
-      \ network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van\
-      \ Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:\
-      \ Response to european policy support  and public data requirements. Land Use\
-      \ Policy 29 (2), 329\xE2\u20AC\u201C338. \n"
+    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/n/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
     paper_doi: 10.1371/journal.pone.0169748
     paper_ref: Hengl et al. (2017)
     source_license: ODbL
@@ -2482,7 +2415,7 @@ soilgrids:
   crs: 4326
 soilgrids_2020:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\soil\soilgrids_v2.0\*\*_mean.vrt
+  path: wflow_global/hydromt/soil/soilgrids_v2.0/*/*_mean.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -2572,13 +2505,13 @@ soilgrids_2020:
     sndppt_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia\
-      \ (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database\
-      \ distribution version 2.0, european commission and the European soil bureau\
-      \ network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van\
-      \ Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:\
-      \ Response to european policy support  and public data requirements. Land Use\
-      \ Policy 29 (2), 329\xE2\u20AC\u201C338. \n"
+    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
     paper_doi: https://doi.org/10.5194/soil-2020-65
     paper_ref: de Sousa et al. (2020)
     source_license: CC BY 4.0
@@ -2586,7 +2519,7 @@ soilgrids_2020:
     source_version: 2020
 soilgrids_v1.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\soil\soilgrids_v1.0\*_250m_ll.tif
+  path: wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2661,13 +2594,13 @@ soilgrids_v1.0:
     ph_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia\
-      \ (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database\
-      \ distribution version 2.0, european commission and the European soil bureau\n\
-      \ network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van\
-      \ Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:\
-      \ Response to european policy support  and public data requirements. Land Use\
-      \ Policy 29 (2), 329\xE2\u20AC\u201C338. \n"
+    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/n/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
     paper_doi: 10.1371/journal.pone.0169748
     paper_ref: Hengl et al. (2017)
     source_license: ODbL
@@ -2676,7 +2609,7 @@ soilgrids_v1.0:
   crs: 4326
 soilgrids_v2.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\soil\soilgrids_v2.0\*\*_mean.vrt
+  path: wflow_global/hydromt/soil/soilgrids_v2.0/*/*_mean.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -2766,13 +2699,13 @@ soilgrids_v2.0:
     sndppt_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia\
-      \ (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database\
-      \ distribution version 2.0, european commission and the European soil bureau\
-      \ network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van\
-      \ Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:\
-      \ Response to european policy support  and public data requirements. Land Use\
-      \ Policy 29 (2), 329\xE2\u20AC\u201C338. \n"
+    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
     paper_doi: https://doi.org/10.5194/soil-2020-65
     paper_ref: de Sousa et al. (2020)
     source_license: CC BY 4.0
@@ -2780,46 +2713,10 @@ soilgrids_v2.0:
     source_version: 2020
 TAMSAT_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
+  path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
   driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 160
-      longitude: 150
-      time: 30
-    combine: by_coords
-    decode_times: true
-    parallel: true
   rename:
-    rfe_filled: precip 
-    lat: latitude
-    lon: longitude   
-  meta:
-    category: meteo
-    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
-    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
-    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
-    source_license: https://creativecommons.org/licenses/by/4.0/
-    source_url: https://research.reading.ac.uk/tamsat/data-access/
-  crs: 4326
-TAMSAT_Idai_hourly:
-  data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\TAMSAT\Idai\01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 160
-      longitude: 150
-      time: 30
-    combine: by_coords
-    decode_times: true
-    parallel: true
-  rename:
-    rfe_filled: precip 
-    lat: latitude
-    lon: longitude  
-  unit_mult:
-    precip: 0.04166667 # 1/24 to correct from daily to hourly
+    rfe_filled: precip
   meta:
     category: meteo
     notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
@@ -2830,7 +2727,7 @@ TAMSAT_Idai_hourly:
   crs: 4326
 vito:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2845,7 +2742,7 @@ vito:
   crs: 4326
 vito_2015_v2.0.2:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2860,7 +2757,7 @@ vito_2015_v2.0.2:
   crs: 4326
 vito_2016_v3.0.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\PROBAV_LC100_global_v3.0.1_2016-conso_Discrete-Classification-map_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/PROBAV_LC100_global_v3.0.1_2016-conso_Discrete-Classification-map_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2875,7 +2772,7 @@ vito_2016_v3.0.1:
   crs: 4326
 vito_2017_v3.0.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\PROBAV_LC100_global_v3.0.1_2017-conso_Discrete-Classification-map_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/PROBAV_LC100_global_v3.0.1_2017-conso_Discrete-Classification-map_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2890,7 +2787,7 @@ vito_2017_v3.0.1:
   crs: 4326
 vito_2018_v3.0.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\PROBAV_LC100_global_v3.0.1_2018-conso_Discrete-Classification-map_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/PROBAV_LC100_global_v3.0.1_2018-conso_Discrete-Classification-map_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2905,7 +2802,7 @@ vito_2018_v3.0.1:
   crs: 4326
 vito_2019_v3.0.1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\landuse\vito\ProbaV_LC100_global_v3.0.1_2019-nrt_discrete-classification-map_EPSG-4326.tif
+  path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_global_v3.0.1_2019-nrt_discrete-classification-map_EPSG-4326.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -2921,13 +2818,13 @@ vito_2019_v3.0.1:
 vito_mapping:
   data_type: DataFrame
   provider: user
-  path: p:/11210471-001-compass/01_Data/lulc/vito_mapping.csv
+  path: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
 wb_countries:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\wb\WB_countries_Admin0.fgb
+  path: wflow_global/hydromt/geography/wb/WB_countries_Admin0.fgb
   driver: vector
   rename:
     ISO_A3: country_iso
@@ -2946,7 +2843,7 @@ wb_countries:
   crs: 4326
 wb_countries_v20200319:
   data_type: GeoDataFrame
-  path: p:\wflow_global\hydromt\geography\wb\WB_countries_Admin0.fgb
+  path: wflow_global/hydromt/geography/wb/WB_countries_Admin0.fgb
   driver: vector
   rename:
     ISO_A3: country_iso
@@ -2965,7 +2862,7 @@ wb_countries_v20200319:
   crs: 4326
 worldclim:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\worldclim_v2.0\wc2.0_30s_prec.nc
+  path: wflow_global/hydromt/meteo/worldclim_v2.0/wc2.0_30s_prec.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -2983,7 +2880,7 @@ worldclim:
   crs: 4326
 worldclim_v2.0:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\meteo\worldclim_v2.0\wc2.0_30s_prec.nc
+  path: wflow_global/hydromt/meteo/worldclim_v2.0/wc2.0_30s_prec.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -3001,7 +2898,7 @@ worldclim_v2.0:
   crs: 4326
 worldpop_2020_UNadj_constrained:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\worldpop\ppp_2020_UNadj_constrained.vrt
+  path: wflow_global/hydromt/socio_economic/worldpop/ppp_2020_UNadj_constrained.vrt
   driver: raster
   driver_kwargs:
     chunks: auto
@@ -3016,7 +2913,7 @@ worldpop_2020_UNadj_constrained:
     source_url: https://www.worldpop.org/doi/10.5258/SOTON/WP00684
 worldpop_2020_constrained:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\socio_economic\worldpop\ppp_2020_constrained.vrt
+  path: wflow_global/hydromt/socio_economic/worldpop/ppp_2020_constrained.vrt
   driver: raster
   driver_kwargs:
     chunks: auto
@@ -3031,7 +2928,7 @@ worldpop_2020_constrained:
     source_url: https://www.worldpop.org/doi/10.5258/SOTON/WP00684
 wsf_bld_2015:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\infrastructure\wsf\WSF2015_v1_EPSG4326.vrt
+  path: wflow_global/hydromt/infrastructure/wsf/WSF2015_v1_EPSG4326.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -3046,7 +2943,7 @@ wsf_bld_2015:
   crs: 4326
 wsf_bld_2015_v1:
   data_type: RasterDataset
-  path: p:\wflow_global\hydromt\infrastructure\wsf\WSF2015_v1_EPSG4326.vrt
+  path: wflow_global/hydromt/infrastructure/wsf/WSF2015_v1_EPSG4326.vrt
   driver: raster
   driver_kwargs:
     chunks:
