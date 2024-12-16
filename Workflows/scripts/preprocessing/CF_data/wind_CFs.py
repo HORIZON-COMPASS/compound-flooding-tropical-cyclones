@@ -24,7 +24,7 @@ else:
     end_date = np.datetime64("2019-03-24") 
     bbox = [34.33,-20.12,34.95,-19.30]
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    precip_name = "ERA5land_Idai"
+    wind_name = "ERA5land_Idai"
     CF_value = -10
     CF_value_txt = "-10"
     output_CF_rainfall = os.path.abspath(f"p:/11210471-001-compass/01_Data/counterfactuals/wind/{wind_name}_{CF_value}.nc")
