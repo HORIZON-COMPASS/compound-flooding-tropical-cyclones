@@ -16,8 +16,7 @@ import shutil
 #from pyproj import Transformer
 
 #%%
-
-# user input
+# user input - to be converted to snakemake inputs and params
 model_name = 'mozambique_spw_Freddy2_area_MZB_500m_gebco2024'
 
 generate_grid = False # option to skip grid generation if this was already done.
@@ -110,10 +109,15 @@ elif 'spw_Freddy2' in model_name:
 tidemodel = 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
 
 #%%    
-# make directories
+# make directories, if not yet present
 os.makedirs(dir_output_run, exist_ok=True)
 
+
 #%%
+#############################################
+###### Grid generation and refinement #######
+#############################################
+
 # File name for the grid network
 netfile = os.path.join(dir_output_run, f'{model_name}_net.nc')
 
@@ -235,7 +239,12 @@ xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='white',alpha=0.2)
 # ctx.add_basemap(ax=ax, crs=crs, attribution=False)
 dfmt.plot_coastlines(ax=ax, crs=crs)
 
+
 #%%
+#####################################################
+### Generate boundary conditions from tidal model ###
+#####################################################
+
 # generate new format external forcings file (.ext): initial and open boundary condition
 ext_file_new = os.path.join(dir_output_run, f'{model_name}_new.ext')
 ext_new = hcdfm.ExtModel()
@@ -248,7 +257,12 @@ dfmt.interpolate_tide_to_bc(ext_new=ext_new, tidemodel=tidemodel, file_pli=poly_
 #save new ext file
 ext_new.save(filepath=ext_file_new) # ,path_style=path_style)
 
+
 #%%
+########################################
+######### Define meteo forcing #########
+########################################
+
 # generate old format external forcings file (.ext): spatial data
 ext_file_old = os.path.join(dir_output_run, f'{model_name}_old.ext')
 
@@ -341,7 +355,14 @@ if 'ERA5' in meteo_type:
     dfmt.plot_coastlines(ax=ax2, crs=crs)
     fig.tight_layout()
 
+
 #%%
+#################################################
+############## Generate obs file ################
+#################################################
+# The D-Flow FM model wil have mapoutput and hisoutput. 
+# A file with coordinates of obs stations will be generated.
+
 # Read shp file of points along the MZB coastline
 gdfp = gpd.read_file(r'p:\11210471-001-compass\01_Data\Coastal_boundary\points\coastal_bnd_MZB_5mMSL_points_1km.shp')
 
@@ -372,7 +393,13 @@ xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='k',alpha=0.2)
 ax.plot(pd_obs['x'],pd_obs['y'],'rx')
 dfmt.plot_coastlines(ax=ax, crs=crs)
 
+
 #%%
+############################################
+############ Generate mdu file #############
+############################################
+# In order for the model to run, we need a model definition file, i.e., a *.mdu file
+
 # initialize mdu file and update settings
 mdu_file = os.path.join(dir_output_run, f'{model_name}.mdu')
 
@@ -421,7 +448,14 @@ mdu.save(mdu_file) # ,path_style=path_style)
 # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
 dfmt.make_paths_relative(mdu_file)
 
+
 #%%
+#######################################################
+############# Generate DIMR and bat file ##############
+#######################################################
+# In order to run the model via DIMR we need a `dimr_config.xml` file. 
+# If you are running this notebook on a Windows platform, a *.bat file will also be created
+
 nproc = 4 # number of processes
 dimrset_folder = r"p:\d-hydro\dimrset\weekly\2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
@@ -441,6 +475,10 @@ with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfil
         outfile.write(line)
 
 #%%
+###############################################
+############ Visualize model tree #############
+###############################################
+
 # visualize the model tree, show_tree is available for all HYDROLIB-core model components
 mdu_obj = hcdfm.FMModel(mdu_file)
 mdu_obj.show_tree()
