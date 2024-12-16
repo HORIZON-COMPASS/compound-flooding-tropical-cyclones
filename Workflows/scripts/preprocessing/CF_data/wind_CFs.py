@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import xarray as xr
-import hydromt
+# import hydromt
 import geopandas as gpd
 import copy
 import yaml
@@ -12,25 +12,24 @@ import yaml
 if "snakemake" in locals():
     start_date = np.datetime64(snakemake.params.start_date) 
     end_date = np.datetime64(snakemake.params.end_date) 
-    domain = os.path.abspath(snakemake.input.model_domain)
-    path_data_cat = os.path.abspath(snakemake.input.data_cat)
-    CF_catalog_path = os.path.abspath(snakemake.input.CF_data_cat)
-    precip_name = snakemake.wildcards.precip_name
-    CF_value = float(snakemake.wildcards.CF_value_rain)
-    CF_value_txt = snakemake.wildcards.CF_value_rain
-    output_CF_rainfall = os.path.abspath(snakemake.output.CF_rainfall)
+    bbox = ast.literal_eval(snakemake.params.bbox)
+    path_data_cat = snakemake.params.data_cat
+    CF_catalog_path = snakemake.params.CF_data_cat
+    wind_name = snakemake.wildcards.wind_name
+    CF_value = float(snakemake.wildcards.CF_value_wind)
+    CF_value_txt = snakemake.wildcards.CF_value_wind
+    output_CF_wind = os.path.abspath(snakemake.output.CF_wind)
 else:
     start_date = np.datetime64("2019-03-09") 
     end_date = np.datetime64("2019-03-24") 
-    domain = os.path.abspath("../../runs/SFINCS/base_model/gis/region.geojson")
-    path_data_cat = os.path.abspath("../../input_data/factual/datacatalog_general.yml")
+    bbox = [34.33,-20.12,34.95,-19.30]
+    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
     precip_name = "ERA5land_Idai"
-    CF_value = 10
-    output_CF_rainfall = os.path.abspath(f"../../input_data/counterfactual/{precip_name}_{CF_value}.nc")
-    CF_catalog_path = os.path.abspath("../../input_data/counterfactual/datacatalog_CF.yml")
+    CF_value = -10
+    CF_value_txt = "-10"
+    output_CF_rainfall = os.path.abspath(f"p:/11210471-001-compass/01_Data/counterfactuals/wind/{wind_name}_{CF_value}.nc")
+    CF_catalog_path = os.path.abspath("../../../data_catalogs/datacatalog_CF_forcing.yml")
     
-# Read model domain as region
-region = gpd.read_file(domain)
 # Read data catalog
 data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 

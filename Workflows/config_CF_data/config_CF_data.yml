@@ -11,5 +11,5 @@ precip_name: ["ERA5land_Idai","TAMSAT_Idai"]
 CF_value_rain: [-7]
 
 # Defining the wind datasets
-# wind_name: ["ERA5_spw"]
-# CF_value_rain: [-10]
+wind_name: ["ERA5_spw"]
+CF_value_wind: [-10]
