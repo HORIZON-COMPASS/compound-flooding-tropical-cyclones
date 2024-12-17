@@ -30,14 +30,14 @@ def get_CF_datacatalog(wildcards):
 # Define wildcards from config file
 precip_name=config["precip_name"]
 CF_value_rain=config["CF_value_rain"]
-# wind_name=config["wind_name"]
-# CF_value_wind=config["CF_value_wind"]
+tc_name=config["tc_name"]
+CF_value_wind=config["CF_value_wind"]
 # tidemodel = config["tidemodel"]
 # SLR_value = config["SLR_value"]
 
 rule all: 
     input: 
-        expand(join(root_dir, "01_Data", "counterfactuals", "precipitation", "{precip_name}_{CF_value_rain}.nc"), 
+        expand(join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{precip_name}_{CF_value_rain}.nc"), 
                precip_name=precip_name, CF_value_rain=CF_value_rain)
 
 # rule create_SFINCS_base_model:
@@ -60,7 +60,7 @@ rule create_CF_rainfall:
         precip_name=lambda wildcards: wildcards.precip_name,
         CF_value_rain=lambda wildcards: wildcards.CF_value_rain
     output:
-        CF_rainfall=join(root_dir, "01_Data", "counterfactuals", "precipitation", "{precip_name}_{CF_value_rain}.nc")
+        CF_rainfall=join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{precip_name}_{CF_value_rain}.nc")
     script:
         join(curdir,"scripts","preprocessing","CF_data","precip_CFs.py")  # Path to the CF script
 
@@ -78,17 +78,15 @@ rule create_CF_rainfall:
 #         "../Idai/preprocessing/scripts/sealevel_CFs.py" 
 
 # rule create_CF_wind:
-#     input:
-#         model_domain="../Idai/runs/SFINCS/base_model/gis/region.geojson",
-#         data_cat="../Idai/input_data/factual/datacatalog_general.yml",
-#         CF_data_cat="../Idai/input_data/counterfactual/datacatalog_CF.yml"
-#     params:
-#         wind_name=lambda wildcards: wildcards.wind_name,
-#         CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
-#     output:
-#         CF_wind="../Idai/input_data/counterfactual/precip/{wind_name}_{CF_value_wind}.nc"
-#     script:
-#         "../Idai/preprocessing/scripts/wind_CFs.py" 
+    input:
+        ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
+    params:
+        tc_name=lambda wildcards: wildcards.wind_name,
+        CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
+    output:
+        CF_wind=join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{tc_name}_{CF_value_rain}.nc")
+    script:
+        join(curdir,"scripts","preprocessing","CF_data","wind_CFs.py") 
 
 # rule update_SFINCS_precip: #Updating the yml file #Creating the new rainfall
 #     input:
