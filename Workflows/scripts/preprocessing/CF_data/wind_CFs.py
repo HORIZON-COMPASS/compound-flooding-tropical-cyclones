@@ -17,9 +17,6 @@ from cht_cyclones.tropical_cyclone import TropicalCyclone
 if "snakemake" in locals():
     start_date = np.datetime64(snakemake.params.start_date) 
     end_date = np.datetime64(snakemake.params.end_date) 
-    # bbox = ast.literal_eval(snakemake.params.bbox)
-    # path_data_cat = snakemake.params.data_cat
-    # CF_catalog_path = snakemake.params.CF_data_cat
     tc_name = snakemake.wildcards.tc_name
     CF_value = float(snakemake.wildcards.CF_value_wind)
     CF_value_txt = snakemake.wildcards.CF_value_wind
@@ -28,29 +25,26 @@ if "snakemake" in locals():
 else:
     start_date = np.datetime64("2019-03-09") 
     end_date = np.datetime64("2019-03-24") 
-    # bbox = [34.33,-20.12,34.95,-19.30]
-    # path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
     tc_name = "Idai"
     CF_value = -10
     CF_value_txt = "-10"
     output_CF_wind = os.path.abspath(f"p:/11210471-001-compass/01_Data/counterfactuals/wind/{tc_name}_{CF_value}.nc")
-    # CF_catalog_path = os.path.abspath("../../../data_catalogs/datacatalog_CF_forcing.yml")
     ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
+    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
+    
 #%%
 # specify cyclone name
-tc_name = 'Idai' #'Kenneth', 'Idai', 'Freddy'
+# tc_name = 'Idai' #'Kenneth', 'Idai', 'Freddy'
 tc_year = start_date.astype('datetime64[ms]').astype(datetime).year
-extend_days = 9 # change to check with how many days it need to be extended
+# extend_days = 9 # change to check with how many days it need to be extended
 
 #%%
 # directory where the IBTRACS database is stored
-print('Open IBTrACS dataset...')
 ds_ibtracs = xr.open_dataset(ibtracs_path)
 
 #%%
 def create_track(ds_tc):
     # Initialize the tropical cyclone object
-    print('- Initializing tc object...')
     tc = TropicalCyclone(name=tc_name)
     tc.nr_radial_bins = 600
     tc.phi_spiral = 22.6
@@ -68,7 +62,6 @@ def create_track(ds_tc):
     data_r34 = ds_tc.usa_r34.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
 
     # fill in track data
-    print('- Filling in track data...')
     tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
                  winds = data_wind.values, pressures = data_pres.values,
                  rmw = data_rmw.values, r35 = data_r34.values)
@@ -78,8 +71,6 @@ def create_track(ds_tc):
 #%%
 # Find the cyclone in the IBTRACS database
 # Note: the record for one cyclone can contain several parts, this is the case for Freddy (2023)
-print(f'Find TC {tc_name} ({tc_year}) in the database...')
-
 ds_ibtracs = ds_ibtracs.where(ds_ibtracs.season == tc_year,drop=True)
 id = []
 for ii,ids in enumerate(ds_ibtracs.storm):
@@ -93,8 +84,6 @@ for id_track in id:
     # select only the data for this cyclone
     ds_tc = ds_ibtracs.isel(storm=id_track,drop=True)
 
-    print(f'Processing TC {tc_name} ({tc_year}),  track {ds_tc.sid} ...') 
-
     # drop unnecessary variables
     sid = ds_tc.sid.item().decode(encoding="utf-8")
     keys = list(ds_tc.keys()) # remove all variables except water level
@@ -106,8 +95,8 @@ for id_track in id:
     
     # crop the length of the dataset for specific cyclones
     # e.g. Freddy (2023) record is very long, we do not need the part that is far beyond the model domain
-    if (tc_name == 'Freddy') & (tc_year == 2023):
-        ds_tc = ds_tc.where(ds_tc.time > np.datetime64('2023-02-21'),drop=True)
+    # if (tc_name == 'Freddy') & (tc_year == 2023):
+    #     ds_tc = ds_tc.where(ds_tc.time > np.datetime64('2023-02-21'),drop=True)
 
     # TO DO: define extend_days based on datetime
 
@@ -122,17 +111,52 @@ for id_track in id:
     # del tc
 
 #ds_ibtracs.close(); del ds_ibtracs
+
 #%%
-ds_tc["usa_r34"]
+# Extract data and coordinates
+# data = ds_tc['bom_poci'].values
+# data
 
+#%%
+import numpy as np
 
+# Filter out NaT values
+valid_times = ds_tc.time.values[~np.isnat(ds_tc.time.values)]
+
+# Get the last valid time
+if len(valid_times) > 0:
+    last_valid_time = valid_times[-1]
+
+    # Calculate the difference with end_date
+    end_date = np.datetime64("2024-12-31")  # Example end_date
+    difference = (end_date - last_valid_time).astype('timedelta64[D]').item()
+
+    # Define extend_days if the difference is greater than zero
+    if difference > 0:
+        extend_days = difference
+        print(f"extend_days: {extend_days}")
+    else:
+        print("No extension needed.")
+else:
+    print("No valid time values found in the dataset.")
+
+#%%
+# Read data catalog
+data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
+
+# Load raster data
+precip_data = data_catalog.get_rasterdataset(
+    data_like = "ERA5_Idai",
+    variables = 'precip',
+    bbox=bbox, 
+)
 #%%
 import matplotlib.pyplot as plt
-ds = ds_tc
+
 # Assuming your dataset is loaded as 'ds'
-lat = ds['lat'].values
-lon = ds['lon'].values
-wind = ds['usa_pres'].values
+lat = ds_tc['lat'].values
+lon = ds_tc['lon'].values
+wind = ds_tc['usa_wind'].values
 
 # Remove NaN values to avoid plotting issues
 valid_data = ~np.isnan(lat) & ~np.isnan(lon) & ~np.isnan(wind)
@@ -149,6 +173,16 @@ plt.ylabel("Latitude")
 plt.title("Spatial Distribution of Tropical Cyclone Wind")
 plt.grid()
 plt.show()
+
+#%%
+
+#%%
+ds_tc["usa_wind"] = ds_tc["usa_wind"] * ((100 + CF_value)/100)
+# ds_tc["usa_pres"] = ds_tc["usa_pres"] * 1.1
+
+
+#%%
+
 
 
 
