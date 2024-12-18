@@ -15,27 +15,22 @@ from hydromt_sfincs.sfincs_input import SfincsInput
 # %%
 # model and data paths/
 logger = setuplog("update", "./hydromt.log", log_level=10)
-# if "snakemake" in locals():
-#     wflow_root = snakemake.params.wflow_root
-#     event = snakemake.params.event
-#     cosmos_event_root = snakemake.params.cosmos_event_root
-#     use_case = snakemake.params.use_case
-#     sfincs_root = snakemake.params.sfincs_root
-#     sf_model_name = snakemake.params.sfincs_event_name
-#     meteo_option = snakemake.params.meteo_option
-#     meteo_fn = snakemake.params.meteo_fn
-# else
-wflow_root = "c:/Git_repos/COMPASS/Wflow/wflow_sofala"
-event =  "freddy2"
-sfincs_model_folder = "c:/Git_repos/COMPASS/SFINCS/sfincs_sofala/computations/sfincs_CLI_Freddy2"
+if "snakemake" in locals():
+    sfincs_model_folder = snakemake.params.dir_run_with_forcing
+    wflow_root = snakemake.params.wflow_root_forcing
+    data_cats = snakemake.params.data_cats
+else:
+    wflow_root = "c:/Git_repos/COMPASS/Wflow/wflow_sofala"
+    event =  "freddy2"
+    sfincs_model_folder = "c:/Git_repos/COMPASS/SFINCS/sfincs_sofala/computations/sfincs_CLI_Freddy2"
 
 
 
 
 #%%
 mod = WflowModel(
-    root=join(wflow_root, "event", event),
-    data_libs=["deltares_data", r"c:/Git_repos/COMPASS/SFINCS/datacatalog_general.yml"],
+    root=join(wflow_root),
+    data_libs=data_cats,
     mode="r",
     logger=logger,
 )
@@ -68,7 +63,6 @@ for var in mod.results['netcdf'].data_vars:
         'longitude' : 'x',
         'latitude' : 'y'
         })
-
 
     #Convert time units to minutes
     encoding = dict(
