@@ -117,7 +117,7 @@ rule run_wflow_warmup:
         julia_env_fn = "~/.julia/environments/v1.9"
     shell:
         """
-        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
 
 rule run_wflow_event:
@@ -132,5 +132,5 @@ rule run_wflow_event:
         julia_env_fn = "~/.julia/environments/v1.9",
     shell:
         """
-        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
