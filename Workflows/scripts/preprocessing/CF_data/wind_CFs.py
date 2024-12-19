@@ -28,7 +28,7 @@ else:
     output_CF_wind = f"p:/11210471-001-compass/01_Data/counterfactuals/wind/tc_{tc_name}_{CF_value_txt}.spw"
     
 #%%
-#extract TC year
+# extract TC year
 tc_year = start_date.astype('datetime64[ms]').astype(datetime).year
 
 #%%
@@ -117,71 +117,15 @@ else:
     print("No valid time values found in the dataset.")
 
 #%%
-# Load the era5 dataset for environmental pressure estimate 
-# era5_ds = xr.open_dataset("p:/wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_2019_daily.nc")
-# era5_ds = era5_ds.rename({"latitude": "lat", "longitude": "lon"})
-# #%%
-# # Extract data from ERA5 datasets to obtain an estimate for environmental pressure
-# tc_lat, tc_lon, usa_pres, tc_time = ds_tc['lat'].values, ds_tc['lon'].values, ds_tc['usa_pres'].values, ds_tc['time'].values
-# era5_lat, era5_lon, era5_time, era5_pressure = era5_ds['lat'].values, era5_ds['lon'].values, era5_ds['time'].values, era5_ds['msl'].values # convert Pa to hPa
-
-# # Remove NaN values
-# valid_data = ~np.isnan(tc_lat) & ~np.isnan(tc_lon) & ~np.isnan(usa_pres)
-# tc_lat, tc_lon, usa_pres, tc_time = tc_lat[valid_data], tc_lon[valid_data], usa_pres[valid_data], tc_time[valid_data]
-
-# # Match TC time with ERA5 time (find closest time step in ERA5)
-# era5_time_index = np.abs(era5_time - tc_time[:, None]).argmin(axis=1)
-
-# # Find the closest grid points in ERA5 and extract msl values
-# matched_lat, matched_lon, matched_time, matched_era5_pressure = [], [], [], []
-# for i, time_index in enumerate(era5_time_index):
-#     lat_idx, lon_idx = np.abs(era5_lat - tc_lat[i]).argmin(), np.abs(era5_lon - tc_lon[i]).argmin()
-#     matched_lat.append(era5_lat[lat_idx])
-#     matched_lon.append(era5_lon[lon_idx])
-#     matched_time.append(era5_time[time_index])
-#     matched_era5_pressure.append(era5_pressure[time_index, lat_idx, lon_idx]/100) # divide by 100 to convert from Pa to hPa = mb
-
-#     print(matched_era5_pressure)
-    
-
-# matched_era5_ds = xr.Dataset(
-#     {
-#         "era5_msl": ("date_time", matched_era5_pressure),
-#     },
-#     coords={
-#         "time": ("date_time", tc_time),
-#         "lat": ("date_time", matched_lat),
-#         "lon": ("date_time", matched_lon),
-#     }
-# )
-
-# Plot the matched ERA5 pressure data as a scatter plot over the TC points
-# fig, ax = plt.subplots(figsize=(10, 6))
-# scatter = ax.scatter(matched_ds['lon'], matched_ds['lat'], c=matched_ds['matched_pressure'], cmap='coolwarm', edgecolors='k', s=50)
-# fig.colorbar(scatter, label="Matched ERA5 Pressure (hPa)")
-# ax.set_title("Matched ERA5 Pressure at TC Points")
-# ax.set_xlabel("Longitude")
-# ax.set_ylabel("Latitude")
-# ax.grid(True)
-# plt.show()
-
-#%%
 #### CF calculations ####
 # Create counterfactual wind based on CF_value
 ds_tc["usa_wind"] = ds_tc["usa_wind"] * ((100 + CF_value)/100)
-
 
 # Correct for the cooresponsing (small) change in pressure:
 # The central pressure at each track position is increased by CF_value times 
 # the difference between central pressure and environmental/background pressure,
 # defined in cht-cyclones as self.background_pressure = 1012 Pa
 ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((100 - CF_value)/100) * (1012 - ds_tc["usa_pres"])
-
-# # Mask for non-NaN values in the 'usa_pres' column
-# valid_usa_pres_mask = ~np.isnan(ds_tc["usa_pres"])
-
-# # Apply the operation only for valid 'usa_pres' values
-# ds_tc["usa_pres"][valid_usa_pres_mask] = ds_tc["usa_pres"][valid_usa_pres_mask] + ((100 - CF_value)/100) * (matched_era5_ds["era5_msl"] - ds_tc["usa_pres"][valid_usa_pres_mask])
 
 #%%
 # create spw file for this specific track
@@ -193,6 +137,3 @@ print('- Saving track...')
 tc.to_spiderweb(output_CF_wind)
 
 del tc
-
-
-# %%
