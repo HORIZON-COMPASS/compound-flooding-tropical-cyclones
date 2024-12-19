@@ -37,8 +37,10 @@ CF_value_wind=config["CF_value_wind"]
 
 rule all: 
     input: 
-        expand(join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{precip_name}_{CF_value_rain}.nc"), 
-               precip_name=precip_name, CF_value_rain=CF_value_rain)
+        expand(join(root_dir, "01_Data", "counterfactuals", "wind", "tc_{tc_name}_{CF_value_wind}.spw"), 
+               tc_name=tc_name, CF_value_wind=CF_value_wind)
+        # expand(join(root_dir, "01_Data", "counterfactuals", "precipitation", "{precip_name}_{CF_value_rain}.nc"), 
+        #        precip_name=precip_name, CF_value_rain=CF_value_rain)
 
 # rule create_SFINCS_base_model:
     # input:
@@ -46,23 +48,19 @@ rule all:
         # fn_base_model = "../Idai/runs/SFINCS/" + "base_model"
 
 # Creat CF rainfall dataset and add to CF data catalog
-rule create_CF_rainfall:
-    # input: 
-    #     # model_domain="../Idai/runs/SFINCS/base_model/gis/region.geojson",
-    #     # data_cat=join(curdir,"data_catalogs","datacatalog_general.yml"),
-    #     CF_data_cat="../Idai/input_data/counterfactual/datacatalog_CF.yml"
-    params:
-        start_date=config["start_date"],
-        end_date=config["end_date"],
-        bbox=config["bbox"],
-        data_cat=get_datacatalog,
-        CF_data_cat=get_CF_datacatalog,
-        precip_name=lambda wildcards: wildcards.precip_name,
-        CF_value_rain=lambda wildcards: wildcards.CF_value_rain
-    output:
-        CF_rainfall=join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{precip_name}_{CF_value_rain}.nc")
-    script:
-        join(curdir,"scripts","preprocessing","CF_data","precip_CFs.py")  # Path to the CF script
+# rule create_CF_rainfall:
+#     params:
+#         start_date=config["start_date"],
+#         end_date=config["end_date"],
+#         bbox=config["bbox"],
+#         data_cat=get_datacatalog,
+#         CF_data_cat=get_CF_datacatalog,
+#         precip_name=lambda wildcards: wildcards.precip_name,
+#         CF_value_rain=lambda wildcards: wildcards.CF_value_rain
+#     output:
+#         CF_rainfall=join(root_dir, "01_Data", "counterfactuals", "precipitation", "{precip_name}_{CF_value_rain}.nc")
+#     script:
+#         join(curdir,"scripts","preprocessing","CF_data","precip_CFs.py")  # Path to the CF script
 
 ### Other CF rules for wflow & DFM ###
 # rule create_CF_noSLR:
@@ -77,14 +75,16 @@ rule create_CF_rainfall:
 #     script:
 #         "../Idai/preprocessing/scripts/sealevel_CFs.py" 
 
-# rule create_CF_wind:
-    input:
-        ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
+rule create_CF_wind:
     params:
-        tc_name=lambda wildcards: wildcards.wind_name,
+        start_date=config["start_date"],
+        end_date=config["end_date"],
+        # tc_name=lambda wildcards: wildcards.tc_name,
+        tc_name=lambda wildcards: wildcards.tc_name,
+        # CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
         CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
     output:
-        CF_wind=join(root_dir, "01_Data", "counterfactuals", "precipitation", f"{tc_name}_{CF_value_rain}.nc")
+        CF_wind=join(root_dir, "01_Data", "counterfactuals", "wind", "tc_{tc_name}_{CF_value_wind}.spw")
     script:
         join(curdir,"scripts","preprocessing","CF_data","wind_CFs.py") 
 

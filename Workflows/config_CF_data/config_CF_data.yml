@@ -12,4 +12,4 @@ CF_value_rain: [-7]
 
 # Defining the wind datasets
 tc_name: ["Idai"]
-CF_value_wind: [-10]
+CF_value_wind: [-12]

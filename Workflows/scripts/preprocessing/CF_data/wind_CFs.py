@@ -5,10 +5,8 @@ import os
 import numpy as np
 import xarray as xr
 import pandas as pd
-# import hydromt
 import geopandas as gpd
-import copy
-import yaml
+import matplotlib.pyplot as plt
 from datetime import datetime
 from cht_cyclones.tropical_cyclone import TropicalCyclone
 
@@ -21,30 +19,27 @@ if "snakemake" in locals():
     CF_value = float(snakemake.wildcards.CF_value_wind)
     CF_value_txt = snakemake.wildcards.CF_value_wind
     output_CF_wind = os.path.abspath(snakemake.output.CF_wind)
-    ibtracs_path = os.path.abspath(snakemake.input.ibtracs_path)
 else:
     start_date = np.datetime64("2019-03-09") 
     end_date = np.datetime64("2019-03-24") 
     tc_name = "Idai"
     CF_value = -10
     CF_value_txt = "-10"
-    output_CF_wind = os.path.abspath(f"p:/11210471-001-compass/01_Data/counterfactuals/wind/{tc_name}_{CF_value}.nc")
-    ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
+    output_CF_wind = f"p:/11210471-001-compass/01_Data/counterfactuals/wind/tc_{tc_name}_{CF_value_txt}.spw"
     
 #%%
-# specify cyclone name
-# tc_name = 'Idai' #'Kenneth', 'Idai', 'Freddy'
+#extract TC year
 tc_year = start_date.astype('datetime64[ms]').astype(datetime).year
-# extend_days = 9 # change to check with how many days it need to be extended
 
 #%%
 # directory where the IBTRACS database is stored
+ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
 ds_ibtracs = xr.open_dataset(ibtracs_path)
 
 #%%
 def create_track(ds_tc):
     # Initialize the tropical cyclone object
+    print('- Initializing tc object...')
     tc = TropicalCyclone(name=tc_name)
     tc.nr_radial_bins = 600
     tc.phi_spiral = 22.6
@@ -62,6 +57,7 @@ def create_track(ds_tc):
     data_r34 = ds_tc.usa_r34.where(~ds_tc.usa_rmw.isnull(),drop=True).fillna(-999)
 
     # fill in track data
+    print('- Filling in track data...')
     tc.provide_track(datetimes = data_time, lons = data_lon.values, lats = data_lat.values,
                  winds = data_wind.values, pressures = data_pres.values,
                  rmw = data_rmw.values, r35 = data_r34.values)
@@ -79,7 +75,6 @@ for ii,ids in enumerate(ds_ibtracs.storm):
         id.append(ids.item())
 
 # %%
-
 for id_track in id:
     # select only the data for this cyclone
     ds_tc = ds_ibtracs.isel(storm=id_track,drop=True)
@@ -98,28 +93,10 @@ for id_track in id:
     # if (tc_name == 'Freddy') & (tc_year == 2023):
     #     ds_tc = ds_tc.where(ds_tc.time > np.datetime64('2023-02-21'),drop=True)
 
-    # TO DO: define extend_days based on datetime
-
-
-    # create spw file for this specific track
-    # tc = create_track(ds_tc)
-
-    # export to spiderweb
-    # print('- Saving track...')
-    # tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{sid}.spw'))
-
-    # del tc
-
-#ds_ibtracs.close(); del ds_ibtracs
+ds_ibtracs.close(); del ds_ibtracs
 
 #%%
-# Extract data and coordinates
-# data = ds_tc['bom_poci'].values
-# data
-
-#%%
-import numpy as np
-
+# Calculated extended days necessary of the track
 # Filter out NaT values
 valid_times = ds_tc.time.values[~np.isnat(ds_tc.time.values)]
 
@@ -127,13 +104,12 @@ valid_times = ds_tc.time.values[~np.isnat(ds_tc.time.values)]
 if len(valid_times) > 0:
     last_valid_time = valid_times[-1]
 
-    # Calculate the difference with end_date
-    end_date = np.datetime64("2024-12-31")  # Example end_date
+    # Calculate the difference with end_date defined by snakemake
     difference = (end_date - last_valid_time).astype('timedelta64[D]').item()
 
     # Define extend_days if the difference is greater than zero
-    if difference > 0:
-        extend_days = difference
+    if difference.days > 0:
+        extend_days = difference.days
         print(f"extend_days: {extend_days}")
     else:
         print("No extension needed.")
@@ -141,58 +117,80 @@ else:
     print("No valid time values found in the dataset.")
 
 #%%
-# Read data catalog
-data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
+# Load the era5 dataset for environmental pressure estimate 
+# era5_ds = xr.open_dataset("p:/wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_2019_daily.nc")
+# era5_ds = era5_ds.rename({"latitude": "lat", "longitude": "lon"})
+# #%%
+# # Extract data from ERA5 datasets to obtain an estimate for environmental pressure
+# tc_lat, tc_lon, usa_pres, tc_time = ds_tc['lat'].values, ds_tc['lon'].values, ds_tc['usa_pres'].values, ds_tc['time'].values
+# era5_lat, era5_lon, era5_time, era5_pressure = era5_ds['lat'].values, era5_ds['lon'].values, era5_ds['time'].values, era5_ds['msl'].values # convert Pa to hPa
 
-# Load raster data
-precip_data = data_catalog.get_rasterdataset(
-    data_like = "ERA5_Idai",
-    variables = 'precip',
-    bbox=bbox, 
-)
+# # Remove NaN values
+# valid_data = ~np.isnan(tc_lat) & ~np.isnan(tc_lon) & ~np.isnan(usa_pres)
+# tc_lat, tc_lon, usa_pres, tc_time = tc_lat[valid_data], tc_lon[valid_data], usa_pres[valid_data], tc_time[valid_data]
+
+# # Match TC time with ERA5 time (find closest time step in ERA5)
+# era5_time_index = np.abs(era5_time - tc_time[:, None]).argmin(axis=1)
+
+# # Find the closest grid points in ERA5 and extract msl values
+# matched_lat, matched_lon, matched_time, matched_era5_pressure = [], [], [], []
+# for i, time_index in enumerate(era5_time_index):
+#     lat_idx, lon_idx = np.abs(era5_lat - tc_lat[i]).argmin(), np.abs(era5_lon - tc_lon[i]).argmin()
+#     matched_lat.append(era5_lat[lat_idx])
+#     matched_lon.append(era5_lon[lon_idx])
+#     matched_time.append(era5_time[time_index])
+#     matched_era5_pressure.append(era5_pressure[time_index, lat_idx, lon_idx]/100) # divide by 100 to convert from Pa to hPa = mb
+
+#     print(matched_era5_pressure)
+    
+
+# matched_era5_ds = xr.Dataset(
+#     {
+#         "era5_msl": ("date_time", matched_era5_pressure),
+#     },
+#     coords={
+#         "time": ("date_time", tc_time),
+#         "lat": ("date_time", matched_lat),
+#         "lon": ("date_time", matched_lon),
+#     }
+# )
+
+# Plot the matched ERA5 pressure data as a scatter plot over the TC points
+# fig, ax = plt.subplots(figsize=(10, 6))
+# scatter = ax.scatter(matched_ds['lon'], matched_ds['lat'], c=matched_ds['matched_pressure'], cmap='coolwarm', edgecolors='k', s=50)
+# fig.colorbar(scatter, label="Matched ERA5 Pressure (hPa)")
+# ax.set_title("Matched ERA5 Pressure at TC Points")
+# ax.set_xlabel("Longitude")
+# ax.set_ylabel("Latitude")
+# ax.grid(True)
+# plt.show()
+
 #%%
-import matplotlib.pyplot as plt
-
-# Assuming your dataset is loaded as 'ds'
-lat = ds_tc['lat'].values
-lon = ds_tc['lon'].values
-wind = ds_tc['usa_wind'].values
-
-# Remove NaN values to avoid plotting issues
-valid_data = ~np.isnan(lat) & ~np.isnan(lon) & ~np.isnan(wind)
-lat = lat[valid_data]
-lon = lon[valid_data]
-wind = wind[valid_data]
-
-# Create the scatter plot
-plt.figure(figsize=(10, 6))
-sc = plt.scatter(lon, lat, c=wind, cmap="viridis", s=20, edgecolor="k")
-plt.colorbar(sc, label="Wind Speed (m/s)")
-plt.xlabel("Longitude")
-plt.ylabel("Latitude")
-plt.title("Spatial Distribution of Tropical Cyclone Wind")
-plt.grid()
-plt.show()
-
-#%%
-
-#%%
+#### CF calculations ####
+# Create counterfactual wind based on CF_value
 ds_tc["usa_wind"] = ds_tc["usa_wind"] * ((100 + CF_value)/100)
-# ds_tc["usa_pres"] = ds_tc["usa_pres"] * 1.1
 
+
+# Correct for the cooresponsing (small) change in pressure:
+# The central pressure at each track position is increased by CF_value times 
+# the difference between central pressure and environmental/background pressure,
+# defined in cht-cyclones as self.background_pressure = 1012 Pa
+ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((100 - CF_value)/100) * (1012 - ds_tc["usa_pres"])
+
+# # Mask for non-NaN values in the 'usa_pres' column
+# valid_usa_pres_mask = ~np.isnan(ds_tc["usa_pres"])
+
+# # Apply the operation only for valid 'usa_pres' values
+# ds_tc["usa_pres"][valid_usa_pres_mask] = ds_tc["usa_pres"][valid_usa_pres_mask] + ((100 - CF_value)/100) * (matched_era5_ds["era5_msl"] - ds_tc["usa_pres"][valid_usa_pres_mask])
 
 #%%
-
-
-
-
-# %%
 # create spw file for this specific track
 tc = create_track(ds_tc)
 
+#%%
 # export to spiderweb
 print('- Saving track...')
-tc.to_spiderweb(os.path.join(dir_base,'boundary_conditions','meteo','TC',f'tc_{tc_name.upper()}_{sid}.spw'))
+tc.to_spiderweb(output_CF_wind)
 
 del tc
 
