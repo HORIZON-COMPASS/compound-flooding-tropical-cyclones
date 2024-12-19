@@ -32,6 +32,11 @@ precip_name=config["precip_name"]
 CF_value_rain=config["CF_value_rain"]
 tc_name=config["tc_name"]
 CF_value_wind=config["CF_value_wind"]
+
+runname_ids = list(config['runname_ids'].keys())
+forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
+regions = [value['region'] for key, value in config['runname_ids'].items()]
+spw_files = [value['file_spw'] for key, value in config['runname_ids'].items()]
 # tidemodel = config["tidemodel"]
 # SLR_value = config["SLR_value"]
 
@@ -79,9 +84,7 @@ rule all:
 #     params:
 #         start_date=config["start_date"],
 #         end_date=config["end_date"],
-#         # tc_name=lambda wildcards: wildcards.tc_name,
 #         tc_name=lambda wildcards: wildcards.tc_name,
-#         # CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
 #         CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
 #     output:
 #         CF_wind=join(root_dir, "01_Data", "counterfactuals", "wind", "tc_{tc_name}_{CF_value_wind}.spw")
