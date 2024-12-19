@@ -48,7 +48,7 @@ opt = {
         "timestepsecs": 86400,
         "model.reinit": True,
         "state.path_output": join(
-            "..", "events", "instate", "instates.nc"
+            "..", "..", "events", "instate", "instates.nc"
         ),
         "input.path_static": join("..","staticmaps.nc"),
         "input.path_forcing":"inmaps.nc",
