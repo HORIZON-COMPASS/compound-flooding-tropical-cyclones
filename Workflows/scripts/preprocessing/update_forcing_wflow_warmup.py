@@ -48,9 +48,10 @@ opt = {
         "timestepsecs": 86400,
         "model.reinit": True,
         "state.path_output": join(
-            wflow_root_forcing, "events", "instate", "instates.nc"
+            "..", "events", "instate", "instates.nc"
         ),
-        "input.path_static": join(wflow_root_noforcing, "staticmaps.nc"),
+        "input.path_static": join("..","staticmaps.nc"),
+        "input.path_forcing":"inmaps.nc",
     },
     "setup_precip_forcing": {
         "precip_fn": "era5_daily",
@@ -72,7 +73,8 @@ mod.set_root(join(wflow_root_forcing, "warmup"), mode="w+")
 mod.setup_config(**opt["setup_config"])
 mod.setup_precip_forcing(**opt["setup_precip_forcing"])
 mod.setup_temp_pet_forcing(**opt["setup_temp_pet_forcing"])
-mod.write_forcing(fn_out=join(mod.root, "inmaps.nc"), chunksize=10)
+mod.write_forcing(chunksize=10)
+mod.write_grid()
 mod.write_config()
 
 # %%

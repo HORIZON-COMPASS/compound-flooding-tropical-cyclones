@@ -79,6 +79,7 @@ rule update_dis_forcing_sfincs:
         wflow_output = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
     params:
         dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        wflow_root_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
         data_cats = get_datacatalog,
     output:
         dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
@@ -104,14 +105,15 @@ rule run_sfincs_model:
         dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
     params:
         dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        exe = join(root_dir, "02_Models", "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
         currentdir = curdir
     output:
         mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
-        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),     
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),
     shell:
         '''
         docker image ls 
-        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs
+        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs || cd {params.dir_run} && {params.exe} > sfincs.log
         '''
 #        '(cd {params.dir_run} && run_sfincs.bat)
 

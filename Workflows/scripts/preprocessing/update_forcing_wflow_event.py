@@ -50,7 +50,8 @@ opt = {
         "endtime": end_time,
         "timestepsecs": 3600,
         "model.reinit": False,
-        "input.path_static": join(wflow_root_noforcing, "staticmaps.nc"),
+        "input.path_static": join("..","staticmaps.nc"),
+        "input.path_forcing":"inmaps.nc",
     },
     "setup_precip_forcing": {
         "precip_fn": meteo_fn,
@@ -67,6 +68,6 @@ opt = {
 
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
-mod.write_forcing(fn_out=join(mod.root, "inmaps.nc"))
+mod.write_forcing()
 mod.write_config()
 # %%
