@@ -75,18 +75,18 @@ rule all:
 #     script:
 #         "../Idai/preprocessing/scripts/sealevel_CFs.py" 
 
-rule create_CF_wind:
-    params:
-        start_date=config["start_date"],
-        end_date=config["end_date"],
-        # tc_name=lambda wildcards: wildcards.tc_name,
-        tc_name=lambda wildcards: wildcards.tc_name,
-        # CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
-        CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
-    output:
-        CF_wind=join(root_dir, "01_Data", "counterfactuals", "wind", "tc_{tc_name}_{CF_value_wind}.spw")
-    script:
-        join(curdir,"scripts","preprocessing","CF_data","wind_CFs.py") 
+# rule create_CF_wind:
+#     params:
+#         start_date=config["start_date"],
+#         end_date=config["end_date"],
+#         # tc_name=lambda wildcards: wildcards.tc_name,
+#         tc_name=lambda wildcards: wildcards.tc_name,
+#         # CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
+#         CF_value_wind=lambda wildcards: wildcards.CF_value_wind,
+#     output:
+#         CF_wind=join(root_dir, "01_Data", "counterfactuals", "wind", "tc_{tc_name}_{CF_value_wind}.spw")
+#     script:
+#         join(curdir,"scripts","preprocessing","CF_data","wind_CFs.py") 
 
 # rule update_SFINCS_precip: #Updating the yml file #Creating the new rainfall
 #     input:

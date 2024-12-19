@@ -47,14 +47,14 @@ forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
 
 
 #TODO Update rules with expand functions
-rule all:
+rule all_wflow:
     # input:
         # expand(join(root_dir, "02_Models", get_region("{runname}"), "{runname}", "wflow", 'wflow_sbm.toml'), runname=runname_ids)
     input:
         expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"), zip, region=regions, runname=runname_ids, forcing=forcing),
         
 
-rule make_base_model:
+rule make_base_model_wflow:
     input:
         config_file = join(curdir, "config_wflow", "wflow_build_{region}.yml"),
         region_geom = join(curdir, "..", "03_Runs", "sfincs_{runname}", "gis", "region.geojson"),

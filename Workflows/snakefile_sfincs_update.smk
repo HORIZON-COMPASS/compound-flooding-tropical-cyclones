@@ -42,24 +42,24 @@ spw_files = [value['file_spw'] for key, value in config['runname_ids'].items()]
 runname_ids = list(config['runname_ids'].keys())  #
 forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
 
-rule all:
+rule all_sfincs_update:
     input:
         expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing, spw_file = spw_files)
 
-rule make_base_model:
-    params:
-        arg_bbox = get_bbox,
-        dir_model_sfincs = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
-        data_cats = get_datacatalog
-    input:
-        config_file = join(curdir, "config_sfincs", "sfincs_base_build.yml"),
-    output: 
-        msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk")
-    script:
-        join("scripts", "model_building", "sfincs", "setup_sfincs_base.py")
+# rule make_base_model_sfincs:
+#     params:
+#         arg_bbox = get_bbox,
+#         dir_model_sfincs = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
+#         data_cats = get_datacatalog
+#     input:
+#         config_file = join(curdir, "config_sfincs", "sfincs_base_build.yml"),
+#     output: 
+#         msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk")
+#     script:
+#         join("scripts", "model_building", "sfincs", "setup_sfincs_base.py")
 
 
-rule add_forcing:
+rule add_forcing_coastal_meteo_sfincs:
     input:
         msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk"),
         spw_file_in = get_path_spw_ori,
@@ -73,6 +73,18 @@ rule add_forcing:
     script:
         join("scripts", "preprocessing", "update_sfincs_coastal_forcing.py")
 
+rule update_dis_forcing_sfincs:
+    input:
+        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs"),
+        wflow_output = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
+    params:
+        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        wflow_root_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
+        data_cats = get_datacatalog,
+    output:
+        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
+    script:
+        join("scripts", "preprocessing", "update_sfincs_dis_forcing.py")
 
 # rule - check the inp file? for e.g: formatting in linux
 
@@ -90,17 +102,18 @@ rule add_forcing:
 rule run_sfincs_model:
     input:
 #        batchfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
-        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs") 
+        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
     params:
         dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        exe = join(root_dir, "02_Models", "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
         currentdir = curdir
     output:
         mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
-        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),     
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),
     shell:
         '''
         docker image ls 
-        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs
+        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs || cd {params.dir_run} && {params.exe} > sfincs.log
         '''
 #        '(cd {params.dir_run} && run_sfincs.bat)
 

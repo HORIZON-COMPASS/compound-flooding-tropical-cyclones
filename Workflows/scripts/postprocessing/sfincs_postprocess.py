@@ -7,8 +7,8 @@ from os.path import join
 from hydromt_sfincs import SfincsModel, utils
 
 # We read the snakemake parameters
-mapfile = snakemake.input.mapfile
-hisfile = snakemake.input.hisfile
+mapfile = snakemake.input.mapout
+hisfile = snakemake.input.hisout
 outfile = snakemake.output.figure
 dir_run = snakemake.params.dir_run
 datacat = snakemake.params.datacat
