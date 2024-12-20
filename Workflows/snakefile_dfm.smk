@@ -29,6 +29,11 @@ def get_bbox(wildcards):
     arg_bbox = "{" + "'bbox': "+ prebbox + "}"
     return arg_bbox
 
+def get_dfm_bbox(wildcards):
+    prebbox = config["tc_name"][wildcards.tc_name]["bbox_dfm"]
+    dfm_bbox = "{" + "'bbox_dfm': "+ prebbox + "}"
+    return dfm_bbox
+
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return "data_catalogs/datacatalog_general.yml"
@@ -47,7 +52,7 @@ rule all_dfm:
     # input:
     #     expand(join(root_dir, "dir_runs", "{region}", "{tc_name}", "{forcing}", "dfm", "events", "run_default", "output_scalar.nc"), zip, region=region, tc_name=tc_name, forcing=wind_forcing),
     input:
-        expand(join(root_dir, dir_models, "mozambique", "dfm", 'base_{dfm_res}_{bathy}_{tidemodel}'), dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
+        expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
 
 rule make_base_model_dfm:
     params:
@@ -55,7 +60,7 @@ rule make_base_model_dfm:
         dfm_bbox = get_dfm_bbox,
         output_bbox = get_bbox,
     output: 
-        dir_model = join(root_dir, dir_models, "mozambique", "dfm", 'base_{dfm_res}_{bathy}_{tidemodel}'),
+        dir_model = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}"),
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_base.py")
 
@@ -71,7 +76,7 @@ rule make_base_model_dfm:
 #         toml_file = join(root_dir, "02_Models", "{region}", "{tc_name}", "wflow", 'wflow_sbm.toml'),
 #         staticmaps = join(root_dir, "02_Models", "{region}", "{tc_name}", "wflow", 'staticmaps.nc'), 
 #     script:
-#         join("scripts", "model_building", "wflow", "setup_wflow_base.py")
+#         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 # rule run_dfm:
 #     input:

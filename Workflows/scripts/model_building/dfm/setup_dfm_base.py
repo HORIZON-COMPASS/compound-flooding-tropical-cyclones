@@ -27,7 +27,7 @@ else:
     dfm_res = "450" # m
     bathy = "gebco2024"
     tidemodel = 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    dir_output_main = f'p:/11210471-001-compass/02_Models/mozambique/dfm/base_{dfm_res}_{bathy}_{tidemodel}'
+    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res}_{bathy}_{tidemodel}'
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
 
 #%%
