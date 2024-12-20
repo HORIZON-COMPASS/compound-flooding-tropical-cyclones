@@ -78,7 +78,7 @@ df.to_csv(
     # precip.to_netcdf(join(sfincs_model_folder,"precip.nc"), encoding = encoding)
     # Update inp file
     # config.pop('amprfile', None)
-config.update({'netamprfile': "precip.nc"})
+# config.update({'netamprfile': "precip.nc"})
 config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})
 inp = SfincsInput.from_dict(config)

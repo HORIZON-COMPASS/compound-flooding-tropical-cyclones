@@ -57,8 +57,9 @@ rule all_wflow:
 rule make_base_model_wflow:
     input:
         config_file = join(curdir, "config_wflow", "wflow_build_{region}.yml"),
-        region_geom = join(curdir, "..", "03_Runs", "sfincs_{runname}", "gis", "region.geojson"),
-        dir_sfincs_model = "c:/Git_repos/COMPASS/03_Runs/sfincs_{runname}",
+        region_geom = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
+        dir_sfincs_model = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
+        src_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs", "gis", "src.geojson")
     params:
         dir_model = join(root_dir, "02_Models", "{region}", "{runname}", "wflow"),
         data_cat = get_datacatalog,

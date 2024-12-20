@@ -1,6 +1,7 @@
 ### Import some useful python libraries
 import os
 from snakemake.io import Wildcards
+from snakemake import shell
 from os.path import join
 
 curdir = os.getcwd()
@@ -99,6 +100,7 @@ rule update_dis_forcing_sfincs:
 #     script:
 #         'add_batchfile.py'
 
+
 rule run_sfincs_model:
     input:
 #        batchfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
@@ -110,12 +112,19 @@ rule run_sfincs_model:
     output:
         mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
         hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),
-    shell:
-        '''
-        docker image ls 
-        docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs || cd {params.dir_run} && {params.exe} > sfincs.log
-        '''
-#        '(cd {params.dir_run} && run_sfincs.bat)
+    run:
+        if os.name == 'nt':
+            import subprocess
+            print(f"Running Sfincs model at {params.dir_run_with_forcing} with bin {params.exe}")
+            print("Executing SFINCS...")
+            with open (join(params.dir_run_with_forcing,"sfincs.log"), "w") as f:
+                subprocess.run([str(params.exe)], stdout=f, cwd=params.dir_run_with_forcing)
+                print("Finished running")
+        if os.name == 'posix':
+            shell("docker image ls")
+            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs")
+
+
 
 rule sfincs_plot_floodmap:
     input:
