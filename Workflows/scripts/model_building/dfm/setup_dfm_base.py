@@ -20,25 +20,15 @@ if "snakemake" in locals():
     dfm_res = snakemake.wildcards.dfm_res
     bathy = snakemake.wildcards.bathy
     tidemodel = snakemake.wildcards.tidemodel
-    model_name = snakemake.params.model_name
-    dir_output_main = snakemake.params.dir_model
+    dir_output_main = snakemake.output.dir_model
     path_data_cat = snakemake.params.data_cat
-    # grid_network = snakemake.output.grid_network
-    # illigalcells = snakemake.output.illigalcells
-    # pli_file = snakemake.output.pli_file
-    # ext_file_new = snakemake.output.ext_file_new
 else:
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
-    dfm_res = "450"
+    dfm_res = "450" # m
     bathy = "gebco2024"
     tidemodel = 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    model_name = f'base_{dfm_res}_{bathy}_{tidemodel}'
-    dir_output_main = f'p:/11210471-001-compass/02_Models/mozambique/dfm/'
+    dir_output_main = f'p:/11210471-001-compass/02_Models/mozambique/dfm/base_{dfm_res}_{bathy}_{tidemodel}'
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    # grid_network = os.path.join(dir_output_run, 'grid_network.nc')
-    # illigalcells = os.path.join(dir_output_run, 'pli_file.pli')
-    # pli_file = os.path.join(dir_output_run,"illegalcells.pol")
-    # ext_file_new =
 
 #%%
 # Define hydromt datacatalog
@@ -47,7 +37,7 @@ data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 # needed to define wind_forcing and bathy paths
 #%%
 # define model name, general settings and output location
-dir_output_run = os.path.join(dir_output_main, model_name)
+dir_output_run = os.path.join(dir_output_main)
 
 # make directories, if not yet present
 os.makedirs(dir_output_run, exist_ok=True)
