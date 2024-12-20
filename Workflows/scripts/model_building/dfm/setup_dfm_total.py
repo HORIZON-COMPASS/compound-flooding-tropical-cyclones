@@ -38,13 +38,13 @@ else:
     dfm_output_bbox = [34, -20.5, 35.6, -19.5] 
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
     dfm_obs_file = 'p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp'
-    verification_points = 'p:/ 11210471-001-compass/02_Models\Delft3DFM/mozambique_model/geometry/output_locations/MZB_Sofala_IHO_obs.xyn'
+    verification_points = 'p:/11210471-001-compass/02_Models\Delft3DFM/mozambique_model/geometry/output_locations/MZB_Sofala_IHO_obs.xyn'
 
 #%%
 # Define hydromt datacatalog
 data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 
-# needed to define wind_focring and bathy paths
+# needed to define wind_forcing and bathy paths
 #%%
 # define model name, general settings and output location
 dir_output_run = os.path.join(dir_output_main,'computations')
@@ -77,14 +77,14 @@ date_min = (start_datetime - timedelta(days=spin_up)).strftime('%Y-%m-%d %H:%M:%
 date_max = (end_datetime).strftime('%Y-%m-%d %H:%M:%S')
 ref_date = datetime(start_datetime.year, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
 
-#%%
-#############################################
+
+#%% #########################################
 ###### Grid generation and refinement #######
 #############################################
 
 # File name for the grid network
-netfile = os.path.join(dir_output_run, f'grid_network.nc')
-poly_file = os.path.join(dir_output_run, f'pli_file.pli')
+netfile = os.path.join(dir_output_run, 'grid_network.nc')
+poly_file = os.path.join(dir_output_run, 'pli_file.pli')
 pathfile_illegalcells = os.path.join(dir_output_run,"illegalcells.pol")
 
 # Load grid if it was already generated
@@ -116,7 +116,6 @@ else:
     fig, ax = plt.subplots()
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
     bnd_gdf_interp.plot(ax=ax, edgecolor='r')
-    # ctx.add_basemap(ax=ax, crs=crs, attribution=False)
     dfmt.plot_coastlines(ax=ax, crs=crs)
 
     # Define bathymetry
@@ -134,7 +133,6 @@ else:
     # plot
     fig, ax = plt.subplots()
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
-    # ctx.add_basemap(ax=ax, crs=crs, attribution=False)
     dfmt.plot_coastlines(ax=ax, crs=crs)
 
     # remove land with GSHHS coastlines
@@ -143,7 +141,6 @@ else:
     # plot
     fig, ax = plt.subplots(figsize=(12,7))
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
-    # ctx.add_basemap(ax=ax, crs=crs, attribution=False)
     dfmt.plot_coastlines(ax=ax,res='i',min_area=50,crs=crs)
 
     # derive illegalcells geodataframe
@@ -187,8 +184,7 @@ dfmt.interpolate_tide_to_bc(ext_new=ext_new, tidemodel=tidemodel, file_pli=poly_
 ext_new.save(filepath=ext_file_new) # ,path_style=path_style)
 
 
-#%%
-########################################
+#%%#####################################
 ######### Define meteo forcing #########
 ########################################
 
@@ -228,11 +224,11 @@ if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind sp
                                                     dir_output=dir_output_run,
                                                     time_slice=slice(date_min, date_max))
 elif meteo_type == 'spiderweb':
-    spw_file = spw_name + '.spw'
-    shutil.copyfile(spw_file_origin, os.path.join(dir_output_run,os.path.basename(spw_file_origin)))
+    spw_file = os.path.basename(spw_file_origin)
+    shutil.copyfile(spw_file_origin, os.path.join(dir_output_run,spw_file))
 
-    uniformwind_filename = 'uniformwind0.wnd'
-    shutil.copyfile(os.path.join(dir_output_bc,'meteo',uniformwind_filename),os.path.join(dir_output_run,uniformwind_filename))
+    uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
+    shutil.copyfile(uniformwind_filename,os.path.join(dir_output_run,"uniformwind0.wnd"))
 
     forcing_uniformwind = hcdfm.ExtOldForcing(quantity='windxy',
                                         filename=uniformwind_filename,
@@ -269,14 +265,14 @@ elif meteo_type == 'spiderweb':
 #                                                     time_slice=slice(date_min, date_max))
     
     # spiderweb # is this repetition (only changing Operand.override) necessary??
-    spw_file = spw_name + '.spw'
-    shutil.copyfile(spw_file_origin, os.path.join(dir_output_run,spw_file))
-    forcing_spw = hcdfm.ExtOldForcing(quantity='airpressure_windx_windy',
-                                        filename=spw_file,
-                                        filetype=hcdfm.ExtOldFileType.SpiderWebData, 
-                                        method=hcdfm.ExtOldMethod.PassThrough, 
-                                        operand=hcdfm.Operand.override) # is override necessary?
-    ext_old.forcing.append(forcing_spw)
+    # spw_file = spw_name + '.spw'
+    # shutil.copyfile(spw_file_origin, os.path.join(dir_output_run,spw_file))
+    # forcing_spw = hcdfm.ExtOldForcing(quantity='airpressure_windx_windy',
+    #                                     filename=spw_file,
+    #                                     filetype=hcdfm.ExtOldFileType.SpiderWebData, 
+    #                                     method=hcdfm.ExtOldMethod.PassThrough, 
+    #                                     operand=hcdfm.Operand.override) # is override necessary?
+    # ext_old.forcing.append(forcing_spw)
 
 ext_old.save(filepath=ext_file_old) # , path_style=path_style)
 
@@ -296,8 +292,7 @@ ext_old.save(filepath=ext_file_old) # , path_style=path_style)
 #     fig.tight_layout()
 
 
-#%%
-#################################################
+#%%##############################################
 ############## Generate obs file ################
 #################################################
 # The D-Flow FM model wil have mapoutput and hisoutput. 
@@ -338,8 +333,7 @@ ax.plot(pd_obs['x'],pd_obs['y'],'rx')
 dfmt.plot_coastlines(ax=ax, crs=crs)
 
 
-#%%
-############################################
+#%%#########################################
 ############ Generate mdu file #############
 ############################################
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
@@ -350,7 +344,7 @@ mdu_file = os.path.join(dir_output_run, f'settings.mdu')
 #mdu = hcdfm.FMModel()
 
 # use mdu file from GTSM
-base_mdu = os.path.join(dir_output_main,'general','base_model_settings.mdu')
+base_mdu = os.path.abspath('base_model_settings.mdu')
 mdu = hcdfm.FMModel(base_mdu)
 
 if os.path.exists(pathfile_illegalcells):
@@ -393,8 +387,7 @@ mdu.save(mdu_file) # ,path_style=path_style)
 dfmt.make_paths_relative(mdu_file)
 
 
-#%%
-#######################################################
+#%%####################################################
 ############# Generate DIMR and bat file ##############
 #######################################################
 # In order to run the model via DIMR we need a `dimr_config.xml` file. 
@@ -404,9 +397,8 @@ nproc = 4 # number of processes
 dimrset_folder = r"p:\d-hydro\dimrset\weekly\2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
 
-#%%
 # add a batch file to submit job to h7 cluster (as al alternative to running it on your node or computer)
-batchfile_h7 = os.path.abspath("../submit_singularity_h7.sh")
+batchfile_h7 = os.path.abspath("submit_singularity_h7.sh")
 
 # maybe not necessary?
 pathfile_h7 = os.path.join(dir_output_run,'submit_singularity_h7.sh')
@@ -419,8 +411,7 @@ with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfil
             line = line.replace(src, target)
         outfile.write(line)
 
-#%%
-###############################################
+#%%############################################
 ############ Visualize model tree #############
 ###############################################
 
