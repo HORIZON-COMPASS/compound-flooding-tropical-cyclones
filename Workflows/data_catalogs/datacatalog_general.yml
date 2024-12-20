@@ -2748,7 +2748,7 @@ soilgrids_v2.0:
     source_version: 2020
 spw_IBTrACS_ext_Idai:
     data_type: Dataset
-    path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw,
+    path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw
     meta:
       category: meteo
       notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
