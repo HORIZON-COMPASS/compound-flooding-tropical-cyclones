@@ -17,26 +17,42 @@ runname_ids:
         dfm_res: "450"
         bathy: "gebco2024"
         tidemodel: 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-
-        dfm_output_bbox:"[34, -20.5, 35.6, -19.5]" # same as bbox?
+        dfm_output_bbox: "[34,-20.5,35.6,-19.5]" # same as bbox?
         dfm_obs_file: 'p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp'
         verification_points: 'p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/geometry/output_locations/MZB_Sofala_IHO_obs.xyn'
-
-bbox_dfm: "[32.3,42.5,-27.4,-9.5]"
-
+        # bbox_dfm: "[32.3,42.5,-27.4,-9.5]"
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # CF_value_rain: [-7]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
         # CF_value_wind: [-10, -12]
         # CF_value_SLR: [14]
-    # Freddy2:
-    #     tc_name: Freddy2
-    #     region: quelimane
+    # Freddy1:
+    #     tc_name: Freddy1
+    #     region: quelimane #?
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
-    #     file_spw: tc_FREDDY_2023061S22036_ext9d.spw
-    #     start_time: 20230304 000000
-    #     end_time: 20230323 060000
+    #     dfm_output_bbox: "[34,-23.3,36,-21] "
+    #     file_spw: tc_FREDDY_2023036S12118_ext9d.spw
+    #     start_time: 20230221 000000
+    #     end_time: 20230305 060000
+    #     forcing: era5_hourly
+    Freddy2:
+        tc_name: Freddy2
+        region: quelimane
+        bbox: "[36.7,-18.35,37.41,-17.64]"
+        dfm_output_bbox: "[36.3,-19.7,38,-16.7]"
+        file_spw: tc_FREDDY_2023061S22036_ext9d.spw
+        start_time: 20230304 000000
+        end_time: 20230323 060000
+        forcing: era5_hourly
+    # Kenneth:
+    #     tc_name: Kenneth
+    #     region: 
+    #     bbox: "[36.7,-18.35,37.41,-17.64]"
+    #     dfm_output_bbox: "[40,-13.5,42,-11.2]"
+    #     file_spw: tc_KENNETH_2019112S10053_ext9d.spw
+    #     start_time: 20190421 210000
+    #     end_time: 20190505 000000
     #     forcing: era5_hourly
 
 
