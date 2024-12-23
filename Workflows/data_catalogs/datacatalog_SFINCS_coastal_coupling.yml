@@ -1,0 +1,89 @@
+meta:
+  root: p:/
+# roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
+#    - /p/  
+#    - p:/
+coastal_coupling_msk_MZB:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for Mozambique coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/obs_locs.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+dfm_output_MZB_Idai:
+  data_type: GeoDataset
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Idai_area_MZB_500m_gebco2024/output/mozambique_spw_Idai_area_MZB_500m_gebco2024_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_MZB_Kenneth:
+  data_type: GeoDataset
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Kenneth_area_MZB_500m_gebco2024/output/mozambique_spw_Kenneth_area_MZB_500m_gebco2024_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_MZB_Freddy1:
+  data_type: GeoDataset
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy1_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy1_area_MZB_500m_gebco2024_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_MZB_Freddy2:
+  data_type: GeoDataset
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/computations/mozambique_spw_Freddy2_area_MZB_500m_gebco2024/output/mozambique_spw_Freddy2_area_MZB_500m_gebco2024_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326

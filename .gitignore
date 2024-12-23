@@ -17,13 +17,15 @@ DelftFIAT/scripts/cache
 SFINCS/computations
 Delft3DFM/mozambique_model/results
 SFINCS/results
-SFINCS/workflow_scripts/.snakemake
+*.snakemake
+*.svg
 SFINCS/workflow_scripts/.nfs*
 SFINCS/workflow_scripts/test_*
 SFINCS/workflow_scripts/dag.png
 SFINCS/workflow_scripts/*.dot
 SFINCS/workflow_scripts/hook.sh
 hook.sh
+Wflow/wflow_sofala
 
 # Distribution / packaging
 .Python

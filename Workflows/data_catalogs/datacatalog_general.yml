@@ -1,5 +1,5 @@
 meta:
-  root: /p/
+  root: p:/
 # roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
 #    - /p/  
 #    - p:/
@@ -757,6 +757,7 @@ era5_hourly:
     combine: by_coords
     decode_times: true
     parallel: true
+    lock: false
   rename:
     d2m: temp_dew
     msl: press_msl
@@ -1031,6 +1032,13 @@ gdp_world:
     source_license: CC BY-4.0
     source_version: 1.0
   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 gdp_world_v1:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/socio_economic/gdp_world/World_countries_GDPpcPPP.fgb
@@ -1087,7 +1095,7 @@ gebco_v2020:
   crs: 4326
 gebco_v2024:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
   driver: raster
   driver_kwargs:
     chunks:

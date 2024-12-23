@@ -1,9 +1,3 @@
-global:
-  data_libs: 
-  - ..//datacatalog_general.yml    
-  - ..//datacatalog_SFINCS_coastal_coupling.yml             
-  - ..//datacatalog_SFINCS_obspoints.yml
-
 # set time of simulation
 setup_config:
   tref: 20230221 000000
