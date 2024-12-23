@@ -15,7 +15,7 @@ if "snakemake" in locals():
     region_geom = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
 else:
-    model_dir = r"p:/11210471-001-compass\02_Models\sofala\quelimane\wflow"
+    model_dir = r"p:/11210471-001-compass\02_Models\quelimane\Freddy2\wflow"
     config_file = r"c:\Git_repos\COMPASS\Workflows\config_wflow\wflow_build_quelimane.yml"
     data_cat = r"c:\Git_repos\COMPASS\Workflows\data_catalogs/datacatalog_general.yml"
     bbox = [34.33,-20.12,34.95,-19.30]
@@ -53,3 +53,5 @@ mod = WflowModel(
 mod.config['csv'] = None
 # %% BUILD MODEL
 mod.build(region={"basin": region}, opt=opt)
+mod.config['csv'] = None
+mod.write_config()
