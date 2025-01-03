@@ -26,9 +26,9 @@ The structure of the repository is as follows:
 ## Table of Contents
 - [Workflows](#workflows)
   - [snakefile_all.smk](#snakefile_allsmk)
-  - [snakefile_sfincs_build.smk](#snakefilesfincsbuildsmk)
-  - [snakefile_wflow.smk](#snakefilewflowsmk)
-  - [Other Workflow Rules](#other-workflow-rules)
+  - [snakefile_sfincs_build.smk](#snakefile_sfincs_buildsmk)
+  - [snakefile_wflow.smk](#snakefile_wflowsmk)
+  - [snakefile_sfincs_update](#snakefile_sfincs_updatesmk)
 
 ## **Workflows**
 
