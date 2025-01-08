@@ -30,7 +30,11 @@ def get_bbox(wildcards):
 
 def get_dfm_bbox(wildcards):
     bbox = config["tc_name"][wildcards.tc_name]["bbox_dfm"]
-    return bbox_dfm
+    return bbox
+
+def get_wind_forcing(wildcards):
+    obs_file = config["tc_name"][wildcards.tc_name]["wind_forcing"]
+    return obs_file
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -38,41 +42,68 @@ def get_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return "data_catalogs/datacatalog_general___linux.yml"
 
+# need to be adjusted for Linux
+def get_obs_file(wildcards):
+    obs_file = config["tc_name"][wildcards.tc_name]["dfm_obs_file"]
+    return obs_file
+
+# need to be adjusted for Linux
+def get_verification_points(wildcards):
+    verification_points = config["tc_name"][wildcards.tc_name]["verification_points"]
+    return verification_points
+
 # Define wildcards for path names
 region = [value['region'] for key, value in config['tc_name'].items()]
-tc_name = list(config['tc_name'].keys())  #
-wind_forcing = [value['wind_forcing'] for key, value in config['tc_name'].items()]
 dfm_res = [value['dfm_res'] for key, value in config['tc_name'].items()]
 bathy = [value['bathy'] for key, value in config['tc_name'].items()]
 tidemodel = [value['tidemodel'] for key, value in config['tc_name'].items()]
+tc_name = list(config['tc_name'].keys())
+wind_forcing = [value['wind_forcing'] for key, value in config['tc_name'].items()]
+
+# To prevent unwanted wildcard underscore splitting
+wildcard_constraints:
+    wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
 
 rule all_dfm:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
+        # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
+        expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
 
-rule make_base_model_dfm:
+# rule make_model_dfm_base:
+#     params:
+#         data_cat = get_datacatalog,
+#         dfm_bbox = get_dfm_bbox,
+#         output_bbox = get_bbox,
+#     output: 
+#         dir_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
+        # grid_network = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "grid_network.nc"),
+        # pli_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "pli_file.pli"),
+        # illegalcells = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "illegalcells.pol"),   
+#         ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
+#     script:
+#         join("scripts", "model_building", "dfm", "setup_dfm_base.py")
+
+rule make_dfm_model_event:
+    input:
+        grid_network = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "grid_network.nc"),
+        pli_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "pli_file.pli"),
+        illegalcells = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "illegalcells.pol"), 
+        ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
     params:
-        data_cat = get_datacatalog,
+        dir_base_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
+        start_time = get_start_time,
+        end_time = get_end_time,
         dfm_bbox = get_dfm_bbox,
         output_bbox = get_bbox,
+        dfm_obs_file = get_obs_file,
+        verification_points = get_verification_points,
+        data_cat = get_datacatalog,
+        wind_forcing = get_wind_forcing,
     output: 
-        dir_model = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}"),
+        dir_event_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+        mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
     script:
-        join("scripts", "model_building", "dfm", "setup_dfm_base.py")
-
-# rule make_dfm_model:
-#      input:
-#         config_file = join(curdir, "config_wflow", "wflow_build_{region}.yml"),
-#         dir_dfm_model = join(root_dir, "02_Models","{region}", "{tc_name}", "wflow",)
-#     params:
-#         dir_model = join(root_dir, "02_Models", "{region}", "{tc_name}", "wflow"),
-#         data_cat = get_datacatalog,
-#         arg_bbox = get_bbox,
-#     output: 
-#         toml_file = join(root_dir, "02_Models", "{region}", "{tc_name}", "wflow", 'wflow_sbm.toml'),
-#         staticmaps = join(root_dir, "02_Models", "{region}", "{tc_name}", "wflow", 'staticmaps.nc'), 
-#     script:
-#         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
+        join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 # rule run_dfm:
 #     input:
