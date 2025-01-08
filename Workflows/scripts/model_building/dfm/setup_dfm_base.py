@@ -16,20 +16,31 @@ import hydromt
 
 #%%
 if "snakemake" in locals():
-    bbox_dfm = snakemake.params.dfm_bbox
-    dfm_res = snakemake.wildcards.dfm_res
+    dfm_res = float(snakemake.wildcards.dfm_res)
     bathy = snakemake.wildcards.bathy
     tidemodel = snakemake.wildcards.tidemodel
-    dir_output_main = snakemake.output.dir_model
-    path_data_cat = snakemake.params.data_cat
+    dir_output_main = os.path.abspath(snakemake.output.dir_model)
+    bbox_dfm = snakemake.params.dfm_bbox
+    path_data_cat = os.path.abspath(snakemake.params.data_cat)
 else:
-    bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
-    dfm_res = "450" # m
+    dfm_res_txt = "450"
+    dfm_res = 450 # m
     bathy = "gebco2024"
-    tidemodel = 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res}_{bathy}_{tidemodel}'
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}'
+    bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
 
+# Correct for the missing . in the snake that snakemake cannot read
+if tidemodel == "GTSMv41opendap":
+    tidemodel = "GTSMv4.1_opendap"
+else:
+    pass
+
+if tidemodel == "GTSMv41":
+    tidemodel = "GTSMv4.1"
+else:
+    pass
 #%%
 # Define hydromt datacatalog
 data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
@@ -38,9 +49,11 @@ data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 #%%
 # define model name, general settings and output location
 dir_output_run = os.path.join(dir_output_main)
+dir_output_geometry = os.path.join(dir_output_main, "geometry")
 
 # make directories, if not yet present
 os.makedirs(dir_output_run, exist_ok=True)
+os.makedirs(dir_output_geometry, exist_ok=True)
 
 generate_grid = False # option to skip grid generation if this was already done.
 overwrite = False # used for downloading of forcing data. Always set to True when changing the domain
@@ -94,6 +107,9 @@ else:
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
     bnd_gdf_interp.plot(ax=ax, edgecolor='r')
     dfmt.plot_coastlines(ax=ax, crs=crs)
+    # Save the figure
+    output_path = os.path.join(dir_output_geometry, 'basegrid_polyline.png')
+    fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
     # Define bathymetry
     file_nc_bathy_sel = data_catalog[bathy].path
@@ -111,6 +127,9 @@ else:
     fig, ax = plt.subplots()
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
     dfmt.plot_coastlines(ax=ax, crs=crs)
+    # Save the figure
+    output_path = os.path.join(dir_output_geometry, 'basegrid_refined.png')
+    fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
     # remove land with GSHHS coastlines
     dfmt.meshkernel_delete_withcoastlines(mk=mk_object,res='i',min_area=50,crs=crs)
@@ -119,6 +138,9 @@ else:
     fig, ax = plt.subplots(figsize=(12,7))
     mk_object.mesh2d_get().plot_edges(ax,zorder=1)
     dfmt.plot_coastlines(ax=ax,res='i',min_area=50,crs=crs)
+    # Save the figure
+    output_path = os.path.join(dir_output_geometry, 'basegrid_refined_noland.png')
+    fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
     # derive illegalcells geodataframe
     illegalcells_gdf = dfmt.meshkernel_get_illegalcells(mk=mk_object)
@@ -143,6 +165,10 @@ xu_grid_uds.mesh2d_node_z.ugrid.plot(ax=ax,center=False)
 xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='white',alpha=0.2)
 # ctx.add_basemap(ax=ax, crs=crs, attribution=False)
 dfmt.plot_coastlines(ax=ax, crs=crs)
+
+# Save the figure
+output_path = os.path.join(dir_output_geometry, 'grid_refined_bathy.png')
+fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
 
 #%%##################################################
