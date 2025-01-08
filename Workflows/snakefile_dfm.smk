@@ -25,14 +25,12 @@ def get_end_time(wildcards):
     return config["tc_name"][wildcards.tc_name]['end_time']
 
 def get_bbox(wildcards):
-    prebbox = config["tc_name"][wildcards.tc_name]["bbox"]
-    arg_bbox = "{" + "'bbox': "+ prebbox + "}"
-    return arg_bbox
+    bbox = config["tc_name"][wildcards.tc_name]["bbox"]
+    return bbox
 
 def get_dfm_bbox(wildcards):
-    prebbox = config["tc_name"][wildcards.tc_name]["bbox_dfm"]
-    dfm_bbox = "{" + "'bbox_dfm': "+ prebbox + "}"
-    return dfm_bbox
+    bbox = config["tc_name"][wildcards.tc_name]["bbox_dfm"]
+    return bbox_dfm
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -49,8 +47,6 @@ bathy = [value['bathy'] for key, value in config['tc_name'].items()]
 tidemodel = [value['tidemodel'] for key, value in config['tc_name'].items()]
 
 rule all_dfm:
-    # input:
-    #     expand(join(root_dir, "dir_runs", "{region}", "{tc_name}", "{forcing}", "dfm", "events", "run_default", "output_scalar.nc"), zip, region=region, tc_name=tc_name, forcing=wind_forcing),
     input:
         expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
 
