@@ -13,62 +13,62 @@ import geopandas as gpd
 import shutil
 from datetime import datetime, timedelta
 import hydromt
+import ast
 
 #%%
 if "snakemake" in locals():
-    model_dir = snakemake.params.dir_model
-    # config_file = snakemake.input.config_file
-    # data_cat = snakemake.params.data_cat
-    # bbox = snakemake.params.arg_bbox
-    # region_geom = snakemake.input.region_geom
-    # dir_sfincs_model = snakemake.input.dir_sfincs_model
+    region = snakemake.wildcards.region
+    tc_name = snakemake.wildcards.tc_name
+    wind_forcing = snakemake.params.wind_forcing
+    start_time = snakemake.params.start_time
+    end_time = snakemake.params.end_time
+    bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
+    output_bbox = ast.literal_eval(snakemake.params.output_bbox)
+    dfm_obs_file = os.path.abspath(snakemake.params.dfm_obs_file)
+    verification_points = os.path.abspath(snakemake.params.verification_points)
+    path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
+    dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
 else:
-    bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
     region = "sofala"
     tc_name = "Idai"
     dfm_res = "450"
     bathy = "gebco2024"
-    tidemodel = 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
     wind_forcing = "spw_IBTrACS_ext"
+    bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
+    output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
     start_time = "20190309 000000"
     end_time = "20190325 060000"
-    model_name = f'mozambique_{region}_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
-    base_model = model_name = f'base_{dfm_res}_{bathy}_{tidemodel}'
-    dir_base_model = f'p:/11210471-001-compass/02_Models/mozambique/dfm/{model_name}'
-    dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
-    spw_input = 'p:/11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw'
-    output_bbox = [34, -20.5, 35.6, -19.5] 
+    dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
+    verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    dfm_obs_file = 'p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp'
-    verification_points = 'p:/11210471-001-compass/02_Models\Delft3DFM/mozambique_model/geometry/output_locations/MZB_Sofala_IHO_obs.xyn'
-
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
+    base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
+    dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
+    dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
+    
 #%%
 # Define hydromt datacatalog
 data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 
-# needed to define wind_forcing and bathy paths
 #%%
 # define model name, general settings and output location
-dir_output_run = os.path.join(dir_output_main,'computations')
 dir_output_geom = os.path.join(dir_output_main,'geometry')
 dir_output_bc = os.path.join(dir_output_main,'boundary_conditions')
 
 # make directories, if not yet present
-os.makedirs(dir_output_run, exist_ok=True)
+os.makedirs(dir_output_main, exist_ok=True)
+os.makedirs(dir_output_geom, exist_ok=True)
 
 # generate_grid = False # option to skip grid generation if this was already done.
 overwrite = False # used for downloading of forcing data. Always set to True when changing the domain
 crs = 'EPSG:4326' # coordinate reference system
 
 #%%
-# domain and resolution
-bbox_list = [float(x) for x in bbox_dfm.strip("[]").split(",")]
-lon_min, lon_max, lat_min, lat_max = bbox_list
-
-# dxy is the base grid resolution - i.e. the coarsest grid size in your grid. It is in degrees.
-# dxy = 0.2 # degrees
-# # Defines the minimum length of the edges of the computational mesh cells.
-# min_edge_size = dfm_res # m 
+# Define model domain
+lon_min, lon_max, lat_min, lat_max = bbox_dfm
+ 
 #%%
 # Define spin up and the model dates in the correct format
 spin_up =  4 # days
@@ -79,19 +79,18 @@ date_min = (start_datetime - timedelta(days=spin_up)).strftime('%Y-%m-%d %H:%M:%
 date_max = (end_datetime).strftime('%Y-%m-%d %H:%M:%S')
 ref_date = datetime(start_datetime.year, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
 
-
 #%% #########################################
 ###### Grid generation and refinement #######
 #############################################
 
 # Copy the correct base model files and define them
-shutil.copyfile(os.path.join(dir_base_model, base_model, 'grid_network.nc'), os.path.join(dir_output_run,'grid_network.nc'))
-shutil.copyfile(os.path.join(dir_base_model, base_model, 'pli_file.pli'), os.path.join(dir_output_run,'pli_file.pli'))
-shutil.copyfile(os.path.join(dir_base_model, base_model, 'illegalcells.pol'), os.path.join(dir_output_run,'illegalcells.pol'))
+shutil.copyfile(os.path.join(dir_base_model, 'grid_network.nc'), os.path.join(dir_output_main,'grid_network.nc'))
+shutil.copyfile(os.path.join(dir_base_model, 'pli_file.pli'), os.path.join(dir_output_main,'pli_file.pli'))
+shutil.copyfile(os.path.join(dir_base_model, 'illegalcells.pol'), os.path.join(dir_output_main,'illegalcells.pol'))
 
-netfile = os.path.join(dir_output_run, 'grid_network.nc')
-poly_file = os.path.join(dir_base_model, base_model, 'pli_file.pli')
-pathfile_illegalcells = os.path.join(dir_base_model, base_model,"illegalcells.pol")
+netfile = os.path.join(dir_output_main, 'grid_network.nc')
+poly_file = os.path.join(dir_base_model, 'pli_file.pli')
+pathfile_illegalcells = os.path.join(dir_base_model, "illegalcells.pol")
 
 # Load the base model grid
 xu_grid_uds = dfmt.open_partitioned_dataset(netfile)
@@ -101,17 +100,17 @@ xu_grid_uds = dfmt.open_partitioned_dataset(netfile)
 #####################################################
 
 # Copy the correct base model external forcings file (.ext): initial and open boundary condition 
-shutil.copyfile(os.path.join(dir_base_model, base_model, 'ext_file_new.ext'), os.path.join(dir_output_run,'ext_file_new.ext'))
+shutil.copyfile(os.path.join(dir_base_model, 'ext_file_new.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
 
 # and define it
-ext_file_new = os.path.join(dir_output_run, f'ext_file_new.ext')
+ext_file_new = os.path.join(dir_output_main, f'ext_file_new.ext')
 
 #%%#####################################
 ######### Define meteo forcing #########
 ########################################
 
 # generate old format external forcings file (.ext): spatial data
-ext_file_old = os.path.join(dir_output_run, f'ext_file_old.ext')
+ext_file_old = os.path.join(dir_output_main, f'ext_file_old.ext')
 
 ext_old = hcdfm.ExtOldModel()
 
@@ -143,14 +142,14 @@ if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind sp
     ext_old = dfmt.preprocess_merge_meteofiles_era5(ext_old=ext_old,
                                                     varkey_list=varlist_list,
                                                     dir_data=dir_output_data_era5,
-                                                    dir_output=dir_output_run,
+                                                    dir_output=dir_output_main,
                                                     time_slice=slice(date_min, date_max))
 elif meteo_type == 'spiderweb':
     spw_file = os.path.basename(spw_file_origin)
-    shutil.copyfile(spw_file_origin, os.path.join(dir_output_run,spw_file))
+    shutil.copyfile(spw_file_origin, os.path.join(dir_output_main,spw_file))
 
     uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
-    shutil.copyfile(uniformwind_filename,os.path.join(dir_output_run,"uniformwind0.wnd"))
+    shutil.copyfile(uniformwind_filename,os.path.join(dir_output_main,"uniformwind0.wnd"))
 
     forcing_uniformwind = hcdfm.ExtOldForcing(quantity='windxy',
                                         filename=uniformwind_filename,
@@ -199,7 +198,7 @@ except NameError:
     print("verification_points is not defined. Using 'tmp' as pd_obs.")
 
 # save obs points
-file_obs = os.path.join(dir_output_run, f'obs_points.xyn')
+file_obs = os.path.join(dir_output_main, f'obs_points.xyn')
 pd_obs.to_csv(file_obs, sep=' ', header=False, index=False, float_format='%.6f')
 
 # plot obs points
@@ -208,6 +207,9 @@ xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='k',alpha=0.2)
 ax.plot(pd_obs['x'],pd_obs['y'],'rx')
 dfmt.plot_coastlines(ax=ax, crs=crs)
 
+# Save the figure
+# output_path = os.path.join(dir_output_geom, 'grid_obs_points.png')
+# fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
 #%%#########################################
 ############ Generate mdu file #############
@@ -215,7 +217,7 @@ dfmt.plot_coastlines(ax=ax, crs=crs)
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_output_run, f'settings.mdu')
+mdu_file = os.path.join(dir_output_main, f'settings.mdu')
 
 #mdu = hcdfm.FMModel()
 
@@ -277,9 +279,9 @@ dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimr
 batchfile_h7 = os.path.abspath("submit_singularity_h7.sh")
 
 # maybe not necessary?
-pathfile_h7 = os.path.join(dir_output_run,'submit_singularity_h7.sh')
+pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
 
-replacements = {'JOBNAME':'MZB', 'MDUFILE':mdu_file}
+replacements = {'JOBNAME': region, 'MDUFILE':mdu_file}
 
 with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfile:
     for line in infile:
