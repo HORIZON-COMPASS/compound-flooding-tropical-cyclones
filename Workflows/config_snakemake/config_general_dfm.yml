@@ -12,20 +12,20 @@ tc_name:
         region: sofala
         bbox: "[34.33,-20.12,34.95,-19.30]"
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"
-        file_spw: tc_IDAI_2019063S18038_ext9d.spw 
+        # file_spw: "tc_IDAI_2019063S18038_ext9d.spw"
         start_time: 20190309 000000
         end_time: 20190325 060000
         forcing: era5_hourly
         dfm_res: "450"
         bathy: "gebco2024"
-        tidemodel: 'GTSMv4.1_opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+        tidemodel: "GTSMv41opendap" # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap (GTSMv41 = GTSMv4.1 but cannot be read by snake)
         dfm_output_bbox: "[34,-20.5,35.6,-19.5]" # same as bbox?
-        dfm_obs_file: 'Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp'
-        verification_points: 'Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn'
+        dfm_obs_file: "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
+        verification_points: "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # CF_value_rain: [-7]
-        wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        CF_value_wind: [-10, -12]
+        wind_forcing: "spw_IBTrACS_ext"
+        # CF_value_wind: [-10, -12]
         # CF_value_SLR: [14]
     # Freddy1:
     #     region: quelimane #?
