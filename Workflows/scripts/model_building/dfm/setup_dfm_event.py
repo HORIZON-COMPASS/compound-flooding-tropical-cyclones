@@ -29,9 +29,7 @@ if "snakemake" in locals():
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
-    # base_mdu = os.path.abspath(snakemake.input.base_mdu)
     dimrset_folder = os.path.abspath(snakemake.input.dimrset)
-    # batchfile_h7 = os.path.abspath(snakemake.input.batchfile_h7)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -50,9 +48,7 @@ else:
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
-    # base_mdu = os.path.abspath('base_model_settings.mdu')
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
-    # batchfile_h7 = os.path.abspath("submit_singularity_h7.sh")
 
 #%%
 # Define hydromt datacatalog
