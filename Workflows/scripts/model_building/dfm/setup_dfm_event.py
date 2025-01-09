@@ -19,7 +19,7 @@ import ast
 if "snakemake" in locals():
     region = snakemake.wildcards.region
     tc_name = snakemake.wildcards.tc_name
-    wind_forcing = snakemake.params.wind_forcing
+    wind_forcing = snakemake.wildcards.wind_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
@@ -29,6 +29,9 @@ if "snakemake" in locals():
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
+    # base_mdu = os.path.abspath(snakemake.input.base_mdu)
+    dimrset_folder = os.path.abspath(snakemake.input.dimrset)
+    # batchfile_h7 = os.path.abspath(snakemake.input.batchfile_h7)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -47,10 +50,18 @@ else:
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
-    
+    # base_mdu = os.path.abspath('base_model_settings.mdu')
+    dimrset_folder = "p:/d-hydro/dimrset/weekly/2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
+    # batchfile_h7 = os.path.abspath("submit_singularity_h7.sh")
+
 #%%
 # Define hydromt datacatalog
 data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
+
+# Get base mdu and batchfile
+script_path = os.path.abspath(__file__)
+base_mdu = os.path.abspath(script_path, 'base_model_settings.mdu')
+batchfile_h7 = os.path.abspath(script_path, "submit_singularity_h7.sh")
 
 #%%
 # define model name, general settings and output location
@@ -222,7 +233,7 @@ mdu_file = os.path.join(dir_output_main, f'settings.mdu')
 #mdu = hcdfm.FMModel()
 
 # use mdu file from GTSM
-base_mdu = os.path.abspath('base_model_settings.mdu')
+base_mdu = base_mdu
 mdu = hcdfm.FMModel(base_mdu)
 
 if os.path.exists(pathfile_illegalcells):
@@ -272,11 +283,7 @@ dfmt.make_paths_relative(mdu_file)
 # If you are running this notebook on a Windows platform, a *.bat file will also be created
 
 nproc = 4 # number of processes
-dimrset_folder = r"p:\d-hydro\dimrset\weekly\2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
-
-# add a batch file to submit job to h7 cluster (as al alternative to running it on your node or computer)
-batchfile_h7 = os.path.abspath("submit_singularity_h7.sh")
 
 # maybe not necessary?
 pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
