@@ -1,6 +1,6 @@
 # %%
 from os.path import basename, join, exists
-
+import geopandas as gpd
 from hydromt.config import configread
 import ast
 from hydromt.log import setuplog
@@ -27,7 +27,7 @@ else:
         r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_obspoints.yml',
         r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
     ]
-    bbox ="[36.7,-18.35,37.41,-17.64]"
+    bbox =[36.7,-18.35,37.41,-17.64]
 
 
 if not exists(model_dir):
@@ -53,5 +53,36 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
+
+# %%
+mod = SfincsModel(
+    root=model_dir, data_libs=data_cats, mode="r+", logger=logger, **kwargs
+)
+mod.read()
+gdf_powlaw = gpd.read_file(join(model_dir, "gis", "rivers_inflow.geojson"))
+depth_powlaw = hydromt.workflows.rivers.river_depth(data= gdf_powlaw,
+                                                    method = "powlaw",
+                                                    qbankfull_name= "qbankfull",
+                                                    hc = 0.27,
+                                                    hp = 0.30,)
+gdf_powlaw["rivdph"] = depth_powlaw
+gdf_powlaw.to_file(join(model_dir, "gis", "rivers_inflow_with_depth.geojson"))
+
+#%%
+
+mod.setup_subgrid(datasets_dep=[{"elevtn": "merit_hydro", "zmin": 0.001},{"elevtn": "gebco_v2024", "reproj_method" : "bilinear"}],
+                  datasets_rgh=[{"lulc": "vito", "reclass_table" : "vito_mapping"}],
+                  datasets_riv=[{"centerlines": gdf_powlaw,
+                                 "manning": 0.035, 
+                                 # "rivdph": 3
+                                 }],
+                  write_dep_tif = True,
+                  nr_subgrid_pixels = 3, # 1 m
+                  nrmax = 2000,
+                  )
+
+
+#%%
+mod.write()
 
 # %%

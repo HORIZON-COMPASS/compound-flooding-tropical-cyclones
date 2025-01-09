@@ -29,20 +29,20 @@ setup_mask_bounds:
   include_mask_buffer: 200         
   reset_bounds: True  
 
-setup_subgrid:
-  datasets_dep:
-  - elevtn: merit_hydro       
-    zmin: 0.001              
-  - elevtn: gebco_v2024       
-    reproj_method: bilinear
-  datasets_rgh:
-  - lulc: vito
-    reclass_table: vito_mapping
-#    datasets_riv = datasets_riv,
-  nr_subgrid_pixels: 3  
-  write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
-  write_man_tif: True
-  nrmax: 5000  # set tile size a bit larger speed up processing (default 2000)
+# setup_subgrid:
+#   datasets_dep:
+#   - elevtn: merit_hydro       
+#     zmin: 0.001              
+#   - elevtn: gebco_v2024       
+#     reproj_method: bilinear
+#   datasets_rgh:
+#   - lulc: vito
+#     reclass_table: vito_mapping
+#   datasets_riv: datasets_riv,
+#   nr_subgrid_pixels: 3  
+#   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
+#   write_man_tif: True
+#   nrmax: 5000  # set tile size a bit larger speed up processing (default 2000)
 
 setup_cn_infiltration:
   cn: gcn250  
