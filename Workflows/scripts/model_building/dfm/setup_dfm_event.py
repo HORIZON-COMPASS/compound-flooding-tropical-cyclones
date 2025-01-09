@@ -56,8 +56,8 @@ data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 
 # Get base mdu and batchfile
 script_path = os.path.abspath(__file__)
-base_mdu = os.path.abspath(script_path, 'base_model_settings.mdu')
-batchfile_h7 = os.path.abspath(script_path, "submit_singularity_h7.sh")
+base_mdu = os.path.abspath(os.path.join(script_path, 'base_model_settings.mdu'))
+batchfile_h7 = os.path.abspath(os.path.join(script_path, "submit_singularity_h7.sh"))
 
 #%%
 # define model name, general settings and output location
