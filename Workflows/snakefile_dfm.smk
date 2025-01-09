@@ -101,7 +101,7 @@ rule make_dfm_model_event:
 
 # rule run_dfm:
 #     input:
-#         join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "instate", "instates.nc"),
+        # mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
 #         join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "inmaps.nc"),
 #         toml = join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "wflow_sbm.toml"),
 #     output:
