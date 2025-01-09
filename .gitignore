@@ -12,6 +12,8 @@ pixi.lock
 
 # Model data
 Delft3DFM/mozambique_model/computations
+DelftFIAT/computations
+DelftFIAT/scripts/cache
 SFINCS/computations
 Delft3DFM/mozambique_model/results
 SFINCS/results
