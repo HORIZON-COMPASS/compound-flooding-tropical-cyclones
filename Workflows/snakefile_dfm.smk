@@ -5,9 +5,11 @@ from os.path import join
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    root_dir = join("p:/",config['root_dir'])
+    p_dir = join("p:/")
 elif os.name == "posix": #Running on linux
-    root_dir = join("/p", config['root_dir'])
+    p_dir = join("/p")
+
+root_dir = join(p_dir,config['root_dir'])
 dir_runs = config['dir_runs']
 
 # define other directories:
@@ -31,10 +33,6 @@ def get_bbox(wildcards):
 def get_dfm_bbox(wildcards):
     bbox = config["tc_name"][wildcards.tc_name]["bbox_dfm"]
     return bbox
-
-def get_wind_forcing(wildcards):
-    obs_file = config["tc_name"][wildcards.tc_name]["wind_forcing"]
-    return obs_file
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -69,36 +67,32 @@ rule all_dfm:
         # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
         expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
 
-# rule make_model_dfm_base:
-#     params:
-#         data_cat = get_datacatalog,
-#         dfm_bbox = get_dfm_bbox,
-#         output_bbox = get_bbox,
-#     output: 
-#         dir_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
-        # grid_network = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "grid_network.nc"),
-        # pli_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "pli_file.pli"),
-        # illegalcells = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "illegalcells.pol"),   
-#         ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
-#     script:
-#         join("scripts", "model_building", "dfm", "setup_dfm_base.py")
+rule make_model_dfm_base:
+    params:
+        data_cat = get_datacatalog,
+        dfm_bbox = get_dfm_bbox,
+        output_bbox = get_bbox,
+    output: 
+        dir_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
+        ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
+    script:
+        join("scripts", "model_building", "dfm", "setup_dfm_base.py")
 
 rule make_dfm_model_event:
     input:
-        grid_network = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "grid_network.nc"),
-        pli_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "pli_file.pli"),
-        illegalcells = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "illegalcells.pol"), 
         ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
+        dimrset      = join(root_dir, "/d-hydro/dimrset/weekly/2.25.17.78708"),
+        base_mdu     = join("scripts", "model_building", "dfm", "base_model_settings.mdu"),
+        batchfile_h7 = join("scripts", "model_building", "dfm", "submit_singularity_h7.sh"),
     params:
         dir_base_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
-        start_time = get_start_time,
-        end_time = get_end_time,
-        dfm_bbox = get_dfm_bbox,
-        output_bbox = get_bbox,
+        start_time   = get_start_time,
+        end_time     = get_end_time,
+        dfm_bbox     = get_dfm_bbox,
+        output_bbox  = get_bbox,
         dfm_obs_file = get_obs_file,
         verification_points = get_verification_points,
-        data_cat = get_datacatalog,
-        wind_forcing = get_wind_forcing,
+        data_cat     = get_datacatalog,
     output: 
         dir_event_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
         mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
