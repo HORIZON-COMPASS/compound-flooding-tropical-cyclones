@@ -82,8 +82,8 @@ rule make_dfm_model_event:
     input:
         ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
         dimrset      = join(root_dir, "/d-hydro/dimrset/weekly/2.25.17.78708"),
-        base_mdu     = join("scripts", "model_building", "dfm", "base_model_settings.mdu"),
-        batchfile_h7 = join("scripts", "model_building", "dfm", "submit_singularity_h7.sh"),
+        # base_mdu     = join("scripts", "model_building", "dfm", "base_model_settings.mdu"),
+        # batchfile_h7 = join("scripts", "model_building", "dfm", "submit_singularity_h7.sh"),
     params:
         dir_base_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         start_time   = get_start_time,
@@ -99,16 +99,13 @@ rule make_dfm_model_event:
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
-# rule run_dfm:
-#     input:
-        # mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
-#         join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "inmaps.nc"),
-#         toml = join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "wflow_sbm.toml"),
-#     output:
-#         join(root_dir, "03_Runs", "{region}", "{tc_name}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
-#     params:
-#         exe = join(root_dir, "02_Models", "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
-#         julia_env_fn = "~/.julia/environments/v1.9",
+rule run_dfm:
+    input:
+        mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
+        submit_script_linux = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
+        submit_script_windows = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
+    output:
+        join(root_dir, "03_Runs", "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
 #     shell:
 #         """
 #         {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
