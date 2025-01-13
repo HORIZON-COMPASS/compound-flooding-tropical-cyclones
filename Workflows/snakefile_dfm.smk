@@ -40,6 +40,12 @@ def get_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return "data_catalogs/datacatalog_general___linux.yml"
 
+def get_dfm_datacatalog(wildcards):
+    if os.name == 'nt': #Running on windows
+        return "data_catalogs/datacatalog_dfm_output.yml"
+    elif os.name == "posix": #Running on linux
+        return "data_catalogs/datacatalog_dfm_output___linux.yml"
+
 # need to be adjusted for Linux
 def get_obs_file(wildcards):
     obs_file = config["tc_name"][wildcards.tc_name]["dfm_obs_file"]
@@ -65,7 +71,8 @@ wildcard_constraints:
 rule all_dfm:
     input:
         # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
-        expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
+        # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
+        expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "settings.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
 
 rule make_model_dfm_base:
     params:
@@ -80,12 +87,12 @@ rule make_model_dfm_base:
 
 rule make_dfm_model_event:
     input:
-        ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
-        dimrset      = join(root_dir, "/d-hydro/dimrset/weekly/2.25.17.78708"),
+        ext_file_new = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
+        dimrset      = join(root_dir, "d-hydro", "dimrset", "weekly", "2.25.17.78708"),
         # base_mdu     = join("scripts", "model_building", "dfm", "base_model_settings.mdu"),
         # batchfile_h7 = join("scripts", "model_building", "dfm", "submit_singularity_h7.sh"),
     params:
-        dir_base_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
+        dir_base_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         start_time   = get_start_time,
         end_time     = get_end_time,
         dfm_bbox     = get_dfm_bbox,
@@ -94,21 +101,35 @@ rule make_dfm_model_event:
         verification_points = get_verification_points,
         data_cat     = get_datacatalog,
     output: 
-        dir_event_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
-        mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
-        mdu_file = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
-        submit_script_linux = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
-        submit_script_windows = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
+        submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
+        submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
     output:
-        join(root_dir, "03_Runs", "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
-    script:
-        {input.submit_script_linux} || {input.submit_script_windows}
-#     shell:
-#         """
-        # {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
-#         """
+        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "settings.nc"),
+    # script:
+        # {input.submit_script_linux} || {input.submit_script_windows}
+    run:
+        if os.name == 'nt':
+            print("Executing DFM...")
+            shell("{input.submit_script_windows}")
+            print("Finished running")
+        if os.name == 'posix':
+            shell("sbatch {input.submit_script_linux}")
+
+
+
+# rule add_dfm_output_to_catalog:
+#     input:
+#         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
+#     params:
+#         dfm_data_cat = get_dfm_datacatalog
+#         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+#     script:
+#         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
