@@ -279,12 +279,46 @@ dfmt.make_paths_relative(mdu_file)
 # If you are running this notebook on a Windows platform, a *.bat file will also be created
 
 nproc = 4 # number of processes
+
+# Making bat file
 dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
 
-# maybe not necessary?
-pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
+bat_file_path = os.path.join(dir_output_main, "run_parallel.bat")
 
-replacements = {'JOBNAME': region, 'MDUFILE':mdu_file}
+# Define the replacements from hardcoded dmft paths
+replacements = {
+    r"%dimrset_folder%\x64\bin\run_dflowfm.bat": r"%dimrset_folder%\x64\dflowfm\scripts\run_dflowfm.bat",
+    r"%dimrset_folder%\x64\bin\run_dimr_parallel.bat": r"%dimrset_folder%\x64\dimr\scripts\run_dimr_parallel.bat",
+}
+
+# Check if the .bat file exists
+if os.path.exists(bat_file_path):
+    print(f"Found .bat file: {bat_file_path}. Modifying...")
+
+    # Open the .bat file and read its lines
+    with open(bat_file_path, "r") as infile:
+        lines = infile.readlines()
+
+    # Create a new file (or overwrite the existing file) with the changes
+    with open(bat_file_path, "w") as outfile:
+        for line in lines:
+            # Remove the pause command
+            if line.strip().lower() == "pause":
+                continue  # Skip writing this line
+
+            for old, new in replacements.items():
+                line = line.replace(old, new)  # Replace old paths with new paths
+            outfile.write(line)
+
+    print(f"Updated the .bat file: {bat_file_path}")
+else:
+    print(f".bat file not found: {bat_file_path}. No changes made.")
+
+
+# making singularity .sh file
+pathfile_h7 = os.path.join(dir_output_main.replace('\\', '/'),'submit_singularity_h7.sh')
+
+replacements = {'JOBNAME': region, 'MDUFILE':mdu_file.replace('\\', '/')}
 
 with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfile:
     for line in infile:
