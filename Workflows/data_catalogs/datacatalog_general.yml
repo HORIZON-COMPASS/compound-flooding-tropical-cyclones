@@ -1832,7 +1832,7 @@ hydro_reservoirs:
   crs: 4326
 isimip_TC_rain_er11_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -1848,7 +1848,7 @@ isimip_TC_rain_er11_Idai:
   crs: 4326
 isimip_TC_rain_h08_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
