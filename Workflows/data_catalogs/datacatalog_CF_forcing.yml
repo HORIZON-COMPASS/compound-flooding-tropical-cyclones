@@ -1,8 +1,8 @@
 meta:
-  root: C:\Code\COMPASS\Workflows\data_catalogs
+  root: p:/
 ERA5land_Idai_-7:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\ERA5land_Idai_-7.nc
+  path: 11210471-001-compass\01_Data\counterfactuals\precipitation\ERA5land_Idai_-7.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -17,14 +17,14 @@ ERA5land_Idai_-7:
   crs: 4326
 TAMSAT_Idai_-7:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\TAMSAT_Idai_-7.nc
+  path: 11210471-001-compass\01_Data\counterfactuals\precipitation\TAMSAT_Idai_-7.nc
   driver: netcdf
   meta:
     notes: Copied TAMSAT_Idai dataset and adjusted with CF value -7%
   crs: 4326
 dfm_output_MZB_Idai_noSLR2015:
   data_type: GeoDataset
-  path: p:\11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
+  path: 11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -39,7 +39,7 @@ dfm_output_MZB_Idai_noSLR2015:
   crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
-  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
+  path: archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
