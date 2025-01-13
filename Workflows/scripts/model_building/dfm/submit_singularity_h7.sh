@@ -22,7 +22,7 @@ mduFile=MDUFILE
 #---You do not need to modify anything below this line---
 
 # Set the location of the Singularity container.
-export singularityFolder=/p/11210471-001-compass/02_Models/Delft3DFM/Apptainer_DFLOWFM_2023_02/
+export singularityFolder=/p/11210471-001-compass/02_Models/00_executables/Apptainer_DFLOWFM_2023_02_copy/
 
 #
 #
