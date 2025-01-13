@@ -2,7 +2,7 @@ meta:
   root: /p/
 dfm_output_MZB_Idai_noSLR2015:
   data_type: GeoDataset
-  path: p:\11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
+  path: 11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -17,7 +17,7 @@ dfm_output_MZB_Idai_noSLR2015:
   crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
-  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
+  path: archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
