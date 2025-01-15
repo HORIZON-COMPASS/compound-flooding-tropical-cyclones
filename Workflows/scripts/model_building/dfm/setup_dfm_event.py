@@ -27,6 +27,7 @@ if "snakemake" in locals():
     dfm_obs_file = os.path.abspath(snakemake.params.dfm_obs_file)
     verification_points = os.path.abspath(snakemake.params.verification_points)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    model_name = os.path.abspath(snakemake.params.model_name)
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.input.dimrset)
@@ -44,11 +45,11 @@ else:
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
-    dimrset_folder = "p:/d-hydro/dimrset/weekly/2.25.17.78708" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
+    dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 
 #%%
 # Define hydromt datacatalog
@@ -63,10 +64,12 @@ batchfile_h7 = os.path.abspath(os.path.join(script_path, "submit_singularity_h7.
 # define model name, general settings and output location
 dir_output_geom = os.path.join(dir_output_main,'geometry')
 dir_output_bc = os.path.join(dir_output_main,'boundary_conditions')
+dir_windows_simulation = os.path.join(dir_output_main,'windows_simulation')
 
 # make directories, if not yet present
 os.makedirs(dir_output_main, exist_ok=True)
 os.makedirs(dir_output_geom, exist_ok=True)
+os.makedirs(dir_windows_simulation, exist_ok=True)
 
 # generate_grid = False # option to skip grid generation if this was already done.
 overwrite = False # used for downloading of forcing data. Always set to True when changing the domain
@@ -94,6 +97,8 @@ ref_date = datetime(start_datetime.year, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
 shutil.copyfile(os.path.join(dir_base_model, 'grid_network.nc'), os.path.join(dir_output_main,'grid_network.nc'))
 shutil.copyfile(os.path.join(dir_base_model, 'pli_file.pli'), os.path.join(dir_output_main,'pli_file.pli'))
 shutil.copyfile(os.path.join(dir_base_model, 'illegalcells.pol'), os.path.join(dir_output_main,'illegalcells.pol'))
+shutil.copyfile(os.path.join(dir_base_model, 'L1.pli'), os.path.join(dir_output_main,'L1.pli'))
+shutil.copyfile(os.path.join(dir_base_model, 'L2.pli'), os.path.join(dir_output_main,'L2.pli'))
 
 netfile = os.path.join(dir_output_main, 'grid_network.nc')
 poly_file = os.path.join(dir_base_model, 'pli_file.pli')
@@ -107,19 +112,37 @@ xu_grid_uds = dfmt.open_partitioned_dataset(netfile)
 #####################################################
 
 # Copy the correct base model external forcings file (.ext): initial and open boundary condition 
-shutil.copyfile(os.path.join(dir_base_model, 'ext_file_new.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
+shutil.copyfile(os.path.join(dir_base_model, 'ext_file_new_linux.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
+# make a copy for the windows simulation that required full file paths (and not relative paths like Linux systems)
+shutil.copyfile(os.path.join(dir_base_model,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
 
 # and define it
-ext_file_new = os.path.join(dir_output_main, f'ext_file_new.ext')
+ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_new.ext')
+
+# Modify the ext_file_new to contain only file names and not full paths for Linux
+ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
 
 #%%#####################################
 ######### Define meteo forcing #########
 ########################################
+# Function to more easily create meteo forcing with full paths and only file names
+def create_forcing(quantity, filename, filetype, method, operand, use_basename=False):
+    # Optionally use only the file name
+    if use_basename:
+        filename = os.path.basename(filename)
+    return hcdfm.ExtOldForcing(quantity=quantity,
+                               filename=filename,
+                               filetype=filetype,
+                               method=method,
+                               operand=operand)
 
 # generate old format external forcings file (.ext): spatial data
 ext_file_old = os.path.join(dir_output_main, f'ext_file_old.ext')
+ext_file_old_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_old.ext')
 
+# Initialise focring files for Linux and Windows separately
 ext_old = hcdfm.ExtOldModel()
+ext_old_windows = hcdfm.ExtOldModel()
 
 # Define model forcing
 if 'spw' in wind_forcing:
@@ -132,6 +155,7 @@ else:
     spw = 0
 # Can we add option for spiderweb+ERA5? Could not make it work yet.
 
+# To be adjusted to fit both windows and linux
 if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
     dir_output_data_era5 = os.path.join(dir_output_bc,'meteo', 'ERA5')
     os.makedirs(dir_output_data_era5, exist_ok=True)
@@ -153,26 +177,24 @@ if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind sp
                                                     time_slice=slice(date_min, date_max))
 elif meteo_type == 'spiderweb':
     spw_file = os.path.basename(spw_file_origin)
-    shutil.copyfile(spw_file_origin, os.path.join(dir_output_main,spw_file))
-
+    spw_copy = os.path.join(dir_output_main,spw_file)
+    shutil.copyfile(spw_file_origin, spw_copy)
     uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
     shutil.copyfile(uniformwind_filename,os.path.join(dir_output_main,"uniformwind0.wnd"))
 
-    forcing_uniformwind = hcdfm.ExtOldForcing(quantity='windxy',
-                                        filename=uniformwind_filename,
-                                        filetype=hcdfm.ExtOldFileType.TimeSeries, 
-                                        method=hcdfm.ExtOldMethod.PassThrough, 
-                                        operand=hcdfm.Operand.override)
-    ext_old.forcing.append(forcing_uniformwind)
-    
-    forcing_spw = hcdfm.ExtOldForcing(quantity='airpressure_windx_windy',
-                                        filename=spw_file,
-                                        filetype=hcdfm.ExtOldFileType.SpiderWebData, 
-                                        method=hcdfm.ExtOldMethod.PassThrough, 
-                                        operand=hcdfm.Operand.add)
-    ext_old.forcing.append(forcing_spw)
+    # Create forcing with full paths for Windows
+    ext_old_windows.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
+                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override))
+    ext_old_windows.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
+                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add))
+    ext_old_windows.save(filepath=ext_file_old_windows) # save the file
 
-ext_old.save(filepath=ext_file_old) # , path_style=path_style)
+    # Create forcing with only file names for Linux
+    ext_old.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
+                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override, use_basename=True))
+    ext_old.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
+                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add, use_basename=True))
+    ext_old.save(filepath=ext_file_old) # save the file
 
 #%%##############################################
 ############## Generate obs file ################
@@ -215,8 +237,8 @@ ax.plot(pd_obs['x'],pd_obs['y'],'rx')
 dfmt.plot_coastlines(ax=ax, crs=crs)
 
 # Save the figure
-# output_path = os.path.join(dir_output_geom, 'grid_obs_points.png')
-# fig.savefig(output_path, dpi=300, bbox_inches='tight')
+output_path = os.path.join(dir_output_geom, 'grid_obs_points.png')
+fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
 #%%#########################################
 ############ Generate mdu file #############
@@ -224,7 +246,7 @@ dfmt.plot_coastlines(ax=ax, crs=crs)
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_output_main, f'settings.mdu')
+mdu_file = os.path.join(dir_output_main, dir_windows_simulation, f'{model_name}.mdu')
 
 #mdu = hcdfm.FMModel()
 
@@ -235,12 +257,13 @@ mdu = hcdfm.FMModel(base_mdu)
 if os.path.exists(pathfile_illegalcells):
     mdu.geometry.drypointsfile = pathfile_illegalcells
 
+
 # add the grid (grid_network.nc, network file)
 mdu.geometry.netfile = netfile
 
 # add the external forcing files (.ext)
-mdu.external_forcing.extforcefile = ext_file_old
-mdu.external_forcing.extforcefilenew = ext_file_new
+mdu.external_forcing.extforcefile = ext_file_old_windows
+mdu.external_forcing.extforcefilenew = ext_file_new_windows
 
 # Define drag coefficient 
 mdu.wind.icdtyp = 3 
@@ -266,11 +289,44 @@ mdu.output.statsinterval = [3600]
 mdu.output.wrimap_wind = 1
 
 # save .mdu file
-mdu.save(mdu_file) # ,path_style=path_style)
+mdu.save(mdu_file) 
 
-# make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
-dfmt.make_paths_relative(mdu_file)
 
+# # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
+# dfmt.make_paths_relative(mdu_file)
+
+#%%
+# Modify the ext_new file for Linux simulation (only containing file names and not full paths)
+mdu_file_linux = os.path.join(dir_output_main, f'{model_name}.mdu')
+
+with open(mdu_file, 'r') as file:
+    lines = file.readlines()
+    
+# Modify the lines that contain file paths
+modified_lines = []
+for line in lines:
+    if 'extForceFile' in line or 'extForceFileNew' in line or 'obsFile' in line or 'netFile' in line or 'dryPointsFile' in line:
+        # Split the line by the first '=' and get the key and path
+        key, path = line.split('=', 1)
+        # Check if there is a comment (after '#')
+        if '#' in path:
+            path, comment = path.split('#', 1)
+            comment = f" #{comment.strip()}"
+        else:
+            comment = ""
+        # Remove leading/trailing spaces from the path and get just the file name
+        path = path.strip()
+        file_name = os.path.basename(path)
+        # Replace the path with just the file name and retain the comment
+        modified_line = f'{key.strip()} = {file_name}{comment}\n'
+        modified_lines.append(modified_line)
+    else:
+        modified_lines.append(line)
+
+# Write the modified lines to the output file
+with open(mdu_file_linux, 'w') as file:
+    file.writelines(modified_lines)
+print(f'Modified file saved to: {mdu_file_linux}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
@@ -280,18 +336,16 @@ dfmt.make_paths_relative(mdu_file)
 
 nproc = 4 # number of processes
 
-# Making bat file
+# Making bat file and dimr_config.xml file
 dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
+default_bat_path = os.path.join(dir_output_main, "run_parallel.bat")
+bat_file_path = os.path.join(dir_output_main, "windows_simulation", "run_parallel.bat")
+# Relocating and copying for windows simulation
+shutil.copy(os.path.join(dir_output_main, "dimr_config.xml"), os.path.join(dir_output_main, dir_windows_simulation, "dimr_config.xml"))
+if os.path.exists(default_bat_path):
+    shutil.move(default_bat_path, bat_file_path)
 
-bat_file_path = os.path.join(dir_output_main, "run_parallel.bat")
-
-# Define the replacements from hardcoded dmft paths
-replacements = {
-    r"%dimrset_folder%\x64\bin\run_dflowfm.bat": r"%dimrset_folder%\x64\dflowfm\scripts\run_dflowfm.bat",
-    r"%dimrset_folder%\x64\bin\run_dimr_parallel.bat": r"%dimrset_folder%\x64\dimr\scripts\run_dimr_parallel.bat",
-}
-
-# Check if the .bat file exists
+# remove "pause" from bat file 
 if os.path.exists(bat_file_path):
     print(f"Found .bat file: {bat_file_path}. Modifying...")
 
@@ -305,9 +359,6 @@ if os.path.exists(bat_file_path):
             # Remove the pause command
             if line.strip().lower() == "pause":
                 continue  # Skip writing this line
-
-            for old, new in replacements.items():
-                line = line.replace(old, new)  # Replace old paths with new paths
             outfile.write(line)
 
     print(f"Updated the .bat file: {bat_file_path}")
@@ -316,9 +367,9 @@ else:
 
 
 # making singularity .sh file
-pathfile_h7 = os.path.join(dir_output_main.replace('\\', '/'),'submit_singularity_h7.sh')
+pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
 
-replacements = {'JOBNAME': region, 'MDUFILE':mdu_file.replace('\\', '/')}
+replacements = {'JOBNAME': region, 'MDUFOLDER':os.path.dirname(mdu_file_linux).replace('\\', '/').replace('p:/', '/p/')}
 
 with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfile:
     for line in infile:
