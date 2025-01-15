@@ -88,9 +88,7 @@ rule make_model_dfm_base:
 rule make_dfm_model_event:
     input:
         ext_file_new = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
-        dimrset      = join(root_dir, "d-hydro", "dimrset", "weekly", "2.25.17.78708"),
-        # base_mdu     = join("scripts", "model_building", "dfm", "base_model_settings.mdu"),
-        # batchfile_h7 = join("scripts", "model_building", "dfm", "submit_singularity_h7.sh"),
+        dimrset      = join(root_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
     params:
         dir_base_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         start_time   = get_start_time,
@@ -100,21 +98,22 @@ rule make_dfm_model_event:
         dfm_obs_file = get_obs_file,
         verification_points = get_verification_points,
         data_cat     = get_datacatalog,
+        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}"
     output: 
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
-        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}")),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}", "{params.modelname}.mdu"),
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
-        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "settings.mdu"),
-        submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
-        submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}", "{params.modelname}.mdu"),
+        submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}", "submit_singularity_h7.sh"),
+        submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}", "run_parallel.bat"),
+    params:
+        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}"
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "settings.nc"),
-    # script:
-        # {input.submit_script_linux} || {input.submit_script_windows}
+        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{params.modelname}", "output", "{params.modelname}_his.nc"),
     run:
         if os.name == 'nt':
             print("Executing DFM...")
