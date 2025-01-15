@@ -19,6 +19,10 @@ import ast
 if "snakemake" in locals():
     region = snakemake.wildcards.region
     tc_name = snakemake.wildcards.tc_name
+    dfm_res = snakemake.wildcards.dfm_res
+    bathy = snakemake.wildcards.bathy
+    tidemodel = snakemake.wildcards.tidemodel
+    bathy = snakemake.wildcards.wind_forcing
     wind_forcing = snakemake.wildcards.wind_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
@@ -27,10 +31,10 @@ if "snakemake" in locals():
     dfm_obs_file = os.path.abspath(snakemake.params.dfm_obs_file)
     verification_points = os.path.abspath(snakemake.params.verification_points)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
-    model_name = os.path.abspath(snakemake.params.model_name)
+    model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
-    dimrset_folder = os.path.abspath(snakemake.input.dimrset)
+    dimrset_folder = os.path.abspath(snakemake.params.dimrset)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -47,8 +51,8 @@ else:
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
-    dir_base_model = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{base_model}'
-    dir_output_main = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{model_name}'
+    dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
+    dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 
 #%%
@@ -246,9 +250,7 @@ fig.savefig(output_path, dpi=300, bbox_inches='tight')
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_output_main, dir_windows_simulation, f'{model_name}.mdu')
-
-#mdu = hcdfm.FMModel()
+mdu_file = os.path.join(dir_windows_simulation, f'{model_name}.mdu')
 
 # use mdu file from GTSM
 base_mdu = base_mdu
@@ -293,13 +295,14 @@ mdu.save(mdu_file)
 
 
 # # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
-# dfmt.make_paths_relative(mdu_file)
+# dfmt.make_paths_relative(mdu_file_linux)
 
 #%%
 # Modify the ext_new file for Linux simulation (only containing file names and not full paths)
 mdu_file_linux = os.path.join(dir_output_main, f'{model_name}.mdu')
+shutil.copy2(mdu_file, mdu_file_linux)
 
-with open(mdu_file, 'r') as file:
+with open(mdu_file_linux, 'r') as file:
     lines = file.readlines()
     
 # Modify the lines that contain file paths
@@ -341,11 +344,11 @@ dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimr
 default_bat_path = os.path.join(dir_output_main, "run_parallel.bat")
 bat_file_path = os.path.join(dir_output_main, "windows_simulation", "run_parallel.bat")
 # Relocating and copying for windows simulation
-shutil.copy(os.path.join(dir_output_main, "dimr_config.xml"), os.path.join(dir_output_main, dir_windows_simulation, "dimr_config.xml"))
+shutil.copy(os.path.join(dir_windows_simulation, "dimr_config.xml"), os.path.join(dir_output_main, "dimr_config.xml"))
 if os.path.exists(default_bat_path):
     shutil.move(default_bat_path, bat_file_path)
 
-# remove "pause" from bat file 
+# remove "pause" from bat file and update MDU_file, dimr_config
 if os.path.exists(bat_file_path):
     print(f"Found .bat file: {bat_file_path}. Modifying...")
 
@@ -355,10 +358,29 @@ if os.path.exists(bat_file_path):
 
     # Create a new file (or overwrite the existing file) with the changes
     with open(bat_file_path, "w") as outfile:
+        dimr_config_line_added = False  # Flag to check if the dimr_config line is added
+
         for line in lines:
             # Remove the pause command
             if line.strip().lower() == "pause":
                 continue  # Skip writing this line
+
+            # If the line starts with "set MDU_file=", update its value
+            if line.strip().startswith("set MDU_file="):
+                line = f"set MDU_file={mdu_file.replace('/', '\\')}\n"  # Replace the line with the new MDU_file value
+                outfile.write(line)  # Write the updated MDU_file line
+
+                # After the MDU_file line, add the dimr_config line if not added yet
+                if not dimr_config_line_added:
+                    outfile.write(f"set dimr_config={dir_windows_simulation.replace('/', '\\')}\dimr_config.xml\n")  # Add the dimr_config line
+                    dimr_config_line_added = True  # Set flag to True to prevent adding it again
+                continue  # Skip the next block of code
+            
+            # Replace dimr_config.xml with %dimr_config%
+            if "dimr_config.xml" in line:
+                line = line.replace("dimr_config.xml", "%dimr_config%")
+            
+            # Write any other lines as they are
             outfile.write(line)
 
     print(f"Updated the .bat file: {bat_file_path}")
