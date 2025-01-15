@@ -47,8 +47,8 @@ else:
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
-    dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
-    dir_output_main = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{model_name}'
+    dir_base_model = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{base_model}'
+    dir_output_main = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
 
 #%%
