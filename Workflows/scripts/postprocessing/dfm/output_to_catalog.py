@@ -1,4 +1,4 @@
-# The dfm output is added to a dfm specific data catalog
+#%% The dfm output is added to a dfm specific data catalog
 # Importing the necessary packages
 import os
 import numpy as np
@@ -11,37 +11,37 @@ import yaml
 
 #%%
 if "snakemake" in locals():
-    path_data_cat = os.path.abspath(snakemake.params.dfm_data_cat)
     his_path = os.path.abspath(snakemake.input.his_file)
+    path_data_cat = os.path.abspath(snakemake.output.sfincs_data_cat)
     run_dir = os.path.abspath(snakemake.params.dir_event_model)
+    model_name = snakemake.params.model_name
+    tc_name = snakemake.wildcards.tc_name
 else:
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_dfm_output.yml")
+    region = "sofala"
+    tc_name = "Idai"
+    dfm_res = "450"
+    bathy = "gebco2024"
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+    wind_forcing = "spw_IBTrACS_ext"
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
+    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+    run_dir = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{model_name}'
+    his_path = f"{model_name}_his.nc"
 
 #%%
 # Adding modified rainfall dataset to the CF data catalog
-dfm_datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
-dfm_run = f"{precip_name}_{CF_value_txt}"
+datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
+dfm_run = f"dfm_output_{model_name}"
 
 # # Add the CF data to the CF data catalog
-if CF_dataset_name not in CF_datacatalog:
-    CF_datacatalog[CF_dataset_name] = copy.deepcopy(data_catalog[f"{precip_name}"])
-    CF_datacatalog[CF_dataset_name].path = os.path.abspath(output_CF_rainfall)
-
-    # Check if the 'rename' attribute exists and delete it
-    if hasattr(CF_datacatalog[CF_dataset_name], 'rename'):
-        del CF_datacatalog[CF_dataset_name].rename
-
-    # Check if 'meta' exists and is a dictionary
-    if hasattr(CF_datacatalog[CF_dataset_name], 'meta') and isinstance(CF_datacatalog[CF_dataset_name].meta, dict):
-        # Remove all metadata except for 'notes' and add CF info
-        notes = CF_datacatalog[CF_dataset_name].meta.pop('notes', None)  # Save the current 'notes' if exists
-        CF_datacatalog[CF_dataset_name].meta.clear()
-
-        if notes is not None:
-            CF_datacatalog[CF_dataset_name].meta['notes'] = f"Copied {precip_name} dataset and adjusted with CF value {CF_value_txt}%"
+if dfm_run not in datacatalog:
+    datacatalog[dfm_run] = copy.deepcopy(datacatalog[f"dfm_output_MZB_{tc_name}"])
+    datacatalog[dfm_run].path = os.path.abspath(his_path)
     
     # Save the updated catalog
-    CF_datacatalog.to_yml(CF_catalog_path)
+    datacatalog.to_yml(path_data_cat)
 
 else:
-    print(f"Dataset '{CF_dataset_name}' is already in the catalog.")
+    print(f"Dataset '{dfm_run}' is already in the catalog.")
+
+# %%
