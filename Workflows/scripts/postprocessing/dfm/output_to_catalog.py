@@ -12,8 +12,8 @@ import yaml
 #%%
 if "snakemake" in locals():
     path_data_cat = os.path.abspath(snakemake.params.dfm_data_cat)
-    his_path = 
-    run_dir = 
+    his_path = os.path.abspath(snakemake.input.his_file)
+    run_dir = os.path.abspath(snakemake.params.dir_event_model)
 else:
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_dfm_output.yml")
 
