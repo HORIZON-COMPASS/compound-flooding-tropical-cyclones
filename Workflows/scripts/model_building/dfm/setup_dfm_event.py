@@ -120,11 +120,37 @@ shutil.copyfile(os.path.join(dir_base_model, 'ext_file_new_linux.ext'), os.path.
 # make a copy for the windows simulation that required full file paths (and not relative paths like Linux systems)
 shutil.copyfile(os.path.join(dir_base_model,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
 
+# Modify the ext_file_new to contain only file names and not full paths for Linux
+ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
+
 # and define it
 ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_new.ext')
 
-# Modify the ext_file_new to contain only file names and not full paths for Linux
-ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
+# if os.path.exists(ext_file_new_windows):
+#     print(f"Found file: {ext_file_new_windows}. Modifying paths...")
+
+#     # Open the file and read its content
+#     with open(ext_file_new_windows, "r") as infile:
+#         lines = infile.readlines()
+
+#     # Open the file for writing and modify the lines
+#     with open(ext_file_new_windows, "w") as outfile:
+#         for line in lines:
+#             if "locationFile" in line:
+#                 # Replace the locationFile path
+#                 _, file_name = os.path.split(line.split("=")[1].strip())
+#                 line = f"locationFile = {os.path.join(new_base_path, file_name).replace('/', '\\')}\n"
+#             elif "forcingFile" in line:
+#                 # Replace the forcingFile path
+#                 _, file_name = os.path.split(line.split("=")[1].strip())
+#                 line = f"forcingFile = {os.path.join(new_base_path, file_name).replace('/', '\\')}\n"
+            
+#             # Write the modified (or unmodified) line
+#             outfile.write(line)
+
+#     print(f"Paths in {ext_file_new_windows} updated successfully.")
+# else:
+#     print(f"File not found: {ext_file_new_windows}. No changes made.")
 
 #%%#####################################
 ######### Define meteo forcing #########
@@ -340,7 +366,7 @@ print(f'Modified file saved to: {mdu_file_linux}')
 nproc = 4 # number of processes
 
 # Making bat file and dimr_config.xml file
-dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder)
+dfmt.create_model_exec_files(file_mdu=mdu_file.replace('/', '\\'), nproc=nproc, dimrset_folder=dimrset_folder.replace('/', '\\'))
 default_bat_path = os.path.join(dir_output_main, "run_parallel.bat")
 bat_file_path = os.path.join(dir_output_main, "windows_simulation", "run_parallel.bat")
 # Relocating and copying for windows simulation
@@ -348,7 +374,7 @@ shutil.copy(os.path.join(dir_windows_simulation, "dimr_config.xml"), os.path.joi
 if os.path.exists(default_bat_path):
     shutil.move(default_bat_path, bat_file_path)
 
-# remove "pause" from bat file and update MDU_file, dimr_config
+# Remove "pause" from bat file and update MDU_file, dimr_config
 if os.path.exists(bat_file_path):
     print(f"Found .bat file: {bat_file_path}. Modifying...")
 
@@ -358,6 +384,11 @@ if os.path.exists(bat_file_path):
 
     # Create a new file (or overwrite the existing file) with the changes
     with open(bat_file_path, "w") as outfile:
+        # Add the working directory as the first line
+        outfile.write(f'Rem Set working directory\n')
+        outfile.write(f'cd /d "{dir_windows_simulation.replace('/', '\\')}"\n')
+        outfile.write(f'\n')
+
         dimr_config_line_added = False  # Flag to check if the dimr_config line is added
 
         for line in lines:
@@ -372,9 +403,9 @@ if os.path.exists(bat_file_path):
 
                 # After the MDU_file line, add the dimr_config line if not added yet
                 if not dimr_config_line_added:
-                    outfile.write(f"set dimr_config={dir_windows_simulation.replace('/', '\\')}\dimr_config.xml\n")  # Add the dimr_config line
+                    outfile.write(f"set dimr_config={os.path.join(dir_windows_simulation, 'dimr_config.xml').replace('/', '\\')}\n")  # Add the dimr_config line
                     dimr_config_line_added = True  # Set flag to True to prevent adding it again
-                continue  # Skip the next block of code
+                continue
             
             # Replace dimr_config.xml with %dimr_config%
             if "dimr_config.xml" in line:
