@@ -31,6 +31,7 @@ python = ">=3.11"
 hydromt = "==0.9.3"
 snakemake = "*"
 netcdf4 = "==1.6.5"
+numpy = "==1.26.4"
 
 [feature.dataviz.dependencies]
 ffmpeg = ">=7.0.0" 
