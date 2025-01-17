@@ -46,15 +46,14 @@ def get_sfincs_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return "data_catalogs/datacatalog_sfincs___linux.yml"
 
-# need to be adjusted for Linux
-def get_obs_file(wildcards):
-    obs_file = config["tc_name"][wildcards.tc_name]["dfm_obs_file"]
-    return obs_file
+# # need to be adjusted for Linux
+# def get_obs_file(wildcards):
+#     return config["tc_name"][wildcards.tc_name]["dfm_obs_file"]
 
-# need to be adjusted for Linux
-def get_verification_points(wildcards):
-    verification_points = config["tc_name"][wildcards.tc_name]["verification_points"]
-    return verification_points
+# # need to be adjusted for Linux
+# def get_verification_points(wildcards):
+#     verification_points = config["tc_name"][wildcards.tc_name]["verification_points"]
+#     return verification_points
 
 # Define wildcards for path names
 region = [value['region'] for key, value in config['tc_name'].items()]
@@ -95,8 +94,10 @@ rule make_dfm_model_event:
         end_time     = get_end_time,
         dfm_bbox     = get_dfm_bbox,
         output_bbox  = get_bbox,
-        dfm_obs_file = get_obs_file,
-        verification_points = get_verification_points,
+        # dfm_obs      = get_obs_file,
+        dfm_obs_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["tc_name"][wildcards.tc_name]["dfm_obs_file"]),
+        # verif_points = get_verification_points,
+        verif_points_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["tc_name"][wildcards.tc_name]["verification_points"]),
         data_cat     = get_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
@@ -114,9 +115,7 @@ rule run_dfm:
         submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
         submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "windows_simulation", "run_parallel.bat"),
     params:
-        # model_name     = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         windows_output = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "windows_simulation", "output")),
-        # model_output   = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output"))
     output:
         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
     run:

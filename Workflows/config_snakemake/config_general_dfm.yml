@@ -20,8 +20,8 @@ tc_name:
         bathy: "gebco2024"
         tidemodel: "GTSMv41opendap" # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap (GTSMv41 = GTSMv4.1 but cannot be read by snake)
         dfm_output_bbox: "[34,-20.5,35.6,-19.5]" # same as bbox?
-        dfm_obs_file: "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
-        verification_points: "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
+        dfm_obs_file: "coastal_bnd_MZB_5mMSL_points_1km.shp"
+        verification_points: "MZB_Sofala_IHO_obs.xyn"
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # CF_value_rain: [-7]
         wind_forcing: "spw_IBTrACS_ext"

@@ -29,7 +29,7 @@ if "snakemake" in locals():
     bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
     output_bbox = ast.literal_eval(snakemake.params.output_bbox)
     dfm_obs_file = os.path.abspath(snakemake.params.dfm_obs_file)
-    verification_points = os.path.abspath(snakemake.params.verification_points)
+    verification_points = os.path.abspath(snakemake.params.verif_points_file)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
     model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
