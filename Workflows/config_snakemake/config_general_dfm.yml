@@ -2,7 +2,7 @@
 
 
 root_dir:    11210471-001-compass
-dir_data:    01_data
+dir_data:    01_Data
 dir_models:  02_Models
 dir_runs:    03_Runs
 dir_spw:     02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
