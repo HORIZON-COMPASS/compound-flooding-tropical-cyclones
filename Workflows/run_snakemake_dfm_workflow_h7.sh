@@ -2,7 +2,7 @@
 #SBATCH --job-name=compass-dfm         # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
 #SBATCH --time=0-0:30:00           # Job duration (hh:mm:ss)
-##SBATCH --partition test
+#SBATCH --partition test
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
 
