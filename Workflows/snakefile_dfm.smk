@@ -99,6 +99,7 @@ rule make_dfm_model_event:
         verification_points = get_verification_points,
         data_cat     = get_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
+        uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
     output: 
         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),

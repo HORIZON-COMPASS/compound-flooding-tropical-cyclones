@@ -35,6 +35,7 @@ if "snakemake" in locals():
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.params.dimrset)
+    uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -54,10 +55,11 @@ else:
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
+    uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
 
 #%%
 # Define hydromt datacatalog
-data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
+data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
 
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -209,7 +211,6 @@ elif meteo_type == 'spiderweb':
     spw_file = os.path.basename(spw_file_origin)
     spw_copy = os.path.join(dir_output_main,spw_file)
     shutil.copyfile(spw_file_origin, spw_copy)
-    uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
     shutil.copyfile(uniformwind_filename,os.path.join(dir_output_main,"uniformwind0.wnd"))
 
     # Create forcing with full paths for Windows
@@ -319,43 +320,42 @@ mdu.output.wrimap_wind = 1
 # save .mdu file
 mdu.save(mdu_file) 
 
-
-# # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
-# dfmt.make_paths_relative(mdu_file_linux)
-
 #%%
 # Modify the ext_new file for Linux simulation (only containing file names and not full paths)
 mdu_file_linux = os.path.join(dir_output_main, f'{model_name}.mdu')
 shutil.copy2(mdu_file, mdu_file_linux)
 
+# make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
+dfmt.make_paths_relative(mdu_file_linux)
+
 with open(mdu_file_linux, 'r') as file:
     lines = file.readlines()
     
 # Modify the lines that contain file paths
-modified_lines = []
-for line in lines:
-    if 'extForceFile' in line or 'extForceFileNew' in line or 'obsFile' in line or 'netFile' in line or 'dryPointsFile' in line:
-        # Split the line by the first '=' and get the key and path
-        key, path = line.split('=', 1)
-        # Check if there is a comment (after '#')
-        if '#' in path:
-            path, comment = path.split('#', 1)
-            comment = f" #{comment.strip()}"
-        else:
-            comment = ""
-        # Remove leading/trailing spaces from the path and get just the file name
-        path = path.strip()
-        file_name = os.path.basename(path)
-        # Replace the path with just the file name and retain the comment
-        modified_line = f'{key.strip()} = {file_name}{comment}\n'
-        modified_lines.append(modified_line)
-    else:
-        modified_lines.append(line)
+# modified_lines = []
+# for line in lines:
+#     if 'extForceFile' in line or 'extForceFileNew' in line or 'obsFile' in line or 'dryPointsFile' in line:
+#         # Split the line by the first '=' and get the key and path
+#         key, path = line.split('=', 1)
+#         # Check if there is a comment (after '#')
+#         if '#' in path:
+#             path, comment = path.split('#', 1)
+#             comment = f" #{comment.strip()}"
+#         else:
+#             comment = ""
+#         # Remove leading/trailing spaces from the path and get just the file name
+#         path = path.strip()
+#         file_name = os.path.basename(path)
+#         # Replace the path with just the file name and retain the comment
+#         modified_line = f'{key.strip()} = {file_name}{comment}\n'
+#         modified_lines.append(modified_line)
+#     else:
+#         modified_lines.append(line)
 
-# Write the modified lines to the output file
-with open(mdu_file_linux, 'w') as file:
-    file.writelines(modified_lines)
-print(f'Modified file saved to: {mdu_file_linux}')
+# # Write the modified lines to the output file
+# with open(mdu_file_linux, 'w') as file:
+#     file.writelines(modified_lines)
+# print(f'Modified file saved to: {mdu_file_linux}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
