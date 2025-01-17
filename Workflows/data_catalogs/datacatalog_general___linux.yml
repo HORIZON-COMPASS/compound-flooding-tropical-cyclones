@@ -2712,6 +2712,12 @@ soilgrids_v2.0:
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
+spw_IBTrACS_ext_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
 TAMSAT_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
