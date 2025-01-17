@@ -291,8 +291,8 @@ if os.path.exists(pathfile_illegalcells):
 mdu.geometry.netfile = netfile
 
 # add the external forcing files (.ext)
-mdu.external_forcing.extforcefile = ext_file_old_windows
-mdu.external_forcing.extforcefilenew = ext_file_new_windows
+mdu.external_forcing.extforcefile = ext_file_old_linux
+mdu.external_forcing.extforcefilenew = ext_file_new_linux
 
 # Define drag coefficient 
 mdu.wind.icdtyp = 3 
