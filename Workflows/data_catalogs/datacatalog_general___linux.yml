@@ -1085,7 +1085,7 @@ gebco_v2020:
   crs: 4326
 gebco2024:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-13.0_s-25.0_w30.0_e45.0.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
   driver: raster
   driver_kwargs:
     chunks:
