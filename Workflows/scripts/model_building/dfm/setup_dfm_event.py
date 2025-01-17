@@ -126,7 +126,7 @@ shutil.copyfile(os.path.join(dir_base_model,'ext_file_new_windows.ext'), os.path
 ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
 
 # and define it
-ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_new.ext')
+ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", 'ext_file_new.ext')
 
 # if os.path.exists(ext_file_new_windows):
 #     print(f"Found file: {ext_file_new_windows}. Modifying paths...")
@@ -332,30 +332,30 @@ with open(mdu_file_linux, 'r') as file:
     lines = file.readlines()
     
 # Modify the lines that contain file paths
-# modified_lines = []
-# for line in lines:
-#     if 'extForceFile' in line or 'extForceFileNew' in line or 'obsFile' in line or 'dryPointsFile' in line:
-#         # Split the line by the first '=' and get the key and path
-#         key, path = line.split('=', 1)
-#         # Check if there is a comment (after '#')
-#         if '#' in path:
-#             path, comment = path.split('#', 1)
-#             comment = f" #{comment.strip()}"
-#         else:
-#             comment = ""
-#         # Remove leading/trailing spaces from the path and get just the file name
-#         path = path.strip()
-#         file_name = os.path.basename(path)
-#         # Replace the path with just the file name and retain the comment
-#         modified_line = f'{key.strip()} = {file_name}{comment}\n'
-#         modified_lines.append(modified_line)
-#     else:
-#         modified_lines.append(line)
+modified_lines = []
+for line in lines:
+    if 'extForceFile' in line or 'extForceFileNew' in line or 'dryPointsFile' in line:
+        # Split the line by the first '=' and get the key and path
+        key, path = line.split('=', 1)
+        # Check if there is a comment (after '#')
+        if '#' in path:
+            path, comment = path.split('#', 1)
+            comment = f" #{comment.strip()}"
+        else:
+            comment = ""
+        # Remove leading/trailing spaces from the path and get just the file name
+        path = path.strip()
+        file_name = os.path.basename(path)
+        # Replace the path with just the file name and retain the comment
+        modified_line = f'{key.strip()} = {file_name}{comment}\n'
+        modified_lines.append(modified_line)
+    else:
+        modified_lines.append(line)
 
-# # Write the modified lines to the output file
-# with open(mdu_file_linux, 'w') as file:
-#     file.writelines(modified_lines)
-# print(f'Modified file saved to: {mdu_file_linux}')
+# Write the modified lines to the output file
+with open(mdu_file_linux, 'w') as file:
+    file.writelines(modified_lines)
+print(f'Modified file saved to: {mdu_file_linux}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
