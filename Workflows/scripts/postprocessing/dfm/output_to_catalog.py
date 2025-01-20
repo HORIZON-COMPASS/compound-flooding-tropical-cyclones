@@ -25,7 +25,7 @@ else:
     wind_forcing = "spw_IBTrACS_ext"
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-    run_dir = f'p:/11210471-001-compass/02_Runs/{region}/{tc_name}/dfm/{model_name}'
+    run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     his_path = f"{model_name}_his.nc"
 
 #%%
@@ -43,5 +43,7 @@ if dfm_run not in datacatalog:
 
 else:
     print(f"Dataset '{dfm_run}' is already in the catalog.")
+
+# %%
 
 # %%
