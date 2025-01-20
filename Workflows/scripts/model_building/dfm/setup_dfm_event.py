@@ -50,7 +50,7 @@ else:
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST4'
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
@@ -120,8 +120,8 @@ ref_date = datetime(start_datetime.year, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
 ###### Grid generation and refinement #######
 #############################################
 netfile = os.path.join(dir_output_main, 'grid_network.nc')
-poly_file = os.path.join(dir_base_model, 'pli_file.pli')
-pathfile_illegalcells = os.path.join(dir_base_model, "illegalcells.pol")
+poly_file = os.path.join(dir_output_main, 'pli_file.pli')
+pathfile_illegalcells = os.path.join(dir_output_main, "illegalcells.pol")
 
 # Load the base model grid
 xu_grid_uds = dfmt.open_partitioned_dataset(netfile)

@@ -67,11 +67,14 @@ wind_forcing = [value['wind_forcing'] for key, value in config['tc_name'].items(
 wildcard_constraints:
     wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
 
+# Define the script dynamically based on OS before the rule
+submit_script_system = "run_parallel.bat" if os.name == 'nt' else "submit_singularity_h7.sh"
+
 rule all_dfm:
     input:
         # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
-        expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
-        # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
+        # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
+        expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
         # "data_catalogs/datacatalog_sfincs.yml"
 
 rule make_model_dfm_base:
@@ -87,16 +90,14 @@ rule make_model_dfm_base:
 
 rule make_dfm_model_event:
     input:
-        ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", 'ext_file_new.ext'),
+        ext_file_new = join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
     params:
         dir_base_model = directory(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         start_time   = get_start_time,
         end_time     = get_end_time,
         dfm_bbox     = get_dfm_bbox,
         output_bbox  = get_bbox,
-        # dfm_obs      = get_obs_file,
         dfm_obs_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["tc_name"][wildcards.tc_name]["dfm_obs_file"]),
-        # verif_points = get_verification_points,
         verif_points_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["tc_name"][wildcards.tc_name]["verification_points"]),
         data_cat     = get_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
@@ -105,37 +106,33 @@ rule make_dfm_model_event:
     output: 
         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
         mdu_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
-        submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
-        submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
+        submit_script = join(root_dir,dir_runs,"{region}", "{tc_name}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
-        submit_script_linux = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "submit_singularity_h7.sh"),
-        submit_script_windows = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "run_parallel.bat"),
+        submit_script = join(root_dir,dir_runs,"{region}", "{tc_name}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     params:
-        windows_output = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output")),
+        output = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output")),
     output:
         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
     run:
         if os.name == 'nt':
             print("Executing DFM...")
-            shell("cmd /c {input.submit_script_windows}")
+            shell("cmd /c {input.submit_script}")
             print("Finished running")
-            # Move the output folder one level up on Windows
-            # os.rename("{params.windows_output}", "{params.model_output}")  # Move folder one level up
         if os.name == 'posix':
-            shell("sbatch {input.submit_script_linux}")
+            shell("sbatch {input.submit_script}")
 
-rule add_dfm_output_to_catalog:
-    input:
-        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
-    params:
-        model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
-        sfincs_data_cat = get_sfincs_datacatalog,
-    output:
-        sfincs_data_cat_update = "{params.sfincs_data_cat}"
-    script:
-        join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
+# rule add_dfm_output_to_catalog:
+#     input:
+#         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
+#     params:
+#         model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+#         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
+#         sfincs_data_cat = get_sfincs_datacatalog,
+#     output:
+#         sfincs_data_cat_update = "{params.sfincs_data_cat}"
+#     script:
+#         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
