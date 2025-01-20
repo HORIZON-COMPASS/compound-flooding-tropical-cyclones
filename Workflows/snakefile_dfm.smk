@@ -42,18 +42,9 @@ def get_datacatalog(wildcards):
 
 def get_sfincs_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "data_catalogs/datacatalog_sfincs.yml"
+        return "data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
     elif os.name == "posix": #Running on linux
-        return "data_catalogs/datacatalog_sfincs___linux.yml"
-
-# # need to be adjusted for Linux
-# def get_obs_file(wildcards):
-#     return config["tc_name"][wildcards.tc_name]["dfm_obs_file"]
-
-# # need to be adjusted for Linux
-# def get_verification_points(wildcards):
-#     verification_points = config["tc_name"][wildcards.tc_name]["verification_points"]
-#     return verification_points
+        return "data_catalogs/datacatalog_SFINCS_coastal_coupling___linux.yml"
 
 # Define wildcards for path names
 region = [value['region'] for key, value in config['tc_name'].items()]
@@ -75,7 +66,7 @@ rule all_dfm:
         # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
         # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
         expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
-        # "data_catalogs/datacatalog_sfincs.yml"
+        # get_sfincs_datacatalog(wildcards={})
 
 rule make_model_dfm_base:
     params:
@@ -125,14 +116,14 @@ rule run_dfm:
         if os.name == 'posix':
             shell("sbatch {input.submit_script}")
 
-# rule add_dfm_output_to_catalog:
-#     input:
-#         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
-#     params:
-#         model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
-#         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
-#         sfincs_data_cat = get_sfincs_datacatalog,
-#     output:
-#         sfincs_data_cat_update = "{params.sfincs_data_cat}"
-#     script:
-#         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
+rule add_dfm_output_to_catalog:
+    input:
+        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
+    params:
+        model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
+        sfincs_data_cat = get_sfincs_datacatalog,
+    output:
+        sfincs_data_cat_update = "{params.sfincs_data_cat}"
+    script:
+        join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
