@@ -1,5 +1,5 @@
-# This script is based on the ModelBuilder template from dfm_tools v0.23.0 (accessed on 18/07/2024). 
-# Adapted by Natalia Aleksandrova
+# This script is based on the ModelBuilder template from dfm_tools v0.31.0 (accessed on 20/01/2025). 
+# Adapted by Natalia Aleksandrova & Doris Vertegaal
 #%%
 # import packages
 import os
@@ -175,16 +175,14 @@ fig.savefig(output_path, dpi=300, bbox_inches='tight')
 ### Generate boundary conditions from tidal model ###
 #####################################################
 
-# generate new format external forcings file (.ext): initial and open boundary condition
+# Generate new format external forcings file (.ext): initial and open boundary condition
 ext_new_path = os.path.join(dir_output_run, 'ext_file_new.ext')
 ext_new = hcdfm.ExtModel()
-# ext_new_windows = hcdfm.ExtModel()
 
-# interpolate tidal components to boundary conditions file (.bc)
-dfmt.interpolate_tide_to_bc(ext_new=ext_new, tidemodel=tidemodel, file_pli=poly_file, component_list=['M2'])
-# dfmt.interpolate_tide_to_bc(ext_new=ext_new_windows, tidemodel=tidemodel, file_pli=poly_file, component_list=None)
+# Interpolate tidal components to boundary conditions file (.bc)
+dfmt.interpolate_tide_to_bc(ext_new=ext_new, tidemodel=tidemodel, file_pli=poly_file, component_list=None)
 
-#save new ext file
+# Save new ext file
 ext_new.save(filepath=ext_new_path)
 
 # Make the paths relative
@@ -210,40 +208,5 @@ for line in lines:
 with open(ext_new_path, 'w') as file:
     file.writelines(modified_lines)
 print(f'Modified file saved to: {ext_new_path}')
-
-# ext_new_windows.save(filepath=os.path.join(dir_output_run, 'ext_file_new_windows.ext')) # ,path_style=path_style)
-
-# %%
-# Modify the ext_new file for Linux simulation (only containing file names and not full paths)
-# def modify_file_paths(input_filepath, output_filepath):
-#     # Open and read the original file
-#     with open(input_filepath, 'r') as file:
-#         lines = file.readlines()
-    
-#     # Modify the lines that contain file paths
-#     modified_lines = []
-#     for line in lines:
-#         if 'locationFile' in line or 'forcingFile' in line:
-#             # Split the line by the equal sign and get the file path
-#             key, path = line.split('=')
-#             # Remove leading/trailing spaces and get just the file name
-#             path = path.strip()
-#             file_name = os.path.basename(path)
-#             # Replace the path with just the file name
-#             modified_line = f'{key} = {file_name}\n'
-#             modified_lines.append(modified_line)
-#         else:
-#             modified_lines.append(line)
-    
-#     # Write the modified lines to the output file
-#     with open(output_filepath, 'w') as file:
-#         file.writelines(modified_lines)
-#     print(f'Modified file saved to: {output_filepath}')
-
-# # Example usage
-# input_file = os.path.join(dir_output_run, 'ext_file_new_windows.ext')
-# output_file = os.path.join(dir_output_run, 'ext_file_new_linux.ext')
-
-# modify_file_paths(input_file, output_file)
 
 # %%
