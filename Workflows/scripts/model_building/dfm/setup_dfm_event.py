@@ -50,7 +50,7 @@ else:
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST2'
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST3'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
@@ -74,6 +74,27 @@ dir_windows_simulation = os.path.join(dir_output_main,'windows_simulation')
 
 # make directories, if not yet present
 os.makedirs(dir_output_main, exist_ok=True)
+
+#%% Copy all files from the base model directory (excl. hidden files like .git files)
+for item in os.listdir(dir_base_model):
+    # Skip hidden files and directories (names starting with '.')
+    if item.startswith('.'):
+        continue
+
+    src_path = os.path.join(dir_base_model, item)
+    dest_path = os.path.join(dir_output_main, item)
+
+    try:
+        # Check if the item is a file or directory
+        if os.path.isfile(src_path):
+            shutil.copy2(src_path, dest_path)  # Copy file with metadata
+        elif os.path.isdir(src_path):
+            shutil.copytree(src_path, dest_path, dirs_exist_ok=True)  # Recursively copy directories
+    except PermissionError:
+        print(f"Permission denied: {src_path}")
+    except Exception as e:
+        print(f"Error copying {src_path}: {e}")
+#%%
 os.makedirs(dir_output_geom, exist_ok=True)
 os.makedirs(dir_windows_simulation, exist_ok=True)
 
@@ -98,14 +119,6 @@ ref_date = datetime(start_datetime.year, 1, 1).strftime('%Y-%m-%d %H:%M:%S')
 #%% #########################################
 ###### Grid generation and refinement #######
 #############################################
-
-# Copy the correct base model files and define them
-shutil.copyfile(os.path.join(dir_base_model, 'grid_network.nc'), os.path.join(dir_output_main,'grid_network.nc'))
-shutil.copyfile(os.path.join(dir_base_model, 'pli_file.pli'), os.path.join(dir_output_main,'pli_file.pli'))
-shutil.copyfile(os.path.join(dir_base_model, 'illegalcells.pol'), os.path.join(dir_output_main,'illegalcells.pol'))
-shutil.copyfile(os.path.join(dir_base_model, 'L1.pli'), os.path.join(dir_output_main,'L1.pli'))
-shutil.copyfile(os.path.join(dir_base_model, 'L2.pli'), os.path.join(dir_output_main,'L2.pli'))
-
 netfile = os.path.join(dir_output_main, 'grid_network.nc')
 poly_file = os.path.join(dir_base_model, 'pli_file.pli')
 pathfile_illegalcells = os.path.join(dir_base_model, "illegalcells.pol")
@@ -118,9 +131,9 @@ xu_grid_uds = dfmt.open_partitioned_dataset(netfile)
 #####################################################
 
 # Copy the correct base model external forcings file (.ext): initial and open boundary condition 
-shutil.copyfile(os.path.join(dir_base_model, 'ext_file_new_linux.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
+shutil.move(os.path.join(dir_output_main, 'ext_file_new_linux.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
 # make a copy for the windows simulation that required full file paths (and not relative paths like Linux systems)
-shutil.copyfile(os.path.join(dir_base_model,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
+shutil.move(os.path.join(dir_output_main,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
 
 # Modify the ext_file_new to contain only file names and not full paths for Linux
 ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
