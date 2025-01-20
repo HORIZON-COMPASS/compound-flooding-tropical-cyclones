@@ -50,7 +50,7 @@ else:
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST3'
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_TEST4'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
@@ -70,7 +70,7 @@ batchfile_h7 = os.path.abspath(os.path.join(script_path, "submit_singularity_h7.
 # define model name, general settings and output location
 dir_output_geom = os.path.join(dir_output_main,'geometry')
 dir_output_bc = os.path.join(dir_output_main,'boundary_conditions')
-dir_windows_simulation = os.path.join(dir_output_main,'windows_simulation')
+# dir_windows_simulation = os.path.join(dir_output_main,'windows_simulation')
 
 # make directories, if not yet present
 os.makedirs(dir_output_main, exist_ok=True)
@@ -96,7 +96,7 @@ for item in os.listdir(dir_base_model):
         print(f"Error copying {src_path}: {e}")
 #%%
 os.makedirs(dir_output_geom, exist_ok=True)
-os.makedirs(dir_windows_simulation, exist_ok=True)
+# os.makedirs(dir_windows_simulation, exist_ok=True)
 
 # generate_grid = False # option to skip grid generation if this was already done.
 overwrite = False # used for downloading of forcing data. Always set to True when changing the domain
@@ -131,15 +131,15 @@ xu_grid_uds = dfmt.open_partitioned_dataset(netfile)
 #####################################################
 
 # Copy the correct base model external forcings file (.ext): initial and open boundary condition 
-shutil.move(os.path.join(dir_output_main, 'ext_file_new_linux.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
-# make a copy for the windows simulation that required full file paths (and not relative paths like Linux systems)
-shutil.move(os.path.join(dir_output_main,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
+# shutil.move(os.path.join(dir_output_main, 'ext_file_new_linux.ext'), os.path.join(dir_output_main,'ext_file_new.ext'))
+# # make a copy for the windows simulation that required full file paths (and not relative paths like Linux systems)
+# shutil.move(os.path.join(dir_output_main,'ext_file_new_windows.ext'), os.path.join(dir_output_main,  "windows_simulation", 'ext_file_new.ext'))
 
 # Modify the ext_file_new to contain only file names and not full paths for Linux
-ext_file_new_linux = os.path.join(dir_output_main,'ext_file_new.ext')
+ext_file_new = os.path.join(dir_output_main,'ext_file_new.ext')
 
 # and define it
-ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", 'ext_file_new.ext')
+# ext_file_new_windows = os.path.join(dir_output_main, "windows_simulation", 'ext_file_new.ext')
 
 # if os.path.exists(ext_file_new_windows):
 #     print(f"Found file: {ext_file_new_windows}. Modifying paths...")
@@ -183,11 +183,11 @@ def create_forcing(quantity, filename, filetype, method, operand, use_basename=F
 
 # generate old format external forcings file (.ext): spatial data
 ext_file_old = os.path.join(dir_output_main, f'ext_file_old.ext')
-ext_file_old_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_old.ext')
+# ext_file_old_windows = os.path.join(dir_output_main, "windows_simulation", f'ext_file_old.ext')
 
 # Initialise focring files for Linux and Windows separately
 ext_old = hcdfm.ExtOldModel()
-ext_old_windows = hcdfm.ExtOldModel()
+# ext_old_windows = hcdfm.ExtOldModel()
 
 # Define model forcing
 if 'spw' in wind_forcing:
@@ -227,11 +227,11 @@ elif meteo_type == 'spiderweb':
     shutil.copyfile(uniformwind_filename,os.path.join(dir_output_main,"uniformwind0.wnd"))
 
     # Create forcing with full paths for Windows
-    ext_old_windows.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
-                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override))
-    ext_old_windows.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
-                                      hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add))
-    ext_old_windows.save(filepath=ext_file_old_windows) # save the file
+    # ext_old_windows.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
+    #                                   hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override))
+    # ext_old_windows.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
+    #                                   hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add))
+    # ext_old_windows.save(filepath=ext_file_old_windows) # save the file
 
     # Create forcing with only file names for Linux
     ext_old.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
@@ -290,7 +290,7 @@ fig.savefig(output_path, dpi=300, bbox_inches='tight')
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_windows_simulation, f'{model_name}.mdu')
+mdu_file = os.path.join(dir_output_main, f'{model_name}.mdu')
 
 # use mdu file from GTSM
 base_mdu = base_mdu
@@ -305,7 +305,7 @@ mdu.geometry.netfile = netfile
 
 # add the external forcing files (.ext)
 mdu.external_forcing.extforcefile = ext_file_old
-mdu.external_forcing.extforcefilenew = ext_file_new_linux
+mdu.external_forcing.extforcefilenew = ext_file_new
 
 # Define drag coefficient 
 mdu.wind.icdtyp = 3 
@@ -335,13 +335,13 @@ mdu.save(mdu_file)
 
 #%%
 # Modify the ext_new file for Linux simulation (only containing file names and not full paths)
-mdu_file_linux = os.path.join(dir_output_main, f'{model_name}.mdu')
-shutil.copy2(mdu_file, mdu_file_linux)
+# mdu_file_linux = os.path.join(dir_output_main, f'{model_name}.mdu')
+# shutil.copy2(mdu_file, mdu_file_linux)
 
 # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
-dfmt.make_paths_relative(mdu_file_linux)
+dfmt.make_paths_relative(mdu_file)
 
-with open(mdu_file_linux, 'r') as file:
+with open(mdu_file, 'r') as file:
     lines = file.readlines()
     
 # Modify the lines that contain file paths
@@ -366,9 +366,9 @@ for line in lines:
         modified_lines.append(line)
 
 # Write the modified lines to the output file
-with open(mdu_file_linux, 'w') as file:
+with open(mdu_file, 'w') as file:
     file.writelines(modified_lines)
-print(f'Modified file saved to: {mdu_file_linux}')
+print(f'Modified file saved to: {mdu_file}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
@@ -379,13 +379,13 @@ print(f'Modified file saved to: {mdu_file_linux}')
 nproc = 4 # number of processes
 
 # Making bat file and dimr_config.xml file
-dfmt.create_model_exec_files(file_mdu=mdu_file.replace('/', '\\'), nproc=nproc, dimrset_folder=dimrset_folder.replace('/', '\\'))
-default_bat_path = os.path.join(dir_output_main, "run_parallel.bat")
-bat_file_path = os.path.join(dir_output_main, "windows_simulation", "run_parallel.bat")
-# Relocating and copying for windows simulation
-shutil.copy(os.path.join(dir_windows_simulation, "dimr_config.xml"), os.path.join(dir_output_main, "dimr_config.xml"))
-if os.path.exists(default_bat_path):
-    shutil.move(default_bat_path, bat_file_path)
+dfmt.create_model_exec_files(file_mdu=mdu_file, nproc=nproc, dimrset_folder=dimrset_folder.replace('/', '\\'))
+# default_bat_path = os.path.join(dir_output_main, "run_parallel.bat")
+bat_file_path = os.path.join(dir_output_main, "run_parallel.bat")
+# # Relocating and copying for windows simulation
+# shutil.copy(os.path.join(dir_windows_simulation, "dimr_config.xml"), os.path.join(dir_output_main, "dimr_config.xml"))
+# if os.path.exists(default_bat_path):
+#     shutil.move(default_bat_path, bat_file_path)
 
 # Remove "pause" from bat file and update MDU_file, dimr_config
 if os.path.exists(bat_file_path):
@@ -399,7 +399,7 @@ if os.path.exists(bat_file_path):
     with open(bat_file_path, "w") as outfile:
         # Add the working directory as the first line
         outfile.write(f'Rem Set working directory\n')
-        outfile.write(f'cd /d "{dir_windows_simulation.replace('/', '\\')}"\n')
+        outfile.write(f'cd /d "{dir_output_main.replace('/', '\\')}"\n')
         outfile.write(f'\n')
 
         dimr_config_line_added = False  # Flag to check if the dimr_config line is added
@@ -409,20 +409,23 @@ if os.path.exists(bat_file_path):
             if line.strip().lower() == "pause":
                 continue  # Skip writing this line
 
-            # If the line starts with "set MDU_file=", update its value
-            if line.strip().startswith("set MDU_file="):
-                line = f"set MDU_file={mdu_file.replace('/', '\\')}\n"  # Replace the line with the new MDU_file value
-                outfile.write(line)  # Write the updated MDU_file line
+            # Replace every "/p/" with "p:\" in the line (happens when run on linux)
+            line = line.replace("/p/", "p:\\")
 
-                # After the MDU_file line, add the dimr_config line if not added yet
-                if not dimr_config_line_added:
-                    outfile.write(f"set dimr_config={os.path.join(dir_windows_simulation, 'dimr_config.xml').replace('/', '\\')}\n")  # Add the dimr_config line
-                    dimr_config_line_added = True  # Set flag to True to prevent adding it again
-                continue
+            # If the line starts with "set MDU_file=", update its value
+            # if line.strip().startswith("set MDU_file="):
+            #     line = f"set MDU_file={mdu_file.replace('/', '\\')}\n"  # Replace the line with the new MDU_file value
+            #     outfile.write(line)  # Write the updated MDU_file line
+
+                # # After the MDU_file line, add the dimr_config line if not added yet
+                # if not dimr_config_line_added:
+                #     outfile.write(f"set dimr_config={os.path.join(dir_windows_simulation, 'dimr_config.xml').replace('/', '\\')}\n")  # Add the dimr_config line
+                #     dimr_config_line_added = True  # Set flag to True to prevent adding it again
+                # continue
             
-            # Replace dimr_config.xml with %dimr_config%
-            if "dimr_config.xml" in line:
-                line = line.replace("dimr_config.xml", "%dimr_config%")
+            # # Replace dimr_config.xml with %dimr_config%
+            # if "dimr_config.xml" in line:
+            #     line = line.replace("dimr_config.xml", "%dimr_config%")
             
             # Write any other lines as they are
             outfile.write(line)
@@ -435,7 +438,7 @@ else:
 # making singularity .sh file
 pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
 
-replacements = {'JOBNAME': region, 'MDUFOLDER':os.path.dirname(mdu_file_linux).replace('\\', '/').replace('p:/', '/p/')}
+replacements = {'JOBNAME': region, 'MDUFOLDER':os.path.dirname(mdu_file).replace('\\', '/').replace('p:/', '/p/')}
 
 with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfile:
     for line in infile:
