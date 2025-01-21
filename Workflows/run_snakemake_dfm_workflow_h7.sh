@@ -26,7 +26,7 @@ cd Workflows
 snakemake --unlock -s snakefile_dfm.smk --configfile config_snakemake/config_general_dfm.yml 
 
 # running workflow with snakemake
-snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general_dfm.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
+snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general_dfm.yml --forceall --rulegraph | dot -Tpdf > dag_dfm.pdf
 snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general_dfm.yml --cores 'all' --latency-wait 60 --wait-for-files  --forceall # --cores 4
 
 exit
