@@ -65,8 +65,8 @@ rule all_dfm:
     input:
         # expand(join(root_dir, dir_models, "{region}", "{tc_name}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
         # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
-        expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),
-        # get_sfincs_datacatalog
+        # expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),
+        expand(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"), region=region, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),   
 
 rule make_model_dfm_base:
     params:
@@ -101,16 +101,9 @@ rule make_dfm_model_event:
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
-rule run_dfm_and_add_to_catalog:
+rule run_dfm:
     input:
         submit_script = join(root_dir,dir_runs,"{region}", "{tc_name}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
-    params:
-        # output           = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output")),
-        post_exec_script = join("scripts", "postprocessing", "dfm", "output_to_catalog.py"),
-        model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
-        # dir_event_model  = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
-        sfincs_data_cat  = get_sfincs_datacatalog,
-        root_dir = root_dir,
     output:
         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
     run:
@@ -118,20 +111,17 @@ rule run_dfm_and_add_to_catalog:
             print("Executing DFM...")
             shell("cmd /c {input.submit_script}")
             print("Finished running")
-            shell("python {params.post_exec_script}")
         if os.name == 'posix':
             shell("sbatch {input.submit_script}")
-            shell("python {params.post_exec_script}")
 
-# rule add_dfm_output_to_catalog:
-#     input:
-#         his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "his.nc"),
-#     params:
-#         model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
-#         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
-#         sfincs_data_cat = get_sfincs_datacatalog,
-#         root_dir = root_dir,
-#     output:
-#         sfincs_data_cat_update = '{params.get_sfincs_datacatalog}',
-#     script:
-#         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
+rule add_dfm_output_to_catalog:
+    input:
+        his_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),
+    params:
+        model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+        sfincs_data_cat  = get_sfincs_datacatalog,
+        root_dir         = root_dir,
+    output:
+        done_file = join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"),
+    script:
+        join("scripts", "postprocessing", "dfm", "output_to_catalog.py")

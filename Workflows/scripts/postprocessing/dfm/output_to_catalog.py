@@ -5,10 +5,11 @@ import hydromt
 
 #%%
 if "snakemake" in locals():
-    his_path = os.path.abspath(snakemake.output.his_file)
+    his_path = os.path.abspath(snakemake.input.his_file)
     path_data_cat = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
     root_dir = os.path.abspath(snakemake.params.root_dir)
+    snake_done = os.path.abspath(snakemake.output.done_file)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -21,6 +22,7 @@ else:
     run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     his_path = os.path.join(run_dir, "output", f"{model_name}_his.nc")
     root_dir = 'p:\\'
+    snake_done = os.path.join(run_dir, "postprocessing_done.txt")
 
 #%% Loading the SFINCS coastal coupling data catalog & DFM output path
 datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
@@ -59,4 +61,9 @@ else:
 
 # Save the updated catalog
 datacatalog.to_yml(path_data_cat, root=root_dir)
+
+#%% Make a file for snakemake to track the cata,log update
+with open(snake_done, 'w') as file:
+    # Write content to the file
+    file.write("# Empty file used to make the snakemake dfm workflow add_data_to_catalog rule work\n")
 # %%
