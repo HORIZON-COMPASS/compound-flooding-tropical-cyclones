@@ -106,7 +106,7 @@ rule run_dfm_and_add_to_catalog:
         submit_script = join(root_dir,dir_runs,"{region}", "{tc_name}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     params:
         # output           = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output")),
-        post_exec_script = join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
+        post_exec_script = join("scripts", "postprocessing", "dfm", "output_to_catalog.py"),
         model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         # dir_event_model  = directory(join(root_dir, dir_runs, "{region}", "{tc_name}", "dfm", "{model_name}")),
         sfincs_data_cat  = get_sfincs_datacatalog,
