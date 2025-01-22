@@ -5,11 +5,9 @@ import hydromt
 
 #%%
 if "snakemake" in locals():
-    his_path = os.path.abspath(snakemake.input.his_file)
-    path_data_cat = os.path.abspath(snakemake.output.sfincs_data_cat)
-    run_dir = os.path.abspath(snakemake.params.dir_event_model)
+    his_path = os.path.abspath(snakemake.output.his_file)
+    path_data_cat = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
-    tc_name = snakemake.wildcards.tc_name
     root_dir = os.path.abspath(snakemake.params.root_dir)
 else:
     region = "sofala"
