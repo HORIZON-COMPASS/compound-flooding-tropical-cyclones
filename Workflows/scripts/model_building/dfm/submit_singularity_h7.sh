@@ -12,12 +12,12 @@
  
 #--- Specify Slurm SBATCH directives ------------------------------------------------------------------------
 #SBATCH --nodes=1               # Number of nodes.
-#SBATCH --ntasks-per-node=1     # The number of tasks to be invoked on each node.
+#SBATCH --ntasks-per-node=4     # The number of tasks to be invoked on each node.
                                 # For sequential runs, the number of tasks should be '1'.
                                 # Note: SLURM_NTASKS is equal to "--nodes" multiplied by "--ntasks-per-node".
 #SBATCH --job-name=JOBNAME      # Specify a name for the job allocation.
-#SBATCH --time 04:00:00         # Set a limit on the total run time of the job allocation.
-#SBATCH --partition=16vcpu       # Request a specific partition for the resource allocation.
+#SBATCH --time 03:00:00         # Set a limit on the total run time of the job allocation.
+#SBATCH --partition=4vcpu       # Request a specific partition for the resource allocation.
                                 # See: https://publicwiki.deltares.nl/display/Deltareken/Compute+nodes.
 ##SBATCH --exclusive            # The job allocation can not share nodes with other running jobs.
                                 # In many cases this option can be omitted.
