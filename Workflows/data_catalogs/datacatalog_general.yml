@@ -2753,6 +2753,12 @@ spw_IBTrACS_ext_Idai:
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_ext_Freddy2:
+  data_type: RasterDataset
+  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_FREDDY_2023061S22036_ext9d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
 TAMSAT_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
