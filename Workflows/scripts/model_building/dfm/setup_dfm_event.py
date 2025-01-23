@@ -217,17 +217,22 @@ tmp = pd.concat([xcor,ycor],axis=1)
 tmp = tmp.dropna()
 tmp['names'] = tmp.index
 
-# Attempt to check if 'verification_points' is defined
 try:
-    # Try to use 'verification_points'
-    tmp2 = pd.read_table(verification_points, sep=" ", names=['x', 'y', 'names'])
-    pd_obs = tmp2._append(tmp, ignore_index=True)  
-    del tmp, tmp2
+    if verification_points:  # Ensures 'verification_points' is not empty or None
+        tmp2 = pd.read_table(verification_points, sep=" ", names=['x', 'y', 'names'])
+        pd_obs = tmp2._append(tmp, ignore_index=True)  
+        del tmp, tmp2
+    else:
+        raise ValueError("verification_points is empty.")  # Handle empty case explicitly
 except NameError:
     # If 'verification_points' is not defined, set pd_obs to tmp
     pd_obs = tmp
     print("verification_points is not defined. Using 'tmp' as pd_obs.")
-
+except ValueError as e:
+    # If 'verification_points' is defined but empty, set pd_obs to tmp
+    pd_obs = tmp
+    print(f"{e} Using 'tmp' as pd_obs.")
+    
 # save obs points
 file_obs = os.path.join(dir_output_main, f'obs_points.xyn')
 pd_obs.to_csv(file_obs, sep=' ', header=False, index=False, float_format='%.6f')
