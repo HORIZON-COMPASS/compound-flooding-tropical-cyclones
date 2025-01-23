@@ -5,6 +5,7 @@ from os.path import join
 
 include: 'snakefile_sfincs_build.smk'
 include: 'snakefile_wflow.smk'
+# include: 'snakefile_dfm.smk' # to be included and tested
 include: 'snakefile_sfincs_update.smk'
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows

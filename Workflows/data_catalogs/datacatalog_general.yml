@@ -1074,7 +1074,7 @@ gebco:
     source_version: 2020
     unit: m+MSL
   crs: 4326
-gebco_v2020:
+gebco2020:
   data_type: RasterDataset
   path: wflow_global/hydromt/bathymetry/gebco/gebco.vrt
   driver: raster
@@ -1093,7 +1093,7 @@ gebco_v2020:
     source_version: 2020
     unit: m+MSL
   crs: 4326
-gebco_v2024:
+gebco2024:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
   driver: raster
@@ -1832,7 +1832,7 @@ hydro_reservoirs:
   crs: 4326
 isimip_TC_rain_er11_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -1848,7 +1848,7 @@ isimip_TC_rain_er11_Idai:
   crs: 4326
 isimip_TC_rain_h08_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -2747,6 +2747,18 @@ soilgrids_v2.0:
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
+spw_IBTrACS_ext_Idai:
+  data_type: RasterDataset
+  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_ext_Freddy2:
+  data_type: RasterDataset
+  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_FREDDY_2023061S22036_ext9d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
 TAMSAT_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc

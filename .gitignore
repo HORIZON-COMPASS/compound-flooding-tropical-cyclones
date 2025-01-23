@@ -9,6 +9,7 @@ __pycache__/
 # Pixi
 .pixi
 pixi.lock
+hook.sh
 
 # Model data
 Delft3DFM/mozambique_model/computations
@@ -26,6 +27,8 @@ SFINCS/workflow_scripts/*.dot
 SFINCS/workflow_scripts/hook.sh
 hook.sh
 Wflow/wflow_sofala
+DelftFIAT/scripts/cache
+DelftFIAT/computations
 
 # Distribution / packaging
 .Python
