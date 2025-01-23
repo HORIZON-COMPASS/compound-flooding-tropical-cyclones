@@ -98,6 +98,79 @@ The model is created on the P-drive in the *p:\11210471-001-compass\02_Models* f
 - **Output**: WFlow event run output, saved as `output_scalar.nc`.
 - **Description**: This rule runs the wflow event run. Output is saved as *output_scalar.nc*
 
+
+### snakefile_dfm.smk
+
+This workflow creates a dfm base model and updates it by adding forcing data and running the model simulations. It also add the output to a data catalog which can be used as SFINCS waterlevel forcing.
+
+#### Rule: make_model_dfm_base
+- **Script**: `scripts/model_building/dfm/setup_dfm_base.py`
+- **Params**:
+  - `bbox_dfm` (from config file)
+  - `bbox_output` (from config file)
+  - `data_cat` (from snake file)
+- **Output**: DFM base model configuration, saved as multiple files in the base model folder:
+  - `geometry` folder with base model grid figures
+  - `pli_file.pli`
+  - `illigalcells.pol`
+  - `grid_network.nc`
+  - `tide_{bathy}.bc`
+  - `L*.pli` where * is a number, depending on how many boundary lines there are
+  - `ext_file_new.ext`
+- **Description**: This rule makes generates and refines base model grid and adds boundary conditions from a tidal model.
+
+#### Rule: make_dfm_model_event
+- **Script**: `scripts/model_building/dfm/setup_dfm_event.py`
+- **Input**: 
+  - `ext_file_new.ext` (from the base model)
+  - (and all other files in the base model folder, which are copied inside the script to the event folder)
+- **Params**:
+  - `dir_base_model` (from make_model_dfm_base rule)
+  - `start_time` (from config file)
+  - `end_time` (from config file)
+  - `bbox_dfm` (from config file)
+  - `bbox_output` (from config run)
+  - `dfm_obs_file` (from config file)
+  - `verif_points_file` (from config file)
+  - `data_cat` (from snake file)
+  - `dimrset` (from Deltares dfm directory)
+  - `uniformwind` (from data directory)
+  - `model_name` (from snake rule)
+- **Output**: 
+  - `geometry` folder with base grid ánd event model figures
+  - `{model_name}.mdu`
+  - `ext_file_old.ext`
+  - `dimr_config.xml`
+  - `submit_singularity_h7.sh` (if run on linux)
+  - `run_parallel.bat` (if run on windows)
+- **Description**: This rule copies the base model configuration and adds the TC meteo forcing. It also set the model output points (through an obs file) and generates the files required to run the model (mdu, dimr, bat and sh)
+
+#### Rule: run_dfm
+- **Script**: `scripts/model_building/dfm/setup_dfm_event.py`
+- **Input**: 
+  - `submit_singularity_h7.sh` (if run on linux)
+  - `run_parallel.bat` (if run on windows)
+  - (and all other files in the event model folder, needed for model execution)
+- **Run**:
+  - Runs the batch file depending on the system that is used
+- **Output**: 
+  - `output/{model_name}_his.nc` (needed as sfincs water level forcing)
+  - other output files, not needed for sfincs and therefore not included in the snake rule
+- **Description**: This rule runs the dfm event model configuration, possible on windows and linux systems. It generates an output folder containing a his.nc, map.nc and .dia file. 
+
+#### Rule: add_dfm_output_to_catalog
+- **Script**: `scripts/postprocessing/dfm/output_to_catalog.py`
+- **Input**: 
+  - `output/{model_name}_his.nc` (from the event model directory)
+- **Params**:
+  - `model_name` (from snake rule)
+  - `sfincs_data_cat` (from snake rule)
+  - `root_dir` (from snake rule, differs for windows or linux)
+- **Output**: 
+  - `done_file` tracks whether the sfincs_data_cat is updated
+- **Description**: This rule adds the event model his.nc output to the SFINCS data catalog, to be used as water level forcing for the SFINCS model. A 'done_file' is used for Snakemake to track whether the data catalog has been updated, but has no other purpose.
+
+
 ### snakefile_sfincs_update.smk
 
 This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of both meteorological and WFlow forcing data, executes the model, and generates the output.
