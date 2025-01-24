@@ -301,34 +301,34 @@ mdu.save(mdu_file)
 # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
 dfmt.make_paths_relative(mdu_file)
 
-with open(mdu_file, 'r') as file:
-    lines = file.readlines()
+# with open(mdu_file, 'r') as file:
+#     lines = file.readlines()
     
-# Modify the lines that contain file paths
-modified_lines = []
-for line in lines:
-    if 'extForceFile' in line or 'extForceFileNew' in line or 'dryPointsFile' in line:
-        # Split the line by the first '=' and get the key and path
-        key, path = line.split('=', 1)
-        # Check if there is a comment (after '#')
-        if '#' in path:
-            path, comment = path.split('#', 1)
-            comment = f" #{comment.strip()}"
-        else:
-            comment = ""
-        # Remove leading/trailing spaces from the path and get just the file name
-        path = path.strip()
-        file_name = os.path.basename(path)
-        # Replace the path with just the file name and retain the comment
-        modified_line = f'{key.strip()} = {file_name}{comment}\n'
-        modified_lines.append(modified_line)
-    else:
-        modified_lines.append(line)
+# # Modify the lines that contain file paths
+# modified_lines = []
+# for line in lines:
+#     if 'extForceFile' in line or 'extForceFileNew' in line or 'dryPointsFile' in line:
+#         # Split the line by the first '=' and get the key and path
+#         key, path = line.split('=', 1)
+#         # Check if there is a comment (after '#')
+#         if '#' in path:
+#             path, comment = path.split('#', 1)
+#             comment = f" #{comment.strip()}"
+#         else:
+#             comment = ""
+#         # Remove leading/trailing spaces from the path and get just the file name
+#         path = path.strip()
+#         file_name = os.path.basename(path)
+#         # Replace the path with just the file name and retain the comment
+#         modified_line = f'{key.strip()} = {file_name}{comment}\n'
+#         modified_lines.append(modified_line)
+#     else:
+#         modified_lines.append(line)
 
-# Write the modified lines to the output file
-with open(mdu_file, 'w') as file:
-    file.writelines(modified_lines)
-print(f'Modified file saved to: {mdu_file}')
+# # Write the modified lines to the output file
+# with open(mdu_file, 'w') as file:
+#     file.writelines(modified_lines)
+# print(f'Modified file saved to: {mdu_file}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
