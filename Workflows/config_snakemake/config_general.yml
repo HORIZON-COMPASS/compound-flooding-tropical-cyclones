@@ -20,7 +20,7 @@ runname_ids:
         dfm_res: "450"
         bathy: "gebco2024"
         wind_forcing: "spw_IBTrACS_ext"
-        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap (GTSMv4.1(_opendap)) is converted to be accurated read by snake)
         dfm_obs_file: 'coastal_bnd_MZB_5mMSL_points_1km.shp'
         verification_points: 'MZB_Sofala_IHO_obs.xyn'
         # Change to:
