@@ -20,12 +20,12 @@ if "snakemake" in locals():
     CF_value_txt = snakemake.wildcards.CF_value_wind
     output_CF_wind = os.path.abspath(snakemake.output.CF_wind)
 else:
-    start_date = np.datetime64("2019-03-09") 
-    end_date = np.datetime64("2019-03-24") 
-    tc_name = "Idai"
-    CF_value = -10
-    CF_value_txt = "-10"
-    output_CF_wind = f"p:/11210471-001-compass/01_Data/counterfactuals/wind/tc_{tc_name}_{CF_value_txt}.spw"
+    start_date = np.datetime64("2020-11-12") 
+    end_date = np.datetime64("2020-11-28") 
+    tc_name = "Iota"
+    CF_value = 0
+    CF_value_txt = "0"
+    output_CF_wind = "p:/11210471-001-compass/01_Data/SPW_forcing_files"
     
 #%%
 # extract TC year
@@ -116,6 +116,9 @@ if len(valid_times) > 0:
 else:
     print("No valid time values found in the dataset.")
 
+#%% Adjust the time to remove decimal seconds
+ds_tc['time'] = ds_tc['time'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+
 #%%
 #### CF calculations ####
 # Create counterfactual wind based on CF_value
@@ -125,7 +128,7 @@ ds_tc["usa_wind"] = ds_tc["usa_wind"] * ((100 + CF_value)/100)
 # The central pressure at each track position is increased by CF_value times 
 # the difference between central pressure and environmental/background pressure,
 # defined in cht-cyclones as self.background_pressure = 1012 Pa
-ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((100 - CF_value)/100) * (1012 - ds_tc["usa_pres"])
+ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((-1 * CF_value)/100) * (1012 - ds_tc["usa_pres"])
 
 #%%
 # create spw file for this specific track
@@ -134,6 +137,6 @@ tc = create_track(ds_tc)
 #%%
 # export to spiderweb
 print('- Saving track...')
-tc.to_spiderweb(output_CF_wind)
+tc.to_spiderweb(os.path.join(output_CF_wind, f"tc_{tc_name}_CF{CF_value_txt}_{sid}_ext{extend_days}d.spw"))
 
 del tc
