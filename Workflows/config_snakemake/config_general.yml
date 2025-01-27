@@ -13,7 +13,7 @@ runname_ids:
         region: sofala
         bbox: "[34.33,-20.12,34.95,-19.30]"
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"
-        file_spw: tc_IDAI_2019063S18038_CF0_ext9d.spw # right spw files need to be incorporate in snake workflow, instead of hardcoded
+        file_spw: tc_IDAI_CF0_2019063S18038_ext9d.spw # right spw files need to be incorporate in snake workflow, instead of hardcoded
         start_time: 20190309 000000
         end_time: 20190325 060000
         forcing: era5_hourly
