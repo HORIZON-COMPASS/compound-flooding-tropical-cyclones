@@ -1,0 +1,23 @@
+# Defining parameters to run the snakemake pipeline
+
+
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+runname_ids: 
+    Eta:
+        tc_name: Eta
+        region: honduras
+        bbox_sfincs: "[-88.3,15.1,-87.6,16.0]"   
+        bbox_dfm: "[-89.0,-82.4,14.9,17.7]"     
+        start_time: 20201031 180000
+        end_time: 20201116 000000
+        forcing: era5_hourly
+        dfm_res: '450'
+        bathy: 'gebco2024_HND'
+        wind_forcing: spw_IBTrACS_CF0_Eta
+        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+        dfm_obs_file: coastal_coupling_DFM_obs_points_HND
+        
+        verification_points: 'MZB_Sofala_IHO_obs.xyn' # need to add relevant verification points
