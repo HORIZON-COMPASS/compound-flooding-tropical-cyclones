@@ -27,7 +27,7 @@ def get_end_time(wildcards):
     return config["runname_ids"][wildcards.runname]['end_time']
 
 def get_bbox(wildcards):
-    prebbox = config["runname_ids"][wildcards.runname]["bbox"]
+    prebbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     arg_bbox = "{" + "'bbox': "+ prebbox + "}"
     return arg_bbox
 
