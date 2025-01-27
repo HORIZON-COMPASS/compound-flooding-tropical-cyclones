@@ -41,7 +41,7 @@ else:
     tc_name = "Idai"
     dfm_res = "450"
     bathy = "gebco2024"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing = "spw_IBTrACS_ext"
     bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
     output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
