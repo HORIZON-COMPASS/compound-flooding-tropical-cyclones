@@ -20,19 +20,26 @@ dir_runs   = config["dir_runs"]
 def get_forcing(wildcards):
     return config["runname_ids"][wildcards.runname]['forcing']
 
+def get_tcname(wildcards):
+    return config["runname_ids"][wildcards.runname]['tc_name']
+
 def get_start_time(wildcards):
     return config["runname_ids"][wildcards.runname]['start_time']
 
 def get_end_time(wildcards):
     return config["runname_ids"][wildcards.runname]['end_time']
 
-def get_bbox(wildcards):
-    bbox = config["runname_ids"][wildcards.runname]["bbox"]
+def get_sfincs_bbox(wildcards):
+    bbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     return bbox
 
 def get_dfm_bbox(wildcards):
     bbox = config["runname_ids"][wildcards.runname]["bbox_dfm"]
     return bbox
+
+def get_dfm_obs_points(wildcards):
+    dfm_obs_file = config["runname_ids"][wildcards.runname]["dfm_obs_file"]
+    return dfm_obs_file
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -48,7 +55,6 @@ def get_sfincs_datacatalog(wildcards):
 
 # Define wildcards for path names
 runname_ids = list(config['runname_ids'].keys())
-tc_name = [value['tc_name'] for key, value in config['runname_ids'].items()]
 region = [value['region'] for key, value in config['runname_ids'].items()]
 dfm_res = [value['dfm_res'] for key, value in config['runname_ids'].items()]
 bathy = [value['bathy'] for key, value in config['runname_ids'].items()]
@@ -58,22 +64,23 @@ wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].it
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
     wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
+    bathy='|'.join([re.escape(x) for x in bathy]),
 
 # Define the script dynamically based on OS before the rule
 submit_script_system = "run_parallel.bat" if os.name == 'nt' else "submit_singularity_h7.sh"
 
 rule all_dfm:
     input:
-        # expand(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
-        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), zip, region=region, runname=runname_ids, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
-        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), zip, region=region, runname=runname_ids, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"), zip, region=region, runname=runname_ids, tc_name=tc_name, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),   
+        # expand(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{bathy}_{tidemodel}", "ext_file_new.ext"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel)
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing)
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),   
 
 rule make_model_dfm_base:
     params:
         data_cat = get_datacatalog,
         dfm_bbox = get_dfm_bbox,
-        output_bbox = get_bbox,
+        output_bbox = get_sfincs_bbox,
     output: 
         dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
@@ -84,29 +91,31 @@ rule make_dfm_model_event:
     input:
         ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
     params:
+        tc_name = get_tcname,
         dir_base_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
         start_time   = get_start_time,
         end_time     = get_end_time,
         dfm_bbox     = get_dfm_bbox,
-        output_bbox  = get_bbox,
-        dfm_obs_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["runname_ids"][wildcards.runname]["dfm_obs_file"]),
+        output_bbox  = get_sfincs_bbox,
         verif_points_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["runname_ids"][wildcards.runname]["verification_points"]),
         data_cat     = get_datacatalog,
+        sfincs_data_cat = get_sfincs_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
-        model_name   = "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+        dfm_obs_file = get_dfm_obs_points,
     output: 
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
-        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
+        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
+        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
     run:
         if os.name == 'nt':
             print("Executing DFM...")
@@ -117,12 +126,12 @@ rule run_dfm:
 
 rule add_dfm_output_to_catalog:
     input:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),
     params:
-        model_name       = "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
+        model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         sfincs_data_cat  = get_sfincs_datacatalog,
         root_dir         = p_dir,
     output:
-        done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"),
+        done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"),
     script:
         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
