@@ -11,7 +11,7 @@ elif os.name == "posix": #Running on linux
     root_dir = join("/p", config['root_dir'])
 
 def get_bbox(wildcards):
-    bbox = config["runname_ids"][wildcards.runname]["bbox"]
+    bbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     return bbox
 
 def get_path_spw_ori(wildcards):
