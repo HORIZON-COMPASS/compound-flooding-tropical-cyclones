@@ -2747,15 +2747,15 @@ soilgrids_v2.0:
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
-spw_IBTrACS_ext_Idai:
+spw_IBTrACS_ext_CF0_Idai:
   data_type: RasterDataset
-  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw
+  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_CF0_2019063S18038_ext9d.spw
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
-spw_IBTrACS_ext_Freddy2:
+spw_IBTrACS_ext_CF0_Freddy2:
   data_type: RasterDataset
-  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_FREDDY_2023061S22036_ext9d.spw
+  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_FREDDY_CF0_2023061S22036_ext9d.spw
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time

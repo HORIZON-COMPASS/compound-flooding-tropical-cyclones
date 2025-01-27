@@ -5,7 +5,7 @@ root_dir:    11210471-001-compass
 dir_data:    01_Data
 dir_models:  02_Models
 dir_runs:    03_Runs
-dir_spw:     02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/
+dir_spw:     01_Data/SPW_forcing_files/
 datacatalog: data_catalogs/datacatalog_general.yml
 runname_ids: 
     Idai:
@@ -13,13 +13,13 @@ runname_ids:
         region: sofala
         bbox: "[34.33,-20.12,34.95,-19.30]"
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"
-        file_spw: tc_IDAI_2019063S18038_ext9d.spw 
+        file_spw: tc_IDAI_2019063S18038_CF0_ext9d.spw # right spw files need to be incorporate in snake workflow, instead of hardcoded
         start_time: 20190309 000000
         end_time: 20190325 060000
         forcing: era5_hourly
         dfm_res: "450"
         bathy: "gebco2024"
-        wind_forcing: "spw_IBTrACS_ext"
+        wind_forcing: "spw_IBTrACS_ext_CF0" # CF0 need to be made a variable in snake file
         tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
         dfm_obs_file: 'coastal_bnd_MZB_5mMSL_points_1km.shp'
         verification_points: 'MZB_Sofala_IHO_obs.xyn'
@@ -34,7 +34,7 @@ runname_ids:
     #     region: quelimane #?
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[34,-23.3,36,-21] "
-    #     file_spw: tc_FREDDY_2023036S12118_ext9d.spw
+    #     file_spw: tc_FREDDY_CF0_2023036S12118_ext9d.spw
     #     start_time: 20230221 000000
     #     end_time: 20230305 060000
     #     forcing: era5_hourly
@@ -43,13 +43,13 @@ runname_ids:
     #     region: quelimane
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     bbox_dfm: "[36.3,-19.7,38,-16.7]"
-    #     file_spw: tc_FREDDY_2023061S22036_ext9d.spw
+    #     file_spw: tc_FREDDY_CF0_2023061S22036_ext9d.spw
     #     start_time: 20230304 000000
     #     end_time: 20230323 060000
     #     forcing: era5_hourly
     #     dfm_res: "450"
     #     bathy: "gebco2024"
-    #     wind_forcing: "spw_IBTrACS_ext"
+    #     wind_forcing: "spw_IBTrACS_ext_CF0"
     #     dfm_obs_file: 'coastal_bnd_MZB_5mMSL_points_1km.shp'
     #     verification_points: ''
     # Kenneth:
@@ -57,7 +57,7 @@ runname_ids:
     #     region: 
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[40,-13.5,42,-11.2]"
-    #     file_spw: tc_KENNETH_2019112S10053_ext9d.spw
+    #     file_spw: tc_KENNETH_CF0_2019112S10053_ext9d.spw
     #     start_time: 20190421 210000
     #     end_time: 20190505 000000
     #     forcing: era5_hourly
