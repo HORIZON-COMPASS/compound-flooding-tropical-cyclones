@@ -1,11 +1,11 @@
 # set time of simulation
 setup_config:
-  tref: 20230304 060000
-  tstart: 20230304 000000
-  tstop: 20230323 060000
+  tref: 20201031 180000
+  tstart: 20201031 180000
+  tstop: 20201116 000000
   dtout: 3600
   dthisout: 3600
-  spwfile: tc_Freddy_CF0_2023061S22036_ext9d.spw
+  spwfile: tc_Eta_CF0_2020306N15288_ext2d.spw
   storemeteo: 1
   utmzone: 36s
 
@@ -14,13 +14,13 @@ setup_precip_forcing_from_grid:
   aggregate: False
 
 setup_waterlevel_forcing:
-  geodataset: dfm_output_MZB_Freddy2
+  geodataset: gtsm_reanalysis_waterlevel_hourly
   buffer: 1000
   merge: False
 
-setup_observation_points:
-  locations: obs_points_Freddy2
-  merge: False
+#setup_observation_points:
+#  locations: obs_points_sofala
+#  merge: False
 
 
 # setup discharge

@@ -5,7 +5,7 @@ setup_config:
   tstop: 20190325 060000
   dtout: 3600
   dthisout: 3600
-  spwfile: tc_IDAI_2019063S18038_ext9d.spw
+  spwfile: tc_Idai_CF0_2019063S18038_ext9d.spw
   storemeteo: 1
   utmzone: 36s
 
