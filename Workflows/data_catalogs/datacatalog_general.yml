@@ -1093,9 +1093,28 @@ gebco2020:
     source_version: 2020
     unit: m+MSL
   crs: 4326
-gebco2024:
+gebco2024_MZB:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    gebco: elevtn
+  meta:
+    category: topography
+    paper_doi: 
+    paper_ref: 
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_url: 
+    source_version: 2024
+    unit: m+MSL
+  crs: 4326
+gebco2024_HND:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n19.0_s14.7_w-89.4_e-80.0.nc
   driver: raster
   driver_kwargs:
     chunks:
@@ -1691,10 +1710,9 @@ gswo_v2019:
     paper_ref: Pekel et al. (2016)
     source_url: https://global-surface-water.appspot.com/download
     source_version: v1_1_2019
-gtsm_codec_reanalysis_10min_v1:
+gtsm_reanalysis_waterlevel_hourly:
   data_type: GeoDataset
-  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/{variable}/reanalysis_{variable}_10min_{year}_{month:02d}_v1.nc
-  driver: netcdf
+  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_hourly_{year}_{month:02d}_v2.nc
   driver_kwargs:
     chunks:
       stations: 10
@@ -1708,47 +1726,8 @@ gtsm_codec_reanalysis_10min_v1:
     paper_doi: 10.3389/fmars.2020.00263
     paper_ref: Muis at al (2020)
     source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.8c59054f
-    source_version: v1
-  crs: 4326
-gtsm_codec_reanalysis_dailymax_v1:
-  data_type: GeoDataset
-  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/{variable}/reanalysis_{variable}_dailymax_{year}_{month:02d}_v1.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-    paper_doi: 10.3389/fmars.2020.00263
-    paper_ref: Muis at al (2020)
-    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.8c59054f
-    source_version: v1
-  crs: 4326
-gtsm_codec_reanalysis_hourly_v1:
-  data_type: GeoDataset
-  path: 11210471-001-compass/01_Data/GTSM-ERA5-E/06_model_runs/03_postprocessing/TS_extension_hourly/surge/reanalysis_surge_hourly_{year}_03_v1.nc
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-    paper_doi: 10.3389/fmars.2020.00263
-    paper_ref: Muis at al (2020)
-    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.8c59054f
-    source_version: v1
+    source_url: https://doi.org/10.24381/cds.a6d42d60
+    source_version: v2
   crs: 4326
 guf_bld_2012:
   data_type: RasterDataset
@@ -2747,15 +2726,27 @@ soilgrids_v2.0:
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
-spw_IBTrACS_ext_Idai:
+spw_IBTrACS_CF0_Idai:
   data_type: RasterDataset
-  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_IDAI_2019063S18038_ext9d.spw
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
-spw_IBTrACS_ext_Freddy2:
+spw_IBTrACS_CF0_Freddy2:
   data_type: RasterDataset
-  path: /11210471-001-compass/02_Models/Delft3DFM/mozambique_model/boundary_conditions/meteo/TC/tc_FREDDY_2023061S22036_ext9d.spw
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Freddy_CF0_2023061S22036_ext9d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_CF0_Eta:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Eta_CF0_2020306N15288_ext2d.spw
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_CF0_Iota:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Iota_CF0_2020318N16289_ext9d.spw
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
