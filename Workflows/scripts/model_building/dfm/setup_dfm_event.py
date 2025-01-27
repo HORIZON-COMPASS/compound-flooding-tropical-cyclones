@@ -18,7 +18,7 @@ import ast
 #%%
 if "snakemake" in locals():
     region = snakemake.wildcards.region
-    tc_name = snakemake.wildcards.tc_name
+    tc_name = snakemake.params.tc_name
     dfm_res = snakemake.wildcards.dfm_res
     bathy = snakemake.wildcards.bathy
     tidemodel = snakemake.wildcards.tidemodel
@@ -28,9 +28,10 @@ if "snakemake" in locals():
     end_time = snakemake.params.end_time
     bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
     output_bbox = ast.literal_eval(snakemake.params.output_bbox)
-    dfm_obs_file = os.path.abspath(snakemake.params.dfm_obs_file)
+    dfm_obs_file = snakemake.params.dfm_obs_file
     verification_points = os.path.abspath(snakemake.params.verif_points_file)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
@@ -40,16 +41,17 @@ else:
     region = "sofala"
     tc_name = "Idai"
     dfm_res = "450"
-    bathy = "gebco2024"
+    bathy = "gebco2024_MZB"
     tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    wind_forcing = "spw_IBTrACS_ext"
+    wind_forcing = "spw_IBTrACS_ext_Idai_factual"
     bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
     output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
     start_time = "20190309 000000"
     end_time = "20190325 060000"
-    dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
+    dfm_obs_file = "coastal_coupling_DFM_obs_points_MZB"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
+    path_data_cat_sfincs = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
@@ -59,7 +61,8 @@ else:
 
 #%%
 # Define hydromt datacatalog
-data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
+#data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
+data_catalog = hydromt.data_catalog.DataCatalog([path_data_cat,path_data_cat_sfincs])
 
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -157,13 +160,13 @@ ext_old = hcdfm.ExtOldModel()
 # Define model forcing
 if 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
-    spw = 1
-    spw_input = data_catalog[f'{wind_forcing}_{tc_name}'].path
+    spw = 1 
+    spw_input = data_catalog[wind_forcing].path
     spw_file_origin = spw_input # change to path from datacatalog
 else:
     meteo_type = wind_forcing
     spw = 0
-# Can we add option for spiderweb+ERA5? Could not make it work yet.
+# Can we add option for spiderweb+ERA5? Could not make it work yet. -> Natalia: as far as I know that is not possible
 
 # To be adjusted to fit both windows and linux
 if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
@@ -205,7 +208,7 @@ elif meteo_type == 'spiderweb':
 # A file with coordinates of obs stations will be generated.
 
 # Read shp file of points along the MZB coastline
-gdfp = gpd.read_file(dfm_obs_file)
+gdfp = gpd.read_file(data_catalog[dfm_obs_file].path)
 
 # crop output points to the area where output is needed for the flood model
 gdfp = gdfp.cx[output_bbox[0]:output_bbox[2],output_bbox[1]:output_bbox[3]]

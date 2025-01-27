@@ -25,7 +25,7 @@ if "snakemake" in locals():
 else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
-    bathy = "gebco2024"
+    bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
@@ -55,14 +55,13 @@ dir_output_geometry = os.path.join(dir_output_main, "geometry")
 os.makedirs(dir_output_run, exist_ok=True)
 os.makedirs(dir_output_geometry, exist_ok=True)
 
-generate_grid = False # option to skip grid generation if this was already done.
-overwrite = False # used for downloading of forcing data. Always set to True when changing the domain
 crs = 'EPSG:4326' # coordinate reference system
 
 #%%
 # domain and resolution
 bbox_list = [float(x) for x in bbox_dfm.strip("[]").split(",")]
 lon_min, lon_max, lat_min, lat_max = bbox_list
+print(bbox_dfm)
 
 # dxy is the base grid resolution - i.e. the coarsest grid size in your grid. It is in degrees.
 dxy = 0.2 # degrees
@@ -113,7 +112,7 @@ else:
 
     # Define bathymetry
     file_nc_bathy_sel = data_catalog[bathy].path
-    data_bathy_sel = xr.open_dataset(file_nc_bathy_sel).elevation # what does elevation do?
+    data_bathy_sel = xr.open_dataset(file_nc_bathy_sel).elevation # elevation is the name of the array in the dataset
         
     data_bathy_sel.load()
 

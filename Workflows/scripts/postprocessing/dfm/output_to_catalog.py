@@ -14,9 +14,9 @@ else:
     region = "sofala"
     tc_name = "Idai"
     dfm_res = "450"
-    bathy = "gebco2024"
+    bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    wind_forcing = "spw_IBTrACS_ext"
+    wind_forcing = "spw_IBTrACS_ext_CF0_Idai"
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
     path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
     run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
