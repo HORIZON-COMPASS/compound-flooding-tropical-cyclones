@@ -111,7 +111,7 @@ lon_min, lon_max, lat_min, lat_max = bbox_dfm
  
 #%%
 # Define spin up and the model dates in the correct format
-spin_up =  4 # days
+spin_up =  3 # days
 
 start_datetime = datetime.strptime(start_time, '%Y%m%d %H%M%S')
 end_datetime = datetime.strptime(end_time, '%Y%m%d %H%M%S')
