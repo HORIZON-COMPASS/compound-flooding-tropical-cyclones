@@ -11,12 +11,13 @@ __pycache__/
 pixi.lock
 
 #Workflow output files
-Workflows/dag.png
+Workflows/dag*.png
 Workflows/dag*.pdf
 Workflows/*.dot
 Workflows/hook.sh
 Workflows/slurm*
 Workflows/.nfs*
+Workflows/*/.nfs*
 Workflows/test_*
 
 # Model data
