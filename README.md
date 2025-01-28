@@ -1,7 +1,9 @@
-# **COMPASS**
+# Compound Flooding Modeling for Tropical Cyclones
 
-This repository contains the code related to the HORIZON EU Project COMPASS -  “Compound extremes attribution of climate change: towards an operational service” for the work carried on by Deltares. 
-The project began in January 2024 and will run for 3 years.
+This repository contains workflows to setup a modelling chain for the hazard and impact modelling of tropical cyclones. The code is under development and this file will be updated to reflect the current updates on the project. 
+
+
+HORIZON EU Project COMPASS -  “Compound extremes attribution of climate change: towards an operational service” for the work carried on by Deltares. 
 
 More information about the project can be found at https://compass-climate.eu
 
