@@ -37,6 +37,7 @@ if "snakemake" in locals():
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.params.dimrset)
     uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
+    submit_script_file = os.path.abspath(snakemake.params.submit_script_file)
 else:
     region = "sofala"
     tc_name = "Idai"
@@ -58,6 +59,7 @@ else:
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
     uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
+    submit_script_file = 'run_parallel.bat'
 
 #%%
 # Define hydromt datacatalog
@@ -67,7 +69,6 @@ data_catalog = hydromt.data_catalog.DataCatalog([path_data_cat,path_data_cat_sfi
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
 base_mdu = os.path.abspath(os.path.join(script_path, 'base_model_settings.mdu'))
-batchfile_h7 = os.path.abspath(os.path.join(script_path, "submit_singularity_h7.sh"))
 
 #%%
 # define model name, general settings and output location
@@ -380,15 +381,15 @@ else:
 
 
 # making singularity .sh file
-pathfile_h7 = os.path.join(dir_output_main,'submit_singularity_h7.sh')
+if submit_script_file[-3:]=='.sh':
 
-replacements = {'JOBNAME': region, 'MDUFOLDER':os.path.dirname(mdu_file).replace('\\', '/').replace('p:/', '/p/')}
+    replacements = {'JOBNAME': region, 'MDUFOLDER':os.path.dirname(mdu_file).replace('\\', '/').replace('p:/', '/p/')}
 
-with open(batchfile_h7) as infile, open(pathfile_h7, 'w',newline='\n') as outfile:
-    for line in infile:
-        for src, target in replacements.items():
-            line = line.replace(src, target)
-        outfile.write(line)
+    with open(os.path.join(script_path,os.path.basename(submit_script_file))) as infile, open(submit_script_file, 'w',newline='\n') as outfile:
+        for line in infile:
+            for src, target in replacements.items():
+                line = line.replace(src, target)
+            outfile.write(line)
 
 #%%############################################
 ############ Visualize model tree #############

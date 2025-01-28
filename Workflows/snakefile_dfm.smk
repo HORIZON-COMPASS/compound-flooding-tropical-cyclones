@@ -104,6 +104,7 @@ rule make_dfm_model_event:
         uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         dfm_obs_file = get_dfm_obs_points,
+        submit_script_file = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     output: 
         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
         mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
