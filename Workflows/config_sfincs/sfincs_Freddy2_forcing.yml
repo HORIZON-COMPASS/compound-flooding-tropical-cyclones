@@ -5,7 +5,6 @@ setup_config:
   tstop: 20230323 060000
   dtout: 3600
   dthisout: 3600
-  spwfile: tc_Freddy_CF0_2023061S22036_ext9d.spw
   storemeteo: 1
   utmzone: 36s
 

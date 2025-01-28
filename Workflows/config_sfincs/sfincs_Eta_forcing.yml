@@ -5,7 +5,6 @@ setup_config:
   tstop: 20201116 000000
   dtout: 3600
   dthisout: 3600
-  spwfile: tc_Eta_CF0_2020306N15288_ext2d.spw
   storemeteo: 1
   utmzone: 36s
 
