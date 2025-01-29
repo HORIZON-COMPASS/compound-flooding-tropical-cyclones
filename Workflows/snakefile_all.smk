@@ -22,5 +22,5 @@ forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
 
 rule all_general:
     input:
-        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing, spw_file = spw_files),
+        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing),
 

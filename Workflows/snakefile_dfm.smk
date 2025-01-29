@@ -116,7 +116,7 @@ rule run_dfm:
     input:
         submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),        
     run:
         if os.name == 'nt':
             print("Executing DFM...")
@@ -127,7 +127,7 @@ rule run_dfm:
 
 rule add_dfm_output_to_catalog:
     input:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),
     params:
         model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         sfincs_data_cat  = get_sfincs_datacatalog,

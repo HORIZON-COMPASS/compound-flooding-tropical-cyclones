@@ -14,15 +14,20 @@ def get_bbox(wildcards):
     bbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     return bbox
 
-def get_path_spw_ori(wildcards):
-    file_spw = config["runname_ids"][wildcards.runname]["file_spw"]
-    path_spw_ori = join(root_dir, config['dir_spw'], file_spw)
-    return path_spw_ori
+def get_starttime(wildcards):
+    start_time = config["runname_ids"][wildcards.runname]["start_time"]
+    return start_time
 
+def get_endtime(wildcards):
+    end_time = config["runname_ids"][wildcards.runname]["end_time"]
+    return end_time
 
-def get_file_spw(wildcards):
-    # Returns the file name for the .spw file (e.g., tc_FREDDY_2023061S22036_ext9d.spw)
-    return config['runname_ids'][wildcards.runname]['file_spw']
+def get_wind_forcing(wildcards):
+    # Returns the data catalog handle for the .spw file 
+    return config['runname_ids'][wildcards.runname]['wind_forcing']
+
+def get_utmzone(wildcards):
+    return config['runname_ids'][wildcards.runname]['utmzone']
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -38,55 +43,64 @@ def get_datacatalog(wildcards):
             join(curdir, "data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
         ]
 
+runname_ids = list(config['runname_ids'].keys())
 regions = [value['region'] for key, value in config['runname_ids'].items()]
-spw_files = [value['file_spw'] for key, value in config['runname_ids'].items()]
-runname_ids = list(config['runname_ids'].keys())  #
+wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
 forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
+
+# To prevent unwanted wildcard underscore splitting
+wildcard_constraints:
+    forcing='|'.join([re.escape(x) for x in forcing]),
+    wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
 
 rule all_sfincs_update:
     input:
-        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing, spw_file = spw_files)
+        expand(join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing)
 
 
 rule add_forcing_coastal_meteo_sfincs:
     input:
-        msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs" , "sfincs.msk"),
-        spw_file_in = get_path_spw_ori,
+        msk_file = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs", "sfincs.msk"),
     params:
-        dir_run_no_forcing = join(root_dir, "02_Models", "{region}", "{runname}", "sfincs"),
-        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
-        forcing_yml = "config_sfincs/sfincs_"+"{runname}"+"_forcing.yml",
+        dir_run_no_forcing = directory(join(root_dir, "02_Models", "{region}", "{runname}", "sfincs")),
+        dir_run_with_forcing = directory(join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}")),
+#        forcing_yml = "config_sfincs/sfincs_"+"{runname}"+"_forcing.yml",
         data_cats = get_datacatalog,
+        wind_forcing = get_wind_forcing,
+        start_time = get_starttime, 
+        end_time = get_endtime,
+        dfm_output = lambda wildcards: "dfm_output_event_"+ config['runname_ids'][wildcards.runname]["dfm_res"] + "_" + config['runname_ids'][wildcards.runname]["bathy"] + "_" + config['runname_ids'][wildcards.runname]["tidemodel"] + "_" + config['runname_ids'][wildcards.runname]["wind_forcing"],
+        utmzone = get_utmzone,
     output:
-        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs"),
+        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs.bzs"),
     script:
-        join("scripts", "preprocessing", "update_sfincs_coastal_forcing.py")
+        join("scripts", "model_building", "sfincs", "update_sfincs_coastal_forcing.py")
 
 rule update_dis_forcing_sfincs:
     input:
-        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.bzs"),
-        wflow_output = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow", "events", "run_default", "output_scalar.nc"),
+        bzs_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs.bzs"),
+        wflow_output = join(root_dir, "03_Runs", "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "run_default", "output_scalar.nc"),
     params:
-        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
-        wflow_root_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "wflow"),
+        dir_run_with_forcing = directory(join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}")),
+        wflow_root_forcing = directory(join(root_dir, "03_Runs", "{region}", "{runname}", "wflow","event_precip_{forcing}")),
         data_cats = get_datacatalog,
     output:
-        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
+        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs.dis"),
     script:
-        join("scripts", "preprocessing", "update_sfincs_dis_forcing.py")
+        join("scripts", "model_building", "sfincs", "update_sfincs_dis_forcing.py")
 
 
 rule run_sfincs_model:
     input:
 #        batchfile = "{dir_run}"+"/sfincs_"+"{runname}"+"/run_sfincs.bat"
-        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs.dis"),
+        dis_file = join(root_dir,  "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs.dis"),
     params:
-        dir_run_with_forcing = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        dir_run_with_forcing = directory(join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}")),
         exe = join(root_dir, "02_Models", "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
         currentdir = curdir
     output:
-        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
-        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"),
+        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs_map.nc"),
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs_his.nc"),
     run:
         if os.name == 'nt':
             import subprocess
@@ -103,12 +117,12 @@ rule run_sfincs_model:
 
 rule sfincs_plot_floodmap:
     input:
-        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_map.nc"),
-        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "sfincs_his.nc"), 
+        mapout = join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs_map.nc"),
+        hisout =join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs_his.nc"), 
     params:
-        dir_run = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs"),
+        dir_run = directory(join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}")),
         datacat = get_datacatalog
     output:
-        figure = join(root_dir, "03_Runs", "{region}", "{runname}", "{forcing}", "sfincs", "plot_output", "sfincs_basemap.png")  
+        figure = join(root_dir, "03_Runs", "{region}", "{runname}", "sfincs","event_precip_{forcing}", "plot_output", "sfincs_basemap.png")  
     script:
         join(curdir, "scripts", "postprocessing", "sfincs_postprocess.py")

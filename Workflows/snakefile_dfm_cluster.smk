@@ -90,7 +90,7 @@ rule make_model_dfm_base:
         partition = '4vcpu',
         time = '0-0:30:00',
         jobname = 'dfm_base',
-        taskspernode = 1,
+        taskspernode = 4,
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_base.py")
         
@@ -120,7 +120,7 @@ rule make_dfm_model_event:
         partition = '4vcpu',
         time = '0-0:30:00',
         jobname = 'dfm_event',
-        taskspernode = 1,
+        taskspernode = 4,
     script:
         join("scripts", "model_building", "dfm", "setup_dfm_event.py")
 
@@ -132,7 +132,7 @@ rule run_dfm:
         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test")),
         submit_script_copy = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system_copy),
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),        
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),        
     resources:
         partition = '16vcpu',
         time =  '0-3:00:00',
@@ -150,7 +150,7 @@ rule run_dfm:
 
 rule add_dfm_output_to_catalog:
     input:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_his.nc"),
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),
     params:
         model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         sfincs_data_cat  = get_sfincs_datacatalog,
@@ -161,6 +161,6 @@ rule add_dfm_output_to_catalog:
         partition = '4vcpu',
         time = '0-0:30:00',
         jobname = 'dfm_out',
-        taskspernode = 1,
+        taskspernode = 4,
     script:
         join("scripts", "postprocessing", "dfm", "output_to_catalog.py")
