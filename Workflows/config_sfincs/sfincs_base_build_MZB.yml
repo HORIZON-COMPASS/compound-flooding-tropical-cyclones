@@ -7,7 +7,7 @@ setup_dep:
   datasets_dep:
   - elevtn: merit_hydro        # 1st elevation dataset
     zmin: 0.001                # only use where values > 0.001
-  - elevtn: gebco_v2024_MZB        # 2nd eleveation dataset (to be merged with the first)
+  - elevtn: gebco2024_MZB        # 2nd eleveation dataset (to be merged with the first)
     reproj_method: bilinear
 
 setup_mask_active:
@@ -33,7 +33,7 @@ setup_subgrid:
   datasets_dep:
   - elevtn: merit_hydro       
     zmin: 0.001              
-  - elevtn: gebco_v2024_MZB       
+  - elevtn: gebco2024_MZB       
     reproj_method: bilinear
   datasets_rgh:
   - lulc: vito

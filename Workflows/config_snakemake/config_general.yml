@@ -20,6 +20,7 @@ runname_ids:
         tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
         dfm_obs_file: coastal_coupling_DFM_obs_points_MZB
         verification_points: 'MZB_Sofala_IHO_obs.xyn'
+        config_sfincs_base: sfincs_base_build_MZB.yml
         utmzone: 36s
         
         # Change to:
