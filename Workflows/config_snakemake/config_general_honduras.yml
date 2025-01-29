@@ -15,9 +15,11 @@ runname_ids:
         end_time: 20201116 000000
         forcing: era5_hourly
         dfm_res: '450'
-        bathy: 'gebco2024_HND'
+        bathy: gebco2024_HND
         wind_forcing: spw_IBTrACS_CF0_Eta
         tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
         dfm_obs_file: coastal_coupling_DFM_obs_points_HND
+        config_sfincs_base: sfincs_base_build_Honduras.yml
+        utmzone: 16p
         
         verification_points: 'MZB_Sofala_IHO_obs.xyn' # need to add relevant verification points
