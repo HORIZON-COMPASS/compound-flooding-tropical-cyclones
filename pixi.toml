@@ -71,7 +71,6 @@ pyarrow = "==15.0.2"
 graphviz = "*"
 pygraphviz = "*"
 snakemake-executor-plugin-cluster-generic = "*"
-snakemake-executor-plugin-slurm = "*"
 
 [environments]
 default = { features = ["py311"]}
