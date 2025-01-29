@@ -57,10 +57,4 @@ setup_river_inflow:
   keep_rivers_geom: True
   reverse_river_geom: True
 
-# setup_river_outflow:
-#   hydrography: merit_hydro
-#   river_upa: 10
-#   river_len: 4000
-#   keep_rivers_geom: True
-
 

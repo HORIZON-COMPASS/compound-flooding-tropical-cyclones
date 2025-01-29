@@ -7,14 +7,14 @@ setup_dep:
   datasets_dep:
   - elevtn: merit_hydro        # 1st elevation dataset
     zmin: 0.001                # only use where values > 0.001
-  - elevtn: gebco_v2024_Honduras        # 2nd eleveation dataset (to be merged with the first)
+  - elevtn: gebco2024_HND        # 2nd eleveation dataset (to be merged with the first)
     reproj_method: bilinear
 
 setup_mask_active:
   zmin: -10
   fill_area: 50
   include_mask: ocean_shape
-  exclude_mask: coastal_coupling_msk_Honduras   
+  exclude_mask: coastal_coupling_msk_HND   
   reset_mask: True
 
 setup_mask_active2:
@@ -33,7 +33,7 @@ setup_subgrid:
   datasets_dep:
   - elevtn: merit_hydro       
     zmin: 0.001              
-  - elevtn: gebco_v2024_Honduras      
+  - elevtn: gebco2024_HND      
     reproj_method: bilinear
   datasets_rgh:
   - lulc: vito
