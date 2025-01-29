@@ -23,12 +23,12 @@ Four snakemake workflow files are present. All workflows work both on Linux as w
 
 In the section below, the different workflows are described:
 
-### Workflow --- snakefile_all.smk ---
+## Workflow --- snakefile_all.smk ---
 This workflow combines all other snakemake workflows into one large workflow. The sequence of the workflows are: 
 
 snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
 
-### Workflow --- snakefile_sfincs_build.smk ---
+## Workflow --- snakefile_sfincs_build.smk ---
 
 This workflow builds a SFINCS model without adding any forcing yet. The workflow consists of just one rule.
 
@@ -41,7 +41,7 @@ Further options for building the model are given in the *config_sfincs\sfincs_ba
 The bounding box is then  used to find all intersecting subbasins (hydroAtlas level 12). These intersecting subbasins form the model region. Also, the model region extents to the -5???m contour line. 
 
 
-### Workflow --- snakefile_wflow.smk ---
+## Workflow --- snakefile_wflow.smk ---
 
 This workflow builds a wflow model, using the SFINCS region as input. Gauges are added on the SFINCS inflow points, in order to generate output at the correct locations. Precipitation forcing is added based on the event start and end time. First, the model is warmed up for a period of 1 year, with daily ERA5 data. The event itself is run with the forcing data as given in the snakemake config file.
 
@@ -88,7 +88,7 @@ The model is created on the P-drive in the *p:\11210471-001-compass\02_Models* f
 - **Description**: This rule runs the wflow event run. Output is saved as *output_scalar.nc*
 
 
-### Workflow --- snakefile_dfm.smk ---
+##  Workflow --- snakefile_dfm.smk ---
 
 This workflow creates a dfm base model and updates it by adding forcing data and running the model simulations. It also add the output to a data catalog which can be used as SFINCS waterlevel forcing.
 
@@ -160,7 +160,7 @@ This workflow creates a dfm base model and updates it by adding forcing data and
 - **Description**: This rule adds the event model his.nc output to the SFINCS data catalog, to be used as water level forcing for the SFINCS model. A 'done_file' is used for Snakemake to track whether the data catalog has been updated, but has no other purpose.
 
 
-### Workflow --- snakefile_sfincs_update.smk ---
+## Workflow --- snakefile_sfincs_update.smk ---
 
 This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of both meteorological and WFlow forcing data, executes the model, and generates the output.
 
