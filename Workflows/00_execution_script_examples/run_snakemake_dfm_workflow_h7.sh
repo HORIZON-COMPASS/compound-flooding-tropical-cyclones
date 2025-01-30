@@ -21,13 +21,13 @@ pixi shell-hook --environment compass-snake-dfm > hook.sh
 source hook.sh
 
 # Navigate to directory where the scripts are
-cd Workflows
+cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_dfm.smk --configfile config_snakemake/config_general.yml 
+snakemake --unlock -s 02_workflow_rules/snakefile_dfm.smk --configfile ../01_config_snakemake/config_general.yml 
 
 # running workflow with snakemake
-snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpdf > dag_dfm.pdf
-snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files  # --forceall # --cores 4
+snakemake -s snakefile_dfm.smk --configfile ../01_config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpdf > dag_dfm.pdf
+snakemake -s snakefile_dfm.smk --configfile ../01_config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files  # --forceall # --cores 4
 
 exit

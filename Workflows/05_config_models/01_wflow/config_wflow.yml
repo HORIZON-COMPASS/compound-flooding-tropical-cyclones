@@ -42,7 +42,6 @@ setup_soilmaps:
 setup_outlets:
   river_only: True
 
-
 setup_config_output_timeseries:
   mapname: wflow_gauges_locs
   toml_output: netcdf

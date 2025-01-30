@@ -24,10 +24,10 @@ source hook.sh
 cd Workflows
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_dfm.smk --configfile config_snakemake/config_general_honduras.yml 
+snakemake --unlock -s 02_workflow_rules/snakefile_dfm.smk --configfile 01_config_snakemake/config_general_honduras.yml 
 
 # running workflow with snakemake
-snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general_honduras.yml --forceall --rulegraph | dot -Tpdf > dag_dfm.pdf
-snakemake -s snakefile_dfm.smk --configfile config_snakemake/config_general_honduras.yml --cores 'all' --latency-wait 60 --wait-for-files # --forceall # --cores 4
+snakemake -s 02_workflow_rules/snakefile_dfm.smk --configfile 01_config_snakemake/config_general_honduras.yml --forceall --rulegraph | dot -Tpdf > dag_dfm.pdf
+snakemake -s 02_workflow_rules/snakefile_dfm.smk --configfile 01_config_snakemake/config_general_honduras.yml --cores 'all' --latency-wait 60 --wait-for-files # --forceall # --cores 4
 
 exit

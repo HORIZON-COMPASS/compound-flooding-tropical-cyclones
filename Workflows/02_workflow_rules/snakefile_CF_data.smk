@@ -17,15 +17,15 @@ elif os.name == "posix": #Running on linux
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "data_catalogs/datacatalog_general.yml"
+        return "03_data_catalogs/datacatalog_general.yml"
     elif os.name == "posix": #Running on linux
-        return "data_catalogs/datacatalog_general___linux.yml"
+        return "03_data_catalogs/datacatalog_general___linux.yml"
 
 def get_CF_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "data_catalogs/datacatalog_CF_forcing.yml"
+        return "03_data_catalogs/datacatalog_CF_forcing.yml"
     elif os.name == "posix": #Running on linux
-        return "data_catalogs/datacatalog_CF_forcing___linux.yml"
+        return "03_data_catalogs/datacatalog_CF_forcing___linux.yml"
 
 # Define wildcards from config file
 precip_name=config["precip_name"]
