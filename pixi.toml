@@ -49,7 +49,7 @@ rasterio = "=1.3.11"
 hydromt = ">=0.10.0, <1.0.0"
 hydromt_wflow = ">=0.7.0"
 
-[feature.wflow_extra.dependencies]
+[feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
 
 [feature.snake.dependencies]
