@@ -67,7 +67,8 @@ wildcard_constraints:
     bathy='|'.join([re.escape(x) for x in bathy]),
 
 # Define the script dynamically based on OS before the rule
-submit_script_system = "run_parallel.bat" if os.name == 'nt' else "submit_singularity_h7.sh"
+submit_script_system = "run_parallel.bat" if os.name == 'nt' else "run_singularity_h7.sh"
+submit_script_system_copy = "run_parallel_copy.bat" if os.name == 'nt' else "run_singularity_h7_copy.sh"
 
 rule all_dfm:
     input:
@@ -115,6 +116,9 @@ rule make_dfm_model_event:
 rule run_dfm:
     input:
         submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
+    params:
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test")),
+        submit_script_copy = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system_copy),    
     output:
         his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),        
     run:
@@ -123,7 +127,9 @@ rule run_dfm:
             shell("cmd /c {input.submit_script}")
             print("Finished running")
         if os.name == 'posix':
-            shell("sbatch {input.submit_script}")
+            shell("cp {input.submit_script} {params.submit_script_copy}")
+            shell("chmod +x {params.submit_script_copy}")
+            shell("{params.submit_script_copy}")
 
 rule add_dfm_output_to_catalog:
     input:
