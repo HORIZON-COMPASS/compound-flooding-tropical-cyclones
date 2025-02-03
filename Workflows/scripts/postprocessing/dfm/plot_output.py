@@ -27,7 +27,7 @@ else:
     dfm_res = "450"
     bathy = "gebco2024"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS_ext"
+    wind_forcing = "spw_IBTrACS_ext_CF0"
     dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
     model = f'event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
     dfm_bbox = "[32.3,42.5,-27.4,-9.5]"   
@@ -43,6 +43,18 @@ for fname in os.listdir(os.path.join(dir_runs,model,'output')):
 #open hisfile with xarray and print netcdf structure
 if file_nc_his is not None:
     ds_his = xr.open_mfdataset(file_nc_his, preprocess=dfmt.preprocess_hisnc)
+
+    # locate map files 
+file_nc_map = []
+for fname in os.listdir(os.path.join(dir_runs,model,'output')):
+    if fname.endswith("map.nc"):
+        print(fname)
+        file_nc_map.append(os.path.join(dir_runs,model,'output',fname))
+
+ds_map = dfmt.open_partitioned_dataset(file_nc_map)
+
+# compute magnitude of wind
+ds_map['mesh2d_windmag'] = np.sqrt(ds_map['mesh2d_windx']**2 + ds_map['mesh2d_windy']**2)
 
 #%% Load the DFM model grid for visualisation
 grid_ds = xr.open_dataset(os.path.join(dir_runs,model,"grid_network.nc"))
@@ -103,76 +115,65 @@ plt.tight_layout()
 plt.show()
 
 #%%
-# Extract x and y coordinates from the 'geometry' column of dfm_obs
-x_coords = [point.x for point in dfm_obs.geometry if point is not None]
-y_coords = [point.y for point in dfm_obs.geometry if point is not None]
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from cartopy.io.shapereader import Reader
+import contextily as ctx
+import geopandas as gpd
+from shapely.geometry import Point
 
-# Plotting
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})  # Two subplots side by side
+# Define topography and bathymetry for ocean and land
+def add_background_features(ax):
+    ax.add_feature(cfeature.LAND, facecolor="lightgray", zorder=1)
+    ax.add_feature(cfeature.OCEAN, facecolor="lightblue", zorder=0)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.7, zorder=2)
+    ax.gridlines(draw_labels=True, color='gray', linestyle='--', linewidth=0.5)
 
-# Plot 1: Stations with letter names
-letter_stations = [s for s in ds_his.station.values if not s.isdigit()]
-ds_his.sel(station=letter_stations).plot.scatter(ax=axes[0], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(letter_stations):
-    axes[0].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[0].set_title("Stations with Names (Letters)")
+# Convert the bounding box or data to a GeoDataFrame (example with bbox and points)
+crs = "EPSG:4326"  # Initial coordinate reference system (WGS84)
+sfincs_bbox = [-90, 20, -80, 30]  # Example bounding box (lon_min, lat_min, lon_max, lat_max)
+x_coords = [-85, -87, -89]
+y_coords = [25, 28, 22]
 
-# Grid network points in a nicer blue with transparency
-axes[0].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, 
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
+# Create a GeoDataFrame for the bounding box and points
+bbox_geometry = gpd.GeoDataFrame(geometry=[Point(sfincs_bbox[0], sfincs_bbox[1])], crs=crs)
+bbox_geometry = bbox_geometry.to_crs(epsg=3857)
 
-# Add background features
-axes[0].set_facecolor('lightblue')
-axes[0].coastlines(resolution='50m', color='black', linewidth=1)
-axes[0].add_feature(cfeature.LAND, facecolor='lightgray', zorder=1)
-axes[0].add_feature(cfeature.OCEAN, facecolor='lightblue', zorder=0)
+# Setting up the plot
+fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
 
-# Plot bounding boxes
-axes[0].plot([lon_min_dfm, lon_max_dfm, lon_max_dfm, lon_min_dfm, lon_min_dfm],
-             [lat_min_dfm, lat_min_dfm, lat_max_dfm, lat_max_dfm, lat_min_dfm],
-             color="orange", label="BBox 1", transform=ccrs.PlateCarree())
-axes[0].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],
-             color="red", label="BBox 2", transform=ccrs.PlateCarree())
+# Plot 1: Letters-based stations
+add_background_features(axes[0])
+axes[0].scatter(x_coords, y_coords, s=1, c='blue', alpha=0.5, label='Grid Nodes', transform=ccrs.PlateCarree())
+axes[0].set_title("Stations with Letter Names")
 
-axes[0].set_xlabel("Longitude")  # Add x-axis label
-axes[0].set_ylabel("Latitude")  # Add y-axis label
+# Plot 2: Numbers-based stations with basemap
+add_background_features(axes[1])
 
-# Plot 2: Stations with numeric names at the SFINCS bbox
-numeric_stations = [s for s in ds_his.station.values if s.isdigit()]
-ds_his.sel(station=numeric_stations).plot.scatter(ax=axes[1], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(numeric_stations):
-    axes[1].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
+# Convert the coordinates to EPSG:3857 for contextily
+gdf = gpd.GeoDataFrame({'x': x_coords, 'y': y_coords}, 
+                       geometry=[Point(x, y) for x, y in zip(x_coords, y_coords)],
+                       crs=crs).to_crs(epsg=3857)
+
+# Plot the data
+gdf.plot(ax=axes[1], color="yellow", markersize=50, label="Observation Line")
+
+# Add basemap
+ctx.add_basemap(ax=axes[1], source=ctx.providers.Esri.WorldImagery, crs=gdf.crs, attribution=False)
+
 axes[1].set_title("Stations with Numeric Names")
 
-# Grid network points in a nicer blue with transparency
-axes[1].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, 
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
-
-# Plot the observation line (connecting the points from dfm_obs)
-axes[1].plot(x_coords, y_coords, color="yellow", linewidth=2, label="Observation Line", transform=ccrs.PlateCarree())
-
-# Set limits for Plot 2 (zoom into the SFINCS bbox)
-axes[1].set_xlim([sfincs_bbox[0], sfincs_bbox[2]])
-axes[1].set_ylim([sfincs_bbox[1], sfincs_bbox[3]])
-
-# Add background features
-axes[1].set_facecolor('lightblue')
-axes[1].coastlines(resolution='50m', color='black', linewidth=1)
-axes[1].add_feature(cfeature.LAND, facecolor='lightgray', zorder=1)
-axes[1].add_feature(cfeature.OCEAN, facecolor='lightblue', zorder=0)
-
-axes[1].set_xlabel("Longitude")  # Add x-axis label
-axes[1].set_ylabel("Latitude")  # Add y-axis label
-
-# Show coastlines and borders for both plots
+# Add titles, legends, and annotations
 for ax in axes:
-    dfmt.plot_coastlines(ax=ax, min_area=1000, linewidth=0.5, zorder=0)
-    dfmt.plot_borders(ax=ax, zorder=0)
+    ax.legend(loc='lower right', fontsize=8)
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
 
-# Display the plot
 plt.tight_layout()
 plt.show()
+
+
 
 #%%
 import matplotlib.pyplot as plt
