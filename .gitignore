@@ -9,7 +9,16 @@ __pycache__/
 # Pixi
 .pixi
 pixi.lock
-hook.sh
+
+#Workflow output files
+Workflows/dag*.png
+Workflows/dag*.pdf
+Workflows/*.dot
+Workflows/hook.sh
+Workflows/slurm*
+Workflows/.nfs*
+Workflows/*/.nfs*
+Workflows/test_*
 
 # Model data
 Delft3DFM/mozambique_model/computations
@@ -20,13 +29,7 @@ Delft3DFM/mozambique_model/results
 SFINCS/results
 *.snakemake
 *.svg
-SFINCS/workflow_scripts/.nfs*
-SFINCS/workflow_scripts/test_*
-SFINCS/workflow_scripts/dag.png
-SFINCS/workflow_scripts/*.dot
-SFINCS/workflow_scripts/hook.sh
-hook.sh
-Wflow/wflow_sofala
+
 DelftFIAT/scripts/cache
 DelftFIAT/computations
 

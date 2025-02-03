@@ -1,214 +1,74 @@
-# **COMPASS**
+# Compound Flooding Modeling for Tropical Cyclones
 
-This repository contains the code related to the HORIZON EU Project COMPASS -  “Compound extremes attribution of climate change: towards an operational service” for the work carried on by Deltares. 
-The project began in January 2024 and will run for 3 years.
+This work is part of Work Package 1 of the COMPASS project whose overarching objective is to characterise compound extremes in current and future climates. COMPASS (COMPound extremes Attribution of climate change: towardS an operational Service) aims to develop a harmonized, yet flexible, methodological framework for **climate and impact attribution** of various complex **extremes** that include compound, sequential and cascading hazard events. For more information and useful links about the project, have a look at the introduction on the [COMPASS Github repository](https://github.com/HORIZON-COMPASS)
 
-More information about the project can be found at https://compass-climate.eu
+![logoCOMPASS](https://github.com/user-attachments/assets/4c3b95d4-bfc0-4727-a1e8-ee6653a03b5e)
 
-This is work in progress
+## Description
+This repository contains workflows to setup a global-to-local modelling chain for the hazard and impact modelling of tropical cyclones (TCs). More specifically, it contains specific workflows to setup a hydrological model, a coastal hydrodynamic model and a local compound flooding model for a user-defined region. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local flooding. A final workflow combines all the separate workflows together for the local compound flood model setup. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)) and SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)) and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets  are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. 
 
-To-do:
+![image](https://github.com/user-attachments/assets/d50faecf-2b06-4193-8780-150476cb8315)
 
--Add link to the main repo
--Add Zenodo link
+The code is under development and this file will be updated to reflect the current updates on the project. 
 
+## Installation instructions
+### Prerequisite
+Make sure you have [Git](https://github.com/git-guides/install-git) installed. You will also need [pixi](https://pixi.sh/latest/#installation) to install the required dependencies (defined in specific environments). We suggest using [Visual Studio Code](https://code.visualstudio.com/) to browse through the code, develop and open the Jupyter notebooks (optional).
 
-The structure of the repository is as follows:
-- Workflows
-    - Config - per model  : Model configuration files
-    - Config_snakemake : Snakemake configuration files
-    - data_catalogs : The data catalogs used for hydromt
-    - scripts
-        - model_building : Scripts used to build the models
-        - preprocessing : Scripts used for preprocessing of data, updating models etc.
-        - postprocessing : Scripts used for postprocessing of model results
+### Installation
+In order to use the workflows, you will need to clone this repository and install the dependencies required to run the code. 
+1. Open a terminal and clone this repository: `git clone https://github.com/HORIZON-COMPASS/compound-flooding-tropical-cyclones.git`
+2. Navigate to the project directory: `cd compound-flooding-tropical-cyclones`
+3. Install dependencies: `pixi install`. This will install all the environments required to run all the workflows. To install only specific environments, mention it, for example : `pixi install compass-sfincs`. All the enviroments available are listed [environments] in the pixi.toml file
+   
+## How to run
+At the moment, four snakemake workflow files are present. All workflows work both on Linux as well as on Windows. A workflow consists of a set of rules to be executed in a specific order. All specific workflow configuration settings are prescribed in a configuration file (a .yml file).
 
-## Table of Contents
-- [Workflows](#workflows)
-  - [snakefile_all.smk](#snakefile_allsmk)
-  - [snakefile_sfincs_build.smk](#snakefile_sfincs_buildsmk)
-  - [snakefile_wflow.smk](#snakefile_wflowsmk)
-  - [snakefile_sfincs_update](#snakefile_sfincs_updatesmk)
-
-## **Workflows**
-
-Four snakemake workflow files are present. All workflows work both on linux as well as on windows. All snakemake workflows use the same config yml file: config_snakemake/config_general.yml.
-In the section below, the different workflows are described:
-### snakefile_all.smk
-This workflow combines all other snakemake workflows into one large workflow. The sequence of the workflows are: 
-
+- **snakefile_sfincs_build.smk**: This workflow builds a SFINCS model without adding any forcing yet. The workflow consists of just one rule.
+- **snakefile_wflow.smk**: This workflow builds a wflow model, using the SFINCS region as input. Gauges are added on the SFINCS inflow points, in order to generate output at the correct locations. Precipitation forcing is added based on the event start and end time. First, the wflow model is warmed up for a period of 1 year, with daily ERA5 data. The event itself is run with the forcing data as given in the snakemake configuration file.
+- **snakefile_dfm.smk**: This workflow creates a dfm base model and updates it by adding forcing data and running the model simulations. It also add the output to a data catalog which can be used as SFINCS waterlevel forcing.
+- **snakefile_sfincs_update.smk**: This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of both meteorological and WFlow forcing data, executes the model, and generates the output.
+- **snakefile_all.smk**: This workflow combines all other snakemake workflows into one large workflow. The sequence of the workflows are: 
 snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
 
-### snakefile_sfincs_build.smk
+All snakemake workflows use the same configuration file: config_snakemake/config_general.yml.
 
-This workflow builds a SFINCS model without adding any forcing yet. The workflow consists of just one rule.
+We provide examples on how to run each workflow in specific Jupyter notebook in the docs folder. Building the workflow requires the same general steps in snakemake, summarized below.
+ 1. Activating the environments to load all the required dependencies
+ 2. Navigate to the folder where the workflows are located (or make sure that you use the correct path afterwards)
+ 3. Creating a picture showing the workflow with the rules and their order to make sure the workflow is doing what is intended (optional)
+ 4. Unlocking the working directory in order to save the results of the workflow
+ 5. Running the workflow
 
-#### Rule: make_base_model_sfincs
-- **Script**: `scripts/model_building/sfincs/setup_sfincs_base.py`
-- **Input**: `config_sfincs/sfincs_base_build.yml`
-- **Output**: SFINCS model for the region (bounding box defined in `config_snakemake/config_general.yml`).
-- **Description**: This rule creates the SFINCS model  using the bbox given in the snakemakeThe model domain is based on the bounding box as given in the config_snakemake/config_general.yml file.
-Further options for building the model are given in the *config_sfincs\sfincs_base_build.yml* input file.
-The bounding box is then  used to find all intersecting subbasins (hydroAtlas level 12). These intersecting subbasins form the model region. Also, the model region extents to the -5???m contour line. 
+This translate to the following command lines in the terminal, taking as an example the snakefile_wflow.smk workflow:
+```
+conda activate compass-wflow
+cd Workflows
+snakemake -s snakefile_wflow --configfile config_snakemake/config_general.yml  --dag | dot -Tpng > dag_all.png
+snakemake --unlock -s snakefile_wflow --configfile config_snakemake/config_general.yml
+snakemake all -c 1 -s snakefile_wflow --configfile config_snakemake/config_general.yml
+```
 
+There exists many snakemake commad line options that are worth exploring. The complete list is is on the [CLI documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html) but below are a few useful ones:
+- **-s**: selection of the snakefile workflow to run.
+- **--configfile**: name of the config file with the model and climate options.
+- **-c**: number of cores to use to run the workflows (if more than 1, the workflow will be parallelized).
+- **--dry-run**: returns the list of steps (rules) in the workflow that will be run, **without actually running it**. This is useful to test whether the workflow will work as intended. 
 
-### snakefile_wflow.smk
+## How to contribute
+We welcome contributions to improve this project! Here are some ways you can help:
+**Report Bugs**: If you find a bug, please open an issue with detailed information about the problem and how to reproduce it.
+**Submit Pull Requests**: If you want to fix a bug or implement a feature, follow these steps:
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/YourFeatureName`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add some feature'`).
+5. Push to the branch (`git push origin feature/YourFeatureName`).
+6. Open a pull request.
+**Suggest Features**: Have an idea for a new feature? Open an issue to discuss it.
 
-This workflow builds a wflow model, using the SFINCS region as input. Gauges are added on the SFINCS inflow points, in order to generate output at the correct locations. Precipitation forcing is added based on the event start and end time. First, the model is warmed up for a period of 1 year, with daily ERA5 data. The event itself is run with the forcing data as given in the snakemake config file.
+## Acknowledgements
 
-#### Rule: make_base_model_wflow
-- **Script**: `scripts/model_building/sfincs/setup_wflow_base.py`
-- **Input**: 
-  - `config_wflow/wflow_build_{REGION}.yml`
-  - `{SFINCS_DIR}/gis/region.geojson`
-  - `{SFINCS_DIR}/gis/src.geojson`
-- **Output**: WFlow model for the SFINCS region.
-- **Description**: This rule creates the wflow model  using the SFINCS region 
-Further options for building the model are given in the input yml file. The model is created for the entire upstream basin of the SFINCS region.
-The model is created on the P-drive in the *p:\11210471-001-compass\02_Models* folder
+![EU_logo](https://github.com/user-attachments/assets/e2fad699-697e-43fd-84be-032447d6dd21) The COMPASS project has received funding from the European Union’s HORIZON Research and Innovation Actions Programme under Grant Agreement No. 101135481
 
-#### Rule: update_forcing_wflow_warmup
-- **Script**: `scripts/preprocessing/update_forcing_wflow_warmup.py`
-- **Input**:
-  - `toml_file`
-  - `staticmaps`
-- **Output**: Updated WFlow base model with ERA5 forcing data.
-- **Description**: This rule uses the wflow base model and updates it with daily forcing data from ERA5. The start time is 1 year before the start time of the event (given in the snakemake config yml file) and the end time is 2 days before the event. The updated model is saved to the P-drive in the *p:\11210471-001-compass\03_Runs* folder
-
-#### Rule: update_forcing_wflow_event
-- **Script**: `scripts/preprocessing/update_forcing_wflow_event.py`
-- **Input**:
-  - `toml_file`
-  - `staticmaps`
-- **Output**: Updated WFlow base model for the event with the configured forcing data.
-- **Description**: This rule uses the wflow base model and updates it with forcing data as configured in the snakemake config file. The start time is 2 days before the date in the config file and it uses the initial state from the warmup run. The updated model is saved to the P-drive in the *p:\11210471-001-compass\03_Runs* folder
-
-#### Rule: run_wflow_warmup
-- **Input**:
-  - `inmaps.nc` (from warmup run)
-  - `toml_file` (from warmup run)
-- **Output**: WFlow warmup run output.
-- **Description**: This rule runs the wflow warmup model. The final state is saved into the folder of the 'event' run. 
-
-#### Rule: run_wflow_event
-- **Input**:
-  - `inmaps.nc` (from event run)
-  - `toml_file` (from event run)
-  - `instates.nc` (from warmup run)
-- **Output**: WFlow event run output, saved as `output_scalar.nc`.
-- **Description**: This rule runs the wflow event run. Output is saved as *output_scalar.nc*
-
-
-### snakefile_dfm.smk
-
-This workflow creates a dfm base model and updates it by adding forcing data and running the model simulations. It also add the output to a data catalog which can be used as SFINCS waterlevel forcing.
-
-#### Rule: make_model_dfm_base
-- **Script**: `scripts/model_building/dfm/setup_dfm_base.py`
-- **Params**:
-  - `bbox_dfm` (from config file)
-  - `bbox_output` (from config file)
-  - `data_cat` (from snake file)
-- **Output**: DFM base model configuration, saved as multiple files in the base model folder:
-  - `geometry` folder with base model grid figures
-  - `pli_file.pli`
-  - `illigalcells.pol`
-  - `grid_network.nc`
-  - `tide_{bathy}.bc`
-  - `L*.pli` where * is a number, depending on how many boundary lines there are
-  - `ext_file_new.ext`
-- **Description**: This rule makes generates and refines base model grid and adds boundary conditions from a tidal model.
-
-#### Rule: make_dfm_model_event
-- **Script**: `scripts/model_building/dfm/setup_dfm_event.py`
-- **Input**: 
-  - `ext_file_new.ext` (from the base model)
-  - (and all other files in the base model folder, which are copied inside the script to the event folder)
-- **Params**:
-  - `dir_base_model` (from make_model_dfm_base rule)
-  - `start_time` (from config file)
-  - `end_time` (from config file)
-  - `bbox_dfm` (from config file)
-  - `bbox_output` (from config run)
-  - `dfm_obs_file` (from config file)
-  - `verif_points_file` (from config file)
-  - `data_cat` (from snake file)
-  - `dimrset` (from Deltares dfm directory)
-  - `uniformwind` (from data directory)
-  - `model_name` (from snake rule)
-- **Output**: 
-  - `geometry` folder with base grid ánd event model figures
-  - `{model_name}.mdu`
-  - `ext_file_old.ext`
-  - `dimr_config.xml`
-  - `submit_singularity_h7.sh` (if run on linux)
-  - `run_parallel.bat` (if run on windows)
-- **Description**: This rule copies the base model configuration and adds the TC meteo forcing. It also set the model output points (through an obs file) and generates the files required to run the model (mdu, dimr, bat and sh)
-
-#### Rule: run_dfm
-- **Script**: `scripts/model_building/dfm/setup_dfm_event.py`
-- **Input**: 
-  - `submit_singularity_h7.sh` (if run on linux)
-  - `run_parallel.bat` (if run on windows)
-  - (and all other files in the event model folder, needed for model execution)
-- **Run**:
-  - Runs the batch file depending on the system that is used
-- **Output**: 
-  - `output/{model_name}_his.nc` (needed as sfincs water level forcing)
-  - other output files, not needed for sfincs and therefore not included in the snake rule
-- **Description**: This rule runs the dfm event model configuration, possible on windows and linux systems. It generates an output folder containing a his.nc, map.nc and .dia file. 
-
-#### Rule: add_dfm_output_to_catalog
-- **Script**: `scripts/postprocessing/dfm/output_to_catalog.py`
-- **Input**: 
-  - `output/{model_name}_his.nc` (from the event model directory)
-- **Params**:
-  - `model_name` (from snake rule)
-  - `sfincs_data_cat` (from snake rule)
-  - `root_dir` (from snake rule, differs for windows or linux)
-- **Output**: 
-  - `done_file` tracks whether the sfincs_data_cat is updated
-- **Description**: This rule adds the event model his.nc output to the SFINCS data catalog, to be used as water level forcing for the SFINCS model. A 'done_file' is used for Snakemake to track whether the data catalog has been updated, but has no other purpose.
-
-
-### snakefile_sfincs_update.smk
-
-This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of both meteorological and WFlow forcing data, executes the model, and generates the output.
-
-#### Rule: `add_forcing_coastal_meteo_sfincs`
-- **Script**: `scripts/preprocessing/update_sfincs_coastal_forcing.py`
-- **Input**: 
-  - msk file
-  - spw file
-- **Output**: 
-  - bzs file
-- **Description**: This rule adds meteorological forcing from spiderweb data to the SFINCS model. The forcing data is incorporated into the model configuration (`sfincs.bzs`), enabling simulation based on coastal meteorological inputs.
-
-#### Rule: `update_dis_forcing_sfincs`
-- **Script**: `scripts/preprocessing/update_sfincs_dis_forcing.py`
-- **Input**: 
-  - bzs file
-  - wflow output file
-- **Output**: 
-  - dis file
-- **Description**: This rule updates the SFINCS model by adding forcing data derived from WFlow outputs. The `.dis` file is created, adding the discharge from wflow as forcing for SFINCS
-
-#### Rule: `run_sfincs_model`
-- **Script**: N/A (The model is executed via a subprocess or Docker)
-- **Input**: 
-  - dis file
-- **Output**: 
-  - sfincs_map.nc
-  - sfincs_his.nc
-- **Description**: This rule runs the SFINCS model with the updated `.dis` file. Depending on the operating system, the model is executed either via a subprocess (on Windows) or through Docker (on Linux).
-
-#### Rule: `sfincs_plot_floodmap`
-- **Script**: `scripts/postprocessing/sfincs_postprocess.py`
-- **Input**: 
-  - sfincs_map.nc
-  - sfincs_his.nc
-- **Output**: 
-  - sfincs_basemap.png
-- **Description**: This rule generates the final flood map visualization from the model outputs (`sfincs_map.nc` and `sfincs_his.nc`). The postprocessing script is used to produce the flood map as well as some other images.
-
----
+Funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or of the European Health and Digital Executive Agency (HADEA). Neither the European Union nor the granting authority HADEA can be held responsible for them.

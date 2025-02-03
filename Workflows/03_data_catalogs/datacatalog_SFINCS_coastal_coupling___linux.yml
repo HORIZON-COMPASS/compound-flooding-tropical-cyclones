@@ -1,0 +1,94 @@
+meta:
+  root: /p
+coastal_coupling_DFM_obs_points_HND:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_Honduras_5mMSL_points_1km.shp
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the DFM model of Western part of Honduras
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+coastal_coupling_DFM_obs_points_MZB:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the DFM model of Mozambique
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+coastal_coupling_msk_HND:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Honduras_5mMSL_polygon.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for
+      Western part of the Honduras coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+coastal_coupling_msk_MZB:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for
+      Mozambique coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+dfm_output_event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/honduras/Eta/dfm/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta/output/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai_test/output/event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/obs_locs.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
