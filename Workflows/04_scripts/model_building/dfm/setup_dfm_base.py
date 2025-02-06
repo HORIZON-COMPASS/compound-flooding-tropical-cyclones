@@ -24,15 +24,19 @@ if "snakemake" in locals():
     dir_output_main = os.path.abspath(snakemake.output.dir_model)
     bbox_dfm = snakemake.params.dfm_bbox
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    CF_value = float(snakemake.wildcards.CF_SLR)
+    CF_value_txt = snakemake.wildcards.CF_SLR
 else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
+    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
+    CF_value = -0.14
+    CF_value_txt = "0.14"
 
 # Correct for the missing . in the snake that snakemake cannot read
 if tidemodel == "GTSMv41opendap":
@@ -217,4 +221,15 @@ with open(ext_new_path, 'w') as file:
     file.writelines(modified_lines)
 print(f'Modified file saved to: {ext_new_path}')
 
+# %%
+if CF_value != 0:
+    # load .bc-file using HydroLib object ForcingModel
+    forcingmodel_object = hcdfm.ForcingModel(os.path.join(dir_output_main, "tide_{tidemodel}_.bc"))
+
+    for forcing in forcingmodel_object.forcing:
+        forcing.datablock.append(["A0", CF_value, 0])
+    forcingmodel_object.save(os.path.basename(file_bc).replace(".bc","_CF{CF_value_text}.bc"))
+
+else:
+    pass
 # %%
