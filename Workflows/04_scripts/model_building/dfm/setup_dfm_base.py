@@ -227,3 +227,14 @@ with open(ext_new_path, 'w') as file:
 print(f'Modified file saved to: {ext_new_path}')
 
 # %%
+if CF_value != 0:
+    # load .bc-file using HydroLib object ForcingModel
+    forcingmodel_object = hcdfm.ForcingModel(os.path.join(dir_output_main, "tide_{tidemodel}_.bc"))
+
+    for forcing in forcingmodel_object.forcing:
+        forcing.datablock.append(["A0", CF_value, 0])
+    forcingmodel_object.save(os.path.basename(file_bc).replace(".bc","_CF{CF_value_text}.bc"))
+
+else:
+    pass
+# %%
