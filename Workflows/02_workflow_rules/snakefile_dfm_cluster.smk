@@ -72,13 +72,13 @@ wildcard_constraints:
 
 # activate when having multiple CF values!!
 #  Generate all combinations of CF_SLR and CF_wind for each runname
-# run_combinations = []
-# for key, value in config['runname_ids'].items():
-#     for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
-#         run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['tidemodel'], slr, value['wind_forcing'], wind))
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
+        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['tidemodel'], slr, value['wind_forcing'], wind))
 
-# # Unpack into separate wildcard lists
-# region, runname_ids, dfm_res, bathy, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
+# Unpack into separate wildcard lists
+region, runname_ids, dfm_res, bathy, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
 
 # Define the script dynamically based on OS before the rule
 submit_script_system = "run_parallel.bat" if os.name == 'nt' else "run_singularity_h7.sh"
@@ -106,7 +106,7 @@ rule make_model_dfm_base:
         jobname = 'dfm_base',
         taskspernode = 4,
     script:
-        join("04_scripts", "model_building", "dfm", "setup_dfm_base.py")
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_base.py")
         
 rule make_dfm_model_event:
     input:
@@ -135,7 +135,7 @@ rule make_dfm_model_event:
         jobname = 'dfm_event',
         taskspernode = 4,
     script:
-        join("04_scripts", "model_building", "dfm", "setup_dfm_event.py")
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 
 rule run_dfm:
@@ -176,4 +176,4 @@ rule add_dfm_output_to_catalog:
         jobname = 'dfm_out',
         taskspernode = 4,
     script:
-        join("04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
+        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
