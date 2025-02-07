@@ -148,7 +148,6 @@ rule make_dfm_model_event:
         submit_script   = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     script:
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
-        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
@@ -179,5 +178,4 @@ rule add_dfm_output_to_catalog:
     output:
         done_file    = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     script:
-        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
         join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
