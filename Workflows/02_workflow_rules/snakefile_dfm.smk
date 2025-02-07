@@ -23,6 +23,12 @@ def get_forcing(wildcards):
 def get_tcname(wildcards):
     return config["runname_ids"][wildcards.runname]['tc_name']
 
+def get_tc_ext_days(wildcards):
+    return config["runname_ids"][wildcards.runname]['ext_days']
+
+def get_tc_sid(wildcards):
+    return config["runname_ids"][wildcards.runname]['sid']
+
 def get_start_time(wildcards):
     return config["runname_ids"][wildcards.runname]['start_time']
 
@@ -100,7 +106,22 @@ rule make_model_dfm_base:
         dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
         ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}", "ext_file_new.ext"),
     script:
-        join("04_scripts", "model_building", "dfm", "setup_dfm_base.py")
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_base.py")
+
+# Modify rule to also create CF for other datasets than spw files 
+# rule create_CF_wind_forcing:
+#     params:
+#         start_date = get_start_time,
+#         end_date   = get_end_time,
+#         tc_name    = get_tcname,
+#         data_cat   = get_datacatalog,
+#         root_dir   = p_dir,
+#         sid        = get_tc_sid,
+#         ext_days   = get_tc_ext_days,
+#     output:
+#         path_CF_wind = join(root_dir, dir_data, "SPW_forcing_files", "tc_{tc_name}_CF{CF_wind}_{sid}_ext{ext_days}d.spw")
+#     script:
+#         join("..", "04_scripts", "preprocessing", "create_tc_IBTrACS_wind.py")
 
 rule make_dfm_model_event:
     input:
@@ -124,7 +145,7 @@ rule make_dfm_model_event:
         mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}.mdu"),
         submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     script:
-        join("04_scripts", "model_building", "dfm", "setup_dfm_event.py")
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
@@ -154,4 +175,4 @@ rule add_dfm_output_to_catalog:
     output:
         done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     script:
-        join("04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
+        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
