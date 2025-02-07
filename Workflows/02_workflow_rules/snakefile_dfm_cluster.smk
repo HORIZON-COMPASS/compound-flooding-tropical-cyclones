@@ -49,15 +49,15 @@ def get_dfm_obs_points(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "03_data_catalogs/datacatalog_general.yml"
+        return "../03_data_catalogs/datacatalog_general.yml"
     elif os.name == "posix": #Running on linux
-        return "03_data_catalogs/datacatalog_general___linux.yml"
+        return "../03_data_catalogs/datacatalog_general___linux.yml"
 
 def get_sfincs_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
+        return "../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
     elif os.name == "posix": #Running on linux
-        return "03_data_catalogs/datacatalog_SFINCS_coastal_coupling___linux.yml"
+        return "../03_data_catalogs/datacatalog_SFINCS_coastal_coupling___linux.yml"
 
 # Define wildcards for path names
 runname_ids = list(config['runname_ids'].keys())
