@@ -229,7 +229,7 @@ print(f'Modified file saved to: {ext_new_path}')
 # %%
 # Add the A0 constituent to include SLR in the tidal boundary
 if CF_value != 0:
-    file_bc = os.path.join(dir_output_main, f"tide_{tidemodel}_pli_file.bc")
+    file_bc = os.path.join(dir_output_main, f"tide_{tidemodel}.bc")
     forcingmodel_object = hcdfm.ForcingModel(file_bc)
 
     for forcing in forcingmodel_object.forcing:
