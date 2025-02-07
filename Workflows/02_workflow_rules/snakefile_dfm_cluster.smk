@@ -79,13 +79,13 @@ wildcard_constraints:
 
 # activate when having multiple CF values!!
 #  Generate all combinations of CF_SLR and CF_wind for each runname
-# run_combinations = []
-# for key, value in config['runname_ids'].items():
-#     for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
-#         run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['tidemodel'], slr, value['wind_forcing'], wind))
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
+        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['tidemodel'], slr, value['wind_forcing'], wind))
 
-# # Unpack into separate wildcard lists
-# region, runname_ids, dfm_res, bathy, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
+# Unpack into separate wildcard lists
+region, runname_ids, dfm_res, bathy, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
 
 # Define the script dynamically based on OS before the rule
 submit_script_system = "run_parallel.bat" if os.name == 'nt' else "run_singularity_h7.sh"
