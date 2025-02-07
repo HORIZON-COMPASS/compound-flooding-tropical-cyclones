@@ -222,16 +222,25 @@ with open(ext_new_path, 'w') as file:
 print(f'Modified file saved to: {ext_new_path}')
 
 # %%
-# Add the A0 constitudent to include SLR in the tidal boundary
+# Add the A0 constituent to include SLR in the tidal boundary
 if CF_value != 0:
-    # load .bc-file using HydroLib object ForcingModel
     file_bc = os.path.join(dir_output_main, f"tide_{tidemodel}_pli_file.bc")
     forcingmodel_object = hcdfm.ForcingModel(file_bc)
 
     for forcing in forcingmodel_object.forcing:
-        forcing.datablock.append(["A0", CF_value, 0])
-    forcingmodel_object.save(os.path.join(dir_output_main, (os.path.basename(file_bc))))
+        if forcing.datablock:
+            last_entry = forcing.datablock[-1]  # Get the last row
+            
+            # Check if "A0" already exists and update it if so
+            if last_entry[0] == "A0":
+                last_entry[1] = CF_value  # Update CF_value
+            else:
+                forcing.datablock.append(["A0", CF_value, 0])  # Append if A0 doesn't exist
+
+    # Save back to the same file
+    forcingmodel_object.save(file_bc)
 
 else:
     pass
+
 # %%
