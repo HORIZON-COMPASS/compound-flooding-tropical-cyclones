@@ -37,7 +37,7 @@ if "snakemake" in locals():
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.params.dimrset)
     uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
-    submit_script_file = os.path.abspath(snakemake.params.submit_script_file)
+    submit_script_file = os.path.abspath(snakemake.output.submit_script)
     CF_SLR = float(snakemake.wildcards.CF_SLR)
     CF_SLR_txt = snakemake.wildcards.CF_SLR
     CF_wind = float(snakemake.wildcards.CF_wind)
