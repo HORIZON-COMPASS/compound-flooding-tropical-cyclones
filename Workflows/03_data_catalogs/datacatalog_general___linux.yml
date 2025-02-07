@@ -2793,6 +2793,14 @@ spw_IBTrACS_CF0_Idai:
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_CF-10_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext9d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
 spw_IBTrACS_CF0_Freddy2:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Freddy_CF0_2023061S22036_ext9d.spw
