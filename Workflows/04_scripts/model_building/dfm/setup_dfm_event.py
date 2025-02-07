@@ -47,7 +47,7 @@ else:
     tc_name = "Idai"
     dfm_res = "450"
     bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing = "spw_IBTrACS"
     CF_SLR = -0.14
     CF_SLR_txt = "0.14"
@@ -61,8 +61,8 @@ else:
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
     path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
     path_data_cat_sfincs = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{CF_SLR_txt}_{wind_forcing}_{CF_wind_txt}'
-    base_model = f'base_{dfm_res}_{bathy}_{tidemodel}_{CF_SLR_txt}'
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    base_model = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"

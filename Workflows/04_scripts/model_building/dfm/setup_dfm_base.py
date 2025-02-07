@@ -31,7 +31,7 @@ else:
     tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = -0.14
     CF_value_txt = "0.14"
-    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_{CF_value_txt}'
+    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
     path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
 
