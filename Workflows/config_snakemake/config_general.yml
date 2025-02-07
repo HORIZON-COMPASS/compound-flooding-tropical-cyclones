@@ -17,11 +17,11 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000
         forcing: era5_hourly
-        dfm_res: "450"
-        bathy: "gebco2024"
-        wind_forcing: "spw_IBTrACS_ext"
-        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap (GTSMv4.1(_opendap)) is converted to be accurated read by snake)
-        dfm_obs_file: 'coastal_bnd_MZB_5mMSL_points_1km.shp'
+        dfm_res: '450'
+        bathy: 'gebco2024_MZB'
+        wind_forcing: spw_IBTrACS # adding CF value and tc_name to name in setup_dfm_event script
+        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB
         verification_points: 'MZB_Sofala_IHO_obs.xyn'
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]

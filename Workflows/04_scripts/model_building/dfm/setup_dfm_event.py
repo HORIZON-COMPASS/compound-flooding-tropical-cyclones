@@ -49,7 +49,7 @@ else:
     dfm_res = "450"
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS_CF0_Idai"
+    wind_forcing = "spw_IBTrACS"
     CF_SLR = -0.14
     CF_SLR_txt = "0.14"
     CF_wind = 0
@@ -171,7 +171,7 @@ ext_old = hcdfm.ExtOldModel()
 if 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
     spw = 1 
-    spw_input = data_catalog[wind_forcing].path
+    spw_input = data_catalog[f"{wind_forcing}_CF{CF_wind_txt}_{tc_name}"].path
     spw_file_origin = spw_input # change to path from datacatalog
 else:
     meteo_type = wind_forcing
