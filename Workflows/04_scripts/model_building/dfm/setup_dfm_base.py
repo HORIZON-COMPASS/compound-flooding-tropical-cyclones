@@ -227,7 +227,7 @@ with open(ext_new_path, 'w') as file:
 print(f'Modified file saved to: {ext_new_path}')
 
 # %%
-# Add the A0 constituent to include SLR in the tidal boundary
+# Add the Z0 constituent to include SLR in the tidal boundary
 if CF_value != 0:
     file_bc = os.path.join(dir_output_main, f"tide_{tidemodel}.bc")
     forcingmodel_object = hcdfm.ForcingModel(file_bc)
@@ -239,10 +239,10 @@ if CF_value != 0:
 
             if z0_entry:
                 # Update Z0 if it exists
-                z0_entry[1] = CF_value
+                z0_entry[-1] = CF_value
             else:
-                # Insert "A0" at the beginning
-                forcing.datablock.insert(0, ["Z0", CF_value, 0])
+                # Insert "Z0" at the end
+                forcing.datablock.append(["Z0", CF_value, 0])
 
     # Save back to the same file
     forcingmodel_object.save(file_bc)
