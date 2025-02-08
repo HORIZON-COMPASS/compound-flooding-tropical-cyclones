@@ -31,9 +31,9 @@ else:
     dfm_res = 450 # m
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = -0.14
-    CF_value_txt = "0.14"
+    CF_value_txt = "-0.14"
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
     path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
@@ -229,13 +229,15 @@ if CF_value != 0:
 
     for forcing in forcingmodel_object.forcing:
         if forcing.datablock:
-            last_entry = forcing.datablock[-1]  # Get the last row
-            
-            # Check if "A0" already exists and update it if so
-            if last_entry[0] == "A0":
-                last_entry[1] = CF_value  # Update CF_value
+            # Check if "A0" already exists anywhere in the list
+            a0_entry = next((entry for entry in forcing.datablock if entry[0] == "A0"), None)
+
+            if a0_entry:
+                # Update A0 if it exists
+                a0_entry[1] = CF_value
             else:
-                forcing.datablock.append(["A0", CF_value, 0])  # Append if A0 doesn't exist
+                # Insert "A0" at the beginning
+                forcing.datablock.insert(0, ["A0", CF_value, 0])
 
     # Save back to the same file
     forcingmodel_object.save(file_bc)
