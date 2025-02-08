@@ -234,13 +234,15 @@ if CF_value != 0:
 
     for forcing in forcingmodel_object.forcing:
         if forcing.datablock:
-            last_entry = forcing.datablock[-1]  # Get the last row
-            
-            # Check if "A0" already exists and update it if so
-            if last_entry[0] == "A0":
-                last_entry[1] = CF_value  # Update CF_value
+            # Check if "A0" already exists anywhere in the list
+            a0_entry = next((entry for entry in forcing.datablock if entry[0] == "A0"), None)
+
+            if a0_entry:
+                # Update A0 if it exists
+                a0_entry[1] = CF_value
             else:
-                forcing.datablock.append(["A0", CF_value, 0])  # Append if A0 doesn't exist
+                # Insert "A0" at the beginning
+                forcing.datablock.insert(0, ["A0", CF_value, 0])
 
     # Save back to the same file
     forcingmodel_object.save(file_bc)
