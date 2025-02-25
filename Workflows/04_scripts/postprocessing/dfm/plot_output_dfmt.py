@@ -28,7 +28,8 @@ else:
     CF_wind = 0
     CF_wind_txt = "0"
     dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
-    CF_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    CF_SLR_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    CF_SLR_wind_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF-10'
     F__model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF0_{wind_forcing}_CF0'
     dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]") 
     crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
@@ -38,24 +39,30 @@ else:
 
 #%%
 # Open the his files in the output folder for the counterfactual (CF) and factual (F) model runs
-for fname in os.listdir(os.path.join(dir_runs,CF_model,'output')):
+for fname in os.listdir(os.path.join(dir_runs,CF_SLR_model,'output')):
     if fname.endswith('_his.nc'):
-        CF_file_nc_his = os.path.join(dir_runs,CF_model,'output',fname)
+        CF_SLR_file_nc_his = os.path.join(dir_runs,CF_SLR_model,'output',fname)
+
+for fname in os.listdir(os.path.join(dir_runs,CF_SLR_wind_model,'output')):
+    if fname.endswith('_his.nc'):
+        CF_SLR_wind_file_nc_his = os.path.join(dir_runs,CF_SLR_wind_model,'output',fname)
 
 for fname in os.listdir(os.path.join(dir_runs,F__model,'output')):
     if fname.endswith('_his.nc'):
         F__file_nc_his = os.path.join(dir_runs,F__model,'output',fname)
-
+        
 # open hisfile with xarray and print netcdf structure
-if CF_file_nc_his is not None:
-    ds_his_CF = xr.open_mfdataset(CF_file_nc_his, preprocess=dfmt.preprocess_hisnc)
+if CF_SLR_file_nc_his is not None:
+    ds_his_CF_SLR = xr.open_mfdataset(CF_SLR_file_nc_his, preprocess=dfmt.preprocess_hisnc)
 
-# open hisfile with xarray and print netcdf structure
+if CF_SLR_wind_file_nc_his is not None:
+    ds_his_CF_SLR_wind = xr.open_mfdataset(CF_SLR_wind_file_nc_his, preprocess=dfmt.preprocess_hisnc)
+
 if F__file_nc_his is not None:
     ds_his_F = xr.open_mfdataset(F__file_nc_his, preprocess=dfmt.preprocess_hisnc)
 
 print(ds_his_F)
-print(ds_his_CF)
+print(ds_his_CF_SLR)
 
 #%%
 # get and print variable properties
@@ -70,11 +77,13 @@ fig, ax = plt.subplots(1,1,figsize=(10,5))
 # Find the index of the station 'BEIRA IHO'
 station_name = 'BEIRA IHO'
 station_idx_F  = ds_his_F.station.values.tolist().index(station_name)
-station_idx_CF = ds_his_CF.station.values.tolist().index(station_name)
+station_idx_CF_SLR = ds_his_CF_SLR.station.values.tolist().index(station_name)
+station_idx_CF_SLR_wind = ds_his_CF_SLR_wind.station.values.tolist().index(station_name)
 
 # Plot the water level for the selected station over time
 ax.plot(ds_his_F.time.values, ds_his_F.waterlevel[:, station_idx_F], label='BEIRA IHO - F')
-ax.plot(ds_his_CF.time.values, ds_his_CF.waterlevel[:, station_idx_CF], label='BEIRA IHO - CF_SLR -0.14m')
+ax.plot(ds_his_CF_SLR.time.values, ds_his_CF_SLR.waterlevel[:, station_idx_CF_SLR], label='BEIRA IHO - CF_SLR -0.14m')
+ax.plot(ds_his_CF_SLR_wind.time.values, ds_his_CF_SLR_wind.waterlevel[:, station_idx_CF_SLR_wind], label='BEIRA IHO - CF_SLR -0.14m & CF_wind -10%')
 
 # Set labels and title
 ax.set_xlabel('Time')
