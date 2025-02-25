@@ -73,7 +73,7 @@ CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items(
 wildcard_constraints:
     wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
     bathy='|'.join([re.escape(x) for x in bathy]),
-    CF_wind=r"\d+"  # Ensures only numbers are captured (prevents '10_his.nc')
+    CF_wind=r"-?\d+"  # Ensures only numbers are captured (prevents '10_his.nc')
 
 
 # activate when having multiple CF values!!

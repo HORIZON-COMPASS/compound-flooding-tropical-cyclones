@@ -29,8 +29,8 @@ runname_ids:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
         # CF_value_rain: [-7]
-        CF_value_wind: ['0']
-        CF_value_SLR: ['-0.14'] # in m
+        CF_value_wind: ['-10']
+        CF_value_SLR: ['0'] # in m
     # Freddy1:
     #     tc_name: Freddy1
     #     sid: 2023036S12118 # TC id from IBTrACS
