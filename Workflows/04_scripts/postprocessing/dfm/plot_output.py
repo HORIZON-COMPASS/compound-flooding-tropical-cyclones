@@ -25,7 +25,6 @@ else:
     region = "sofala"
     tc_name = "Idai"
     dfm_res = "450"
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing = "spw_IBTrACS"
@@ -37,15 +36,6 @@ else:
     model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
     dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
     crop_bbox = ast.literal_eval("[34, -20.2, 35.6, -19.2]")
-=======
-    bathy = "gebco2024"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS_ext"
-    dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
-    model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    dfm_bbox = "[32.3,42.5,-27.4,-9.5]"   
-    crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
     sfincs_bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     
@@ -58,7 +48,6 @@ for fname in os.listdir(os.path.join(dir_runs,model,'output')):
 if file_nc_his is not None:
     ds_his = xr.open_mfdataset(file_nc_his, preprocess=dfmt.preprocess_hisnc)
 
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
     # locate map files 
 file_nc_map = []
 for fname in os.listdir(os.path.join(dir_runs,model,'output')):
@@ -71,8 +60,6 @@ ds_map = dfmt.open_partitioned_dataset(file_nc_map)
 # compute magnitude of wind
 ds_map['mesh2d_windmag'] = np.sqrt(ds_map['mesh2d_windx']**2 + ds_map['mesh2d_windy']**2)
 
-=======
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
 #%% Load the DFM model grid for visualisation
 grid_ds = xr.open_dataset(os.path.join(dir_runs,model,"grid_network.nc"))
 dfm_obs = gpd.read_file(dfm_obs_file)
@@ -81,17 +68,13 @@ dfm_obs = gpd.read_file(dfm_obs_file)
 shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
 tc_track = gpd.read_file(shapefile_path)
 
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
 line = LineString(tc_track.geometry)
 line_gdf = gpd.GeoDataFrame(geometry=[line], crs=tc_track.crs)
 
-=======
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
 #%%
 dfm_bbox_strp = [float(x) for x in dfm_bbox.strip("[]").split(",")]
 lon_min_dfm, lon_max_dfm, lat_min_dfm, lat_max_dfm = dfm_bbox_strp
 #%% Plot the stations
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
 fig, ax = plt.subplots(1,1,figsize=(10,5))
 # Find the index of the station 'BEIRA IHO'
 station_name = 'BEIRA IHO'
@@ -108,50 +91,6 @@ ax.set_title(f'Water Level for Station {station_name}')
 ax.legend(loc=1, fontsize=8)
 
 # Show the plot
-=======
-# Extract the coordinates from the 'geometry' column
-x_coords = [point.x for point in dfm_obs.geometry if point is not None]
-y_coords = [point.y for point in dfm_obs.geometry if point is not None]
-
-# Plotting
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})  # Two subplots side by side
-
-# Plot 1: Stations with letter names
-letter_stations = [s for s in ds_his.station.values if not s.isdigit()]
-ds_his.sel(station=letter_stations).plot.scatter(ax=axes[0], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(letter_stations):
-    axes[0].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[0].set_title("Stations with Names (Letters)")
-axes[0].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, s=2, color="blue", label="Grid Network", transform=ccrs.PlateCarree())
-axes[0].plot([lon_min_dfm, lon_max_dfm, lon_max_dfm, lon_min_dfm, lon_min_dfm],
-             [lat_min_dfm, lat_min_dfm, lat_max_dfm, lat_max_dfm, lat_min_dfm],
-             color="orange", label="BBox 1", transform=ccrs.PlateCarree())
-axes[0].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
-
-# Plot 2: Stations with numeric names at the SFINCS bbox
-numeric_stations = [s for s in ds_his.station.values if s.isdigit()]
-ds_his.sel(station=numeric_stations).plot.scatter(ax=axes[1], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(numeric_stations):
-    axes[1].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[1].set_title("Stations with Numeric Names")
-axes[1].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, s=2, color="blue", label="Grid Network", transform=ccrs.PlateCarree())
-axes[1].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
-
-# Plot the observation line (connecting the points from dfm_obs)
-axes[1].plot([point.x for point in dfm_obs.geometry if point is not None], [point.y for point in dfm_obs.geometry if point is not None], color="yellow", linewidth=2, label="Observation Line", transform=ccrs.PlateCarree())
-
-# Set limits for Plot 2 (zooming into the SFINCS bbox)
-axes[1].set_xlim([crop_bbox[0], crop_bbox[2]])
-axes[1].set_ylim([crop_bbox[1], crop_bbox[3]])
-
-# Show coastlines and borders for both plots
-for ax in axes:
-    dfmt.plot_coastlines(ax=ax, min_area=1000, linewidth=0.5, zorder=0)
-    dfmt.plot_borders(ax=ax, zorder=0)
-
-# Display the plot
 plt.tight_layout()
 plt.show()
 
@@ -298,12 +237,11 @@ axes[0].set_xlabel("Longitude")
 axes[0].set_ylabel("Latitude")
 axes[1].set_xlabel("Longitude")
 axes[1].set_ylabel("Latitude")
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
+
 plt.tight_layout()
 plt.show()
 
 
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
 #%%
 # plot net/grid for the whole DFM domain and zoomed into the SFINCS domain
 fig, ax = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
@@ -352,8 +290,7 @@ for a in ax:
 id_ts_max = ds_his['waterlevel'].sel(station=['BEIRA IHO']).argmax().values.tolist()
 time_ts_max = ds_his['time'].isel(time=id_ts_max).values
 
-#%%
-=======
+
 
 
 
@@ -374,8 +311,8 @@ files_nc_map = glob.glob(os.path.join(dir_runs,model,'output','*map.nc'))
 ds_dfm_map = dfmt.open_partitioned_dataset(files_nc_map)
 
 # Find time of max WL at the output location
-id_ts_max = ds_his_sel['waterlevel'].sel(stations=['BEIRA IHO']).argmax().values.tolist()
-time_ts_max = ds_his_sel['time'].isel(time=id_ts_max).values
+id_ts_max = ds_his['waterlevel'].sel(station=['BEIRA IHO']).argmax().values.tolist()
+time_ts_max = ds_his['time'].isel(time=id_ts_max).values
 
 #%%
 
@@ -383,8 +320,6 @@ time_ts_max = ds_his_sel['time'].isel(time=id_ts_max).values
 print(gdf.head())
 line = LineString(gdf.geometry)
 line_gdf = gpd.GeoDataFrame(geometry=[line], crs=gdf.crs)
-
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
 # Plot the TC track and max total water level
 fig = plt.figure(layout="constrained",figsize=(12,4))
 gs = GridSpec(1, 3, figure=fig)
@@ -392,31 +327,25 @@ ax1 = fig.add_subplot(gs[0, 0])#projection = ccrs.epsg(32736))
 
 ax1.set_title('Total water level [mMSL]')
 #sc = ax1.scatter(ds_dfm_map['mesh2d_face_x'].values, ds_dfm_map['mesh2d_face_y'].values, c=ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').values,vmin=-3,vmax=3,  cmap='viridis',s=5)
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
 sc = ds_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
 plot_loc = ax1.scatter(ds_his.sel(station=['BEIRA IHO']).station_x_coordinate, ds_his.sel(station=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
 ax1.set_aspect('equal')
 ax1.set_ylim([-22,-19]); ax1.set_xlim([34.2,37])
 ctx.add_basemap(ax=ax1, source=ctx.providers.Esri.WorldTopoMap, crs='EPSG:4326', attribution=False)
 tc_track.plot(ax=ax1,color='mediumblue', linewidth=1)
-=======
 sc = ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
 plot_loc = ax1.scatter(ds_his_sel.sel(stations=['BEIRA IHO']).station_x_coordinate, ds_his_sel.sel(stations=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
 ax1.set_aspect('equal')
 ax1.set_ylim([-22,-19]); ax1.set_xlim([34.2,37])
 ctx.add_basemap(ax=ax1, source=ctx.providers.Esri.WorldTopoMap, crs='EPSG:4326', attribution=False)
-gdf.plot(ax=ax1,color='mediumblue', linewidth=1)
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
+tc_track.plot(ax=ax1,color='mediumblue', linewidth=1)
 line_gdf.plot(ax=ax1, color='mediumblue', linewidth=1, label='TC track Idai (IBTrACS)')
 ax1.legend(loc='lower right')
 
 # plot the waterlevel over time at the output point
 ax2 = fig.add_subplot(gs[0, 1:])
-<<<<<<< HEAD:Workflows/04_scripts/postprocessing/dfm/plot_output.py
 ax2.plot(ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').time,ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').waterlevel,color='k')
-=======
 ax2.plot(ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').time,ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').waterlevel,color='k')
->>>>>>> 88aa65f (Changing notebook to .py script):Workflows/scripts/postprocessing/dfm/plot_output.py
 lims = ax2.get_ylim()
 ax2.plot([time_ts_max,time_ts_max],lims,'k--')
 ax2.set_ylim(lims)
