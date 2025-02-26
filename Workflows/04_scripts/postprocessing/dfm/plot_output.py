@@ -25,13 +25,17 @@ else:
     region = "sofala"
     tc_name = "Idai"
     dfm_res = "450"
-    bathy = "gebco2024"
+    bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS_ext_CF0"
+    wind_forcing = "spw_IBTrACS"
+    CF_SLR = 0
+    CF_SLR_txt = "0"
+    CF_wind = 0
+    CF_wind_txt = "0"
     dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
-    model = f'event_{tc_name}_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
-    dfm_bbox = "[32.3,42.5,-27.4,-9.5]"   
-    crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
+    model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
+    crop_bbox = ast.literal_eval("[34, -20.2, 35.6, -19.2]")
     sfincs_bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     
@@ -64,222 +68,82 @@ dfm_obs = gpd.read_file(dfm_obs_file)
 shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
 tc_track = gpd.read_file(shapefile_path)
 
+line = LineString(tc_track.geometry)
+line_gdf = gpd.GeoDataFrame(geometry=[line], crs=tc_track.crs)
+
 #%%
 dfm_bbox_strp = [float(x) for x in dfm_bbox.strip("[]").split(",")]
 lon_min_dfm, lon_max_dfm, lat_min_dfm, lat_max_dfm = dfm_bbox_strp
 #%% Plot the stations
-# Extract the coordinates from the 'geometry' column
-x_coords = [point.x for point in dfm_obs.geometry if point is not None]
-y_coords = [point.y for point in dfm_obs.geometry if point is not None]
+fig, ax = plt.subplots(1,1,figsize=(10,5))
+# Find the index of the station 'BEIRA IHO'
+station_name = 'BEIRA IHO'
+station_idx  = ds_his.station.values.tolist().index(station_name)
 
-# Plotting
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})  # Two subplots side by side
+# Plot the water level for the selected station over time for the different simulations
+ax.plot(ds_his.time.values, ds_his.waterlevel[:, station_idx], label='BEIRA IHO - F')
 
-# Plot 1: Stations with letter names
-letter_stations = [s for s in ds_his.station.values if not s.isdigit()]
-ds_his.sel(station=letter_stations).plot.scatter(ax=axes[0], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(letter_stations):
-    axes[0].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[0].set_title("Stations with Names (Letters)")
-axes[0].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, s=2, color="blue", label="Grid Network", transform=ccrs.PlateCarree())
-axes[0].plot([lon_min_dfm, lon_max_dfm, lon_max_dfm, lon_min_dfm, lon_min_dfm],
-             [lat_min_dfm, lat_min_dfm, lat_max_dfm, lat_max_dfm, lat_min_dfm],
-             color="orange", label="BBox 1", transform=ccrs.PlateCarree())
-axes[0].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
+# Set labels and title
+ax.set_xlabel('Time')
+ax.set_ylabel('Water Level (m)')
+ax.set_title(f'Water Level for Station {station_name}')
+# Add legend
+ax.legend(loc=1, fontsize=8)
 
-# Plot 2: Stations with numeric names at the SFINCS bbox
-numeric_stations = [s for s in ds_his.station.values if s.isdigit()]
-ds_his.sel(station=numeric_stations).plot.scatter(ax=axes[1], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(numeric_stations):
-    axes[1].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[1].set_title("Stations with Numeric Names")
-axes[1].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, s=2, color="blue", label="Grid Network", transform=ccrs.PlateCarree())
-axes[1].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
+# Show the plot
+plt.tight_layout()
+plt.show()
 
-# Plot the observation line (connecting the points from dfm_obs)
-axes[1].plot([point.x for point in dfm_obs.geometry if point is not None], [point.y for point in dfm_obs.geometry if point is not None], color="yellow", linewidth=2, label="Observation Line", transform=ccrs.PlateCarree())
 
-# Set limits for Plot 2 (zooming into the SFINCS bbox)
-axes[1].set_xlim([crop_bbox[0], crop_bbox[2]])
-axes[1].set_ylim([crop_bbox[1], crop_bbox[3]])
+#%%
+# plot net/grid for the whole DFM domain and zoomed into the SFINCS domain
+fig, ax = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
+
+pc = ds_map.grid.plot(ax=ax[0], edgecolor='white', linewidth=0.5, alpha=0.5)
+ctx.add_basemap(ax=ax[0], source=ctx.providers.Esri.WorldImagery, zoom=7, crs=ccrs.PlateCarree(), attribution=False)
+ax[0].plot(ds_his['station_x_coordinate'], ds_his['station_y_coordinate'], 'xc')
+ax[0].set_title("Full DFM model domain")
+
+# Set x and y ticks
+ax[0].set_xticks(range(int(dfm_bbox[0]), int(dfm_bbox[2])+1, 2))  # Adjust tick interval as needed
+ax[0].set_yticks(range(int(dfm_bbox[1]), int(dfm_bbox[3])+1, 2))  # Adjust tick interval as needed
+ax[0].set_xticklabels([str(i) for i in range(int(dfm_bbox[0]), int(dfm_bbox[2])+1, 5)])  # Longitude labels
+ax[0].set_yticklabels([str(i) for i in range(int(dfm_bbox[1]), int(dfm_bbox[3])+1, 5)])  # Latitude labels
+
+# Plotting the second map with the cropped bbox to SFINCS region
+pc2 = ds_map.grid.plot(ax=ax[1], edgecolor='white', linewidth=0.5, alpha=0.5)
+ctx.add_basemap(ax=ax[1], source=ctx.providers.Esri.WorldImagery, zoom=9, crs=ccrs.PlateCarree(), attribution=False)
+ax[1].plot(ds_his['station_x_coordinate'], ds_his['station_y_coordinate'], 'xc')
+ax[1].set_xlim([crop_bbox[0], crop_bbox[2]])
+ax[1].set_ylim([crop_bbox[1], crop_bbox[3]])  # Set the extent for the bounding box
+ax[1].set_title("Model zomain zoomed into SFINCS bbox")
+ax[1].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
+           [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
+
+# Set x and y ticks for the cropped region
+ax[1].set_xticks(range(int(crop_bbox[0]), int(crop_bbox[2])+1, 2))  # Adjust tick interval as needed
+ax[1].set_yticks(range(int(crop_bbox[1]), int(crop_bbox[3])+1, 2))  # Adjust tick interval as needed
+ax[1].set_xticklabels([str(i) for i in range(int(crop_bbox[0]), int(crop_bbox[2])+1, 2)])  # Longitude labels
+ax[1].set_yticklabels([str(i) for i in range(int(crop_bbox[1]), int(crop_bbox[3])+1, 2)])  # Latitude labels
 
 # Show coastlines and borders for both plots
-for ax in axes:
-    dfmt.plot_coastlines(ax=ax, min_area=1000, linewidth=0.5, zorder=0)
-    dfmt.plot_borders(ax=ax, zorder=0)
-
-# Display the plot
-plt.tight_layout()
-plt.show()
-
-#%%
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-from cartopy.io.shapereader import Reader
-import contextily as ctx
-import geopandas as gpd
-from shapely.geometry import Point
-
-# Define topography and bathymetry for ocean and land
-def add_background_features(ax):
-    ax.add_feature(cfeature.LAND, facecolor="lightgray", zorder=1)
-    ax.add_feature(cfeature.OCEAN, facecolor="lightblue", zorder=0)
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.7, zorder=2)
-    ax.gridlines(draw_labels=True, color='gray', linestyle='--', linewidth=0.5)
-
-# Convert the bounding box or data to a GeoDataFrame (example with bbox and points)
-crs = "EPSG:4326"  # Initial coordinate reference system (WGS84)
-sfincs_bbox = [-90, 20, -80, 30]  # Example bounding box (lon_min, lat_min, lon_max, lat_max)
-x_coords = [-85, -87, -89]
-y_coords = [25, 28, 22]
-
-# Create a GeoDataFrame for the bounding box and points
-bbox_geometry = gpd.GeoDataFrame(geometry=[Point(sfincs_bbox[0], sfincs_bbox[1])], crs=crs)
-bbox_geometry = bbox_geometry.to_crs(epsg=3857)
-
-# Setting up the plot
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
-
-# Plot 1: Letters-based stations
-add_background_features(axes[0])
-axes[0].scatter(x_coords, y_coords, s=1, c='blue', alpha=0.5, label='Grid Nodes', transform=ccrs.PlateCarree())
-axes[0].set_title("Stations with Letter Names")
-
-# Plot 2: Numbers-based stations with basemap
-add_background_features(axes[1])
-
-# Convert the coordinates to EPSG:3857 for contextily
-gdf = gpd.GeoDataFrame({'x': x_coords, 'y': y_coords}, 
-                       geometry=[Point(x, y) for x, y in zip(x_coords, y_coords)],
-                       crs=crs).to_crs(epsg=3857)
-
-# Plot the data
-gdf.plot(ax=axes[1], color="yellow", markersize=50, label="Observation Line")
-
-# Add basemap
-ctx.add_basemap(ax=axes[1], source=ctx.providers.Esri.WorldImagery, crs=gdf.crs, attribution=False)
-
-axes[1].set_title("Stations with Numeric Names")
-
-# Add titles, legends, and annotations
-for ax in axes:
-    ax.legend(loc='lower right', fontsize=8)
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-
-plt.tight_layout()
-plt.show()
+for a in ax:
+    dfmt.plot_coastlines(ax=a, min_area=1000, linewidth=0.5, zorder=0)
+    dfmt.plot_borders(ax=a, zorder=0)
+    # ax.legend(loc='lower right', fontsize=8)
+    a.set_xlabel("Longitude")
+    a.set_ylabel("Latitude")
+    a.set_xticks
+    a.set_yticks
 
 
 
-#%%
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import numpy as np
-from cartopy.io.shapereader import natural_earth
-
-# Load topography/bathymetry data
-import xarray as xr
-topo_bathy_ds = xr.open_dataset("path_to_topography_or_bathymetry_file.nc")  # Replace with your dataset path
-elevation = topo_bathy_ds["elevation"]  # Replace 'elevation' with the variable name in the dataset
-
-# Define a function to plot the background
-def add_topo_bathy_background(ax, extent=None):
-    if extent:
-        elevation_subset = elevation.sel(
-            lon=slice(extent[0], extent[2]), lat=slice(extent[1], extent[3])
-        )
-    else:
-        elevation_subset = elevation
-    
-    # Plot bathymetry and topography as an image
-    im = ax.pcolormesh(
-        elevation_subset["lon"], elevation_subset["lat"], elevation_subset,
-        cmap="terrain", transform=ccrs.PlateCarree(), shading='auto'
-    )
-    return im
-
-# Plotting
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})  # Two subplots side by side
-
-# Define extent for zoomed-in plot (optional)
-sfincs_extent = [sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[1], sfincs_bbox[3]]
-
-# Add topography and bathymetry to both plots
-add_topo_bathy_background(axes[0])
-im = add_topo_bathy_background(axes[1], extent=sfincs_extent)
-
-# Plot other elements like grid, bounding boxes, and tc_track on top of the background
-for ax in axes:
-    ax.scatter(filtered_tc_x_coords, filtered_tc_y_coords,
-               s=point_sizes, c='orange', alpha=transparencies, edgecolor='black', label="TC Track", transform=ccrs.PlateCarree())
-    ax.plot(filtered_tc_x_coords, filtered_tc_y_coords, color="black", linewidth=0.5, label="TC Track Line", transform=ccrs.PlateCarree())
-
-# Grid network points
-axes[0].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values,
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
-axes[1].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values,
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
-
-# Plot bounding boxes
-axes[0].plot([lon_min_dfm, lon_max_dfm, lon_max_dfm, lon_min_dfm, lon_min_dfm],
-             [lat_min_dfm, lat_min_dfm, lat_max_dfm, lat_max_dfm, lat_min_dfm],
-             color="orange", label="BBox 1", transform=ccrs.PlateCarree())
-axes[0].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],
-             color="red", label="BBox 2", transform=ccrs.PlateCarree())
-
-axes[1].plot(x_coords, y_coords, color="yellow", linewidth=2, label="Observation Line", transform=ccrs.PlateCarree())
-
-# Add colorbar for topography/bathymetry
-cbar = fig.colorbar(im, ax=axes, orientation="horizontal", fraction=0.046, pad=0.1)
-cbar.set_label("Elevation (m)")
-
-# Labels, titles, and layout
-axes[0].set_title("Stations with Names (Letters)")
-axes[1].set_title("Stations with Numeric Names")
-axes[0].set_xlabel("Longitude")
-axes[0].set_ylabel("Latitude")
-axes[1].set_xlabel("Longitude")
-axes[1].set_ylabel("Latitude")
-plt.tight_layout()
-plt.show()
-
-
-
-
-
-
-
-
-
-
-#%% Plot the water level at the Beira IHO and offshore station, and the obs_points
-if file_nc_his is not None:
-    fig, ax = plt.subplots(1,1,figsize=(10,5))
-    ds_his_sel.sel(stations=['BEIRA IHO']).waterlevel.plot.line(ax=ax, x='time')
-    ax.legend(ds_his_sel.stations.to_series(),bbox_to_anchor=(1.04, 1),loc="upper left",fontsize=8) 
-    plt.grid()
-
-#%% Open the produced waterlevel maps
-files_nc_map = glob.glob(os.path.join(dir_runs,model,'output','*map.nc'))
-ds_dfm_map = dfmt.open_partitioned_dataset(files_nc_map)
-
+#%% 
 # Find time of max WL at the output location
-id_ts_max = ds_his_sel['waterlevel'].sel(stations=['BEIRA IHO']).argmax().values.tolist()
-time_ts_max = ds_his_sel['time'].isel(time=id_ts_max).values
+id_ts_max = ds_his['waterlevel'].sel(station=['BEIRA IHO']).argmax().values.tolist()
+time_ts_max = ds_his['time'].isel(time=id_ts_max).values
 
 #%%
-
-# Check the contents of the GeoDataFrame
-print(gdf.head())
-line = LineString(gdf.geometry)
-line_gdf = gpd.GeoDataFrame(geometry=[line], crs=gdf.crs)
-
 # Plot the TC track and max total water level
 fig = plt.figure(layout="constrained",figsize=(12,4))
 gs = GridSpec(1, 3, figure=fig)
@@ -287,18 +151,18 @@ ax1 = fig.add_subplot(gs[0, 0])#projection = ccrs.epsg(32736))
 
 ax1.set_title('Total water level [mMSL]')
 #sc = ax1.scatter(ds_dfm_map['mesh2d_face_x'].values, ds_dfm_map['mesh2d_face_y'].values, c=ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').values,vmin=-3,vmax=3,  cmap='viridis',s=5)
-sc = ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
-plot_loc = ax1.scatter(ds_his_sel.sel(stations=['BEIRA IHO']).station_x_coordinate, ds_his_sel.sel(stations=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
+sc = ds_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
+plot_loc = ax1.scatter(ds_his.sel(station=['BEIRA IHO']).station_x_coordinate, ds_his.sel(station=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
 ax1.set_aspect('equal')
 ax1.set_ylim([-22,-19]); ax1.set_xlim([34.2,37])
 ctx.add_basemap(ax=ax1, source=ctx.providers.Esri.WorldTopoMap, crs='EPSG:4326', attribution=False)
-gdf.plot(ax=ax1,color='mediumblue', linewidth=1)
+tc_track.plot(ax=ax1,color='mediumblue', linewidth=1)
 line_gdf.plot(ax=ax1, color='mediumblue', linewidth=1, label='TC track Idai (IBTrACS)')
 ax1.legend(loc='lower right')
 
 # plot the waterlevel over time at the output point
 ax2 = fig.add_subplot(gs[0, 1:])
-ax2.plot(ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').time,ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').waterlevel,color='k')
+ax2.plot(ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').time,ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').waterlevel,color='k')
 lims = ax2.get_ylim()
 ax2.plot([time_ts_max,time_ts_max],lims,'k--')
 ax2.set_ylim(lims)
