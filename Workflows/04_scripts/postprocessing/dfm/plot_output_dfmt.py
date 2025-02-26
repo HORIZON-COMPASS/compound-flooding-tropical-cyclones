@@ -67,7 +67,7 @@ print(ds_his_CF_SLR)
 #%%
 # get and print variable properties
 vars_pd_F  = dfmt.get_ncvarproperties(ds_his_F)
-vars_pd_CF = dfmt.get_ncvarproperties(ds_his_CF)
+vars_pd_CF = dfmt.get_ncvarproperties(ds_his_CF_SLR)
 print(vars_pd_F)
 print(vars_pd_CF)
 
