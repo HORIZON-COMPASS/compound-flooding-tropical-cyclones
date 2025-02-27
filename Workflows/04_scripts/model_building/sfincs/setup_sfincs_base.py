@@ -40,7 +40,7 @@ kwargs = opt.pop("global", {})
 
 #%%
 region = get_local_vector_data(
-    file = 'basin_atlas_level12_v10',
+    file = 'basin_atlas_level12_v10', #TODO change to 'merit_hydro_basins....' 
     bbox = bbox,
     data_cat = data_cats[0],
 )
