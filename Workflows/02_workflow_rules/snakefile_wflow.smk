@@ -24,15 +24,6 @@ def get_start_time(wildcards):
 def get_end_time(wildcards):
     return config["runname_ids"][wildcards.runname]['end_time']
 
-def get_bbox(wildcards):
-    prebbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
-    arg_bbox = "{" + "'bbox': "+ prebbox + "}"
-    return arg_bbox
-
-# def get_dir_model_base(wildcards):
-#     print(wildcards)
-#     return join(root_dir, dir_models, config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
-
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return "../03_data_catalogs/datacatalog_general.yml"
@@ -61,7 +52,6 @@ rule make_base_model_wflow:
     params:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
         data_cat = get_datacatalog,
-        arg_bbox = get_bbox,
     output: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
