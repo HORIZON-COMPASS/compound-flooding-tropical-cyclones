@@ -57,28 +57,6 @@ df.to_csv(
     header=False,
 )
 
-
-    # precip = mod.data_catalog.get_rasterdataset(
-    #     'era5_hourly',
-    #     geom = mod.region,
-    #     buffer = 5,
-    #     variables = 'precip',
-    #     time_tuple = (config['tstart'], config['tstop']),                     
-    # ).to_dataset().rename({
-    #     'precip' : 'Precipitation',
-    #     'longitude' : 'x',
-    #     'latitude' : 'y'
-    #     })
-
-    # #Convert time units to minutes
-    # encoding = dict(
-    #             time={"units": f"minutes since 1900-01-01", "dtype": "float64", '_FillValue': None}
-    #         )
-
-    # precip.to_netcdf(join(sfincs_model_folder,"precip.nc"), encoding = encoding)
-    # Update inp file
-    # config.pop('amprfile', None)
-# config.update({'netamprfile': "precip.nc"})
 config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})
 inp = SfincsInput.from_dict(config)
