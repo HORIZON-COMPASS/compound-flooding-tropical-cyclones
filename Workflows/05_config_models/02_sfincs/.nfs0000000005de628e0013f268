@@ -21,7 +21,7 @@ setup_mask_active:
   reset_mask: True
 
 setup_mask_active2:
-  fill_area: 50
+  fill_area: 500
   reset_mask: False
 
 setup_mask_bounds:
@@ -39,9 +39,9 @@ setup_subgrid:
   - elevtn: gebco2024_MZB       
     reproj_method: bilinear
   datasets_rgh:
-  - lulc: vito
+  - lulc: vito  #TODO change to esa_worldcover? 
     reclass_table: vito_mapping
-#    datasets_riv = datasets_riv,
+#    datasets_riv = datasets_riv, # = river burning
   nr_subgrid_pixels: 3  
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
@@ -52,12 +52,14 @@ setup_cn_infiltration:
   antecedent_moisture: dry
 
 setup_river_inflow:
-  rivers: rivers_lin2019_v1
+  rivers: rivers_lin2019_v1 # will become merit_hydro or removed
   hydrography: merit_hydro
   river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
   reverse_river_geom: True
+
+#TODO setup_river_outflow
 
 
