@@ -2795,7 +2795,7 @@ spw_IBTrACS_CF0_Idai:
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
 spw_IBTrACS_CF-10_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext9d.spw
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
   driver: raster
   meta:
     category: meteo
