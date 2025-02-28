@@ -226,32 +226,4 @@ with open(ext_new_path, 'w') as file:
     file.writelines(modified_lines)
 print(f'Modified file saved to: {ext_new_path}')
 
-#%% 
-# Add SLR using dfmt functionality
-dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=CF_value)
-ext_new.save(filepath=ext_new_path)
-# %%
-# Add the Z0 constituent to include SLR in the tidal boundary
-# if CF_value != 0:
-#     file_bc = os.path.join(dir_output_main, f"tide_{tidemodel}.bc")
-#     forcingmodel_object = hcdfm.ForcingModel(file_bc)
-
-#     for forcing in forcingmodel_object.forcing:
-#         if forcing.datablock:
-#             # Check if "Z0" already exists anywhere in the list
-#             z0_entry = next((entry for entry in forcing.datablock if entry[0] == "Z0"), None)
-
-#             if z0_entry:
-#                 # Update Z0 if it exists
-#                 z0_entry[-1] = CF_value
-#             else:
-#                 # Insert "Z0" at the end
-#                 forcing.datablock.append(["Z0", CF_value, 0])
-
-#     # Save back to the same file
-#     forcingmodel_object.save(file_bc)
-
-# else:
-#     pass
-
 # %%
