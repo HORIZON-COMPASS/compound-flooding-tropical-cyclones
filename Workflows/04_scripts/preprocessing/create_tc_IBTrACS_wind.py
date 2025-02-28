@@ -24,7 +24,7 @@ if "snakemake" in locals():
     root_dir = os.path.abspath(snakemake.params.root_dir)
 else:
     start_date = np.datetime64("2019-03-09") 
-    end_date = np.datetime64("2019-03-25") 
+    end_date = np.datetime64("2019-03-26") 
     tc_name = "Idai"
     CF_value = -10
     CF_value_txt = "-10"
