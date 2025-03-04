@@ -34,7 +34,7 @@ if "snakemake" in locals():
     path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
-    dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
+    dir_output_main = os.path.abspath(snakemake.params.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.params.dimrset)
     uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
     submit_script_file = os.path.abspath(snakemake.output.submit_script)
