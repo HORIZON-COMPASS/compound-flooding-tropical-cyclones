@@ -51,8 +51,8 @@ else:
     wind_forcing = "spw_IBTrACS"
     CF_SLR = -0.14
     CF_SLR_txt = "-0.14"
-    CF_wind = 0
-    CF_wind_txt = "0"
+    CF_wind = -10
+    CF_wind_txt = "-10"
     bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
     output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
     start_time = "20190309 000000"
@@ -266,7 +266,7 @@ fig.savefig(output_path, dpi=300, bbox_inches='tight')
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_output_main, f'{model_name}.mdu')
+mdu_file = os.path.join(dir_output_main, f'settings.mdu')
 
 
 # use mdu file from GTSM
@@ -312,7 +312,8 @@ mdu.output.wrimap_wind = 1
 # save .mdu file
 mdu.save(mdu_file) 
 
-#%% Modify the ext_new file for Linux simulation (only containing file names and not full paths)
+#%% 
+# Modify the ext_new file for Linux simulation (only containing file names and not full paths)
 
 # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
 dfmt.make_paths_relative(mdu_file)
