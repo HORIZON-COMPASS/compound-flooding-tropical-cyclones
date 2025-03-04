@@ -1811,7 +1811,7 @@ hydro_reservoirs:
   crs: 4326
 isimip_TC_rain_er11_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\er11_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass/01_Data/ISIMIP/TC_rain/Idai/er11_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -1827,7 +1827,7 @@ isimip_TC_rain_er11_Idai:
   crs: 4326
 isimip_TC_rain_h08_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass\01_Data\ISIMIP\TC_rain\Idai\h08_obsclim_historical_rain_idai_region.nc
+  path: 11210471-001-compass/01_Data/ISIMIP/TC_rain/Idai/h08_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
     rain: precip 
@@ -2995,3 +2995,10 @@ wsf_bld_2015_v1:
     source_license: CC0 1.0
     source_url: https://un-spider.org/links-and-resources/data-sources/world-settlement-footprint-2015-wsf-dlr-eoc
   crs: 4326
+merit_basins_cat:
+  data_type: GeoDataFrame
+  driver: vector
+  path: wflow_global/hydromt_staging/merit_basins/pfaf_level_02/cat_MERIT_Hydro_v07_Basins_v01.fgb
+  metadata:
+    source_url: https://www.reachhydro.org/home/params/merit-basins
+    paper_doi: 10.1029/2019WR025287

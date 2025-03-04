@@ -2960,3 +2960,10 @@ wsf_bld_2015_v1:
     source_license: CC0 1.0
     source_url: https://un-spider.org/links-and-resources/data-sources/world-settlement-footprint-2015-wsf-dlr-eoc
   crs: 4326
+merit_basins_cat:
+  data_type: GeoDataFrame
+  driver: vector
+  path: wflow_global/hydromt_staging/merit_basins/pfaf_level_02/cat_MERIT_Hydro_v07_Basins_v01.fgb
+  metadata:
+    source_url: https://www.reachhydro.org/home/params/merit-basins
+    paper_doi: 10.1029/2019WR025287

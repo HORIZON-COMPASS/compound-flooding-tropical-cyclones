@@ -21,5 +21,4 @@ runname_ids:
         dfm_obs_file: coastal_coupling_DFM_obs_points_HND
         config_sfincs_base: sfincs_base_build_Honduras.yml
         utmzone: 16p
-        
         verification_points: 'MZB_Sofala_IHO_obs.xyn' # need to add relevant verification points
