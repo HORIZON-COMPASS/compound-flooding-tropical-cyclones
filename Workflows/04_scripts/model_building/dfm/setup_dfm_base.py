@@ -8,12 +8,7 @@ plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
 import xarray as xr
-import pandas as pd
-import geopandas as gpd
-import shutil
-from datetime import datetime, timedelta
-from hydromt import DataCatalog
-import numpy as np
+import hydromt
 
 #%%
 if "snakemake" in locals():
@@ -31,7 +26,7 @@ else:
     dfm_res = 450 # m
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = -0.14
     CF_value_txt = "-0.14"
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
@@ -50,7 +45,7 @@ else:
     pass
 #%%
 # Define hydromt datacatalog
-data_catalog = DataCatalog(data_libs = [path_data_cat])
+data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
 
 # needed to define wind_forcing and bathy paths
 #%%
