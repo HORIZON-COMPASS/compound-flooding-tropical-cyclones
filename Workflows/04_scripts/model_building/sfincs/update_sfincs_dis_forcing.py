@@ -20,21 +20,28 @@ if "snakemake" in locals():
     wflow_root = snakemake.params.wflow_root_forcing
     data_cats = snakemake.params.data_cats
 else:
-    curdir = r'c:\Git_repos\COMPASS\Workflows'
-    wflow_root = r"p:\11210471-001-compass\03_Runs\quelimane\Freddy2\era5_hourly\wflow"
-    event =  "freddy2"
-    sfincs_model_folder = r"p:\11210471-001-compass\03_Runs\quelimane\Freddy2\era5_hourly\sfincs"
+    curdir = '../../../'
+    region = "sofala"
+    tc_name = "Idai"
+    precip_forcing = "era5_hourly"
+    wind_forcing = 'spw_IBTrACS'
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    CF_SLR_txt = "0"
+    CF_wind_txt = "0"
+    CF_rain_txt = "0"
+    wflow_root = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     data_cats = [
-            join(curdir, "data_catalogs", "datacatalog_general___linux.yml"), 
-            join(curdir, "data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, "data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+            join(curdir, "03_data_catalogs", "datacatalog_general___linux.yml"), 
+            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
+            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
         ]
 
 
 
 #%%
 mod = WflowModel(
-    root=join(wflow_root, 'events'),
+    root=join(wflow_root, "events"),
     data_libs=data_cats,
     mode="r",
     logger=logger,

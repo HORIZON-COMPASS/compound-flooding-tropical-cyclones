@@ -33,7 +33,7 @@ kwargs = opt.pop("global", {})
 opt['setup_gauges'] = {
     'gauges_fn': join(dir_sfincs_model, "gis", "src.geojson"),
     'snap_to_river': True,
-    'snap_uparea': False,   #TODO make True
+    'snap_uparea': True,
     'derive_subcatch': False,
     'index_col': 'index',
     'basename': 'locs'

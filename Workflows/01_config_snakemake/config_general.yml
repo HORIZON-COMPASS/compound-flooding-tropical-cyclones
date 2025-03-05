@@ -15,7 +15,7 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000
         ext_days: '9' # the nr of days used to extend the spw file beyond the IBTrACS time period  
-        forcing: era5_hourly
+        precip_forcing: era5_hourly
         dfm_res: '450'
         bathy: 'gebco2024_MZB'
         wind_forcing: spw_IBTrACS # adding CF value and tc_name to name in setup_dfm_event script
@@ -28,7 +28,7 @@ runname_ids:
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        # CF_value_rain: [-7]
+        CF_value_rain: ['0']
         CF_value_wind: ['-10']
         CF_value_SLR: ['-0.14'] # in m
     # Freddy1:

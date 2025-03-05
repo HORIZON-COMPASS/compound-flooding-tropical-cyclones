@@ -41,7 +41,7 @@ regions = [value['region'] for key, value in config['runname_ids'].items()]
 
 rule all_sfincs_build:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"), zip, region=regions, runname=runname_ids),
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"), zip, region=regions, runname=runname_ids),
         expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"), zip, region=regions, runname=runname_ids)
 
 rule make_base_model_sfincs:

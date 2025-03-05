@@ -8,10 +8,6 @@ plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
 import xarray as xr
-import pandas as pd
-import geopandas as gpd
-import shutil
-from datetime import datetime, timedelta
 import hydromt
 
 #%%
@@ -28,7 +24,7 @@ else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
     bathy = "gebco2024_MZB"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = -0.14
     CF_value_txt = "-0.14"
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
