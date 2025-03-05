@@ -20,14 +20,14 @@ if "snakemake" in locals():
     data_cats = snakemake.params.data_cats
     bbox = ast.literal_eval(snakemake.params.arg_bbox)
 else:
-    model_dir = r'p:\11210471-001-compass\02_Models\quelimane\Freddy2\sfincs'
-    config_file = r'c:\Git_repos\COMPASS\Workflows\config_sfincs\sfincs_base_build.yml'
+    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test2'
+    config_file = '../../../05_config_models/02_sfincs/sfincs_base_build_MZB.yml'
     data_cats = [
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_general.yml',
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_obspoints.yml',
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
     ]
-    bbox ="[36.7,-18.35,37.41,-17.64]"
+    bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
 
 
 if not exists(model_dir):
@@ -53,5 +53,3 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
-
-# %%
