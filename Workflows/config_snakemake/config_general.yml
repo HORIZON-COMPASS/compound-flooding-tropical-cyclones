@@ -29,7 +29,7 @@ runname_ids:
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        # CF_value_rain: [-7]
+        CF_value_rain: ['0']
         CF_value_wind: ['-10']
         CF_value_SLR: ['-0.14'] # in m
     # Freddy1:
