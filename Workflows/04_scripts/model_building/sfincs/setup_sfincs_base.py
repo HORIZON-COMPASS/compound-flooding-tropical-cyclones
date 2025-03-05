@@ -22,27 +22,16 @@ if "snakemake" in locals():
     bathy = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
-    model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
-    config_file = r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
+    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test2'
+    config_file = '../../../05_config_models/02_sfincs/sfincs_base_build_MZB.yml'
     data_cats = [
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_general.yml',
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_obspoints.yml',
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
-        ]
-    #bbox =[-3.2913,50.9637,-2.5063,51.3508]
-    bbox =[-3.16169,51.06687,-2.867119,51.258058]
-    #bbox =[36.7,-18.35,37.41,-17.64]
-    bathy = 'gebco'
-    #bathy = 'emodnet_bathy_E4_2018_msl'
-    dfm_coastal_mask = 'coastal_coupling_msk_SMST'
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    ]
+    bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
 
-    # data_cats = [
-    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_general.yml',
-    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_obspoints.yml',
-    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
-    # ]
 
-#%%
 if not exists(model_dir):
     os.mkdir(model_dir)
 #%%
@@ -76,5 +65,3 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
-
-# %%
