@@ -7,11 +7,31 @@ from os.path import join
 from hydromt_sfincs import SfincsModel, utils
 
 # We read the snakemake parameters
-mapfile = snakemake.input.mapout
-hisfile = snakemake.input.hisout
-outfile = snakemake.output.figure
-dir_run = snakemake.params.dir_run
-datacat = snakemake.params.datacat
+if "snakemake" in locals():
+    mapfile = snakemake.input.mapout
+    hisfile = snakemake.input.hisout
+    outfile = snakemake.output.figure
+    dir_run = snakemake.params.dir_run
+    datacat = snakemake.params.datacat
+else:
+    region = "sofala"
+    tc_name = "Idai"
+    wind_forcing = 'spw_IBTrACS'
+    precip_forcing = 'era5_hourly'
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    ]
+    CF_SLR_txt = "0"
+    CF_wind_txt = "0"
+    CF_rain_txt = "0"
+    mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/sfincs_map.nc"
+    hisfile =
+    outfile =
+    dir_run =
+    datacat =
 
 # mapfile = r'../../sfincs_sofala/computations/sfincs_Idai_v1/sfincs_map.nc'
 # dir_run = r'../../sfincs_sofala/computations/sfincs_Idai_v1'
