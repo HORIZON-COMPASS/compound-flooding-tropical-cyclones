@@ -13,10 +13,11 @@ from hydromt_sfincs import SfincsModel
 # model and data paths/
 logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
+    tc_name = snakemake.params.tc_name
     sfincs_mod_no_forcing = snakemake.params.dir_run_no_forcing
     sfincs_mod_with_forcing = snakemake.params.dir_run_with_forcing
     data_cats = snakemake.params.data_cats
-    wind_forcing = snakemake.params.wind_forcing
+    wind_forcing = snakemake.wildcards.wind_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     precip_forcing = snakemake.wildcards.forcing
@@ -24,8 +25,32 @@ if "snakemake" in locals():
     coastal_ts = snakemake.params.coastal_ts
     dfm_output = snakemake.params.dfm_output
     utmzone = snakemake.params.utmzone
+    CF_wind_txt = snakemake.wildcards.CF_wind
+else:
+    region = "sofala"
+    utmzone = '36s'
+    tc_name = "Idai"
+    wind_forcing = 'spw_IBTrACS'
+    precip_forcing = 'era5_hourly'
+    dfm_res = "450"
+    bathy = "gebco2024_MZB"
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    data_cats = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    ]
+    CF_SLR_txt = "0"
+    CF_wind_txt = "0"
+    CF_rain_txt = "0"
+    start_time = '20190309 000000'
+    end_time = '20190325 060000'
+    dfm_model = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    dfm_output = f"dfm_output_{dfm_model}"
+    sfincs_mod_no_forcing = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs"
+    sfincs_mod_with_forcing = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
 
-data_catalog = data_catalog.DataCatalog(data_cats)
+data_cat = data_catalog.DataCatalog(data_cats)
 
 #%% Create a configuration
 opt = {
@@ -64,9 +89,9 @@ mod = SfincsModel(
 if 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
     spw = 1 
-    spw_input = data_catalog[wind_forcing].path
+    spw_input = data_cat[f"{wind_forcing}_CF{CF_wind_txt}_{tc_name}"].path
     spw_file = os.path.basename(spw_input)
-    spw_copy = os.path.join(sfincs_mod_with_forcing,spw_file)
+    spw_copy = os.path.join(sfincs_mod_with_forcing, spw_file)
     shutil.copyfile(spw_input, spw_copy)
     opt["setup_config"]["spwfile"] =  os.path.basename(spw_file)
 # Add other specifications for when the wind fields are prescribed via another format
@@ -77,3 +102,5 @@ mod.update(
     forceful_overwrite=True,
     opt=opt
 )
+
+# %%
