@@ -16,11 +16,13 @@ else:
     dfm_res = "450"
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    wind_forcing = "spw_IBTrACS_ext_CF0_Idai"
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+    wind_forcing = "spw_IBTrACS"
+    CF_SLR_txt = "0"
+    CF_wind_txt = "0"
+    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
     run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
-    his_path = os.path.join(run_dir, "output", f"{model_name}_his.nc")
+    his_path = os.path.join(run_dir, "output", f"{model_name}_0000_his.nc")
     root_dir = 'p:\\'
     snake_done = os.path.join(run_dir, "postprocessing_done.txt")
 
