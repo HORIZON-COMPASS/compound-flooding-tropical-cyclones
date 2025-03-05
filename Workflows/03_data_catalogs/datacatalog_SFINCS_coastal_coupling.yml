@@ -26,7 +26,7 @@ coastal_coupling_DFM_obs_points_MZB:
   crs: 4326
 coastal_coupling_DFM_obs_points_SMST:
   data_type: GeoDataFrame
-  path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_SomersetUK_5mMSL_points_1km.shp
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
   driver: vector
   meta:
     category: geography
@@ -62,6 +62,33 @@ coastal_coupling_msk_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
 coastal_coupling_msk_SMST:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Somerset_5mMSL_polygon.geojson
