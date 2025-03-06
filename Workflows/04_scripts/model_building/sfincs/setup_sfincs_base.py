@@ -22,7 +22,7 @@ if "snakemake" in locals():
     bathy = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
-    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test2'
+    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
     config_file = '../../../05_config_models/02_sfincs/sfincs_base_build_MZB.yml'
     data_cats = [
         '../../../03_data_catalogs/datacatalog_general.yml',
@@ -65,3 +65,4 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
+
