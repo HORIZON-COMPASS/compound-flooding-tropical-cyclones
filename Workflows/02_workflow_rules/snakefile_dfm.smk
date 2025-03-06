@@ -82,9 +82,9 @@ region = [value['region'] for key, value in config['runname_ids'].items()]
 dfm_res = [value['dfm_res'] for key, value in config['runname_ids'].items()]
 bathy = [value['bathy'] for key, value in config['runname_ids'].items()]
 tidemodel = [value['tidemodel'] for key, value in config['runname_ids'].items()]
-# CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
+CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
 wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
-# CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
