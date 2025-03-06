@@ -1,3 +1,4 @@
+#%% 
 # Load modules
 import os
 import numpy as np
@@ -6,10 +7,10 @@ import xarray as xr
 from os.path import join
 from hydromt_sfincs import SfincsModel, utils
 
+#%%
 # We read the snakemake parameters
 if "snakemake" in locals():
     mapfile = snakemake.input.mapout
-    hisfile = snakemake.input.hisout
     outfile = snakemake.output.figure
     dir_run = snakemake.params.dir_run
     datacat = snakemake.params.datacat
@@ -19,24 +20,21 @@ else:
     wind_forcing = 'spw_IBTrACS'
     precip_forcing = 'era5_hourly'
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    data_cat = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
-        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    datacat = [
+        '../../03_data_catalogs/datacatalog_general.yml',
+        '../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]
     CF_SLR_txt = "0"
     CF_wind_txt = "0"
     CF_rain_txt = "0"
-    mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/sfincs_map.nc"
-    hisfile =
-    outfile =
-    dir_run =
-    datacat =
-
-# mapfile = r'../../sfincs_sofala/computations/sfincs_Idai_v1/sfincs_map.nc'
-# dir_run = r'../../sfincs_sofala/computations/sfincs_Idai_v1'
-# datacat = r'../../datacatalog_general.yml'
-# outfile = r'../../sfincs_sofala/computations/sfincs_Idai_v1/output/figure.png'
+    # mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/sfincs_map.nc"
+    # outfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/plot_output/sfincs_basemap.png"
+    # dir_run = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/sfincs_map.nc"
+    outfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/plot_output/sfincs_basemap.png"
+    dir_run = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}"
 
 print("------- Checking what we got ------")
 print("Model run directory: ", dir_run)
@@ -45,11 +43,12 @@ print("Output figure basemap: ", outfile)
 
 # select the model and datacatalog
 sfincs_root = dir_run
-mod = SfincsModel(sfincs_root, mode="r")
+mod = SfincsModel(sfincs_root, data_libs=datacat, mode="r")
 
-mod.data_catalog.from_yml(datacat)
+#%%
+# mod.data_catalog.from_yml(datacat)
 #mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
-
+#%%
 # select our highest-resolution elevation dataset
 depfile = join(sfincs_root, "subgrid", "dep_subgrid.tif")
 da_dep = mod.data_catalog.get_rasterdataset(depfile)
@@ -60,16 +59,19 @@ gswo = mod.data_catalog.get_rasterdataset("gswo", geom=mod.region, buffer=1000)
 # reading in the model results
 mod.read_results()
 
+#%%
 ### PLOT BASEMAP
 fig, ax = mod.plot_basemap(
     fn_out=os.path.join(os.path.abspath(os.path.dirname(outfile)),os.path.basename(outfile)), 
     plot_geoms=True, 
     figsize=(8, 6))
 
+#%%
 ### PLOT FORCING
 _ = mod.plot_forcing(
     fn_out = os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_forcing.png'))
 
+#%%
 ### PLOT MAX INUNDATION
 # compute the maximum water level over all time steps
 da_zsmax = mod.results["zsmax"].max(dim="timemax")
@@ -108,6 +110,7 @@ ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
 
+#%%
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
 for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
@@ -145,7 +148,7 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
         figname_ext = figname_ext.replace(*r)
     fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.png'))
 
-
+#%%
 ### PLOT TIMESERIES OUTPUT POINTS
 hisfile = os.path.join(dir_run,"sfincs_his.nc")
 ds_his = xr.open_dataset(hisfile)
@@ -158,3 +161,4 @@ for ii,loc_id in enumerate(ds_his['station_id'].values):
     ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
     ax.set_ylabel("Inundation height [m]")
     fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
+# %%
