@@ -43,13 +43,15 @@ def get_datacatalog(wildcards):
         return [
             join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
     elif os.name == "posix": #Running on linux
         return [
             join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
         ]
 
 runname_ids = list(config['runname_ids'].keys())
@@ -79,23 +81,24 @@ region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR,
 
 rule all_sfincs_update:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "sfincs_basemap.png"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
-
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "sfincs_basemap.png"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
+        expand(join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
 
 rule add_forcing_coastal_meteo_sfincs:
     input:
         msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"),
     params:
-        tc_name = get_tcname
+        tc_name = get_tcname,
         dir_run_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
-                                                                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}")),
+                                                                  f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
         data_cats = get_datacatalog,
         wind_forcing = get_wind_forcing,
         start_time = get_starttime, 
         end_time = get_endtime,
         dfm_output = lambda wildcards: f"dfm_output_event_{config['runname_ids'][wildcards.runname]['dfm_res']}_{config['runname_ids'][wildcards.runname]['bathy']}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}",
         utmzone = get_utmzone,
+        sfincs_obs_points = lambda wildcards: join(root_dir, dir_data, "sfincs_obs_points", config["runname_ids"][wildcards.runname]["sfincs_obs_file"]),
     output:
         bzs_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.bzs"),
     script:
@@ -107,7 +110,7 @@ rule update_dis_forcing_sfincs:
         wflow_output = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), # do not change!
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
-                                                                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}")),
+                                                                  f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}")),
         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
         data_cats = get_datacatalog,
     output:
@@ -121,7 +124,7 @@ rule run_sfincs_model:
         dis_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"),
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
-                                                                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}")),
+                                                                  f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}")),
         exe = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
     output:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs_map.nc"),
