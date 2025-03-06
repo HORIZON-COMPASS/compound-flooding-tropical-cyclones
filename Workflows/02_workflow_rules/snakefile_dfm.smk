@@ -49,15 +49,23 @@ def get_dfm_obs_points(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "03_data_catalogs/datacatalog_general.yml"
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml")
+        ]
     elif os.name == "posix": #Running on linux
-        return "03_data_catalogs/datacatalog_general___linux.yml"
-
-def get_sfincs_datacatalog(wildcards):
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+        ]
+        
+def get_cf_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
+        return "03_data_catalogs/datacatalog_CF_forcing.yml"
     elif os.name == "posix": #Running on linux
-        return "03_data_catalogs/datacatalog_SFINCS_coastal_coupling___linux.yml"
+        return "03_data_catalogs/datacatalog_CF_forcing___linux.yml"
 
 # Define wildcards for path names
 runname_ids = list(config['runname_ids'].keys())
@@ -65,9 +73,9 @@ region = [value['region'] for key, value in config['runname_ids'].items()]
 dfm_res = [value['dfm_res'] for key, value in config['runname_ids'].items()]
 bathy = [value['bathy'] for key, value in config['runname_ids'].items()]
 tidemodel = [value['tidemodel'] for key, value in config['runname_ids'].items()]
-# CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
+CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
 wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
-# CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -136,7 +144,6 @@ rule make_dfm_model_event:
         output_bbox  = get_sfincs_bbox,
         verif_points_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["runname_ids"][wildcards.runname]["verification_points"]),
         data_cat     = get_datacatalog,
-        sfincs_data_cat = get_sfincs_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
@@ -170,9 +177,9 @@ rule add_dfm_output_to_catalog:
     input:
         his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
     params:
-        model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
-        sfincs_data_cat  = get_sfincs_datacatalog,
-        root_dir         = p_dir,
+        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
+        cf_data_cat  = get_cf_datacatalog,
+        root_dir     = p_dir,
     output:
         done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     script:
