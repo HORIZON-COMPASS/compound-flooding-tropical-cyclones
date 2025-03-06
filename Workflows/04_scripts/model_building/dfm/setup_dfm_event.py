@@ -31,7 +31,7 @@ if "snakemake" in locals():
     dfm_obs_file = snakemake.params.dfm_obs_file
     verification_points = os.path.abspath(snakemake.params.verif_points_file)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
-    path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
+    # path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.params.dir_event_model)
@@ -59,8 +59,11 @@ else:
     end_time = "20190325 060000"
     dfm_obs_file = "coastal_coupling_DFM_obs_points_MZB"
     verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
-    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
-    path_data_cat_sfincs = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+    path_data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    ]
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
     base_model = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
@@ -73,7 +76,7 @@ else:
 #%%
 # Define hydromt datacatalog
 #data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
-data_catalog = hydromt.data_catalog.DataCatalog([path_data_cat,path_data_cat_sfincs])
+data_catalog = hydromt.data_catalog.DataCatalog(data_libs=path_data_cat)
 
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
