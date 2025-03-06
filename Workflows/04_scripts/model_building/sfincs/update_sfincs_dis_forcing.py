@@ -29,14 +29,14 @@ else:
     CF_SLR_txt = "0"
     CF_wind_txt = "0"
     CF_rain_txt = "0"
-    wflow_root = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_root = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}"
     sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     data_cats = [
-            join(curdir, "03_data_catalogs", "datacatalog_general___linux.yml"), 
-            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+            join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
+            join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
-
 
 
 #%%
