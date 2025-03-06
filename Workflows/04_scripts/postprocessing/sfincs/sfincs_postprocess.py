@@ -163,5 +163,5 @@ if os.path.exists(join(dir_run,"sfincs_his.nc")):
         ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
         ax.set_ylabel("Inundation height [m]")
         fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
-else:
-    print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+    else:
+        print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
