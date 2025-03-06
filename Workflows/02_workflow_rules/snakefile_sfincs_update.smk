@@ -99,6 +99,8 @@ rule all_sfincs_update:
 rule add_forcing_coastal_meteo_sfincs:
     input:
         msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"),
+        dfm_postprocessing = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_450_gebco2024_MZB_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
+        dfm_his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_450_gebco2024_MZB_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
     params:
         tc_name = get_tcname,
         dir_run_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
