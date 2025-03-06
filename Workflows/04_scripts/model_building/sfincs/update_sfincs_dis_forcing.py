@@ -1,15 +1,8 @@
 # %%
 from datetime import datetime as datetime
-from datetime import timedelta
-from os.path import basename, join
-from shutil import copy
-
-import pandas as pd
-import xarray as xr
-from hydromt.config import configread
+from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
-from hydromt_sfincs import SfincsModel
 from hydromt_sfincs.sfincs_input import SfincsInput
 
 # %%
