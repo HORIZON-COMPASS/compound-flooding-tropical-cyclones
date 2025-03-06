@@ -90,7 +90,7 @@ default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow"]}
 compass-snake-dfm = { features = ["py311", "snake_dfm", "dfm", "cht"]}
-compass-snake-dfm-sfincs = { features = ["py311", "snake_dfm", "dfm", "cht" "sfincs","dataviz", "wflow"]}
+compass-snake-dfm-sfincs = { features = ["py311", "snake_dfm", "dfm", "cht", "sfincs","dataviz", "wflow"]}
 # compass-fiat-hydromt = { features = ["py311","hydromt_fiat"]}
 compass-fiat = { features = ["py311","fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
