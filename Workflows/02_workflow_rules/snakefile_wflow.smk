@@ -27,9 +27,15 @@ def get_end_time(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "../03_data_catalogs/datacatalog_general.yml"
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing.yml")
+        ]
     elif os.name == "posix": #Running on linux
-        return "../03_data_catalogs/datacatalog_general___linux.yml"
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
+        ]
 
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
