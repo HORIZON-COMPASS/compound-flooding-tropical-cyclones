@@ -1,6 +1,6 @@
 # %%
 from datetime import datetime as datetime
-
+from os.path import basename, join, exists
 from hydromt.config import configread
 from hydromt.log import setuplog
 from hydromt import data_catalog
@@ -20,12 +20,13 @@ if "snakemake" in locals():
     wind_forcing = snakemake.wildcards.wind_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
-    precip_forcing = snakemake.wildcards.forcing
+    precip_forcing = snakemake.wildcards.precip_forcing
     use_dfm = snakemake.params.use_dfm
     coastal_ts = snakemake.params.coastal_ts
     dfm_output = snakemake.params.dfm_output
     utmzone = snakemake.params.utmzone
     CF_wind_txt = snakemake.wildcards.CF_wind
+    obs_points = snakemake.params.sfincs_obs_points
 else:
     region = "sofala"
     utmzone = '36s'
@@ -39,19 +40,24 @@ else:
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]
-    CF_SLR_txt = "0"
+    CF_SLR_txt = "-0.14"
     CF_wind_txt = "0"
     CF_rain_txt = "0"
     start_time = '20190309 000000'
     end_time = '20190325 060000'
     dfm_model = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     dfm_output = f"dfm_output_{dfm_model}"
-    sfincs_mod_no_forcing = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs"
-    sfincs_mod_with_forcing = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    sfincs_mod_no_forcing = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
+    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
+    obs_points = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
 
+#%%
 data_cat = data_catalog.DataCatalog(data_cats)
 
+if not exists(sfincs_mod_with_forcing):
+    os.mkdir(sfincs_mod_with_forcing)
 #%% Create a configuration
 opt = {
     'setup_config': {
@@ -77,6 +83,9 @@ if use_dfm:
 else:
     # Add coastal water level forcing from an existing time series
     opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
+
+# Add observation points for timeserie output
+opt['setup_observation_points'] = dict(locations=obs_points, merge=False)
 
 #%%
 mod = SfincsModel(
@@ -104,3 +113,8 @@ mod.update(
 )
 
 # %%
+# Copy the subgrid folder from the base model to the event model for postprocessing of the results
+if not os.path.exists(os.path.join(sfincs_mod_with_forcing, 'subgrid')):
+    shutil.copytree(os.path.join(sfincs_mod_no_forcing, 'subgrid'), os.path.join(sfincs_mod_with_forcing, 'subgrid'))
+else:
+    print(f"Folder already exists: {os.path.join(sfincs_mod_with_forcing, 'subgrid')}")
