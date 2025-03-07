@@ -9,61 +9,117 @@ import pandas as pd
 from hydromt_sfincs import SfincsModel, utils
 import contextily as ctx  # For adding basemap tiles
 import seaborn as sns
+import yaml
+import itertools
 
+# %% Load the SFINCS model runs
+config_general  = '../../Workflows/01_config_snakemake/config_general.yml'
+# Load the YAML file
+with open(config_general, 'r') as file:
+    config = yaml.safe_load(file)
 
-# %% Load the SFINCS models
-root         = '../../sfincs_models'
-TC           = 'Idai'
-scenario_F   = 'factuals'
-scenario_CF  = 'counterfactuals'
-comp_drivers = 'compound_drivers'
-sing_drivers = 'single_drivers'
+#%%
+# Access values
+runname_id          = config['runname_ids']['Idai']
+tc_name             = runname_id['tc_name']
+sid                 = runname_id['sid']
+region              = runname_id['region']
+bbox_sfincs         = runname_id['bbox_sfincs']
+bbox_dfm            = runname_id['bbox_dfm']
+start_time          = runname_id['start_time']
+end_time            = runname_id['end_time']
+ext_days            = runname_id['ext_days']
+precip_forcing      = runname_id['precip_forcing']
+dfm_res             = runname_id['dfm_res']
+bathy               = runname_id['bathy']
+wind_forcing        = runname_id['wind_forcing']
+tidemodel           = runname_id['tidemodel']
+dfm_obs_file        = runname_id['dfm_obs_file']
+sfincs_obs_file     = runname_id['sfincs_obs_file']
+verification_points = runname_id['verification_points']
+config_sfincs_base  = runname_id['config_sfincs_base']
+utmzone             = runname_id['utmzone']
 
+# Access CF values
+CF_value_rain = runname_id['CF_value_rain']
+CF_value_wind = runname_id['CF_value_wind']
+CF_value_SLR  = runname_id['CF_value_SLR']
+#%%
+# Define model path
+# model_name     = f'event_tp_{precip_forcing}_CF{CF_value_rain}_{tidemodel}_CF{CF_value_SLR}_{wind_forcing}_CF{CF_value_wind}'
+base_path     = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/'
 
-### Factuals ###
-# compound drivers
-sfincs_root_F_PluvCoast = os.path.join(root,TC,scenario_F,comp_drivers,'sfincs_MZ_ERA5Land_nodischarge')
-mod_F_PluvCoast = SfincsModel(sfincs_root_F_PluvCoast, mode="r")
+#%%
+# Load model output
+# List to store all models
+models = []
+# Generate all combinations of CF values
+for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_SLR):
+    model_name = f'event_tp_{precip_forcing}_CF{rain}_{tidemodel}_CF{slr}_{wind_forcing}_CF{wind}'
+    model_path = f'{base_path}/{model_name}'
+    
+    print(f'Model Name: {model_name}')
+    print(f'Model Path: {model_path}')
 
-# single drivers 
-sfincs_root_F_Coast = os.path.join(root,TC,scenario_F,sing_drivers,'sfincs_MZ_coastal')
-mod_F_Coast = SfincsModel(sfincs_root_F_Coast, mode="r")
+    # Categorization logic
+    CF_values = [rain, wind, slr]
+    num_CF_diff = sum(1 for v in CF_values if v != '0')
 
-sfincs_root_F_Coast_MDT = os.path.join(root,TC,scenario_F,sing_drivers,'sfincs_MZ_coastal_MDT')
-mod_F_Coast_MDT = SfincsModel(sfincs_root_F_Coast_MDT, mode="r")
+    if num_CF_diff == 0:
+        category = "Factual"
+        cat_short = "F"
+    elif num_CF_diff == 1:
+        category = "Single Driver Counterfactual"
+        cat_short = "CF_DR_single"
+    elif num_CF_diff == 2:
+        category = "Counterfactual Driver Pair"
+        cat_short = "CF_DR_pair"
+    else:
+        category = "Counterfactual Compound Driver"
+        cat_short = "CF_DR_compound"
 
+    CF_info = { "rain": rain, "wind": wind, "SLR": slr }
+    CF_info = { param: value for param, value in CF_info.items() if value != '0' } 
 
-### Counterfactuals ###
-# compound drivers
-sfincs_root_CF_7precip_PluvCoast = os.path.join(root,TC,scenario_CF,comp_drivers,'sfincs_MZ_ERA5Land_CF7%_compd')
-mod_CF_7precip_PluvCoast = SfincsModel(sfincs_root_CF_7precip_PluvCoast, mode="r")
+    # Read Sfincs model and store in list
+    model_obj = SfincsModel(model_path, mode="r")
+    models.append({
+        "model_name": model_name,
+        "model_path": model_path,
+        "sfincs_model": model_obj,
+        "category": category,
+        "CF_info": CF_info
+    })
 
-# single drivers
-# sfincs_root_CF_noSLR_Coast = os.path.join(root,TC,scenario_CF,sing_drivers,'sfincs_MZ_SLR_isimip2015')
-# mod_CF_noSLR_Coast = SfincsModel(sfincs_root_CF_noSLR_Coast, mode="r")
+# Print results for verification
+for model in models:
+    print(f"{model['category']} -> {model['model_name']} -> {model['model_path']} -> CF_info: {model['CF_info']}")
 
-sfincs_root_CF_noSLR_Coast_MDT = os.path.join(root,TC,scenario_CF,sing_drivers,'sfincs_MZ_coastal_MDT_noSLR')
-mod_CF_noSLR_Coast_MDT = SfincsModel(sfincs_root_CF_noSLR_Coast_MDT, mode="r")
 
 # %%
-datasets = [
-    (mod_F_PluvCoast, sfincs_root_F_PluvCoast, "F_PluvCoast", "Factual", "Pluvial", "precipitation"),
-    (mod_CF_7precip_PluvCoast, sfincs_root_CF_7precip_PluvCoast, "CF_7precip_PluvCoast", "Counterfactual", "Pluvial", "precipitation"),
-    (mod_F_Coast, sfincs_root_F_Coast, "F_SLR_Coast", "Factual", "Coastal", "SLR-noMDT"),
-    (mod_F_Coast_MDT,sfincs_root_F_Coast_MDT, "F_SLR_Coast_MDT", "Factual", "Coastal", "SLR"),
-    (mod_CF_noSLR_Coast_MDT, sfincs_root_CF_noSLR_Coast_MDT, "CF_noSLR_Coast_MDT", "Counterfactual", "Coastal", "noSLR")
-]
+# datasets = [
+#     (mod_F_PluvCoast, sfincs_root_F_PluvCoast, "F_PluvCoast", "Factual", "Pluvial", "precipitation"),
+#     (mod_CF_7precip_PluvCoast, sfincs_root_CF_7precip_PluvCoast, "CF_7precip_PluvCoast", "Counterfactual", "Pluvial", "precipitation"),
+#     (mod_F_Coast, sfincs_root_F_Coast, "F_SLR_Coast", "Factual", "Coastal", "SLR-noMDT"),
+#     (mod_F_Coast_MDT,sfincs_root_F_Coast_MDT, "F_SLR_Coast_MDT", "Factual", "Coastal", "SLR"),
+#     (mod_CF_noSLR_Coast_MDT, sfincs_root_CF_noSLR_Coast_MDT, "CF_noSLR_Coast_MDT", "Counterfactual", "Coastal", "noSLR")
+# ]
 
 # %%
 # read global surface water occurance (GSWO) data to mask permanent water
-mod_F_PluvCoast.data_catalog.from_yml(os.path.join('../../COMPASS/Workflows/03_data_catalogs/datacatalog_general.yml'))
-gswo = mod_F_PluvCoast.data_catalog.get_rasterdataset("gswo", geom=mod_F_PluvCoast.region, buffer=1000)
+models[0]["sfincs_model"].data_catalog.from_yml(os.path.join('../../Workflows/03_data_catalogs/datacatalog_general.yml'))
+gswo = models[0]["sfincs_model"].data_catalog.get_rasterdataset("gswo", geom=models[0]["sfincs_model"].region, buffer=1000)
 # %%
 ### loop over the different sfincs_model to compute hmax ###
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
 
-for (data, sfincs_root, title, scenario, flood_type, driver) in (datasets):
+for model in models:
+    data        = model["sfincs_model"]  # Load the SFINCS model object
+    sfincs_root = model["model_path"]
+    title       = model["model_name"]
+
+    print(f"Processing model: {title}")
     # first we are going to select our highest-resolution elevation dataset
     depfile = join(sfincs_root, "subgrid", "dep_subgrid.tif")
     da_dep = data.data_catalog.get_rasterdataset(depfile)
