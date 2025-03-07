@@ -281,6 +281,8 @@ ax.plot(ds_his_CF_SLR_wind.time.values, ds_his_CF_SLR_wind.windmag[:, station_id
 ax.set_xlabel('Time')
 ax.set_ylabel('Wind Speed (m/s)')
 ax.set_title(f'Wind speed at {station_name}')
+ax.set_ylabel('Water Level (m)')
+ax.set_title(f'Water Level for Station {station_name}')
 
 # Add legend
 ax.legend(loc=1, fontsize=8)
