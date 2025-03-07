@@ -21,15 +21,16 @@ else:
     tc_name = "Idai"
     dfm_res = "450"
     bathy = "gebco2024_MZB"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing = "spw_IBTrACS"
     CF_SLR = -0.14
     CF_SLR_txt = "-0.14"
     CF_wind = -10
     CF_wind_txt = "-10"
     dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
-    CF_SLR_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF-0.14_{wind_forcing}_CF0'
-    CF_SLR_wind_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF-0.14_{wind_forcing}_CF-10'
+    CF_SLR_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF0'
+    CF_SLR_wind_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    CF_wind_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF0_{wind_forcing}_CF{CF_wind_txt}'
     F__model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF0_{wind_forcing}_CF0'
     dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]") 
     crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
@@ -47,6 +48,10 @@ for fname in os.listdir(os.path.join(dir_runs,CF_SLR_wind_model,'output')):
     if fname.endswith('_his.nc'):
         CF_SLR_wind_file_nc_his = os.path.join(dir_runs,CF_SLR_wind_model,'output',fname)
 
+for fname in os.listdir(os.path.join(dir_runs,CF_wind_model,'output')):
+    if fname.endswith('_his.nc'):
+        CF_wind_file_nc_his = os.path.join(dir_runs,CF_wind_model,'output',fname)
+
 for fname in os.listdir(os.path.join(dir_runs,F__model,'output')):
     if fname.endswith('_his.nc'):
         F__file_nc_his = os.path.join(dir_runs,F__model,'output',fname)
@@ -57,6 +62,9 @@ if CF_SLR_file_nc_his is not None:
 
 if CF_SLR_wind_file_nc_his is not None:
     ds_his_CF_SLR_wind = xr.open_mfdataset(CF_SLR_wind_file_nc_his, preprocess=dfmt.preprocess_hisnc)
+
+if CF_wind_file_nc_his is not None:
+    ds_his_CF_wind = xr.open_mfdataset(CF_wind_file_nc_his, preprocess=dfmt.preprocess_hisnc)
 
 if F__file_nc_his is not None:
     ds_his_F = xr.open_mfdataset(F__file_nc_his, preprocess=dfmt.preprocess_hisnc)
@@ -75,6 +83,12 @@ for fname in os.listdir(os.path.join(dir_runs,CF_SLR_wind_model,'output')):
         print(fname)
         file_nc_map_CF_SLR_wind.append(os.path.join(dir_runs,CF_SLR_wind_model,'output',fname))
 
+file_nc_map_CF_wind = []
+for fname in os.listdir(os.path.join(dir_runs,CF_wind_model,'output')):
+    if fname.endswith("map.nc"):
+        print(fname)
+        file_nc_map_CF_wind.append(os.path.join(dir_runs,CF_wind_model,'output',fname))
+
 file_nc_map_CF_SLR = []
 for fname in os.listdir(os.path.join(dir_runs,CF_SLR_model,'output')):
     if fname.endswith("map.nc"):
@@ -83,6 +97,7 @@ for fname in os.listdir(os.path.join(dir_runs,CF_SLR_model,'output')):
 
 ds_map_F           = dfmt.open_partitioned_dataset(file_nc_map_F)
 ds_map_CF_SLR_wind = dfmt.open_partitioned_dataset(file_nc_map_CF_SLR_wind)
+ds_map_CF_wind     = dfmt.open_partitioned_dataset(file_nc_map_CF_wind)
 ds_map_CF_SLR      = dfmt.open_partitioned_dataset(file_nc_map_CF_SLR)
 
 #%%
@@ -97,13 +112,15 @@ ds_map_CF_SLR      = dfmt.open_partitioned_dataset(file_nc_map_CF_SLR)
 fig, ax = plt.subplots(1,1,figsize=(10,5))
 # Find the index of the station 'BEIRA IHO'
 station_name = 'BEIRA IHO'
-station_idx_F  = ds_his_F.station.values.tolist().index(station_name)
-station_idx_CF_SLR = ds_his_CF_SLR.station.values.tolist().index(station_name)
+station_idx_F           = ds_his_F.station.values.tolist().index(station_name)
+station_idx_CF_SLR      = ds_his_CF_SLR.station.values.tolist().index(station_name)
+station_idx_CF_wind     = ds_his_CF_wind.station.values.tolist().index(station_name)
 station_idx_CF_SLR_wind = ds_his_CF_SLR_wind.station.values.tolist().index(station_name)
 
 # Plot the water level for the selected station over time for the different simulations
 ax.plot(ds_his_F.time.values, ds_his_F.waterlevel[:, station_idx_F], label='BEIRA IHO - F')
 ax.plot(ds_his_CF_SLR.time.values, ds_his_CF_SLR.waterlevel[:, station_idx_CF_SLR], label='BEIRA IHO - CF_SLR -0.14m')
+ax.plot(ds_his_CF_wind.time.values, ds_his_CF_wind.waterlevel[:, station_idx_CF_wind], label='BEIRA IHO - CF_wind -10%')
 ax.plot(ds_his_CF_SLR_wind.time.values, ds_his_CF_SLR_wind.waterlevel[:, station_idx_CF_SLR_wind], label='BEIRA IHO - CF_SLR -0.14m & CF_wind -10%')
 
 # Set labels and title
@@ -167,6 +184,9 @@ ds_map_F['mesh2d_windmag'] = np.sqrt(ds_map_F['mesh2d_windx']**2 + ds_map_F['mes
 ds_his_CF_SLR_wind['windmag'] = np.sqrt(ds_his_CF_SLR_wind['windx']**2 + ds_his_CF_SLR_wind['windy']**2)
 ds_map_CF_SLR_wind['mesh2d_windmag'] = np.sqrt(ds_map_CF_SLR_wind['mesh2d_windx']**2 + ds_map_CF_SLR_wind['mesh2d_windy']**2)
 
+ds_his_CF_wind['windmag'] = np.sqrt(ds_his_CF_wind['windx']**2 + ds_his_CF_wind['windy']**2)
+ds_map_CF_wind['mesh2d_windmag'] = np.sqrt(ds_map_CF_wind['mesh2d_windx']**2 + ds_map_CF_wind['mesh2d_windy']**2)
+
 ds_his_CF_SLR['windmag'] = np.sqrt(ds_his_CF_SLR['windx']**2 + ds_his_CF_SLR['windy']**2)
 ds_map_CF_SLR['mesh2d_windmag'] = np.sqrt(ds_map_CF_SLR['mesh2d_windx']**2 + ds_map_F['mesh2d_windy']**2)
 
@@ -209,7 +229,7 @@ ctx.add_basemap(axes[0], source=ctx.providers.Esri.WorldTopoMap, crs=ccrs.PlateC
 axes[0].set_title(f"Maximum F Wind Speed at BEIRA IHO at {time_ts_max}", fontsize=10)
 axes[0].legend(loc='lower right', fontsize=8)
 
-sc2 = ds_map_CF_SLR_wind['mesh2d_windmag'].sel(time=time_ts_max, method='nearest').ugrid.plot(ax=axes[1], cmap='viridis')
+sc2 = ds_map_CF_wind['mesh2d_windmag'].sel(time=time_ts_max, method='nearest').ugrid.plot(ax=axes[1], cmap='viridis')
 axes[1].scatter(ds_his_F.sel(station=['BEIRA IHO']).station_x_coordinate, 
                 ds_his_F.sel(station=['BEIRA IHO']).station_y_coordinate, 
                 c='red', s=5, label='BEIRA IHO')
@@ -219,7 +239,7 @@ axes[1].legend(loc='lower right', fontsize=8)
 
 # Difference Plot (ds_map_F - ds_map_CF_SLR_wind)
 wind_diff = ds_map_F['mesh2d_windmag'].sel(time=time_ts_max, method='nearest') - \
-            ds_map_CF_SLR_wind['mesh2d_windmag'].sel(time=time_ts_max, method='nearest')
+            ds_map_CF_wind['mesh2d_windmag'].sel(time=time_ts_max, method='nearest')
 vmax = wind_diff.max().compute()  # Computes max() first
 sc3 = wind_diff.ugrid.plot(ax=axes[2], cmap='RdBu_r', vmin=-vmax, vmax=vmax)
 axes[2].scatter(ds_his_F.sel(station=['BEIRA IHO']).station_x_coordinate, 
@@ -247,16 +267,13 @@ plt.tight_layout()
 plt.show()
 
 # %%
+# Plot the wind magnitude over time
 fig, ax = plt.subplots(1,1,figsize=(10,5))
-# Find the index of the station 'BEIRA IHO'
-station_name = 'BEIRA IHO'
-station_idx_F  = ds_his_F.station.values.tolist().index(station_name)
-station_idx_CF_SLR = ds_his_CF_SLR.station.values.tolist().index(station_name)
-station_idx_CF_SLR_wind = ds_his_CF_SLR_wind.station.values.tolist().index(station_name)
 
 # Plot the water level for the selected station over time
 ax.plot(ds_his_F.time.values, ds_his_F.windmag[:, station_idx_F], label='BEIRA IHO - F')
 ax.plot(ds_his_CF_SLR.time.values, ds_his_CF_SLR.windmag[:, station_idx_CF_SLR], label='BEIRA IHO - CF_SLR -0.14m')
+ax.plot(ds_his_CF_wind.time.values, ds_his_CF_wind.windmag[:, station_idx_CF_SLR_wind], label='BEIRA IHO - CF_wind -10%')
 ax.plot(ds_his_CF_SLR_wind.time.values, ds_his_CF_SLR_wind.windmag[:, station_idx_CF_SLR_wind], label='BEIRA IHO - CF_SLR -0.14m & CF_wind -10%')
 
 # Set labels and title
