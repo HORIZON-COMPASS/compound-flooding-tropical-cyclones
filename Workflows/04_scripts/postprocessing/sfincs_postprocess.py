@@ -9,6 +9,7 @@ from hydromt_sfincs import SfincsModel, utils
 # We read the snakemake parameters
 mapfile = snakemake.input.mapout
 outfile = snakemake.output.figure
+dir_model_no_forcing = snakemake.params.dir_model_no_forcing
 dir_run = snakemake.params.dir_run
 datacat = snakemake.params.datacat
 
@@ -24,13 +25,12 @@ print("Output figure basemap: ", outfile)
 
 # select the model and datacatalog
 sfincs_root = dir_run
-mod = SfincsModel(sfincs_root, mode="r")
+mod = SfincsModel(sfincs_root, data_libs=datacat, mode="r")
 
-mod.data_catalog.from_yml(datacat)
 #mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
 
 # select our highest-resolution elevation dataset
-depfile = join(sfincs_root, "subgrid", "dep_subgrid.tif")
+depfile = join(dir_model_no_forcing, "subgrid", "dep_subgrid.tif")
 da_dep = mod.data_catalog.get_rasterdataset(depfile)
 
 # read global surface water occurance (GSWO) data to mask permanent water
@@ -126,14 +126,17 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
 
 
 ### PLOT TIMESERIES OUTPUT POINTS
-hisfile = os.path.join(dir_run,"sfincs_his.nc")
-ds_his = xr.open_dataset(hisfile)
-ds_his["station_id"] = ds_his["station_id"].astype(int)
+if os.path.exists(join(dir_run,"sfincs_his.nc")):
+    hisfile = os.path.join(dir_run,"sfincs_his.nc")
+    ds_his = xr.open_dataset(hisfile)
+    ds_his["station_id"] = ds_his["station_id"].astype(int)
 
-for ii,loc_id in enumerate(ds_his['station_id'].values):
-    fig, ax = plt.subplots(1,1,figsize=(10,5))
-    ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
-    ax.grid()
-    ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
-    ax.set_ylabel("Inundation height [m]")
-    fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
+    for ii,loc_id in enumerate(ds_his['station_id'].values):
+        fig, ax = plt.subplots(1,1,figsize=(10,5))
+        ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
+        ax.grid()
+        ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
+        ax.set_ylabel("Inundation height [m]")
+        fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
+else:
+    print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
