@@ -40,14 +40,16 @@ delft_fiat = "*"
 pandas="*"
 
 [feature.sfincs.dependencies]
-hydromt = ">=0.10.0, <1.0.0"
+hydromt = ">=0.10.0, <0.10.1"
 hydromt_sfincs = ">=1.1.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
+cartopy = "*"
 
 [feature.wflow.dependencies]
 hydromt = ">=0.10.0, <1.0.0"
-hydromt_wflow = ">=0.7.0"
+hydromt_wflow = ">=0.7.0, <0.7.1"
+pyflwdir = "=0.5.8"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
