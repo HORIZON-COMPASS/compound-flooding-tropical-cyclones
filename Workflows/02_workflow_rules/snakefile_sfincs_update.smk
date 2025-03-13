@@ -123,6 +123,7 @@ rule sfincs_plot_floodmap:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{forcing}", "sfincs_map.nc"),
     params:
         dir_run = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{forcing}")),
+        dir_model_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
         datacat = get_datacatalog
     output:
         figure = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{forcing}", "plot_output", "sfincs_basemap.png")  
