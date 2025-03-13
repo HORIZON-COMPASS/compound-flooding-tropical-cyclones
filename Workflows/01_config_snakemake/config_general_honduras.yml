@@ -1,24 +1,25 @@
 # Defining parameters to run the snakemake pipeline
 
-
-root_dir:    11210471-001-compass
-dir_data:    01_Data
-dir_models:  02_Models
-dir_runs:    03_Runs
+_dir:    11210471-001-compass     # root directory of your project, it is appended to the disk drive name specified in the smk files (e.g. c:/ or  p:/)
+dir_data:    01_Data                             
+dir_models:  02_Models            # Folder where the base models will be saved (without dynamic forcing data)
+dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
 runname_ids: 
-    Eta:
-        tc_name: Eta
-        region: honduras
-        bbox_sfincs: "[-88.3,15.1,-87.6,16.0]"   
-        bbox_dfm: "[-89.0,-82.4,14.9,17.7]"     
-        start_time: 20201103 180000 
-        end_time: 20201116 000000
-        forcing: era5_hourly
-        dfm_res: '450'
-        bathy: gebco2024_HND
-        wind_forcing: spw_IBTrACS_CF0_Eta
-        tidemodel: 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-        dfm_obs_file: coastal_coupling_DFM_obs_points_HND
-        config_sfincs_base: sfincs_base_build_Honduras.yml
-        utmzone: 16p
-        verification_points: 'MZB_Sofala_IHO_obs.xyn' # need to add relevant verification points
+    Eta:                                                   # name of the model run     
+        tc_name: Eta                                       # name of the storm. For tropical cyclones, this can be the name of the TC 
+        region: honduras                                   # name of the region will be used in naming folders          
+        bbox_sfincs: "[-88.3,15.1,-87.6,16.0]"             # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]          
+        bbox_dfm: "[-89.0,-82.4,14.9,17.7]"                # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]           
+        start_time: 20201103 180000                                             
+        end_time: 20201116 000000                                       
+        forcing: era5_hourly                               # forcing dataset for the rainfall data (matching to the DataCatalog handle)         
+        wind_forcing: spw_IBTrACS_CF0_Eta                  # wind and pressure dataset (used for coastal surge modelling)     
+        bathy: gebco2024_HND                               # DataCatalog handle for the bathymetry dataset         
+        dfm_res: '450'                                     # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)                     
+        dfm_dxy_base: '0.2'                                # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)                                    
+        tidemodel: 'GTSMv41opendap'                        # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap                     
+        dfm_obs_file: coastal_coupling_DFM_obs_points_HND  # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS         
+        dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask                 
+#        dfm_verification_points: dfm_verif_points_SMST    # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes                 
+        config_sfincs_base: sfincs_base_build.yml          # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
+        utmzone: 16p                                       # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                                                     
