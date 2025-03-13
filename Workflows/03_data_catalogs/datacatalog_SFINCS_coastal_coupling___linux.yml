@@ -24,6 +24,18 @@ coastal_coupling_DFM_obs_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
+coastal_coupling_DFM_obs_points_SMST:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_SomersetUK_5mMSL_points_1km.shp
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the DFM model for Somerset UK
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
 coastal_coupling_msk_HND:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Honduras_5mMSL_polygon.geojson
@@ -45,6 +57,42 @@ coastal_coupling_msk_MZB:
     category: geography
     notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for
       Mozambique coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+coastal_coupling_msk_SMST:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Somerset_5mMSL_polygon.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on EMODnet 2018 (rel. to MSL) data
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+dfm_verif_points_MZB:
+  data_type: DataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn
+  driver: vector
+  meta:
+    category: geography
+    notes: observation points
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+dfm_verif_points_SMST:
+  data_type: DataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/Somerset_verification_points.xyn
+  driver: vector
+  meta:
+    category: geography
+    notes: observation points
     source_author: Natalia Aleksandrova
     source_license: na
     source_url: none

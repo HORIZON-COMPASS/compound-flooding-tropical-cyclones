@@ -29,14 +29,13 @@ if "snakemake" in locals():
     bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
     output_bbox = ast.literal_eval(snakemake.params.output_bbox)
     dfm_obs_file = snakemake.params.dfm_obs_file
-    verification_points = os.path.abspath(snakemake.params.verif_points_file)
+    verification_points = os.path.abspath(snakemake.params.verif_points)
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
     path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
     model_name = snakemake.params.model_name
     dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
     dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
     dimrset_folder = os.path.abspath(snakemake.params.dimrset)
-    uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
     submit_script_file = os.path.abspath(snakemake.params.submit_script_file)
 else:
     region = "sofala"
@@ -58,7 +57,6 @@ else:
     dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
     dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
-    uniformwind_filename = "p:/11210471-001-compass/01_Data/uniformwind0.wnd"
     submit_script_file = 'run_parallel.bat'
 
 #%%
@@ -170,7 +168,7 @@ else:
 # Can we add option for spiderweb+ERA5? Could not make it work yet. -> Natalia: as far as I know that is not possible
 
 # To be adjusted to fit both windows and linux
-if meteo_type=='ERA5': # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
+if 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
     dir_output_data_era5 = os.path.join(dir_output_bc,'meteo', 'ERA5')
     os.makedirs(dir_output_data_era5, exist_ok=True)
         
@@ -193,10 +191,14 @@ elif meteo_type == 'spiderweb':
     spw_file = os.path.basename(spw_file_origin)
     spw_copy = os.path.join(dir_output_main,spw_file)
     shutil.copyfile(spw_file_origin, spw_copy)
-    shutil.copyfile(uniformwind_filename,os.path.join(dir_output_main,"uniformwind0.wnd"))
+
+    # Add uniform wind file to set background wind speed to 0 and enable blending of the spw file with the background wind
+    uniwind_path = os.path.join(dir_output_main,"uniformwind0.wnd")
+    with open(uniwind_path, 'w', encoding='utf-8') as file:
+        file.write('0 0 0\n 1728000 0 0')    
 
     # Create forcing with only file names for Linux
-    ext_old.forcing.append(create_forcing('windxy', uniformwind_filename, hcdfm.ExtOldFileType.TimeSeries, 
+    ext_old.forcing.append(create_forcing('windxy', uniwind_path, hcdfm.ExtOldFileType.TimeSeries, 
                                       hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override, use_basename=True))
     ext_old.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
                                       hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add, use_basename=True))
@@ -223,7 +225,7 @@ tmp['names'] = tmp.index
 
 try:
     if verification_points:  # Ensures 'verification_points' is not empty or None
-        tmp2 = pd.read_table(verification_points, sep=" ", names=['x', 'y', 'names'])
+        tmp2 = pd.read_table(data_catalog[verification_points].path, sep=" ", names=['x', 'y', 'names'])
         pd_obs = tmp2._append(tmp, ignore_index=True)  
         del tmp, tmp2
     else:

@@ -19,6 +19,8 @@ if "snakemake" in locals():
     config_file = snakemake.input.config_file
     data_cats = snakemake.params.data_cats
     bbox = ast.literal_eval(snakemake.params.arg_bbox)
+    bathy = snakemake.params.bathy
+    dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
     model_dir = r'p:\11210471-001-compass\02_Models\quelimane\Freddy2\sfincs'
     config_file = r'c:\Git_repos\COMPASS\Workflows\config_sfincs\sfincs_base_build.yml'
@@ -28,7 +30,8 @@ else:
         r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
     ]
     bbox ="[36.7,-18.35,37.41,-17.64]"
-
+    bathy = 'emodnet_bathy_E4_2018_msl'
+    dfm_coastal_mask = 'coastal_coupling_msk_MZB'
 
 if not exists(model_dir):
     os.mkdir(model_dir)
@@ -37,6 +40,11 @@ if not exists(model_dir):
 logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
 opt = configread(config_file, abs_path=True)  # read settings from ini file
 kwargs = opt.pop("global", {})
+
+# fill in the configuration for SFINCS with arguments from the snakemake config file
+opt['setup_dep']['datasets_dep'] = opt['setup_dep']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
+opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
+opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
 
 #%%
 region = get_local_vector_data(
