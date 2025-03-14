@@ -23,14 +23,15 @@ if "snakemake" in locals():
     precip_forcing = snakemake.wildcards.precip_forcing
     dfm_output = snakemake.params.dfm_output
     utmzone = snakemake.params.utmzone
-    CF_wind_txt = snakemake.wildcards.CF_wind
     obs_points = snakemake.params.sfincs_obs_points
+    CF_wind_txt = snakemake.wildcards.CF_wind
+    CF_rain = float(snakemake.wildcards.CF_rain)
 else:
     region = "sofala"
     utmzone = '36s'
     tc_name = "Idai"
     wind_forcing = 'spw_IBTrACS'
-    precip_forcing = 'era5_hourly'
+    precip_forcing = 'ERA5Land'
     dfm_res = "450"
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
@@ -39,10 +40,11 @@ else:
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
-    ]
+    ]    
+    CF_rain = -7
+    CF_rain_txt = f"{CF_rain}"
     CF_SLR_txt = "-0.14"
     CF_wind_txt = "0"
-    CF_rain_txt = "0"
     start_time = '20190309 000000'
     end_time = '20190325 060000'
     dfm_model = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
@@ -72,7 +74,7 @@ opt["setup_config"]["tstart"] = start_time
 opt["setup_config"]["tstop"] = end_time
 
 # Add rainfall forcing
-opt['setup_precip_forcing_from_grid'] = dict(precip=precip_forcing,aggregate=False)
+opt['setup_precip_forcing_from_grid'] = dict(precip=[f'{precip_forcing}_{tc_name}_CF{CF_rain_txt}'],aggregate=False)
 
 # Add coastal water level forcing
 opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)

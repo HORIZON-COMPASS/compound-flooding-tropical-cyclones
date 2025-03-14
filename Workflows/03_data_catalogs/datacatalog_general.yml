@@ -1,6 +1,6 @@
 meta:
   root: p:\
-ERA5land_Idai:
+ERA5land_Idai_CF0:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/ERA5_land/units_corrected/era5land_tp_long.nc
   driver: netcdf
