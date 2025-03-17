@@ -19,24 +19,26 @@ start_date = np.datetime64('2019-03-09T00:00')
 end_date = np.datetime64('2019-03-24T00:00') 
 #%% Reading in ISIMIP data
 cat = hydromt.DataCatalog("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+cat = hydromt.DataCatalog("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
 # %%
-dfm_idai = cat.get_dataset("dfm_output_MZB_Idai")
-dfm_idai_CF = dfm_idai.copy()
+# dfm_idai = cat.get_dataset("dfm_output_MZB_Idai")
+dfm_Idai_CF0 = cat.get_dataset("dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0")
+dfm_Idai_CF0_copy = dfm_Idai_CF0.copy()
 
 # %%
-dfm_idai_CF['waterlevel'] = dfm_idai['waterlevel'] - 0.141
+dfm_Idai_CF0_copy['waterlevel'] = dfm_Idai_CF0_copy['waterlevel'] - 0.14
 # %% Export the counterfactual ds
 outfile_path = "p:/11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/"
 
-dfm_idai_CF.to_netcdf(outfile_path + "dfm_output_MZB_Idai_SLR2015.his")
-dfm_idai_CF.close()
+dfm_Idai_CF0_copy.to_netcdf(outfile_path + "dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_SLR2015.his")
+dfm_Idai_CF0_copy.close()
 
 # %%
 # Plot the mean data
 # Set up the subplots
 fig, ax = plt.subplots(figsize=(15, 10))
 # mean_data_F.plot(ax=ax)
-dfm_idai_CF['waterlevel'].plot(ax=ax)
+dfm_Idai_CF0_copy['waterlevel'].plot(ax=ax)
 
 # %% Select water level data for one station
 # Create the plot

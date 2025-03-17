@@ -22,6 +22,21 @@ TAMSAT_Idai_-7:
   meta:
     notes: Copied TAMSAT_Idai dataset and adjusted with CF value -7%
   crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP:
+  data_type: GeoDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_SLR2015.his
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
 dfm_output_MZB_Idai_noSLR2015:
   data_type: GeoDataset
   path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_MZB_Idai_SLR2015.his

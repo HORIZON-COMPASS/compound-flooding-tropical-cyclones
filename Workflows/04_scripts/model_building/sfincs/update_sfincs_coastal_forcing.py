@@ -33,7 +33,7 @@ else:
     utmzone = '36s'
     tc_name = "Idai"
     wind_forcing = 'spw_IBTrACS'
-    precip_forcing = 'ERA5Land'
+    precip_forcing = 'era5_hourly'
     dfm_res = "450"
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
@@ -43,16 +43,17 @@ else:
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]    
-    CF_rain = -7
+    CF_rain = 0
     CF_rain_txt = f"{CF_rain}"
     CF_SLR_txt = "-0.14"
     CF_wind_txt = "0"
     start_time = '20190309 000000'
     end_time = '20190325 060000'
     dfm_model = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    dfm_output = f"dfm_output_{dfm_model}"
+    # dfm_output = f"dfm_output_{dfm_model}"
+    dfm_output = "dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP"
     sfincs_mod_no_forcing = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
-    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
+    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_toSFINCSwaterlevel_{wind_forcing}_CF{CF_wind_txt}")
     obs_points = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
 
 #%%
@@ -76,7 +77,7 @@ opt["setup_config"]["tstart"] = start_time
 opt["setup_config"]["tstop"] = end_time
 
 # Add rainfall forcing
-opt['setup_precip_forcing_from_grid'] = dict(precip=[f'{precip_forcing}_{tc_name}_CF{CF_rain_txt}'],aggregate=False)
+opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}',aggregate=False)
 
 #Add coastal water level forcing - either from DFM or from an existing time series such as GTSM
 if use_dfm:
@@ -120,3 +121,5 @@ if not os.path.exists(os.path.join(sfincs_mod_with_forcing, 'subgrid')):
     shutil.copytree(os.path.join(sfincs_mod_no_forcing, 'subgrid'), os.path.join(sfincs_mod_with_forcing, 'subgrid'))
 else:
     print(f"Folder already exists: {os.path.join(sfincs_mod_with_forcing, 'subgrid')}")
+
+# %%
