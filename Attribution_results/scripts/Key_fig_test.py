@@ -90,8 +90,19 @@ for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_
         "model_path": model_path,
         "sfincs_model": model_obj,
         "category": category,
+        "cat_short": cat_short,
         "CF_info": CF_info
     })
+
+extra_model_obj = SfincsModel("p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0", mode="r")
+models.append({
+    "model_name": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
+    "model_path": "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
+    "sfincs_model": extra_model_obj,
+    "category": "Single Driver Counterfactual",
+    "cat_short": "CF_DR_single"
+    "CF_info": { "rain": 0, "wind": 0, "SLR": -0.14 }
+})
 
 # Print results for verification
 for model in models:
