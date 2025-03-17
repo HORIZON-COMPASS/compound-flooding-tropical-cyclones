@@ -22,6 +22,14 @@ def get_config(wildcards):
     config_sfincs_base = config["runname_ids"][wildcards.runname]['config_sfincs_base']
     return join(curdir, '..', "05_config_models", "02_sfincs", config_sfincs_base)
 
+def get_bathy(wildcards):
+    bathy = config["runname_ids"][wildcards.runname]["bathy"]
+    return bathy
+
+def get_dfm_coastal_mask(wildcards):
+    dfm_coastal_mask = config["runname_ids"][wildcards.runname]["dfm_coastal_mask"]
+    return dfm_coastal_mask 
+
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return [
@@ -50,7 +58,9 @@ rule make_base_model_sfincs:
     params:
         arg_bbox = get_bbox,
         dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
-        data_cats = get_datacatalog
+        data_cats = get_datacatalog,
+        bathy = get_bathy,
+        dfm_coastal_mask = get_dfm_coastal_mask,
     input:
         config_file = get_config,
     output: 

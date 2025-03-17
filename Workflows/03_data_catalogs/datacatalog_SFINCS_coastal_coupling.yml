@@ -24,6 +24,18 @@ coastal_coupling_DFM_obs_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
+coastal_coupling_DFM_obs_points_SMST:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_SomersetUK_5mMSL_points_1km.shp
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the DFM model for Somerset UK
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
 coastal_coupling_msk_HND:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Honduras_5mMSL_polygon.geojson

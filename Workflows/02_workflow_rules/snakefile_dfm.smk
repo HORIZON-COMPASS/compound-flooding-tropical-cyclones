@@ -6,14 +6,13 @@ from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    p_dir = join("p:/")
+    disk_dir = join("p:/")
 elif os.name == "posix": #Running on linux
-    p_dir = join("/p")
+    disk_dir = join("/p")
 
-root_dir = join(p_dir,config['root_dir'])
+root_dir = join(disk_dir,config['root_dir'])
 
 # define other directories:
-dir_data   = config["dir_data"]
 dir_models = config["dir_models"]
 dir_runs   = config["dir_runs"]
 
@@ -42,10 +41,18 @@ def get_sfincs_bbox(wildcards):
 def get_dfm_bbox(wildcards):
     bbox = config["runname_ids"][wildcards.runname]["bbox_dfm"]
     return bbox
+    
+def get_dfm_dxy_base(wildcards):
+    dfm_dxy_base = config["runname_ids"][wildcards.runname]["dfm_dxy_base"]
+    return dfm_dxy_base
 
 def get_dfm_obs_points(wildcards):
     dfm_obs_file = config["runname_ids"][wildcards.runname]["dfm_obs_file"]
     return dfm_obs_file
+
+def get_dfm_verification_points(wildcards):
+    verification_points = config["runname_ids"][wildcards.runname]["dfm_verification_points"]
+    return verification_points
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -110,6 +117,7 @@ rule make_model_dfm_base:
         data_cat = get_datacatalog,
         dfm_bbox = get_dfm_bbox,
         output_bbox = get_sfincs_bbox,
+        dfm_dxy_base = get_dfm_dxy_base,
     output: 
         dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
         ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}", "ext_file_new.ext"),
@@ -142,7 +150,7 @@ rule make_dfm_model_event:
         end_time     = get_end_time,
         dfm_bbox     = get_dfm_bbox,
         output_bbox  = get_sfincs_bbox,
-        verif_points_file = lambda wildcards: join(root_dir, dir_data, "Coastal_boundary", "points", config["runname_ids"][wildcards.runname]["verification_points"]),
+        verif_points = get_dfm_verification_points,
         data_cat     = get_datacatalog,
         dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
@@ -152,6 +160,7 @@ rule make_dfm_model_event:
         mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
         submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     script:
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
