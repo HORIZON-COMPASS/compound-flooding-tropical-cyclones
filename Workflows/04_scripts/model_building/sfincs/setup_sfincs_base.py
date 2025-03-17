@@ -23,14 +23,14 @@ if "snakemake" in locals():
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
     model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
-    config_file = '../../../05_config_models/02_sfincs/sfincs_base_build_MZB.yml'
+    config_file = '../../../05_config_models/02_sfincs/sfincs_base_build.yml'
     data_cats = [
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
     ]
     bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
-    bathy = 'emodnet_bathy_E4_2018_msl'
+    bathy = 'gebco2024_MZB'
     dfm_coastal_mask = 'coastal_coupling_msk_MZB'
 
 if not exists(model_dir):
