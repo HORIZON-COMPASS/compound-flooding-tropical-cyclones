@@ -164,11 +164,18 @@ for model in models:
     del da_dep, da_zsmax, da_hmax, da_hmax_masked
 
 # %% Create subplots and set up figure title
-fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(8, 15), constrained_layout=True)
-fig.suptitle("Masked hmax: pluvial & coastal flooding", fontsize=16, y=1.02)
+projection = models[0]['sfincs_model'].crs.to_epsg()
+# Determine subplot grid size
+num_models = len(models)
+num_cols = 2  # Adjust as needed
+num_rows = math.ceil(num_models / num_cols)
 
-# Define high-resolution basemap source
-basemap_source = ctx.providers.Esri.WorldImagery
+fig, axes = plt.subplots(nrows=num_rows, 
+                         ncols=num_cols, 
+                         figsize=(8, 10), 
+                         constrained_layout=True, 
+                         subplot_kw={"projection": ccrs.epsg(projection)})
+fig.suptitle("Masked hmax", fontsize=12, y=1.02)
 
 # Loop through datasets and plot
 for model, ax in zip(models, axes.flatten()):
@@ -176,12 +183,12 @@ for model, ax in zip(models, axes.flatten()):
     im = model['sfincs_model'].results['hmax_masked'].plot.pcolormesh(
         ax=ax, cmap="Blues", vmin=0, vmax=3.0, add_colorbar=False
     )
-    ctx.add_basemap(ax, source=basemap_source, zoom=12, crs=model['sfincs_model'].results['hmax_masked'].rio.crs, attribution=False)
+    ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].results['hmax_masked'].rio.crs, attribution=False)
     
     # Set axis labels and title
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
-    ax.set_title(model['model_name'], fontsize=12)
+    ax.set_title(model['category'], fontsize=11)
 
 # Add colorbar and label
 fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04).set_label('Masked hmax (m)', rotation=270, labelpad=15)
@@ -191,10 +198,6 @@ plt.show()
 
 #%% Create plots of the difference between F and CF scenarios
 # Calculate the differences
-def hmax_CF_difference(factual_model, counterfactual_model):
-    hmax_diff = factual_model['sfincs_model'].results['hmax_masked'] - counterfactual_model['sfincs_model'].results['hmax_masked'] 
-    return hmax_diff
-
 factual_hmax = None 
 
 for model in models:
@@ -267,382 +270,103 @@ plt.show()
 
 
 # %% Calculate the surface area of one grid cell
-dx = abs(mod_F_PluvCoast.results['hmax_masked'].x[1] - mod_F_PluvCoast.results['hmax_masked'].x[0])  # Grid resolution in x-direction (meters)
-dy = abs(mod_F_PluvCoast.results['hmax_masked'].y[1] - mod_F_PluvCoast.results['hmax_masked'].y[0])  # Grid resolution in y-direction (meters)
+dx = abs(models[0]['sfincs_model'].results['hmax_masked'].x[1] - models[0]['sfincs_model'].results['hmax_masked'].x[0])  # Grid resolution in x-direction (meters)
+dy = abs(models[0]['sfincs_model'].results['hmax_masked'].y[1] - models[0]['sfincs_model'].results['hmax_masked'].y[0])  # Grid resolution in y-direction (meters)
 cell_area = dx * dy 
 
 # %% Calculate the area of the flooded cells as flood extent with hmax_masked as variable
 flood_characs = []
 
-for (data, sfincs_root, name, scenario, flood_type, driver) in (datasets):
-    flooded_cells = data.results['hmax_masked'] > 0  # Create a boolean mask
+for model in models:
+    flooded_cells = model['sfincs_model'].results['hmax_masked'] > 0  # Create a boolean mask
     flood_extent = (flooded_cells * cell_area).sum().compute()  # Compute the total flooded area
 
     # Convert the result to square kilometers
     flood_extent_km2 = flood_extent / 1e6  # Convert square meters to square kilometers
     
     # Store the result in the dictionary
-    flood_characs.append({
-        'name': name,
-        'scenario': scenario,
-        'flood_type': flood_type,
-        'driver': driver,
-        'flood_extent_km2': flood_extent_km2
-    })
+    model['flood_extent_km2'] = flood_extent_km2
+    print(f"for model {model['model_name']}, the flooded area: {flood_extent_km2}")
 
-#%% Print results
-for i, data in enumerate(flood_characs):
-    print(f"Dataset: {data['name']}, Flooded Area: {data['flood_extent_km2'].item()} km²")
 
 # %% Calculate the volume for each flooded cell (depth * area)
-for (data, sfincs_root, name, scenario, flood_type, driver), characs in zip(datasets, flood_characs):
-    flooded_cells = data.results['hmax_masked'] > 0  # Create a boolean mask
-    flood_volume = (data.results['hmax_masked'] * flooded_cells * cell_area).sum().compute()  # Sum the volume of all flooded cells
+for model in models:
+    flooded_cells = model['sfincs_model'].results['hmax_masked'] > 0  # Create a boolean mask
+    flood_volume = (model['sfincs_model'].results['hmax_masked'] * flooded_cells * cell_area).sum().compute()  # Sum the volume of all flooded cells
 
     # Convert flood volume to cubic kilometers (optional, for readability)
     flood_volume_km3 = flood_volume / 1e9  # Convert cubic meters to cubic kilometers
 
-    if name == characs['name']:
-        characs['flood_volume_km3'] = flood_volume_km3
+    model['flood_volume_km3'] = flood_volume_km3
+    print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
 
-#%% Print results
-for i, data in enumerate(flood_characs):
-    print(f"Dataset: {data['name']}, Flood Volume: {data['flood_volume_km3'].item()} km³")
 #%% Calculate the flood volume difference between the factual and counterfactual datasets:
-for data in flood_characs:
-    if data['flood_type'] == 'Pluvial' and data['scenario'] == 'Counterfactual' and data['driver'] == 'precipitation':
-        counterfactual_volume = data['flood_volume_km3']
-        factual_data = next(d for d in flood_characs if d['flood_type'] == 'Pluvial' and d['scenario'] == 'Factual' and d['driver'] == 'precipitation')
-        factual_volume = factual_data['flood_volume_km3']
 
-        volume_dif_prc = (factual_volume - counterfactual_volume)/factual_volume * 100
-        data['Volume_diff_from_F(%)'] = volume_dif_prc
+factual_flood_volume = None 
+factual_flood_extent = None 
 
+for model in models:
+        # Store factual hmax for comparison
+    if model["category"] == "Factual":
+        factual_flood_volume = model['flood_volume_km3']
+        factual_flood_extent = model['flood_extent_km2']
 
-    if data['flood_type'] == 'Coastal' and data['scenario'] == 'Counterfactual' and data['driver'] == 'noSLR':
-        counterfactual_volume = data['flood_volume_km3']
-        factual_data = next(d for d in flood_characs if d['flood_type'] == 'Coastal' and d['scenario'] == 'Factual' and d['driver'] == 'SLR')
-        factual_volume = factual_data['flood_volume_km3']
+    # Compute difference for counterfactual models
+    flood_volume_diff = None
 
-        volume_dif_prc = (factual_volume - counterfactual_volume)/factual_volume * 100
-        data['Volume_diff_from_F(%)'] = volume_dif_prc
+    if factual_flood_volume is not None and model["category"] != "Factual":
+        flood_volume_diff = (factual_flood_volume - model['flood_volume_km3']) / factual_flood_volume * 100
+        model['Volume_diff_from_F(%)'] = flood_volume_diff
+        print(f"flood_volume_diff calculated for {model['model_name']}")
 
-#%%
-# Sample Data
-categories = ['Flood drivers']
-data = {
-    'Precipitation': [np.random.normal(loc=5, scale=2, size=100)],
-    'Wind': [np.random.normal(loc=2, scale=1, size=100)],
-    'SLR': [np.random.normal(loc=3, scale=1, size=100)],
-    'Compound': [np.random.normal(loc=6, scale=1, size=100)],
-}
-
-# Define spacing parameters
-n_sets = len(data)
-n_categories = len(categories)
-group_width = 0.8  # Reduce group width to tighten spacing
-set_spacing = 0.2  # Less spacing between boxes
-box_width = 0.12  # Keep boxes narrow
-positions = []
-
-# Compute positions for each box
-for i, category in enumerate(categories):
-    base = i * (group_width + 1.5)  # Adjust category spacing
-    positions.extend([base + j * set_spacing for j in range(n_sets)])
-
-# Flatten data for plotting
-flattened_data = [item for sublist in zip(*data.values()) for item in sublist]
-
-# Plot
-fig, ax = plt.subplots(figsize=(8, 5))  # Smaller figure size
-box = ax.boxplot(flattened_data, positions=positions, widths=box_width, patch_artist=True)
-
-# Add colors for each set
-colors = ['lightblue', 'lightgreen', 'coral', 'pink']
-for patch, color in zip(box['boxes'], colors * n_categories):
-    patch.set_facecolor(color)
-
-# Custom x-ticks for categories
-category_centers = [(i * (group_width + 1.5) + (group_width - set_spacing) / 2) for i in range(n_categories)]
-ax.set_xticks(category_centers)
-ax.set_xticklabels(categories, fontsize=14)
-
-# Labels and grid
-ax.set_ylabel('Diff in flood volume [%]', fontsize=14)
-ax.set_title('Climate Attribution of Driver Contributions to Compound Flood from TC Idai', fontsize=16)
-ax.axhline(0, color='black', linewidth=0.8, linestyle='--')  # Zero line for positive/negative values
-ax.grid(axis='y', linestyle='--', alpha=0.7)
-
-# Ensure x-axis label is properly centered
-ax.set_xlabel('')
-
-# Legend
-handles = [plt.Line2D([0], [0], color=color, lw=4, label=key) for key, color in zip(data.keys(), colors)]
-ax.legend(handles, data.keys(), title='Driver', loc='upper left', fontsize=14, title_fontsize=14)
-
-plt.tight_layout()
-plt.show()
-
+    flood_extent_diff = None
+    if factual_flood_extent is not None and model["category"] != "Factual":
+        flood_extent_diff = (factual_flood_extent - model['flood_extent_km2']) / factual_flood_extent * 100
+        model['Extent_diff_from_F(%)'] = flood_extent_diff
+        print(f"flood_extent_diff calculated for {model['model_name']}")
 
 #%%
-# Define flood types and their suffixes
-flood_types = {
-    'Pluvial': 'pluv',
-    'Fluvial': 'fluv',
-    'Coastal': 'coast',
-    'Compound': 'cmpd'
-}
+# Now create a DataFrame for plotting, excluding models with category "Factual"
+model_names = []
+volume_diffs = []
+drivers = []
 
-# Define drivers
-drivers = ['precipitation', 'temperature', 'wind', 'noSLR']
+for model in models:
+    if model['category'] != "Factual":
+        model_names.append(model["model_name"])
+        volume_diff_value = model["Volume_diff_from_F(%)"].values.flatten()[0]
+        volume_diffs.append(volume_diff_value)
 
-# Create dictionaries to store values for each flood type and driver
-driver_contributions = {
-    'precipitation': {},
-    'temperature': {},
-    'wind': {},
-    'noSLR': {}
-}
+        CF_info = model['CF_info']
+        # Check if each driver is non-zero and construct the description
+        if CF_info.get("rain") != 0 and CF_info.get("wind") != 0 and CF_info.get("SLR") != 0:
+            drivers.append("Compound")
+        elif CF_info.get("rain") != 0 and CF_info.get("wind") != 0:
+            drivers.append("Rain & wind")
+        elif CF_info.get("rain") != 0 and CF_info.get("SLR") != 0:
+            drivers.append("Rain & SLR")
+        elif CF_info.get("wind") != 0 and CF_info.get("SLR") != 0:
+            drivers.append("Wind & SLR")
+        elif CF_info.get("rain") != 0:
+            drivers.append("Rain")
+        elif CF_info.get("wind") != 0:
+            drivers.append("Wind")
+        elif CF_info.get("SLR") != 0:
+            drivers.append("SLR")
 
-# Iterate through flood types and drivers to generate np.array datasets
-for flood_type, suffix in flood_types.items():
-    for driver in drivers:
-        # Filter and create an array for the current flood type and driver
-        driver_values = np.array([
-            d['Volume_diff_from_F(%)'] for d in flood_characs
-            if d['flood_type'] == flood_type and d['scenario'] == 'Counterfactual' and d['driver'] == driver
-        ])
-        
-        # Ensure an empty array is created if no matching values are found
-        if driver_values.size == 0:
-            driver_values = np.array([])
+# Create a DataFrame for seaborn plotting
+df = pd.DataFrame({
+    "Model name": model_names,
+    "Flood volume difference (F-CF in %)": volume_diffs,
+    "CF driver": drivers
+})
 
-        # Use the flood type suffix as the key
-        dataset_name = f"{suffix}"
-        driver_contributions[driver][dataset_name] = driver_values
-
-#%%
-### Make the plot ###
-categories = ['Pluvial', 'Fluvial', 'Coastal', 'Compound']
-data = {
-    'Precipitation': [
-        driver_contributions['precipitation']['pluv'],
-        driver_contributions['precipitation']['fluv'],
-        driver_contributions['precipitation']['coast'],
-        driver_contributions['precipitation']['cmpd']
-    ],
-    'Temperature': [
-        driver_contributions['temperature']['pluv'],
-        driver_contributions['temperature']['fluv'],
-        driver_contributions['temperature']['coast'],
-        driver_contributions['temperature']['cmpd']
-    ],
-    'Wind': [
-        driver_contributions['wind']['pluv'],
-        driver_contributions['wind']['fluv'],
-        driver_contributions['wind']['coast'],
-        driver_contributions['wind']['cmpd']
-    ],
-    'SLR': [
-        driver_contributions['noSLR']['pluv'],
-        driver_contributions['noSLR']['fluv'],
-        driver_contributions['noSLR']['coast'],
-        driver_contributions['noSLR']['cmpd']
-    ],
-}
-
-# Prepare the data for seaborn
-flat_data = []
-for category, values in zip(categories, zip(*data.values())):
-    for driver, driver_values in zip(data.keys(), values):
-        flat_data.extend([(category, driver, value) for value in driver_values])
-
-df = pd.DataFrame(flat_data, columns=['Category', 'Driver', 'Value'])
-
-# Plot
-plt.figure(figsize=(12, 6))
-sns.swarmplot(data=df, x='Category', y='Value', hue='Driver', dodge=True, palette='Set2')
-
-# Customization
-plt.axhline(0, color='black', linewidth=0.8, linestyle='--')  # Zero line for positive/negative values
-plt.title('Climate Attribution of Driver Contributions to Compound Flood from TC Idai')
-plt.ylabel('Diff in Flood Volume [%]')
-plt.xlabel('Flood Type')
-plt.legend(title='Driver Contributions', bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-
-plt.show()
+sns.catplot(data=df, 
+            x="CF driver", 
+            y="Flood volume difference (F-CF in %)", 
+            kind="swarm", 
+            height=6, 
+            aspect=2)
 
 
-
-
-
-# %% 
-                      #####################
-                    ###### EXAMPLES ########
-                      #####################
-# Sample data
-categories = ['Pluvial', 'Fluvial', 'Coastal', 'Compound']
-data = {
-    'Pluvial': [np.random.normal(loc=5, scale=2, size=5),
-                np.random.normal(loc=4, scale=2, size=5),
-                np.random.normal(loc=6, scale=2, size=5),
-                np.random.normal(loc=6, scale=2, size=5)],
-    'Fluvial': [np.random.normal(loc=-3, scale=1.5, size=5),
-                np.random.normal(loc=-4, scale=1.5, size=5),
-                np.random.normal(loc=-2, scale=1.5, size=5),
-                np.random.normal(loc=-2, scale=1.5, size=5)],
-    'Coastal': [np.random.normal(loc=2, scale=1, size=5),
-                np.random.normal(loc=3, scale=1, size=5),
-                np.random.normal(loc=1, scale=1, size=5),
-                np.random.normal(loc=1, scale=1, size=5)],
-    'Compound': [np.random.normal(loc=2, scale=1, size=5),
-                 np.random.normal(loc=3, scale=1, size=5),
-                 np.random.normal(loc=1, scale=1, size=5),
-                 np.random.normal(loc=1, scale=1, size=5)],
-}
-
-# Create positions for the boxplots
-n_sets = len(data)
-n_categories = len(categories)
-group_width = 1  # Width of each group of boxes
-set_spacing = group_width / n_sets
-positions = []
-
-for i, category in enumerate(categories):
-    base = i * (group_width + 0.5)  # 0.5 adds spacing between categories
-    positions.extend([base + j * set_spacing for j in range(n_sets)])
-
-# Flatten the data for plotting
-flattened_data = [item for sublist in zip(*data.values()) for item in sublist]
-
-# Plot
-fig, ax = plt.subplots(figsize=(10, 6))
-box = ax.boxplot(flattened_data, positions=positions, widths=0.2, patch_artist=True)
-
-# Add colors for each set
-colors = ['lightblue', 'lightgreen', 'coral', 'gold']  # Extended to include 4 colors
-for patch, color in zip(box['boxes'], colors * n_categories):
-    patch.set_facecolor(color)
-
-# Custom x-ticks for categories
-category_centers = [(i * (group_width + 0.5) + (group_width - set_spacing) / 2) for i in range(n_categories)]
-ax.set_xticks(category_centers)
-ax.set_xticklabels(categories)
-
-# Labels and grid
-ax.set_ylabel('Diff in Flood Volume [%]')
-ax.set_title('Boxplot with Grouped Boxes and Spaced Categories')
-ax.axhline(0, color='black', linewidth=0.8, linestyle='--')  # Zero line for positive/negative values
-ax.grid(axis='y', linestyle='--', alpha=0.7)
-
-# Legend
-handles = [plt.Line2D([0], [0], color=color, lw=4, label=key) for key, color in zip(data.keys(), colors)]
-ax.legend(handles, data.keys(), title='Data Sets', loc='upper left')
-
-plt.tight_layout()
-plt.show()
-
-
-# %%
-# MAKE A VIOLIN PLOT
-# Prepare the data for seaborn
-flat_data = []
-for category, values in zip(categories, zip(*data.values())):
-    for dataset_index, dataset_values in enumerate(values):
-        flat_data.extend([(category, f"Dataset {dataset_index+1}", value) for value in dataset_values])
-
-df = pd.DataFrame(flat_data, columns=['Category', 'Dataset', 'Value'])
-
-# Plot
-plt.figure(figsize=(12, 6))
-sns.violinplot(data=df, x='Category', y='Value', hue='Dataset', dodge=True, palette='Set2', inner='point')
-
-# Customization
-plt.axhline(0, color='black', linewidth=0.8, linestyle='--')  # Zero line for positive/negative values
-plt.title('Climate Attribution Data by Category (Violin Plot)')
-plt.ylabel('Diff in Flood Volume [%]')
-plt.xlabel('Flood Type')
-plt.legend(title='Driver', bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-
-plt.show()
-
-#%%
-
-# Sample data for drivers (precipitation, temperature, etc.)
-categories = ['Pluvial', 'Fluvial', 'Coastal', 'Compound']
-data = {
-    'Pluvial': [np.random.normal(loc=5, scale=2, size=10),
-                np.random.normal(loc=4, scale=2, size=10),
-                np.random.normal(loc=6, scale=2, size=10),
-                np.random.normal(loc=6, scale=2, size=10)],
-    'Fluvial': [np.random.normal(loc=-3, scale=1.5, size=10),
-                np.random.normal(loc=-4, scale=1.5, size=10),
-                np.random.normal(loc=-2, scale=1.5, size=10),
-                np.random.normal(loc=-2, scale=1.5, size=10)],
-    'Coastal': [np.random.normal(loc=2, scale=1, size=10),
-                np.random.normal(loc=3, scale=1, size=10),
-                np.random.normal(loc=1, scale=1, size=10),
-                np.random.normal(loc=1, scale=1, size=10)],
-    'Compound': [np.random.normal(loc=2, scale=1, size=10),
-                 np.random.normal(loc=3, scale=1, size=10),
-                 np.random.normal(loc=1, scale=1, size=10),
-                 np.random.normal(loc=1, scale=1, size=10)],
-}
-
-# Extra base scenario data for the Pluvial Precipitation
-extra_precipitation_data = np.random.normal(loc=7, scale=2, size=100)  # Extra data for Pluvial + Precipitation
-
-# Prepare the data
-flat_data = []
-for category, values in zip(categories, zip(*data.values())):
-    for dataset_index, dataset_values in enumerate(values):
-        if category == 'Pluvial' and dataset_index == 0:  # Targeting Pluvial + Precipitation
-            # Add the original and the extra data for Pluvial and Precipitation
-            flat_data.extend([(category, f"Precipitation {dataset_index + 1}", value) for value in dataset_values])
-            flat_data.extend([(category, f"Precipitation Extra", value) for value in extra_precipitation_data])
-        else:
-            flat_data.extend([(category, f"Dataset {dataset_index + 1}", value) for value in dataset_values])
-
-df = pd.DataFrame(flat_data, columns=['Category', 'Dataset', 'Value'])
-
-# Plot
-plt.figure(figsize=(12, 6))
-
-# Plot the regular violin plots for all categories and drivers
-sns.violinplot(data=df, x='Category', y='Value', hue='Dataset', dodge=True, palette='Set2', inner='point', scale='count')
-
-# Overlay the extra violin plot only for Pluvial Precipitation
-extra_data = df[df['Dataset'] == 'Precipitation Extra']
-sns.violinplot(data=extra_data, x='Category', y='Value', dodge=True, color='lightgrey', inner='point', scale='count', alpha=0.5)
-
-# Customization
-plt.axhline(0, color='black', linewidth=0.8, linestyle='--')  # Zero line for positive/negative values
-plt.title('Climate Attribution Data by Category (Violin Plot) with Extra Precipitation Data')
-plt.ylabel('Diff in Flood Volume [%]')
-plt.xlabel('Flood Type')
-
-# Adjust plot appearance
-plt.legend(title='Driver', bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-
-plt.show()
-
-
-#%%
-# Example data
-data = [2.5, 3.0, 2.8, 3.2, 2.9]
-
-sns.swarmplot(data=[data])
-plt.ylabel("Diff in Flood Volume [%]")
-plt.title("Bee Swarm Plot for Small Sample Size")
-plt.show()
-
-# %%
-sns.violinplot(data=[data], inner=None, color="lightblue")
-sns.swarmplot(data=[data], color="black", size=7)
-plt.ylabel("Values")
-plt.title("Violin Plot with Data Points")
-plt.show()
 # %%
