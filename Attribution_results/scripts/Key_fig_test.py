@@ -11,9 +11,11 @@ import contextily as ctx  # For adding basemap tiles
 import seaborn as sns
 import yaml
 import itertools
+import cartopy.crs as ccrs
+import math
 
 # %% Load the SFINCS model runs
-config_general  = '../../Workflows/01_config_snakemake/config_general.yml'
+config_general  = '../../Workflows/01_config_snakemake/config_general_MZB.yml'
 # Load the YAML file
 with open(config_general, 'r') as file:
     config = yaml.safe_load(file)
@@ -36,7 +38,7 @@ wind_forcing        = runname_id['wind_forcing']
 tidemodel           = runname_id['tidemodel']
 dfm_obs_file        = runname_id['dfm_obs_file']
 sfincs_obs_file     = runname_id['sfincs_obs_file']
-verification_points = runname_id['verification_points']
+dfm_verification_points = runname_id['dfm_verification_points']
 config_sfincs_base  = runname_id['config_sfincs_base']
 utmzone             = runname_id['utmzone']
 
@@ -63,7 +65,7 @@ for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_
 
     # Categorization logic
     CF_values = [rain, wind, slr]
-    num_CF_diff = sum(1 for v in CF_values if v != '0')
+    num_CF_diff = sum(1 for v in CF_values if v != 0)
 
     if num_CF_diff == 0:
         category = "Factual"
@@ -93,41 +95,35 @@ for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_
 
 # Print results for verification
 for model in models:
+    print(f"{model['CF_info']}")
     print(f"{model['category']} -> {model['model_name']} -> {model['model_path']} -> CF_info: {model['CF_info']}")
-
-
-# %%
-# datasets = [
-#     (mod_F_PluvCoast, sfincs_root_F_PluvCoast, "F_PluvCoast", "Factual", "Pluvial", "precipitation"),
-#     (mod_CF_7precip_PluvCoast, sfincs_root_CF_7precip_PluvCoast, "CF_7precip_PluvCoast", "Counterfactual", "Pluvial", "precipitation"),
-#     (mod_F_Coast, sfincs_root_F_Coast, "F_SLR_Coast", "Factual", "Coastal", "SLR-noMDT"),
-#     (mod_F_Coast_MDT,sfincs_root_F_Coast_MDT, "F_SLR_Coast_MDT", "Factual", "Coastal", "SLR"),
-#     (mod_CF_noSLR_Coast_MDT, sfincs_root_CF_noSLR_Coast_MDT, "CF_noSLR_Coast_MDT", "Counterfactual", "Coastal", "noSLR")
-# ]
 
 # %%
 # read global surface water occurance (GSWO) data to mask permanent water
 models[0]["sfincs_model"].data_catalog.from_yml(os.path.join('../../Workflows/03_data_catalogs/datacatalog_general.yml'))
 gswo = models[0]["sfincs_model"].data_catalog.get_rasterdataset("gswo", geom=models[0]["sfincs_model"].region, buffer=1000)
+
 # %%
 ### loop over the different sfincs_model to compute hmax ###
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
 
+# Can be turned into a function!
 for model in models:
+    # if "hmax_masked" in models["sfincs_model"].results:
+    #     print("hmax_masked exists!")
+    # else:
     data        = model["sfincs_model"]  # Load the SFINCS model object
     sfincs_root = model["model_path"]
     title       = model["model_name"]
-
     print(f"Processing model: {title}")
     # first we are going to select our highest-resolution elevation dataset
     depfile = join(sfincs_root, "subgrid", "dep_subgrid.tif")
     da_dep = data.data_catalog.get_rasterdataset(depfile)
-    
+
     # as we have a subgrid model, we don't have hmax available, so we are using zsmax (maximum water levels)
     # compute the maximum over all time steps
     da_zsmax = data.results["zsmax"].max(dim="timemax")
-
     # Fourthly, we downscale the floodmap
     da_hmax = utils.downscale_floodmap(
         zsmax=da_zsmax,
@@ -135,16 +131,37 @@ for model in models:
         hmin=hmin,
         # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
         )
-    
+
     # we use the GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
     gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
     # permanent water where water occurence > 5%
     da_hmax_masked = da_hmax.where(gswo_mask <= 5)
-
     # Add the name attribute for identification
+    data.results['hmax'] = da_hmax
     data.results['hmax_masked'] = da_hmax_masked
-    
-del da_dep, da_zsmax, da_hmax, da_hmax_masked
+
+        # Open the existing NetCDF dataset in append mode
+        # nc_file = join(sfincs_root, "sfincs_his.nc")
+        # nc_file_out = join(sfincs_root, "sfincs_his_test.nc")
+        
+        # try:
+        #     with xr.open_dataset(nc_file, mode="a") as ds:  
+        #         # Convert DataArrays to Dataset with proper variable names
+        #         ds_new = xr.Dataset({
+        #             "hmax": da_hmax,
+        #             "hmax_masked": da_hmax_masked
+        #         })
+                
+        #         # Merge with existing dataset and save
+        #         ds_updated = xr.merge([ds, ds_new])
+        #         ds_updated.to_netcdf(nc_file, mode="w")  # Overwrite with new data
+
+        #     print(f"Saved hmax and hmax_masked to {nc_file}")
+
+        # except Exception as e:
+        #     print(f"Error saving to {nc_file}: {e}")
+        
+    del da_dep, da_zsmax, da_hmax, da_hmax_masked
 
 # %% Create subplots and set up figure title
 fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(8, 15), constrained_layout=True)
@@ -154,17 +171,17 @@ fig.suptitle("Masked hmax: pluvial & coastal flooding", fontsize=16, y=1.02)
 basemap_source = ctx.providers.Esri.WorldImagery
 
 # Loop through datasets and plot
-for (data, sfincs_root, name, scenario, flood_type, driver), ax in zip(datasets, axes.flatten()):
+for model, ax in zip(models, axes.flatten()):
     # Plot the masked water depth and add basemap
-    im = data.results['hmax_masked'].plot.pcolormesh(
+    im = model['sfincs_model'].results['hmax_masked'].plot.pcolormesh(
         ax=ax, cmap="Blues", vmin=0, vmax=3.0, add_colorbar=False
     )
-    ctx.add_basemap(ax, source=basemap_source, zoom=12, crs=data.results['hmax_masked'].rio.crs, attribution=False)
+    ctx.add_basemap(ax, source=basemap_source, zoom=12, crs=model['sfincs_model'].results['hmax_masked'].rio.crs, attribution=False)
     
     # Set axis labels and title
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
-    ax.set_title(name, fontsize=12)
+    ax.set_title(model['model_name'], fontsize=12)
 
 # Add colorbar and label
 fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04).set_label('Masked hmax (m)', rotation=270, labelpad=15)
@@ -174,62 +191,80 @@ plt.show()
 
 #%% Create plots of the difference between F and CF scenarios
 # Calculate the differences
-# Extract individual datasets from the collection
-mod_F_PluvCoast = datasets[0][0]
-mod_CF_7precip_PluvCoast = datasets[1][0]
-mod_F_SLR_Coast_MDT = datasets[3][0]
-mod_CF_noSLR_Coast_MDT = datasets[4][0]
+def hmax_CF_difference(factual_model, counterfactual_model):
+    hmax_diff = factual_model['sfincs_model'].results['hmax_masked'] - counterfactual_model['sfincs_model'].results['hmax_masked'] 
+    return hmax_diff
 
-# Calculate differences
-difference_pluv_coast = mod_F_PluvCoast.results['hmax_masked'] - mod_CF_7precip_PluvCoast.results['hmax_masked']
-difference_slr_coast_mdt = mod_F_SLR_Coast_MDT.results['hmax_masked'] - mod_CF_noSLR_Coast_MDT.results['hmax_masked']
+factual_hmax = None 
 
+for model in models:
+        # Store factual hmax for comparison
+    if model["category"] == "Factual":
+        factual_hmax = model['sfincs_model'].results["hmax_masked"]
+
+    # Compute difference for counterfactual models
+    hmax_diff = None
+    if factual_hmax is not None and model["category"] != "Factual":
+        hmax_diff = factual_hmax - model['sfincs_model'].results["hmax_masked"]
+        model['sfincs_model'].results["hmax_diff"] = hmax_diff
+        print(f"hmax_diff calculated for {model['model_name']}")
+
+#%%
 # Create subplots
-fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(14, 8), constrained_layout=True)
-fig.suptitle("Difference Plots: Factual - Counterfactual waterlevel", fontsize=16, y=1.06)
+# Filter out only counterfactual models with hmax_diff
+counterfactual_models = [m for m in models if "hmax_diff" in m["sfincs_model"].results]
 
-# Define high-resolution basemap source
-basemap_source = ctx.providers.Esri.WorldImagery
+# Determine subplot grid size
+num_models = len(counterfactual_models)
+num_cols = 2  # Adjust as needed
+num_rows = math.ceil(num_models / num_cols)
 
-# Plot Difference 1: Pluvial & Coastal Flooding
-im1 = difference_pluv_coast.plot.pcolormesh(
-    ax=axes[0], cmap="RdBu", vmin=-0.3, vmax=0.3, add_colorbar=False
-)
-ctx.add_basemap(
-    axes[0],
-    source=basemap_source,
-    zoom=12,
-    crs=difference_pluv_coast.rio.crs,
-    attribution=False
-)
-axes[0].set_title(r"Pluvial & coastal flooding: CF -7% rainfall", fontsize=14)
-axes[0].set_xlabel("x coordinate UTM zone 36S [m]", fontsize=12)
-axes[0].set_ylabel("y coordinate UTM zone 36S [m]", fontsize=12)
-axes[0].tick_params(axis="both", labelsize=11)
+projection = models[0]['sfincs_model'].crs.to_epsg()
+# Create figure and subplots
+fig, axes = plt.subplots(nrows=num_rows, 
+                         ncols=num_cols, 
+                         figsize=(14, 8), 
+                         constrained_layout=True, 
+                         subplot_kw={"projection": ccrs.epsg(projection)}
+                         )
+fig.suptitle("Difference Plots: Factual - Counterfactual Water Level", fontsize=16, y=1.06)
 
-# Plot Difference 2: Coastal MDT
-im2 = difference_slr_coast_mdt.plot.pcolormesh(
-    ax=axes[1], cmap="RdBu", vmin=-0.3, vmax=0.3, add_colorbar=False
-)
-ctx.add_basemap(
-    axes[1],
-    source=basemap_source,
-    zoom=12,
-    crs=difference_slr_coast_mdt.rio.crs,
-    attribution=False
-)
-axes[1].set_title("Coastal flooding: CF -0.14 m SLR", fontsize=14)
-axes[1].set_xlabel("x coordinate UTM zone 36S [m]", fontsize=12)
-axes[1].set_ylabel("y coordinate UTM zone 36S [m]", fontsize=12)
-axes[1].tick_params(axis="both", labelsize=11)
+# Flatten axes array for easy indexing (works for any grid size)
+axes = axes.flatten()
+
+# Define colormap settings
+cmap = "RdBu"
+vmin, vmax = -0.3, 0.3
+
+# Loop through counterfactual models and plot
+for idx, model in enumerate(counterfactual_models):
+    ax = axes[idx]
+    hmax_diff = model['sfincs_model'].results["hmax_diff"]
+
+    # Plot difference
+    im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+
+    # Add basemap
+    ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].crs, attribution=False)
+
+    # Set title and labels
+    ax.set_title(f"{model['model_name']}", fontsize=12)
+    ax.set_xlabel("x coordinate UTM zone 36S [m]", fontsize=10)
+    ax.set_ylabel("y coordinate UTM zone 36S [m]", fontsize=10)
+    ax.tick_params(axis="both", labelsize=9)
+
+# Hide any unused subplots (if the grid is larger than the number of models)
+for idx in range(len(counterfactual_models), len(axes)):
+    fig.delaxes(axes[idx])
 
 # Add shared colorbar
-cbar = fig.colorbar(im1, ax=axes, orientation="vertical", fraction=0.02, pad=0.04)
-cbar.set_label('Difference in maximum waterlevel (m)', rotation=270, labelpad=20, fontsize=14)
-cbar.ax.tick_params(labelsize=12)
+cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04)
+cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=12)
+cbar.ax.tick_params(labelsize=10)
 
 # Show the plot
 plt.show()
+
 
 # %% Calculate the surface area of one grid cell
 dx = abs(mod_F_PluvCoast.results['hmax_masked'].x[1] - mod_F_PluvCoast.results['hmax_masked'].x[0])  # Grid resolution in x-direction (meters)

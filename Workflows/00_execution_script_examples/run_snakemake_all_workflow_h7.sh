@@ -28,10 +28,10 @@ julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general.yml 
+snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
 # # running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general.yml --forceall --rulegraph | dot -Tpng > dag_smk_all.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general.yml --cores 'all' --latency-wait 60 --wait-for-files
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_all.png
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
 
 exit

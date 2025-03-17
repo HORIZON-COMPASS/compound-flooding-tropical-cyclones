@@ -8,11 +8,17 @@ plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
 import xarray as xr
-import hydromt
+import pandas as pd
+import geopandas as gpd
+import shutil
+from datetime import datetime, timedelta
+from hydromt import DataCatalog
+import numpy as np
 
 #%%
 if "snakemake" in locals():
     dfm_res = float(snakemake.wildcards.dfm_res)
+    dxy_base = float(snakemake.params.dfm_dxy_base)
     bathy = snakemake.wildcards.bathy
     tidemodel = snakemake.wildcards.tidemodel
     dir_output_main = os.path.abspath(snakemake.output.dir_model)
@@ -23,6 +29,7 @@ if "snakemake" in locals():
 else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
+    dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = -0.14
@@ -64,7 +71,7 @@ lon_min, lon_max, lat_min, lat_max = bbox_list
 print(bbox_dfm)
 
 # dxy is the base grid resolution - i.e. the coarsest grid size in your grid. It is in degrees.
-dxy = 0.2 # degrees
+dxy = dxy_base # degrees
 # Defines the minimum length of the edges of the computational mesh cells.
 min_edge_size = dfm_res # m 
 
@@ -87,7 +94,7 @@ else:
     mk_object = dfmt.make_basegrid(lon_min, lon_max, lat_min, lat_max, dx=dxy, dy=dxy, crs=crs)
 
     # generate plifile from grid extent and coastlines
-    bnd_gdf = dfmt.generate_bndpli_cutland(mk=mk_object, res='h', buffer=0.2)
+    bnd_gdf = dfmt.generate_bndpli_cutland(mk=mk_object, res='h', buffer=0.05)
     bnd_gdf_interp = dfmt.interpolate_bndpli(bnd_gdf, res=0.03)
 
     # filter out boundary sections that are very short (<5km in this case)
@@ -111,10 +118,16 @@ else:
     fig.savefig(output_path, dpi=300, bbox_inches='tight')
 
     # Define bathymetry
-    file_nc_bathy_sel = data_catalog[bathy].path
-    data_bathy_sel = xr.open_dataset(file_nc_bathy_sel).elevation # elevation is the name of the array in the dataset
-        
+    data_bathy_sel = data_catalog.get_rasterdataset(bathy)
+    data_bathy_sel = data_bathy_sel.rename({'x':'lon','y':'lat'})
+    data_bathy_sel = data_bathy_sel.sortby("lat")
+    data_bathy_sel = data_bathy_sel.sortby("lon")
+    data_bathy_sel = data_bathy_sel.sel(lon=slice(lon_min-1,lon_max+1),lat=slice(lat_min-1,lat_max+1), drop=True)
     data_bathy_sel.load()
+    if '_FillValue' in data_bathy_sel.attrs:
+        data_bathy_sel_masked = xr.where(data_bathy_sel == data_bathy_sel.attrs['_FillValue'], 0, data_bathy_sel)
+        data_bathy_sel = data_bathy_sel_masked
+    data_bathy_sel = data_bathy_sel.fillna(0)
 
     # subset to area of interest
     # data_bathy_sel = data_bathy.sel(lon=slice(lon_min-1, lon_max+1), lat=slice(lat_min-1, lat_max+1))

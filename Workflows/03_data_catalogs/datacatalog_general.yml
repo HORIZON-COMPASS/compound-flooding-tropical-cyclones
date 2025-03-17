@@ -1110,6 +1110,44 @@ gebco2024_MZB:
     source_version: 2024
     unit: m+MSL
   crs: 4326
+emodnet_bathy_E4_2022:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/EMODnet_bathymetry/E4_2022.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    elevation: elevtn
+  meta:
+    category: topography
+    paper_doi: 
+    paper_ref: 
+    source_license: https://emodnet.ec.europa.eu/en/bathymetry#bathymetry-services
+    source_url: https://emodnet.ec.europa.eu/geoviewer/
+    source_version: 2022
+    unit: m+LAT
+  crs: 4326
+emodnet_bathy_E4_2018_msl:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/EMODnet_bathymetry/E4_depth_msl_2018.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    DEPTH: elevtn
+  meta:
+    category: topography
+    paper_doi: 
+    paper_ref: 
+    source_license: https://www.emodnet-bathymetry.eu/internal_html/data-products/8
+    source_url: 
+    source_version: 2018
+    unit: m+MSL
+  crs: 4326
 ghs_pop:
   data_type: RasterDataset
   path: wflow_global/hydromt/socio_economic/ghs/GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif

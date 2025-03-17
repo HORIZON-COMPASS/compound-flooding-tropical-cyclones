@@ -1,6 +1,6 @@
 setup_config:
   stopdepth: 500
-
+  
 setup_grid_from_region:
   res: 100                     # model resolution
   crs: utm                     # model CRS (must be UTM zone)
@@ -10,23 +10,20 @@ setup_dep:
   datasets_dep:
   - elevtn: merit_hydro        # 1st elevation dataset
     zmin: 0.001                # only use where values > 0.001
-  - elevtn: gebco2024_HND        # 2nd eleveation dataset (to be merged with the first)
+  - elevtn: emodnet_bathy_E4_2018_msl       # 2nd eleveation dataset (to be merged with the first)
     reproj_method: bilinear
 
 setup_mask_active:
-  zmin: -10
-  fill_area: 50
+  fill_area: 500
   include_mask: ocean_shape
-  exclude_mask: coastal_coupling_msk_HND   
+  exclude_mask: coastal_coupling_msk_SMST
   reset_mask: True
 
 setup_mask_active2:
-  fill_area: 50
+  fill_area: 500
   reset_mask: False
-
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
-  zmin: -10
   zmax: -1
   include_mask: osm_coastlines
   include_mask_buffer: 200         
@@ -36,7 +33,7 @@ setup_subgrid:
   datasets_dep:
   - elevtn: merit_hydro       
     zmin: 0.001              
-  - elevtn: gebco2024_HND      
+  - elevtn: emodnet_bathy_E4_2018_msl    
     reproj_method: bilinear
   datasets_rgh:
   - lulc: vito
@@ -52,18 +49,18 @@ setup_cn_infiltration:
   antecedent_moisture: dry
 
 setup_river_inflow:
-  rivers: rivers_lin2019_v1
+  #rivers: rivers_lin2019_v1
   hydrography: merit_hydro
   river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
-  reverse_river_geom: True
+  #reverse_river_geom: True
 
-# setup_river_outflow:
-#   hydrography: merit_hydro
-#   river_upa: 10
-#   river_len: 4000
-#   keep_rivers_geom: True
+setup_river_outflow:
+  hydrography: merit_hydro
+  river_upa: 30
+  river_len: 5000
+  keep_rivers_geom: True
 
 
