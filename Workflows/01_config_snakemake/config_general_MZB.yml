@@ -14,7 +14,7 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000      
         ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
-        precip_forcing: era5_hourly                                # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        precip_forcing: era5_hourly                         # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
@@ -36,9 +36,9 @@ runname_ids:
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        # CF_value_rain: [0, -7]
-        # CF_value_wind: [0, -10]
-        # CF_value_SLR: [0, -0.14]
+        CF_value_rain: [0]
+        CF_value_wind: [0, -10]
+        CF_value_SLR: [0, -0.14]
     # Freddy1:
     #     tc_name: Freddy1
     #     sid: 2023036S12118
