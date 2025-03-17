@@ -7,12 +7,14 @@ dir_runs:    03_Runs                # Folder where model runs will be saved (wit
 runname_ids: 
     Idai:                                                   # name of the model run
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
+        sid: 2019063S18038                                  # Storm id from IBTrACS
         region: sofala                                      # name of the region will be used in naming folders 
         bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
         start_time: 20190309 000000
-        end_time: 20190325 060000                   
-        forcing: era5_hourly                                # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        end_time: 20190325 060000      
+        ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
+        precip_forcing: era5_hourly                                # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
@@ -22,6 +24,7 @@ runname_ids:
         dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
         dfm_verification_points: 'MZB_Sofala_IHO_obs.xyn'   # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        sfincs_obs_file: obs_locs_sofala.geojson
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
         
         #Models selections
@@ -33,11 +36,12 @@ runname_ids:
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        # CF_value_rain: [-7]
-        # CF_value_wind: [-10, -12]
-        # CF_value_SLR: [14]
+        # CF_value_rain: [0, -7]
+        # CF_value_wind: [0, -10]
+        # CF_value_SLR: [0, -0.14]
     # Freddy1:
     #     tc_name: Freddy1
+    #     sid: 2023036S12118
     #     region: quelimane #?
     #     bbox_sfincs: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[34,-23.3,36,-21] "
@@ -47,6 +51,7 @@ runname_ids:
     #     forcing: era5_hourly
     # Freddy2:
     #     tc_name: Freddy2
+    #     sid: 2023061S22036
     #     region: quelimane
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     bbox_dfm: "[36.3,-19.7,38,-16.7]"
@@ -61,6 +66,7 @@ runname_ids:
     #     verification_points: ''
     # Kenneth:
     #     tc_name: Kenneth
+    #     sid: 2019112S10053
     #     region: 
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[40,-13.5,42,-11.2]"
