@@ -292,17 +292,19 @@ for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_
         "model_path": model_path,
         "sfincs_model": model_obj,
         "category": category,
+        "cat_short": cat_short,
         "CF_info": CF_info
     })
 
 extra_model_obj = SfincsModel("p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0", mode="r")
+extra_CF_info = {"rain": 0, "wind": 0, "SLR": -0.14 }
 models.append({
     "model_name": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
     "model_path": "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
     "sfincs_model": extra_model_obj,
     "category": "Single Driver Counterfactual",
-    "cat_short": "CF_DR_single"
-    "CF_info": { "rain": 0, "wind": 0, "SLR": -0.14 }
+    "cat_short": "CF_DR_single",
+    "CF_info": { param: value for param, value in extra_CF_info.items() if value != '0' } 
 })
 
 # Print results for verification
@@ -591,7 +593,75 @@ for idx, model in enumerate(counterfactual_models):
     ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].crs, attribution=False)
 
     # Set title and labels
-    ax.set_title(f"{model['model_name']}", fontsize=12)
+    non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
+    cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
+
+    ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
+    ax.set_xlabel("x coordinate UTM zone 36S [m]", fontsize=10)
+    ax.set_ylabel("y coordinate UTM zone 36S [m]", fontsize=10)
+    ax.tick_params(axis="both", labelsize=9)
+
+# Hide any unused subplots (if the grid is larger than the number of models)
+for idx in range(len(counterfactual_models), len(axes)):
+    fig.delaxes(axes[idx])
+
+# Add shared colorbar
+cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04)
+cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=12)
+cbar.ax.tick_params(labelsize=10)
+
+# Extract individual datasets from the collection
+mod_F_PluvCoast = datasets[0][0]
+mod_CF_7precip_PluvCoast = datasets[1][0]
+mod_F_SLR_Coast_MDT = datasets[3][0]
+mod_CF_noSLR_Coast_MDT = datasets[4][0]
+
+# Calculate differences
+difference_pluv_coast = mod_F_PluvCoast.results['hmax_masked'] - mod_CF_7precip_PluvCoast.results['hmax_masked']
+difference_slr_coast_mdt = mod_F_SLR_Coast_MDT.results['hmax_masked'] - mod_CF_noSLR_Coast_MDT.results['hmax_masked']
+
+# Create subplots
+# Filter out only counterfactual models with hmax_diff
+counterfactual_models = [m for m in models if "hmax_diff" in m["sfincs_model"].results]
+
+# Determine subplot grid size
+num_models = len(counterfactual_models)
+num_cols = 2  # Adjust as needed
+num_rows = math.ceil(num_models / num_cols)
+
+projection = models[0]['sfincs_model'].crs.to_epsg()
+# Create figure and subplots
+fig, axes = plt.subplots(nrows=num_rows, 
+                         ncols=num_cols, 
+                         figsize=(14, 8), 
+                         constrained_layout=True, 
+                         subplot_kw={"projection": ccrs.epsg(projection)}
+                         )
+fig.suptitle("Difference Plots: Factual - Counterfactual Water Level", fontsize=16, y=1.06)
+
+# Flatten axes array for easy indexing (works for any grid size)
+axes = axes.flatten()
+
+# Define colormap settings
+cmap = "RdBu"
+vmin, vmax = -0.3, 0.3
+
+# Loop through counterfactual models and plot
+for idx, model in enumerate(counterfactual_models):
+    ax = axes[idx]
+    hmax_diff = model['sfincs_model'].results["hmax_diff"]
+
+    # Plot difference
+    im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+
+    # Add basemap
+    ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].crs, attribution=False)
+
+    # Set title and labels
+    non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
+    cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
+
+    ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
     ax.set_xlabel("x coordinate UTM zone 36S [m]", fontsize=10)
     ax.set_ylabel("y coordinate UTM zone 36S [m]", fontsize=10)
     ax.tick_params(axis="both", labelsize=9)
@@ -994,6 +1064,93 @@ sns.catplot(data=df,
             kind="swarm", 
             height=6, 
             aspect=2)
+
+
+# %%
+### PLOT TIMESERIES OUTPUT POINTS
+dir_run = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0"
+if os.path.exists(join(dir_run,"sfincs_his.nc")):
+    hisfile = os.path.join(dir_run,"sfincs_his.nc")
+    ds_his = xr.open_dataset(hisfile)
+    ds_his["station_id"] = ds_his["station_id"].astype(int)
+
+    for ii,loc_id in enumerate(ds_his['station_id'].values):
+        fig, ax = plt.subplots(1,1,figsize=(10,5))
+        ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
+        ax.grid()
+        ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
+        ax.set_ylabel("Inundation height [m]")
+        # fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
+else:
+    print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+
+
+# %%
+# Define number of columns for subplots
+ncols = 1  
+
+# Filter models with available sfincs_his.nc file
+valid_models = [model for model in models if os.path.exists(os.path.join(model["model_path"], "sfincs_his.nc"))]
+
+if not valid_models:
+    print("No valid models found with sfincs_his.nc.")
+else:
+    # Collect all unique station IDs across all models
+    station_ids = set()
+    model_datasets = []
+
+    for model in valid_models:
+        model_path = model["model_path"]
+        hisfile = os.path.join(model_path, "sfincs_his.nc")
+
+        # Open dataset and convert station_id to int
+        ds_his = xr.open_dataset(hisfile)
+        ds_his["station_id"] = ds_his["station_id"].astype(int)
+
+        station_ids.update(ds_his["station_id"].values)
+        model_datasets.append((model, ds_his))  # Store entire model dict for metadata
+
+    station_ids = sorted(station_ids)  # Ensure consistent order
+
+    # Determine subplot grid size
+    nstations = len(station_ids)
+    nrows = nstations  # One column, so rows = number of stations
+
+    # Create figure and axes for subplots
+    fig, axes = plt.subplots(nrows, ncols, figsize=(8, 4 * nrows), constrained_layout=True)
+
+    # Ensure axes is always iterable (even if only one station)
+    if nstations == 1:
+        axes = [axes]
+
+    for idx, station_id in enumerate(station_ids):
+        ax = axes[idx]
+
+        for shift_idx, (model, ds_his) in enumerate(model_datasets):
+            # Generate CF_info string
+            cf_info_str = ", ".join(f"{key}: {value}" for key, value in model.get("CF_info", {}).items())
+
+            # Title format: "cat_short (CF details)"
+            model_label = f"{model['cat_short']} ({cf_info_str})" if cf_info_str else model["cat_short"]
+
+            # Check if this station exists in the current model's dataset
+            if station_id in ds_his["station_id"].values:
+                station_idx = np.where(ds_his["station_id"].values == station_id)[0][0]
+
+                # Apply small time shift to avoid exact overlaps
+                time_shift = np.timedelta64(shift_idx, 'm')  # Shift by minutes
+                adjusted_time = ds_his.time + time_shift
+                
+                ax.plot(adjusted_time, ds_his["point_zs"].isel(stations=station_idx), label=model_label)
+
+        ax.grid()
+        ax.set_title(f"Station {station_id}", fontsize=14)
+        ax.set_ylabel("Inundation height [m]")
+
+        # Move legend to the top with two columns
+        ax.legend(fontsize=10, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=2, frameon=True)
+
+    plt.show()
 
 
 # %%
