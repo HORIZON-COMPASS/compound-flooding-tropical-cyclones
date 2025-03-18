@@ -1066,91 +1066,125 @@ sns.catplot(data=df,
             aspect=2)
 
 
-# %%
-### PLOT TIMESERIES OUTPUT POINTS
-dir_run = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0"
-if os.path.exists(join(dir_run,"sfincs_his.nc")):
-    hisfile = os.path.join(dir_run,"sfincs_his.nc")
+#%%
+# List to store all data
+data_list = []
+
+for model in valid_models:
+    model_path = model["model_path"]
+    hisfile = os.path.join(model_path, "sfincs_his.nc")
+
+    # Open dataset
     ds_his = xr.open_dataset(hisfile)
     ds_his["station_id"] = ds_his["station_id"].astype(int)
 
-    for ii,loc_id in enumerate(ds_his['station_id'].values):
-        fig, ax = plt.subplots(1,1,figsize=(10,5))
-        ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
-        ax.grid()
-        ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
-        ax.set_ylabel("Inundation height [m]")
-        # fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
-else:
-    print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+    # Convert to Pandas DataFrame
+    df = ds_his[["point_zs"]].to_dataframe().reset_index()
+    
+    # Add model name for identification
+    non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
+    cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
+    
+    df["model_name"]  = model["model_name"]
+    df["category"]    = model["category"]
+    df["cat_short"]   = model["cat_short"]
+    df["CF_info"]     = model["CF_info"]
+    df["CF_info_str"] = cf_info_str
 
+    # Append to list
+    data_list.append(df)
+
+# Combine all models into one DataFrame
+df_all = pd.concat(data_list, ignore_index=True)
+
+
+#%%
+# plot timeseries at output points 
+# Get unique station IDs
+station_ids = df_all["station_id"].unique()
+nrows = len(station_ids)  # One row per station
+
+# Create figure and axes with higher resolution and shared x-axis
+fig, axes = plt.subplots(nrows=nrows, ncols=1, figsize=(14, 40), sharex=True, constrained_layout=True)
+
+# Ensure axes is iterable even when there's only one subplot
+if nrows == 1:
+    axes = [axes]
+
+# Plot data for each station
+for ax, station_id in zip(axes, station_ids):
+    df_station = df_all[df_all["station_id"] == station_id]
+    
+    for model_name in df_station["model_name"].unique():
+        df_model = df_station[df_station["model_name"] == model_name]
+        ax.plot(df_model["time"], df_model["point_zs"], label=model_name, linewidth=2)
+
+    ax.set_title(f"Station {station_id}", fontsize=18)
+    ax.set_ylabel("Water Level [m]", fontsize=14)
+    ax.grid()
+    
+    # Increase y-axis tick size
+    ax.tick_params(axis="y", labelsize=14)
+
+# Shared x-axis label
+axes[-1].set_xlabel("Time", fontsize=16)
+axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for clarity
+
+# Add a single legend at the top
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
+
+plt.show()
+
+#%%
+# Get unique station IDs
+station_ids = df_all["station_id"].unique()
+nrows = len(station_ids)  # One row per station
+
+# Create figure and axes with higher resolution and shared x-axis
+fig, axes = plt.subplots(nrows=nrows, ncols=1, figsize=(14, 40), sharex=True, constrained_layout=True)
+
+# Ensure axes is iterable even when there's only one subplot
+if nrows == 1:
+    axes = [axes]
+
+# Define the two models to plot
+selected_models = [
+    "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_spw_IBTrACS_CF0",
+    "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0",
+    # "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0"
+]
+
+# Plot data for each station
+for ax, station_id in zip(axes, station_ids):
+    df_station = df_all[df_all["station_id"] == station_id]
+
+    # Filter the DataFrame to include only the selected models
+    df_selected_models = df_station[df_station["model_name"].isin(selected_models)]
+
+    # Plot each model separately
+    for model_name in selected_models:
+        df_model = df_selected_models[df_selected_models["model_name"] == model_name]
+        ax.plot(df_model["time"], df_model["point_zs"], label=model_name, linewidth=2)
+
+    ax.set_title(f"Station {station_id}", fontsize=18)
+    ax.set_ylabel("Water Level [m]", fontsize=14)
+    ax.grid()
+    
+    # Increase y-axis tick size
+    ax.tick_params(axis="y", labelsize=14)
+
+# Shared x-axis label
+axes[-1].set_xlabel("Time", fontsize=16)
+axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for clarity
+
+# Add a single legend at the top
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
+
+plt.show()
 
 # %%
-# Define number of columns for subplots
-ncols = 1  
-
-# Filter models with available sfincs_his.nc file
-valid_models = [model for model in models if os.path.exists(os.path.join(model["model_path"], "sfincs_his.nc"))]
-
-if not valid_models:
-    print("No valid models found with sfincs_his.nc.")
-else:
-    # Collect all unique station IDs across all models
-    station_ids = set()
-    model_datasets = []
-
-    for model in valid_models:
-        model_path = model["model_path"]
-        hisfile = os.path.join(model_path, "sfincs_his.nc")
-
-        # Open dataset and convert station_id to int
-        ds_his = xr.open_dataset(hisfile)
-        ds_his["station_id"] = ds_his["station_id"].astype(int)
-
-        station_ids.update(ds_his["station_id"].values)
-        model_datasets.append((model, ds_his))  # Store entire model dict for metadata
-
-    station_ids = sorted(station_ids)  # Ensure consistent order
-
-    # Determine subplot grid size
-    nstations = len(station_ids)
-    nrows = nstations  # One column, so rows = number of stations
-
-    # Create figure and axes for subplots
-    fig, axes = plt.subplots(nrows, ncols, figsize=(8, 4 * nrows), constrained_layout=True)
-
-    # Ensure axes is always iterable (even if only one station)
-    if nstations == 1:
-        axes = [axes]
-
-    for idx, station_id in enumerate(station_ids):
-        ax = axes[idx]
-
-        for shift_idx, (model, ds_his) in enumerate(model_datasets):
-            # Generate CF_info string
-            cf_info_str = ", ".join(f"{key}: {value}" for key, value in model.get("CF_info", {}).items())
-
-            # Title format: "cat_short (CF details)"
-            model_label = f"{model['cat_short']} ({cf_info_str})" if cf_info_str else model["cat_short"]
-
-            # Check if this station exists in the current model's dataset
-            if station_id in ds_his["station_id"].values:
-                station_idx = np.where(ds_his["station_id"].values == station_id)[0][0]
-
-                # Apply small time shift to avoid exact overlaps
-                time_shift = np.timedelta64(shift_idx, 'm')  # Shift by minutes
-                adjusted_time = ds_his.time + time_shift
-                
-                ax.plot(adjusted_time, ds_his["point_zs"].isel(stations=station_idx), label=model_label)
-
-        ax.grid()
-        ax.set_title(f"Station {station_id}", fontsize=14)
-        ax.set_ylabel("Inundation height [m]")
-
-        # Move legend to the top with two columns
-        ax.legend(fontsize=10, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=2, frameon=True)
-
-    plt.show()
-
-
+# Plot basemap with observation points 
+fig, ax = models[0]['sfincs_model'].plot_basemap(fn_out=None, bmap="sat", figsize=(11, 7))
 # %%
