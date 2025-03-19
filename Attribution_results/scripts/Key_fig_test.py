@@ -95,13 +95,14 @@ for rain, wind, slr in itertools.product(CF_value_rain, CF_value_wind, CF_value_
     })
 
 extra_model_obj = SfincsModel("p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0", mode="r")
+extra_CF_info = {"rain": 0, "wind": 0, "SLR": -0.14 }
 models.append({
     "model_name": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
     "model_path": "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0",
     "sfincs_model": extra_model_obj,
     "category": "Single Driver Counterfactual",
-    "cat_short": "CF_DR_single"
-    "CF_info": { "rain": 0, "wind": 0, "SLR": -0.14 }
+    "cat_short": "CF_DR_single",
+    "CF_info": { param: value for param, value in extra_CF_info.items() if value != '0' } 
 })
 
 # Print results for verification
@@ -264,7 +265,10 @@ for idx, model in enumerate(counterfactual_models):
     ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].crs, attribution=False)
 
     # Set title and labels
-    ax.set_title(f"{model['model_name']}", fontsize=12)
+    non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
+    cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
+
+    ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
     ax.set_xlabel("x coordinate UTM zone 36S [m]", fontsize=10)
     ax.set_ylabel("y coordinate UTM zone 36S [m]", fontsize=10)
     ax.tick_params(axis="both", labelsize=9)
@@ -382,4 +386,125 @@ sns.catplot(data=df,
             aspect=2)
 
 
+#%%
+# List to store all data
+data_list = []
+
+for model in valid_models:
+    model_path = model["model_path"]
+    hisfile = os.path.join(model_path, "sfincs_his.nc")
+
+    # Open dataset
+    ds_his = xr.open_dataset(hisfile)
+    ds_his["station_id"] = ds_his["station_id"].astype(int)
+
+    # Convert to Pandas DataFrame
+    df = ds_his[["point_zs"]].to_dataframe().reset_index()
+    
+    # Add model name for identification
+    non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
+    cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
+    
+    df["model_name"]  = model["model_name"]
+    df["category"]    = model["category"]
+    df["cat_short"]   = model["cat_short"]
+    df["CF_info"]     = model["CF_info"]
+    df["CF_info_str"] = cf_info_str
+
+    # Append to list
+    data_list.append(df)
+
+# Combine all models into one DataFrame
+df_all = pd.concat(data_list, ignore_index=True)
+
+
+#%%
+# plot timeseries at output points 
+# Get unique station IDs
+station_ids = df_all["station_id"].unique()
+nrows = len(station_ids)  # One row per station
+
+# Create figure and axes with higher resolution and shared x-axis
+fig, axes = plt.subplots(nrows=nrows, ncols=1, figsize=(14, 40), sharex=True, constrained_layout=True)
+
+# Ensure axes is iterable even when there's only one subplot
+if nrows == 1:
+    axes = [axes]
+
+# Plot data for each station
+for ax, station_id in zip(axes, station_ids):
+    df_station = df_all[df_all["station_id"] == station_id]
+    
+    for model_name in df_station["model_name"].unique():
+        df_model = df_station[df_station["model_name"] == model_name]
+        ax.plot(df_model["time"], df_model["point_zs"], label=model_name, linewidth=2)
+
+    ax.set_title(f"Station {station_id}", fontsize=18)
+    ax.set_ylabel("Water Level [m]", fontsize=14)
+    ax.grid()
+    
+    # Increase y-axis tick size
+    ax.tick_params(axis="y", labelsize=14)
+
+# Shared x-axis label
+axes[-1].set_xlabel("Time", fontsize=16)
+axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for clarity
+
+# Add a single legend at the top
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
+
+plt.show()
+
+#%%
+# Get unique station IDs
+station_ids = df_all["station_id"].unique()
+nrows = len(station_ids)  # One row per station
+
+# Create figure and axes with higher resolution and shared x-axis
+fig, axes = plt.subplots(nrows=nrows, ncols=1, figsize=(14, 40), sharex=True, constrained_layout=True)
+
+# Ensure axes is iterable even when there's only one subplot
+if nrows == 1:
+    axes = [axes]
+
+# Define the two models to plot
+selected_models = [
+    "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_spw_IBTrACS_CF0",
+    "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0",
+    # "event_tp_era5_hourly_CF0_GTSMv41opendap_CF-0.14_toSFINCSwaterlevel_spw_IBTrACS_CF0"
+]
+
+# Plot data for each station
+for ax, station_id in zip(axes, station_ids):
+    df_station = df_all[df_all["station_id"] == station_id]
+
+    # Filter the DataFrame to include only the selected models
+    df_selected_models = df_station[df_station["model_name"].isin(selected_models)]
+
+    # Plot each model separately
+    for model_name in selected_models:
+        df_model = df_selected_models[df_selected_models["model_name"] == model_name]
+        ax.plot(df_model["time"], df_model["point_zs"], label=model_name, linewidth=2)
+
+    ax.set_title(f"Station {station_id}", fontsize=18)
+    ax.set_ylabel("Water Level [m]", fontsize=14)
+    ax.grid()
+    
+    # Increase y-axis tick size
+    ax.tick_params(axis="y", labelsize=14)
+
+# Shared x-axis label
+axes[-1].set_xlabel("Time", fontsize=16)
+axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for clarity
+
+# Add a single legend at the top
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
+
+plt.show()
+
+# %%
+# Plot basemap with observation points 
+fig, ax = models[0]['sfincs_model'].plot_basemap(fn_out=None, bmap="sat", figsize=(11, 7))
 # %%
