@@ -45,7 +45,7 @@ else:
     pass
 #%%
 # Define hydromt datacatalog
-data_catalog = hydromt.DataCatalog(data_libs = [path_data_cat])
+data_catalog = DataCatalog(data_libs = [path_data_cat])
 
 # needed to define wind_forcing and bathy paths
 #%%
