@@ -191,7 +191,8 @@ def compute_hmax_diff(models):
                 print(f"hmax_diff calculated for {model['model_name']}")
             else:
                 print(f"Warning: 'hmax_masked' not found for counterfactual model: {model['model_name']}")
-
+    
+    return models
 
 # Function to plot hmax_diff for counterfactual models
 def plot_hmax_diff(models, num_cols=2, figsize=(14, 8)):
@@ -456,4 +457,11 @@ models = compute_hmax_masked(models, gwso)
 #%%
 plot_masked_hmax(models)
 
+
 #%%
+models = compute_hmax_diff(models)
+
+#%%
+
+plot_hmax_diff(models)
+# %%
