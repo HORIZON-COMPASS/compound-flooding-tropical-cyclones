@@ -165,7 +165,9 @@ for model in models:
                 
         #         # Merge with existing dataset and save
         #         ds_updated = xr.merge([ds, ds_new])
-        #         ds_updated.to_netcdf(nc_file, mode="w")  # Overwrite with new data
+                #   ds.close()
+
+        #     ds_updated.to_netcdf(nc_file, mode="w")  # Overwrite with new data
 
         #     print(f"Saved hmax and hmax_masked to {nc_file}")
 
@@ -191,7 +193,7 @@ fig.suptitle("Masked hmax", fontsize=12, y=1.02)
 # Loop through datasets and plot
 for model, ax in zip(models, axes.flatten()):
     # Plot the masked water depth and add basemap
-    im = model['sfincs_model'].results['hmax_masked'].plot.pcolormesh(
+    im = model['sfincs_model'].results()['hmax_masked'].plot.pcolormesh(
         ax=ax, cmap="Blues", vmin=0, vmax=3.0, add_colorbar=False
     )
     ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].results['hmax_masked'].rio.crs, attribution=False)
