@@ -1,4 +1,5 @@
 #%%
+# Load the necessary packages
 import os
 from os.path import join
 import yaml
@@ -48,7 +49,7 @@ def load_sfincs_models(config):
             "category":       categories[num_CF_diff],
             "cat_short":      short_cats[num_CF_diff],
             "CF_info":        CF_info,
-            "cf_info_str":    CF_info_str
+            "CF_info_str":    CF_info_str
         })
 
     return models
@@ -251,19 +252,17 @@ def plot_hmax_diff(models, num_cols=2, figsize=(14, 8)):
 
 
 # Function to calculate the surface area of one grid cell
-def calculate_cell_area(models):
-    for model in models:
-        # Error handling for missing 'hmax_masked'
-        hmax_masked = model['sfincs_results'].get('hmax_masked', None)
-        if hmax_masked is None:
-            print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
-            continue  # Skip this model if 'hmax_masked' is missing
+def calculate_cell_area(model):
+    # Error handling for missing 'hmax_masked'
+    hmax_masked = model['sfincs_results'].get('hmax_masked', None)
+    if hmax_masked is None:
+        print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
+        return None  # Return None if no data is available
 
-        # Calculate the cell area
-        dx = abs(hmax_masked.x[1] - hmax_masked.x[0])  # Grid resolution in x-direction (meters)
-        dy = abs(hmax_masked.y[1] - hmax_masked.y[0])  # Grid resolution in y-direction (meters)
-        cell_area = dx * dy  # Area of one grid cell (m²)
-    return cell_area
+    # Calculate the cell area
+    dx = abs(hmax_masked.x[1] - hmax_masked.x[0])  # Grid resolution in x-direction (meters)
+    dy = abs(hmax_masked.y[1] - hmax_masked.y[0])  # Grid resolution in y-direction (meters)
+    return dx * dy  # Area of one grid cell (m²)
 
 
 # Function to calculate the flooded area (extent) for each model
@@ -336,49 +335,21 @@ def calculate_flood_differences(models):
                 continue  # Skip this model if flood volume is missing
             
             flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
-            model['Volume_diff_from_F(%)'] = flood_volume_diff
+            model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
             print(f"flood_volume_diff calculated for {model['model_name']}")
 
         # Compute flood extent difference for counterfactual models
         if factual_flood_extent is not None and model["category"] != "Factual":
             # Error handling for missing flood extent in counterfactual models
-            flood_extent = model.get('flood_extent_km2', None)
+            flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
             if flood_extent is None:
                 print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if flood extent is missing
 
             flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
-            model['Extent_diff_from_F(%)'] = flood_extent_diff
+            model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
             print(f"flood_extent_diff calculated for {model['model_name']}")
 
-    return models
-
-
-# Function to compare flood characteristics between factual and counterfactual models
-def compare_flood_characteristics(models):
-    results = {}
-    factual_area, factual_volume = None, None
-
-    # Find the factual model and calculate its flood characteristics
-    for model in models:
-        if model["category"] == "Factual":
-            factual_area, factual_volume = calculate_flood_characteristics(model)
-            break  # No need to continue once factual model is found
-
-    if factual_area is None or factual_volume is None:
-        print("Error: No factual model found or missing flood characteristics")
-        return None  # Exit if no factual model found
-
-    # Loop through counterfactual models and compute differences
-    for model in models:
-        if model["category"] != "Factual":
-            cf_area, cf_volume = calculate_flood_characteristics(model)
-            area_diff = cf_area - factual_area
-            volume_diff = cf_volume - factual_volume
-
-            model['sfincs_results']['Extent_diff_from_F(%)'] = area_diff
-            model['sfincs_results']['Volume_diff_from_F(%)'] = volume_diff
-                
     return models
 
 
@@ -393,26 +364,26 @@ def plot_flood_volume_difference_by_driver(models):
     for model in models:
         if model['category'] != "Factual":
             model_names.append(model["model_name"])
-            volume_diff_value = model.get("Volume_diff_from_F(%)", None)
+            volume_diff_value = model['sfincs_results'].get("Volume_diff_from_F(%)", None)
             if volume_diff_value is not None:
                 volume_diffs.append(volume_diff_value.values.flatten()[0])
 
-            CF_info = model.get('CF_info', {})
-            # Determine the combination of drivers based on CF_info
-            if CF_info.get("rain") != 0 and CF_info.get("wind") != 0 and CF_info.get("SLR") != 0:
+            CF_info = model["CF_info"]
+            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
                 drivers.append("Compound")
-            elif CF_info.get("rain") != 0 and CF_info.get("wind") != 0:
+            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
                 drivers.append("Rain & wind")
-            elif CF_info.get("rain") != 0 and CF_info.get("SLR") != 0:
+            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
                 drivers.append("Rain & SLR")
-            elif CF_info.get("wind") != 0 and CF_info.get("SLR") != 0:
+            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
                 drivers.append("Wind & SLR")
-            elif CF_info.get("rain") != 0:
+            elif "rain" in CF_info and CF_info["rain"] != 0:
                 drivers.append("Rain")
-            elif CF_info.get("wind") != 0:
+            elif "wind" in CF_info and CF_info["wind"] != 0:
                 drivers.append("Wind")
-            elif CF_info.get("SLR") != 0:
+            elif "SLR" in CF_info and CF_info["SLR"] != 0:
                 drivers.append("SLR")
+            print(drivers)
 
     # Create a DataFrame for plotting
     df = pd.DataFrame({
@@ -436,10 +407,10 @@ def plot_flood_volume_difference_by_driver(models):
 
 
 ##############################################################
+# Use of functions
 #%%
-# Main execution
+# Load snakemake config file to construct the model paths
 config_path  = '../../Workflows/01_config_snakemake/config_general_MZB.yml'
-
 cfg = load_config(config_path)
 
 #%%
@@ -448,20 +419,21 @@ models = load_sfincs_models(cfg)
 print(models)
 
 #%%
+# Calculate hmax and mask out permanent water
 gwso = gwso_sfincs_region(models[0])
-
-
-#%%
 models = compute_hmax_masked(models, gwso)
-
-#%%
-plot_masked_hmax(models)
-
-
-#%%
 models = compute_hmax_diff(models)
 
 #%%
+# Calculate flood characteristics 
+models = calculate_flood_extent(models)
+models = calculate_flood_volume(models)
+models = calculate_flood_differences(models)
 
+#%%
+# SOME PLOTTING
 plot_hmax_diff(models)
+plot_masked_hmax(models)
+plot_flood_volume_difference_by_driver(models)
+
 # %%
