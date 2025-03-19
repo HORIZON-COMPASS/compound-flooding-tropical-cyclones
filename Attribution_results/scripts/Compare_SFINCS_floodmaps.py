@@ -396,6 +396,34 @@ def calculate_flood_differences(models):
     return models
 
 
+# Function to compare flood characteristics between factual and counterfactual models
+def compare_flood_characteristics(models):
+    results = {}
+    factual_area, factual_volume = None, None
+
+    # Find the factual model and calculate its flood characteristics
+    for model in models:
+        if model["category"] == "Factual":
+            factual_area, factual_volume = calculate_flood_characteristics(model)
+            break  # No need to continue once factual model is found
+
+    if factual_area is None or factual_volume is None:
+        print("Error: No factual model found or missing flood characteristics")
+        return None  # Exit if no factual model found
+
+    # Loop through counterfactual models and compute differences
+    for model in models:
+        if model["category"] != "Factual":
+            cf_area, cf_volume = calculate_flood_characteristics(model)
+            area_diff = cf_area - factual_area
+            volume_diff = cf_volume - factual_volume
+
+            model['sfincs_results']['Extent_diff_from_F(%)'] = area_diff
+            model['sfincs_results']['Volume_diff_from_F(%)'] = volume_diff
+                
+    return models
+
+
 # Function to create a categorical plot comparing flood volume differences by CF driver
 def plot_flood_volume_difference_by_driver(models):
     # Create lists for model names, volume differences, and drivers
