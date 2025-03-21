@@ -1,5 +1,5 @@
 # %%
-from os.path import basename, join, exists
+from os.path import join, exists
 
 from hydromt.config import configread
 import ast
@@ -22,7 +22,7 @@ if "snakemake" in locals():
     bathy = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
-    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
+    model_dir = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test'
     config_file = '../../../05_config_models/02_sfincs/sfincs_base_build.yml'
     data_cats = [
         '../../../03_data_catalogs/datacatalog_general.yml',
@@ -52,7 +52,8 @@ region = get_local_vector_data(
     bbox = bbox,
     data_cat = data_cats[0],
 )
-
+#%%
+# Set up model region
 opt['setup_mask_active']['mask'] = region
 opt['setup_mask_active']['mask_buffer'] = 2000
 opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
@@ -60,10 +61,28 @@ opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
 opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
 
 #%%
+# Initialise model object
 mod = SfincsModel(
     root=model_dir, data_libs=data_cats, mode="w+", logger=logger, **kwargs
 )
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
+
+
+# %%
+# Include extra polygon
+opt2 = {
+    'setup_mask_active': {
+        'include_mask': 'sofala_incl_polygon',
+        'reset_mask': False
+        }
+}
+
+mod.update(
+    write=True,
+    # forceful_overwrite=True,
+    opt=opt2
+)
+# %%
 
