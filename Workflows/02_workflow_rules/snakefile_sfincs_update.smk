@@ -60,6 +60,12 @@ def get_use_dfm(wildcards):
 def get_coastal_ts(wildcards):
     return config['runname_ids'][wildcards.runname]['coastal_ts']
 
+def get_cf_datacatalog(wildcards):
+    if os.name == 'nt': #Running on windows
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing.yml')
+    elif os.name == "posix": #Running on linux
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing___linux.yml')
+
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
 precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
@@ -90,9 +96,26 @@ rule all_sfincs_update:
         # expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "sfincs_basemap.png"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
         expand(join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
 
+rule create_CF_rainfall:
+    input:
+        wflow_bbox
+    params:
+        start_date = get_starttime,
+        end_date = get_endtime,
+        # bbox = get_bbox,
+        data_cat = get_datacatalog,
+        CF_data_cat = get_cf_datacatalog,
+        precip_name=lambda wildcards: wildcards.precip_forcing,
+        CF_value_rain=lambda wildcards: wildcards.CF_rain
+    output:
+        rainfall_data = join(root_dir, "01_Data", "counterfactuals", "precipitation", "{precip_name}_CF{CF_rain}_{runname}.nc")
+    script:
+        join("..","04_scripts","preprocessing","CF_data","precip_CFs.py")  # Path to the CF script
+
 rule add_forcing_coastal_meteo_sfincs:
     input:
         msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"),
+
     params:
         tc_name = get_tcname,
         dir_run_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
