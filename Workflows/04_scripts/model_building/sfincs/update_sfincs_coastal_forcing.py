@@ -43,7 +43,7 @@ else:
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]    
-    CF_rain = 0
+    CF_rain = -7
     CF_rain_txt = f"{CF_rain}"
     CF_SLR_txt = "-0.14"
     CF_wind_txt = "0"
@@ -77,7 +77,13 @@ opt["setup_config"]["tstart"] = start_time
 opt["setup_config"]["tstop"] = end_time
 
 # Add rainfall forcing
-opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}',aggregate=False)
+if CF_rain is None:
+    print(f"Error: CF_rain value not found")
+elif CF_rain == 0:
+    opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}', aggregate=False)
+else:
+    opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}', aggregate=False)
+
 
 #Add coastal water level forcing - either from DFM or from an existing time series such as GTSM
 if use_dfm:
