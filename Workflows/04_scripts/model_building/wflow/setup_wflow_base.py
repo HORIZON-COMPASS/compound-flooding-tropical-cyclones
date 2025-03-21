@@ -14,12 +14,13 @@ if "snakemake" in locals():
     region_geom = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
 else:
-    model_dir = r"p:/11210471-001-compass\02_Models\sofala\Idai\wflow"
+    model_dir = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
     config_file = "../../../05_config_models/01_wflow/config_wflow.yml"
-    data_cat = r"../../../03_data_catalogs/datacatalog_general.yml"
-    region_geom = r'p:\11210471-001-compass\02_Models\sofala\Idai\sfincs\gis\region.geojson'
-    dir_sfincs_model = r'p:\11210471-001-compass\02_Models\sofala\Idai\sfincs'
+    data_cat = "../../../03_data_catalogs/datacatalog_general.yml"
+    region_geom = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs/gis/region.geojson'
+    dir_sfincs_model = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
 
+#%%
 if not exists(model_dir):
     os.mkdir(model_dir)
 # model and data paths/
