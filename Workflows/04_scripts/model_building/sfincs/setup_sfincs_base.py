@@ -72,6 +72,23 @@ mod.build(region={"geom": region}, opt=opt)
 
 
 # %%
+# Include extra polygon
+opt2 = {
+    'setup_mask_active': {
+        'include_mask': 'sofala_incl_polygon',
+        'reset_mask': False
+        }
+}
+
+mod.update(
+    write=True,
+    # forceful_overwrite=True,
+    opt=opt2
+)
+# %%
+
+
+# %%
 # Include extra polygon for Sofala region
 if region_name == 'sofala':
     opt2 = {
