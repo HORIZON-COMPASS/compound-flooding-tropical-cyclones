@@ -15,7 +15,7 @@ setup_dep:
 
 setup_mask_active:
   zmin: -10
-  fill_area: 50
+  fill_area: 500
   include_mask: ocean_shape
   reset_mask: True
 
@@ -36,7 +36,7 @@ setup_subgrid:
   - elevtn: merit_hydro        # !TODO change to fabdem     
     zmin: 0.001              
   datasets_rgh:
-  - lulc: vito
+  - lulc: vito # change to esa world cover
     reclass_table: vito_mapping
   nr_subgrid_pixels: 3  
   write_dep_tif: True          # save a cloud-optimized geotiff of the subgrid topography
