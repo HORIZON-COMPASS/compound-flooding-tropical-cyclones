@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import contextily as ctx
 import matplotlib.patches as mpatches
 import os
+#%%
 
 #%%
 
