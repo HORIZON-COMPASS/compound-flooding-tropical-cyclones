@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import contextily as ctx
 import matplotlib.patches as mpatches
 import os
+
 #%%
-
-
 
 def plot_region_with_satellite(region, runname, save=True):
     geojson_path = f'p:/11210471-001-compass/02_Models/{region}/{runname}/wflow/staticgeoms/basins.geojson'
