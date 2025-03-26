@@ -157,6 +157,38 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   meta:
     category: ocean
   crs: 4326
+era5_hourly_CF-7_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF-7_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+    lock: false
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -7%
+  crs: 4326
+era5_hourly_CF0_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF0_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+    lock: false
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value 0%
+  crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
   path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/tide/future_tide_{year}_{month:02d}_v1.nc
