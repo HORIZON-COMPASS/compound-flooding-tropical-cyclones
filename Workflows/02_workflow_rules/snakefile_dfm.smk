@@ -59,6 +59,12 @@ def get_sfincs_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml")
 
+def get_sfincs_datacatalog2(wildcards):
+    if os.name == 'nt': #Running on windows
+        return  join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml")
+    elif os.name == "posix": #Running on linux
+        return join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+
 # Define wildcards for path names
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
@@ -105,6 +111,7 @@ rule make_dfm_model_event:
         verif_points = get_dfm_verification_points,
         data_cat     = get_datacatalog,
         sfincs_data_cat = get_sfincs_datacatalog,
+        sfincs_data_cat2 = get_sfincs_datacatalog2,
         dimrset      = join(disk_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         dfm_obs_file = get_dfm_obs_points,
