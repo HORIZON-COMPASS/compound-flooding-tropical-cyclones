@@ -29,6 +29,7 @@ Delft3DFM/mozambique_model/results
 SFINCS/results
 *.snakemake
 *.svg
+*.pdf
 
 DelftFIAT/scripts/cache
 DelftFIAT/computations
