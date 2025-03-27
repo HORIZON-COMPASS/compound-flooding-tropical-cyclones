@@ -13,9 +13,13 @@ setup_dep:
 
 setup_mask_active:
   zmin: -10
-  fill_area: 500
+  fill_area: 50
   include_mask: ocean_shape
   reset_mask: True
+
+setup_mask_active2:
+  fill_area: 500
+  reset_mask: False
 
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
@@ -30,8 +34,8 @@ setup_subgrid:
   - elevtn: merit_hydro       
     zmin: 0.001              
   datasets_rgh:
-  - lulc: vito # change to esa world cover
-    reclass_table: vito_mapping
+  - lulc: esa_worldcover
+    reclass_table: esa_worldcover_mapping
   nr_subgrid_pixels: 3  
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
@@ -39,15 +43,18 @@ setup_subgrid:
 
 setup_cn_infiltration:
   cn: gcn250  
-  antecedent_moisture: dry
+  antecedent_moisture: dry # TBD
 
 setup_river_inflow:
-  rivers: rivers_lin2019_v1
+  # rivers: rivers_lin2019_v1
   hydrography: merit_hydro
   river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
-  reverse_river_geom: True
 
-
+setup_river_outflow:          # Should be same values as river inflow
+  hydrography: merit_hydro
+  river_upa: 30
+  river_len: 5000
+  keep_rivers_geom: True
