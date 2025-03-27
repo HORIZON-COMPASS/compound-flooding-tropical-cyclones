@@ -33,7 +33,7 @@ else:
     CF_wind_model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF0_{wind_forcing}_CF{CF_wind_txt}'
     F__model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF0_{wind_forcing}_CF0'
     dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]") 
-    crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
+    crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.3]")
     sfincs_bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     crs = 'EPSG:4326' # coordinate reference system
@@ -136,6 +136,7 @@ plt.show()
 
 
 #%%
+crop_bbox = ast.literal_eval("[34, -20.5, 35.6, -19]")
 # plot net/grid for the whole DFM domain and zoomed into the SFINCS domain
 fig, ax = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
 

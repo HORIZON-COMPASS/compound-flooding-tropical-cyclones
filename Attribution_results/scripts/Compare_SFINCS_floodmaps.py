@@ -12,7 +12,7 @@ import contextily as ctx
 import cartopy.crs as ccrs
 import pandas as pd
 import seaborn as sns
-
+from pyproj import Transformer
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -161,7 +161,7 @@ def plot_masked_hmax(models, num_cols=2, figsize=(8, 10)):
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
-        ax.set_title(f"{model['cat_short']} ({model['cf_info_str']})", fontsize=11)
+        ax.set_title(f"{model['cat_short']} ({model['CF_info_str']})", fontsize=11)
 
     # Add colorbar and label
     fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04).set_label('Masked hmax (m)', rotation=270, labelpad=15)
@@ -196,20 +196,48 @@ def compute_hmax_diff(models):
     return models
 
 # Function to plot hmax_diff for counterfactual models
-def plot_hmax_diff(models, num_cols=2, figsize=(14, 8)):
+def plot_hmax_diff(models, num_cols=2, zoom_region_latlon=None):
+    """
+    Plots the hmax_diff for counterfactual models with an optional zoom feature.
+    Each subplot has its own x and y labels, and all subplots retain ticks.
+
+    Parameters:
+        models (list): List of model dictionaries.
+        num_cols (int): Number of columns in the subplot grid.
+        figsize (tuple): Size of the figure.
+        zoom_region_latlon (tuple, optional): (lat_min, lat_max, lon_min, lon_max) in latitude/longitude.
+    """
     # Filter out only counterfactual models with hmax_diff
     counterfactual_models = [m for m in models if "hmax_diff" in m["sfincs_results"]]
+    num_models = len(counterfactual_models)
+
+    # Get projection from the first model (assuming all models have the same CRS)
+    model_crs = models[0]['sfincs_model'].crs
+    model_epsg = model_crs.to_epsg()
+
+    # Convert lat/lon zoom to the model’s coordinate system
+    zoom_region = None
+    if zoom_region_latlon:
+        lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
+        transformer = Transformer.from_crs("EPSG:4326", model_epsg, always_xy=True)
+        xmin, ymin = transformer.transform(lon_min, lat_min)
+        xmax, ymax = transformer.transform(lon_max, lat_max)
+        zoom_region = (xmin, xmax, ymin, ymax)
+
+    # Define grid dimensions
+    num_rows = math.ceil(num_models / num_cols)
 
     # Create figure and subplots
-    fig, axes = plt.subplots(nrows=math.ceil(len(counterfactual_models) / num_cols), 
-                             ncols=num_cols, 
-                             figsize=figsize,
-                             constrained_layout=True, 
-                             subplot_kw={"projection": ccrs.epsg(models[0]['sfincs_model'].crs.to_epsg())})
-    fig.suptitle("Difference Plots: Factual - Counterfactual Water Level", fontsize=16, y=1.06)
+    fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, 
+                             figsize=(num_cols * 5, num_rows * 6), 
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.epsg(model_epsg)})
 
-    # Flatten axes array for easy indexing
-    axes = axes.flatten()
+    # Flatten axes array for easy indexing (handles both single and multiple rows)
+    if num_models == 1:
+        axes = [axes]
+    else:
+        axes = axes.flatten()
 
     # Define colormap settings
     cmap = "RdBu"
@@ -225,27 +253,42 @@ def plot_hmax_diff(models, num_cols=2, figsize=(14, 8)):
             im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
 
             # Add basemap
-            ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_model'].crs, attribution=False)
+            ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9, 
+                            crs=model_crs, attribution=False)
+
+            # Apply zoom if region is specified
+            if zoom_region:
+                xmin, xmax, ymin, ymax = zoom_region
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
 
             # Construct title with CF info
             non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
             cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
-            
             ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
+
+            # Set individual x and y labels for each subplot
             ax.set_xlabel(f"x coordinate UTM zone {model['utmzone']} [m]", fontsize=10)
             ax.set_ylabel(f"y coordinate UTM zone {model['utmzone']} [m]", fontsize=10)
+            ax.xaxis.set_visible(True)
+            ax.yaxis.set_visible(True)
+
+            # Ensure tick labels are visible
             ax.tick_params(axis="both", labelsize=9)
         else:
             print(f"Error: 'hmax_diff' not found for counterfactual model: {model['model_name']}")
 
     # Hide any unused subplots (if the grid is larger than the number of models)
-    for idx in range(len(counterfactual_models), len(axes)):
+    for idx in range(num_models, len(axes)):
         fig.delaxes(axes[idx])
 
     # Add shared colorbar
-    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04)
-    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=12)
+    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
+    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=15, fontsize=12)
     cbar.ax.tick_params(labelsize=10)
+
+    # Reduce whitespace between subplots
+    fig.subplots_adjust(wspace=0.02, hspace=0.15)
 
     # Show the plot
     plt.show()
@@ -435,5 +478,9 @@ models = calculate_flood_differences(models)
 plot_hmax_diff(models)
 plot_masked_hmax(models)
 plot_flood_volume_difference_by_driver(models)
+
+# %%
+zoom_region = (-19.95, -19.6, 34.55, 35.1)
+plot_hmax_diff(models, zoom_region_latlon=zoom_region)
 
 # %%
