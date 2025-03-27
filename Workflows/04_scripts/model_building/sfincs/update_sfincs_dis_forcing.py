@@ -10,25 +10,25 @@ from hydromt_sfincs.sfincs_input import SfincsInput
 logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
     sfincs_model_folder = snakemake.params.dir_run_with_forcing
-    wflow_root = snakemake.params.wflow_root_forcing
-    data_cats = snakemake.params.data_cats
+    wflow_root          = snakemake.params.wflow_root_forcing
+    data_cats           = snakemake.params.data_cats
 else:
-    curdir = '../../../'
-    region = "sofala"
-    tc_name = "Idai"
-    precip_forcing = "era5_hourly"
-    wind_forcing = 'spw_IBTrACS'
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    CF_SLR_txt = "0"
-    CF_wind_txt = "0"
-    CF_rain_txt = "0"
-    wflow_root = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}"
+    curdir              = '../../../'
+    region              = "sofala"
+    tc_name             = "Idai"
+    precip_forcing      = "era5_hourly"
+    wind_forcing        = 'spw_IBTrACS'
+    tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    CF_SLR_txt          = "0"
+    CF_wind_txt         = "0"
+    CF_rain_txt         = "0"
+    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}"
     sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    data_cats = [
-            join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
-            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-            join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
-            join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
+    data_cats           = [
+        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
 
 
