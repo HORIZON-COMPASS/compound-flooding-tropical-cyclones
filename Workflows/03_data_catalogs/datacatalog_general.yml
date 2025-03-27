@@ -738,18 +738,24 @@ era5_daily_zarr:
     source_version: ERA5 daily data on pressure levels
   crs: 4326
 era5_hourly:
+  crs: 4326
   data_type: RasterDataset
-  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}*_hourly.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 125
-      longitude: 120
-      time: 50
-    combine: by_coords
-    decode_times: true
-    parallel: true
-    lock: false
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_temporal_extent:
+      start: '1950-01-01'
+      end: '2023-03-01'
+    source_spatial_extent:
+      West: -0.125
+      South: -90.125
+      East: 359.875
+      North: 90.125
+  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}_hourly.nc
   rename:
     d2m: temp_dew
     msl: press_msl
@@ -759,24 +765,27 @@ era5_hourly:
     tp: precip
     u10: wind10_u
     v10: wind10_v
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
   unit_mult:
     kin: 0.000277778
     kout: 0.000277778
     ssr: 0.000277778
     precip: 1000
     press_msl: 0.01
-  unit_add:
-    temp: -273.15
-    temp_dew: -273.15
-  meta:
-    category: meteo
-    notes: Extracted from Copernicus Climate Data Store
-    paper_doi: 10.1002/qj.3803
-    paper_ref: Hersbach et al. (2019)
-    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
-    source_url: https://doi.org/10.24381/cds.adbb2d47
-    source_version: ERA5 hourly data on single levels from 1940 to present
-  crs: 4326
+  variants:
+    - provider: netcdf
+      driver: netcdf
+      kwargs:
+        chunks:
+          latitude: 125
+          longitude: 120
+          time: 50
+        combine: by_coords
+        decode_times: true
+        parallel: true
+      path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}_hourly.nc
 era5_hourly_zarr:
   data_type: RasterDataset
   path: wflow_global/hydromt/meteo/era5.zarr
