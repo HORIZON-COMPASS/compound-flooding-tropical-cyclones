@@ -18,20 +18,23 @@ if "snakemake" in locals():
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
-# else:
-#     script_root = "p:/11208614-de-370a/02_scripts/wflow_sfincs_snake"
-#     wflow_root = (
-#         "p:/11208614-de-370a/01_models/Philippines/wflow/wflow_philippines_all_islands"
-#     )
-#     use_case = "Philippines"
-#     start_time = "2013-11-06T00:00:00"
-#     end_time = "2013-11-12T00:00:00"
-#     event = "2013-11-06"
+else:
+    precip_forcing = "era5_hourly"
+    CF_rain = 0
+    CF_rain_txt = "0"
+    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
+    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    start_time = "20190309 000000"
+    end_time = "20190325 060000"
+    data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+    ] 
 
 # %% Setup forcing Warmup
 mod = WflowModel(
     root=wflow_root_noforcing,
-    data_libs=[data_cat],
+    data_libs=data_cat,
     mode="r",
     logger=logger,
 )
