@@ -884,11 +884,13 @@ esa_worldcover_2020_v100:
   crs: 4326
 esa_worldcover_mapping:
   data_type: DataFrame
-  provider: user
-  path: SFINCS_tutorial/02_hands-on/local_data/esa_worldcover_mapping.csv
+  path: 11210471-001-compass/01_Data/lulc/esa_worldcover_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
+  meta:
+    category: landuse
+    notes: Manning Roughness values for each ESA World Cover class
 fabdem:
   data_type: RasterDataset
   path: wflow_global/hydromt/topography/fabdem/fabdem.vrt
