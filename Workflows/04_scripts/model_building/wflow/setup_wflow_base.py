@@ -16,9 +16,12 @@ if "snakemake" in locals():
 else:
     model_dir = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
     config_file = "../../../05_config_models/01_wflow/config_wflow.yml"
-    data_cat = "../../../03_data_catalogs/datacatalog_general.yml"
-    region_geom = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs/gis/region.geojson'
-    dir_sfincs_model = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
+    data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+    ] 
+    region_geom = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test/gis/region.geojson'
+    dir_sfincs_model = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test'
 
 #%%
 if not exists(model_dir):
@@ -48,7 +51,7 @@ region = gpd.read_file(region_geom).to_crs(epsg = '4326')
 
 #%%
 mod = WflowModel(
-    root=model_dir, data_libs=[data_cat], mode="w+", logger=logger, **kwargs
+    root=model_dir, data_libs=data_cat, mode="w+", logger=logger, **kwargs
 )
 mod.config['csv'] = None
 # %% BUILD MODEL
