@@ -36,8 +36,8 @@ setup_subgrid:
   - elevtn: merit_hydro        # !TODO change to fabdem     
     zmin: 0.001              
   datasets_rgh:
-  - lulc: esa_worldcover
-    reclass_table: esa_worldcover_mapping
+  - lulc: vito
+    reclass_table: vito_mapping
   nr_subgrid_pixels: 3  
   write_dep_tif: True          # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
