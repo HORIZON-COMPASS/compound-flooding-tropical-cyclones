@@ -22,7 +22,7 @@ runname_ids:
         tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
         dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
         dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
-        dfm_verification_points: 'MZB_Sofala_IHO_obs.xyn'   # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
         sfincs_obs_file: obs_locs_sofala.geojson
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
@@ -30,7 +30,7 @@ runname_ids:
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        CF_value_rain: [0]
+        CF_value_rain: [0, -7]
         CF_value_wind: [0, -10]
         CF_value_SLR: [0, -0.14]
     # Freddy1:
