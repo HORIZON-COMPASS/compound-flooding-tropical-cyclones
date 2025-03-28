@@ -13,6 +13,7 @@ from datetime import timedelta
 logger = setuplog("update", "./hydromt.log", log_level=10)
 
 if "snakemake" in locals():
+    tc_name              = snakemake.wildcards.runname
     wflow_root_noforcing = snakemake.params.wflow_root_noforcing
     wflow_root_forcing   = snakemake.params.wflow_root_forcing
     start_time           = snakemake.params.start_time
@@ -20,11 +21,12 @@ if "snakemake" in locals():
     data_cat             = snakemake.params.data_cat
     precip_forcing       = snakemake.wildcards.precip_forcing
 else:
+    tc_name              = "Idai"
     precip_forcing       = "era5_hourly"
-    CF_rain              = 0
-    CF_rain_txt          = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
-    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    CF_rain              = -7
+    CF_rain_txt          = f"{CF_rain}"
+    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
+    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     start_time           = "20190309 000000"
     end_time             = "20190325 060000"
     data_cat             = ['../../../03_data_catalogs/datacatalog_general.yml',
@@ -55,10 +57,6 @@ opt = {
         "input.path_static": join("..","staticmaps.nc"),
         "input.path_forcing":"inmaps.nc",
     },
-    "setup_precip_forcing": {
-        "precip_fn": precip_forcing,
-        "precip_clim_fn": None,
-    },
     "setup_temp_pet_forcing": {
         "temp_pet_fn": "era5_hourly",
         "press_correction": True,
@@ -68,6 +66,24 @@ opt = {
     },
 }
 
+# Add rainfall forcing
+if CF_rain is None:
+    print(f"Error: CF_rain value not found")
+elif CF_rain == 0:
+    opt["setup_precip_forcing"] = {
+        "precip_fn": precip_forcing,
+        "precip_clim_fn": None,  # Use a different forcing file
+    }
+else:
+    opt["setup_precip_forcing"] = {
+        "precip_fn": f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}',
+        "precip_clim_fn": None,  # Use a different forcing file
+    }
+
+# Print for debugging
+print(opt["setup_precip_forcing"])
+
+#%%
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing()
