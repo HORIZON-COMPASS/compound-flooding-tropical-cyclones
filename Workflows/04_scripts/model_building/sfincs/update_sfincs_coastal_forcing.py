@@ -43,17 +43,16 @@ else:
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]    
-    CF_rain                 = 0
+    CF_rain                 = -7
     CF_rain_txt             = f"{CF_rain}"
-    CF_SLR_txt              = "-0.14"
+    CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
     start_time              = '20190309 000000'
     end_time                = '20190325 060000'
     dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    # dfm_output             = f"dfm_output_{dfm_model}"
-    dfm_output              = "dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP"
-    sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
-    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_toSFINCSwaterlevel_{wind_forcing}_CF{CF_wind_txt}")
+    dfm_output             = f"dfm_output_{dfm_model}"
+    sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs_test")
+    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
     obs_points              = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
 
 #%%
