@@ -8,7 +8,7 @@ setup_grid_from_region:
 
 setup_dep:
   datasets_dep:
-  - elevtn: merit_hydro        # 1st elevation dataset
+  - elevtn: merit_hydro        # 1st elevation dataset !TODO change to fabdem 
     zmin: 0.001                # only use where values > 0.001
 
 setup_mask_active:
@@ -31,29 +31,29 @@ setup_mask_bounds:
 
 setup_subgrid:
   datasets_dep:
-  - elevtn: merit_hydro       
+  - elevtn: merit_hydro        # !TODO change to fabdem     
     zmin: 0.001              
   datasets_rgh:
   - lulc: esa_worldcover
     reclass_table: esa_worldcover_mapping
   nr_subgrid_pixels: 3  
-  write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
+  write_dep_tif: True          # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
-  nrmax: 5000  # set tile size a bit larger speed up processing (default 2000)
-
+  nrmax: 5000                  # set tile size a bit larger speed up processing (default 2000)
+  
 setup_cn_infiltration:
   cn: gcn250  
-  antecedent_moisture: dry # TBD
+  antecedent_moisture: dry     # TBD
 
 setup_river_inflow:
-  rivers: rivers_lin2019_v1 # inconsistent!
+  rivers: rivers_lin2019_v1    # inconsistent!
   hydrography: merit_hydro
   river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
 
-setup_river_outflow:          # Should be same values as river inflow
+setup_river_outflow:           # Should be same values as river inflow
   hydrography: merit_hydro
   river_upa: 30
   river_len: 5000
