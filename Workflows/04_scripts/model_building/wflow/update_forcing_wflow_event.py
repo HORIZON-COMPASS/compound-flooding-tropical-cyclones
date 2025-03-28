@@ -20,6 +20,8 @@ if "snakemake" in locals():
     end_time             = snakemake.params.end_time
     data_cat             = snakemake.params.data_cat
     precip_forcing       = snakemake.wildcards.precip_forcing
+    CF_rain              = float(snakemake.wildcards.CF_rain)
+    CF_rain_txt          = snakemake.wildcards.CF_rain
 else:
     tc_name              = "Idai"
     precip_forcing       = "era5_hourly"
