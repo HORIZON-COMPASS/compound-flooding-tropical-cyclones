@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=compass-dfm         # Job name
-#SBATCH --output=00_execution_script_examples/logs/slurm/slurm_%j.log     # Standard output and error log
+#SBATCH --output=00_execution_script_examples/logs/slurm/slurm_dfm_%j.log     # Standard output and error log
 #SBATCH --time=0-0:30:00           # Job duration (hh:mm:ss)
 #SBATCH --partition test
 #SBATCH --exclusive 
