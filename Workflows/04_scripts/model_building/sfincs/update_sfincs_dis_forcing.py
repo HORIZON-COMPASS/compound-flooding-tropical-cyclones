@@ -19,10 +19,10 @@ else:
     precip_forcing      = "era5_hourly"
     wind_forcing        = 'spw_IBTrACS'
     tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    CF_rain_txt         = "0"
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
-    CF_rain_txt         = "0"
-    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}"
+    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     data_cats           = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
@@ -33,6 +33,7 @@ else:
 
 
 #%%
+# Read wflow event model to get the discharge
 mod = WflowModel(
     root=join(wflow_root, "events"),
     data_libs=data_cats,
@@ -41,8 +42,7 @@ mod = WflowModel(
 )
 mod.read()
 #%%
-# reftime_object = datetime.strptime(ref_time, "%Y-%m-%dT%H:%M:%S")
-
+# Read config rile from sfincs model with coastal and meteo forcing
 inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
 config = inp.to_dict()
 
