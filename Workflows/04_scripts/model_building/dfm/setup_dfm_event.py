@@ -17,59 +17,59 @@ import ast
 
 #%%
 if "snakemake" in locals():
-    region = snakemake.wildcards.region
-    tc_name = snakemake.params.tc_name
-    dfm_res = snakemake.wildcards.dfm_res
-    bathy = snakemake.wildcards.bathy
-    tidemodel = snakemake.wildcards.tidemodel
-    bathy = snakemake.wildcards.wind_forcing
-    wind_forcing = snakemake.wildcards.wind_forcing
-    start_time = snakemake.params.start_time
-    end_time = snakemake.params.end_time
-    bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
-    output_bbox = ast.literal_eval(snakemake.params.output_bbox)
-    dfm_obs_file = snakemake.params.dfm_obs_file
-    verification_points = os.path.abspath(snakemake.params.verif_points)
-    path_data_cat = os.path.abspath(snakemake.params.data_cat)
-    # path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
-    model_name = snakemake.params.model_name
-    dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
-    dir_output_main = os.path.abspath(snakemake.params.dir_event_model)
-    dimrset_folder = os.path.abspath(snakemake.params.dimrset)
+    region               = snakemake.wildcards.region
+    tc_name              = snakemake.params.tc_name
+    dfm_res              = snakemake.wildcards.dfm_res
+    bathy                = snakemake.wildcards.bathy
+    tidemodel            = snakemake.wildcards.tidemodel
+    bathy                = snakemake.wildcards.wind_forcing
+    wind_forcing         = snakemake.wildcards.wind_forcing
+    start_time           = snakemake.params.start_time
+    end_time             = snakemake.params.end_time
+    bbox_dfm             = ast.literal_eval(snakemake.params.dfm_bbox)
+    sfincs_region        = os.path.abspath(snakemake.params.sfincs_region)
+    # output_bbox          = ast.literal_eval(snakemake.params.output_bbox)
+    dfm_obs_file         = snakemake.params.dfm_obs_file
+    verification_points  = os.path.abspath(snakemake.params.verif_points)
+    path_data_cat        = os.path.abspath(snakemake.params.data_cat)
+    model_name           = snakemake.params.model_name
+    dir_base_model       = os.path.abspath(snakemake.params.dir_base_model)
+    dir_output_main      = os.path.abspath(snakemake.params.dir_event_model)
+    dimrset_folder       = os.path.abspath(snakemake.params.dimrset)
     uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
-    submit_script_file = os.path.abspath(snakemake.output.submit_script)
-    CF_SLR = float(snakemake.wildcards.CF_SLR)
-    CF_SLR_txt = snakemake.wildcards.CF_SLR
-    CF_wind = float(snakemake.wildcards.CF_wind)
-    CF_wind_txt = snakemake.wildcards.CF_wind
+    submit_script_file   = os.path.abspath(snakemake.output.submit_script)
+    CF_SLR               = float(snakemake.wildcards.CF_SLR)
+    CF_SLR_txt           = snakemake.wildcards.CF_SLR
+    CF_wind              = float(snakemake.wildcards.CF_wind)
+    CF_wind_txt          = snakemake.wildcards.CF_wind
 else:
-    region = "sofala"
-    tc_name = "Idai"
-    dfm_res = "450"
-    bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS"
-    CF_SLR = -0.14
-    CF_SLR_txt = "-0.14"
-    CF_wind = -10
-    CF_wind_txt = "-10"
-    bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
-    output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
-    start_time = "20190309 000000"
-    end_time = "20190325 060000"
-    dfm_obs_file = "coastal_coupling_DFM_obs_points_MZB"
-    verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
-    path_data_cat = [
+    region               = "sofala"
+    tc_name              = "Idai"
+    dfm_res              = "450"
+    bathy                = "gebco2024_MZB"
+    tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    wind_forcing         = "spw_IBTrACS"
+    CF_SLR               = 0
+    CF_SLR_txt           = f"{CF_SLR}"
+    CF_wind              = 0
+    CF_wind_txt          = f"{CF_wind}"
+    bbox_dfm             = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
+    sfincs_region        = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs/gis/region.geojson"
+    start_time           = "20190309 000000"
+    end_time             = "20190325 060000"
+    dfm_obs_file         = "coastal_coupling_DFM_obs_points_MZB"
+    verification_points  = "dfm_verif_points_MZB"
+    path_data_cat        = [
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
-    ]
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    base_model = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
-    dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
-    dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
-    dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
-    submit_script_file = 'run_parallel.bat'
+        ]
+    model_name           = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    base_model           = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
+    dir_base_model       = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
+    dir_output_main      = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
+    dimrset_folder       = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
+    submit_script_file   = 'run_parallel.bat'
     
 
 #%%
@@ -223,17 +223,24 @@ elif meteo_type == 'spiderweb':
 # The D-Flow FM model wil have mapoutput and hisoutput. 
 # A file with coordinates of obs stations will be generated.
 
-# Read shp file of points along the MZB coastline
+# Read shp file of points along the coastline and the sfincs region
 gdfp = gpd.read_file(data_catalog[dfm_obs_file].path)
+region_poly = gpd.read_file(sfincs_region)
 
-# crop output points to the area where output is needed for the flood model
-gdfp = gdfp.cx[output_bbox[0]:output_bbox[2],output_bbox[1]:output_bbox[3]]
+# Ensure both have the same CRS
+gdfp = gdfp.to_crs(region_poly.crs)
 
-# Convert points to the xyn file format
-xcor = gdfp['geometry'][:].x; xcor.name = 'x'
-ycor = gdfp['geometry'][:].y; ycor.name = 'y'
-tmp = pd.concat([xcor,ycor],axis=1)
-tmp = tmp.dropna()
+# Buffer the region_poly and clip the points along the coastline by the buffered region
+buffer_size = 100  # Set buffer distance (adjust as needed)
+region_poly_buffered = region_poly.buffer(buffer_size)
+gdfp_clipped = gpd.clip(gdfp, region_poly_buffered)
+
+# Extract x and y coordinates
+xcor = gdfp_clipped.geometry.x; xcor.name = 'x'
+ycor = gdfp_clipped.geometry.y; ycor.name = 'y'
+
+# Combine into a DataFrame
+tmp = pd.concat([xcor, ycor], axis=1).dropna()
 tmp['names'] = tmp.index
 
 try:
