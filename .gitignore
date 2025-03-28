@@ -30,6 +30,7 @@ SFINCS/results
 *.snakemake
 *.svg
 *.pdf
+*.png
 
 DelftFIAT/scripts/cache
 DelftFIAT/computations

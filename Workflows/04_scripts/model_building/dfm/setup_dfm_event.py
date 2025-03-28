@@ -29,7 +29,7 @@ if "snakemake" in locals():
     bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
     output_bbox = ast.literal_eval(snakemake.params.output_bbox)
     dfm_obs_file = snakemake.params.dfm_obs_file
-    verification_points = os.path.abspath(snakemake.params.verif_points)
+    verification_points = snakemake.params.verif_points
     path_data_cat = os.path.abspath(snakemake.params.data_cat)
     path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
     path_data_cat_sfincs2 = os.path.abspath(snakemake.params.sfincs_data_cat2)
@@ -275,7 +275,8 @@ if os.path.exists(pathfile_illegalcells):
 mdu.geometry.netfile = netfile
 
 # add the external forcing files (.ext)
-mdu.external_forcing.extforcefile = ext_file_old
+if meteo_type == 'spiderweb':
+    mdu.external_forcing.extforcefile = ext_file_old
 mdu.external_forcing.extforcefilenew = ext_file_new
 
 # Define drag coefficient 

@@ -136,4 +136,4 @@ rule sfincs_plot_floodmap:
     output:
         figure = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{forcing}", "plot_output", "sfincs_basemap.png")  
     script:
-        join(curdir,  '..', "04_scripts", "postprocessing", "sfincs_postprocess.py")
+        join(curdir,  '..', "04_scripts", "postprocessing", "sfincs", "sfincs_postprocess.py")

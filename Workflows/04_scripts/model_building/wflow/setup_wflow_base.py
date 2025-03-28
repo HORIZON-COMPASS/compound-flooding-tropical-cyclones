@@ -36,6 +36,7 @@ opt['setup_gauges'] = {
     'gauges_fn': join(dir_sfincs_model, "gis", "src.geojson"),
     'snap_to_river': True,
     'snap_uparea': True,
+    'rel_error': 0.2,
     'derive_subcatch': False,
     'index_col': 'index',
     'basename': 'locs'

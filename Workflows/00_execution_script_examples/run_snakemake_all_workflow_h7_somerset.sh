@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=0-0:20:00           # Job duration (hh:mm:ss)
-#SBATCH --partition test #4vcpu
+#SBATCH --time=0-3:00:00           # Job duration (hh:mm:ss)
+#SBATCH --partition 4vcpu #test #4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
 
@@ -30,18 +30,8 @@ cd Workflows/02_workflow_rules
 #Unlocking the directory for snakemake
 snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml 
 
-# # running workflow with snakemake
+#running workflow with snakemake
 snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --forceall --rulegraph | dot -Tpng > dag_smk_somerset_all.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --cores 'all' --rerun-triggers input --latency-wait 180 --wait-for-files --keep-incomplete
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --cores 'all' --latency-wait 180 --wait-for-files
 
 exit
-
-
-
-# #Unlocking the directory for snakemake
-# snakemake --unlock -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_somerset.yml 
-
-# # # running workflow with snakemake
-# snakemake -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_somerset.yml --rulegraph | dot -Tpng > dag_smk_sfincs_smst.png
-# snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --rerun-triggers input --cores 'all' --latency-wait 60 --wait-for-files --dry-run
-

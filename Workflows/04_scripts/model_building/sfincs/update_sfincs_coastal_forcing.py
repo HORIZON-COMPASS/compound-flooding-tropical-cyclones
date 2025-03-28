@@ -49,7 +49,7 @@ opt['setup_precip_forcing_from_grid'] = dict(precip=precip_forcing,aggregate=Fal
 if use_dfm:
     # Add coastal water level forcing from Delft3D-FM model
     opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
-else
+else:
     # Add coastal water level forcing from an existing time series
     opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
 

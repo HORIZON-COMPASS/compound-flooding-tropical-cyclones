@@ -1,5 +1,7 @@
 setup_config:
   stopdepth: 500
+  storecuminf: 1  #Store the cumulative infiltration
+  storecumprcp: 1 #Store the cumulative precip
   
 setup_grid_from_region:
   res: 100                     # model resolution
@@ -14,7 +16,8 @@ setup_dep:
 setup_mask_active:
   zmin: -10
   fill_area: 50
-  include_mask: ocean_shape
+  exclude_mask: ocean_shape     #Make a decision - user-defined 
+  #include_mask: ocean_shape
   reset_mask: True
 
 setup_mask_active2:
@@ -24,9 +27,9 @@ setup_mask_active2:
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
   zmin: -10
-  zmax: -1
-  include_mask: osm_coastlines
-  include_mask_buffer: 200         
+  #zmax: -1
+  include_mask: osm_coastlines  #Make a decision - user-defined 
+  include_mask_buffer: 1000     #Changed to snap the mask boundary     ###
   reset_bounds: True  
 
 setup_subgrid:

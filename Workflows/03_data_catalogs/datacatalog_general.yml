@@ -757,7 +757,6 @@ era5_hourly:
     combine: by_coords
     decode_times: true
     parallel: true
-    lock: false
   rename:
     d2m: temp_dew
     msl: press_msl
