@@ -53,7 +53,7 @@ kwargs = opt.pop("global", {})
 
 # fill in the configuration for SFINCS with arguments from the snakemake config file
 opt['setup_dep']['datasets_dep'] = opt['setup_dep']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
-opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
+
 opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
 
 #%%
@@ -62,8 +62,13 @@ region = get_local_vector_data(
     bbox = bbox,
     data_cat = data_cats[0],
 )
-#%%
+
 opt['setup_mask_active']['mask'] = region
+opt['setup_mask_active']['mask_buffer'] = 2000
+opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
+
+opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
+
 #%%
 mod = SfincsModel(
     root=model_dir, data_libs=data_cats, mode="w+", logger=logger, **kwargs

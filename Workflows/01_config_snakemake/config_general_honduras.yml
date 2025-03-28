@@ -34,5 +34,5 @@ runname_ids:
         config_sfincs_base: sfincs_base_build.yml          # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
         bbox_sfincs: "[-88.3,15.1,-87.6,16.0]"             # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
         utmzone: 16p                                       # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)     
-        coastal_ts: gtsm_codec_reanalysis                  # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used    
+        coastal_ts: gtsm_reanalysis_waterlevel_hourly      # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used   # gtsm_codec_reanalysis until 2018 only
         dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask                                                                               
