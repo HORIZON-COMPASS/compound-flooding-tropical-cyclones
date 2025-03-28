@@ -16,8 +16,8 @@ def get_region(wildcards):
     print(test)
     return config["runname_ids"][wildcards.runname]['region']
 
-def get_forcing(wildcards):
-    return config["runname_ids"][wildcards.runname]['forcing']
+def get_tcname(wildcards):
+    return config["runname_ids"][wildcards.runname]['tc_name']
 
 def get_start_time(wildcards):
     return config["runname_ids"][wildcards.runname]['start_time']
@@ -107,6 +107,7 @@ rule update_forcing_wflow_event:
         end_time = get_end_time,
         forcing = "{precip_forcing}",
         data_cat = get_datacatalog,
+        tc_name = get_tcname
     script:
         join(curdir, '..',  "04_scripts", "model_building", "wflow", "update_forcing_wflow_event.py")
 
