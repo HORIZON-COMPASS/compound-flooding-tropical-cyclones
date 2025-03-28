@@ -26,6 +26,7 @@ if "snakemake" in locals():
     obs_points              = snakemake.params.sfincs_obs_points
     CF_wind_txt             = snakemake.wildcards.CF_wind
     CF_rain                 = float(snakemake.wildcards.CF_rain)
+    CF_rain_txt             = snakemake.wildcards.CF_rain
 else:
     region                  = "sofala"
     utmzone                 = '36s'
