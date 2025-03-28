@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_sfincs_%j.log     # Standard output and error log
-#SBATCH --time=0-2:00:00           # Job duration (hh:mm:ss)
+#SBATCH --time=0-1:00:00           # Job duration (hh:mm:ss)
 #SBATCH --partition 4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
@@ -25,10 +25,10 @@ source hook.sh
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
+snakemake --unlock -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
 # # running workflow with snakemake
-snakemake -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_sfincs_update.png
-snakemake -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
+snakemake -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_sfincs_update.png
+snakemake -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
 
 exit
