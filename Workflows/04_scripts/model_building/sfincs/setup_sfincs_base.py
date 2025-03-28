@@ -48,7 +48,7 @@ opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{
 
 #%%
 region = get_local_vector_data(
-    file = 'basin_atlas_level12_v10', #TODO change to 'merit_hydro_basins....' 
+    file = 'basin_atlas_level12_v10',
     bbox = bbox,
     data_cat = data_cats[0],
 )
@@ -69,23 +69,6 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
-
-
-# %%
-# Include extra polygon
-opt2 = {
-    'setup_mask_active': {
-        'include_mask': 'sofala_incl_polygon',
-        'reset_mask': False
-        }
-}
-
-mod.update(
-    write=True,
-    # forceful_overwrite=True,
-    opt=opt2
-)
-# %%
 
 
 # %%
