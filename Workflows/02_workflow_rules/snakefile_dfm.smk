@@ -114,64 +114,49 @@ rule all_dfm:
 
 rule make_model_dfm_base:
     params:
-        data_cat = get_datacatalog,
-        dfm_bbox = get_dfm_bbox,
-        output_bbox = get_sfincs_bbox,
+        data_cat     = get_datacatalog,
+        dfm_bbox     = get_dfm_bbox,
+        output_bbox  = get_sfincs_bbox,
         dfm_dxy_base = get_dfm_dxy_base,
     output: 
-        dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
+        dir_model    = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
         ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}", "ext_file_new.ext"),
     script:
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_base.py")
 
-# Modify rule to also create CF for other datasets than spw files 
-# rule create_CF_wind_forcing:
-#     params:
-#         start_date = get_start_time,
-#         end_date   = get_end_time,
-#         tc_name    = get_tcname,
-#         data_cat   = get_datacatalog,
-#         root_dir   = p_dir,
-#         sid        = get_tc_sid,
-#         ext_days   = get_tc_ext_days,
-#     output:
-#         path_CF_wind = join(root_dir, dir_data, "SPW_forcing_files", "tc_{tc_name}_CF{CF_wind}_{sid}_ext{ext_days}d.spw")
-#     script:
-#         join("..", "04_scripts", "preprocessing", "create_tc_IBTrACS_wind.py")
-
 rule make_dfm_model_event:
     input:
-        ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}", "ext_file_new.ext"),
+        ext_file_new    = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}", "ext_file_new.ext"),
     params:
-        tc_name = get_tcname,
-        dir_base_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
+        tc_name         = get_tcname,
+        dir_base_model  = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}")),
         dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
-        start_time   = get_start_time,
-        end_time     = get_end_time,
-        dfm_bbox     = get_dfm_bbox,
-        output_bbox  = get_sfincs_bbox,
-        verif_points = get_dfm_verification_points,
-        data_cat     = get_datacatalog,
-        dimrset      = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
-        uniformwind  = join(root_dir, dir_data, "uniformwind0.wnd"),
-        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
-        dfm_obs_file = get_dfm_obs_points,
+        start_time      = get_start_time,
+        end_time        = get_end_time,
+        dfm_bbox        = get_dfm_bbox,
+        sfincs_region   = join(root_dir, dir_models, "{region}", "{tc_name}", "sfincs", "gis", "region.geojson"),
+        verif_points    = get_dfm_verification_points,
+        data_cat        = get_datacatalog,
+        dimrset         = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
+        uniformwind     = join(root_dir, dir_data, "uniformwind0.wnd"),
+        model_name      = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
+        dfm_obs_file    = get_dfm_obs_points,
     output: 
-        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
+        mdu_file        = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
+        submit_script   = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     script:
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
     input:
-        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
+        mdu_file           = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
+        submit_script      = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     params:
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
+        dir_event_model    = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
         submit_script_copy = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system_copy),    
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),        
+        his_file           = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),        
     run:
         if os.name == 'nt':
             print("Executing DFM...")
@@ -184,13 +169,13 @@ rule run_dfm:
 
 rule add_dfm_output_to_catalog:
     input:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
+        his_file     = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
     params:
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
         cf_data_cat  = get_cf_datacatalog,
         root_dir     = p_dir,
     output:
-        done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
+        done_file    = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     script:
         join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
         join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
