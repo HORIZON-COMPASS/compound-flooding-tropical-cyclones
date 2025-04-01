@@ -159,6 +159,7 @@ rule make_dfm_model_event:
         taskspernode = 4,
     script:
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
+        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 
 rule run_dfm:

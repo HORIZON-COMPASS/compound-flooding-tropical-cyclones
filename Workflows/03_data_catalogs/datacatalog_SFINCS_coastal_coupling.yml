@@ -86,15 +86,18 @@ dfm_verif_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
-dfm_verif_points_SMST:
-  data_type: DataFrame
-  path: 11210471-001-compass/01_Data/Coastal_boundary/points/Somerset_verification_points.xyn
-  driver: vector
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
   meta:
-    category: geography
-    notes: observation points
-    source_author: Natalia Aleksandrova
-    source_license: na
-    source_url: none
-    source_version: 1.0
+    category: ocean
   crs: 4326

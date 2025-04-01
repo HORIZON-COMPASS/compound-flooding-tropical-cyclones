@@ -75,7 +75,7 @@ else:
 #%%
 # Define hydromt datacatalog
 #data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
-data_catalog = hydromt.data_catalog.DataCatalog([path_data_cat])
+data_catalog = hydromt.data_catalog.DataCatalog(data_libs=path_data_cat)
 
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
