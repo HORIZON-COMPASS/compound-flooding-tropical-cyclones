@@ -1107,7 +1107,7 @@ gebco2024_HND:
   crs: 4326
 gebco2024_MZB:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n19.0_s14.7_w-89.4_e-80.0.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
   driver: raster
   driver_kwargs:
     chunks:
@@ -2307,14 +2307,10 @@ pcr_globwb:
     ind_gross: 1000
   driver: zarr
   variants:
-  - path: wflow_global/hydromt/hydro/pcr_globwb/glob_1990.zarr
-    version: '1990'
-  - path: wflow_global/hydromt/hydro/pcr_globwb/glob_1995.zarr
-    version: '1995'
-  - path: wflow_global/hydromt/hydro/pcr_globwb/glob_1990.zarr
-    version: '1990'
-  - path: wflow_global/hydromt/hydro/pcr_globwb/glob_1995.zarr
-    version: '1995'
+  - version: '1990'
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_1990.zarr
+  - version: '1995'
+    path: wflow_global/hydromt/hydro/pcr_globwb/glob_1995.zarr
   - version: '2000'
     path: wflow_global/hydromt/hydro/pcr_globwb/glob_2000.zarr
   - version: '2005'

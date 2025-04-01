@@ -122,15 +122,3 @@ dfm_verif_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
-dfm_verif_points_SMST:
-  data_type: DataFrame
-  path: 11210471-001-compass/01_Data/Coastal_boundary/points/Somerset_verification_points.xyn
-  driver: vector
-  meta:
-    category: geography
-    notes: observation points
-    source_author: Natalia Aleksandrova
-    source_license: na
-    source_url: none
-    source_version: 1.0
-  crs: 4326

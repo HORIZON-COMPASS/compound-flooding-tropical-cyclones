@@ -32,7 +32,6 @@ else:
         ]
 
 
-
 #%%
 # Read wflow event model to get the discharge
 mod = WflowModel(

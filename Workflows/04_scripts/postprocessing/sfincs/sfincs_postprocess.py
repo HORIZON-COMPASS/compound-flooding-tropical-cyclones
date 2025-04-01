@@ -10,32 +10,32 @@ from hydromt_sfincs import SfincsModel, utils
 #%%
 # We read the snakemake parameters
 if "snakemake" in locals():
-    mapfile = snakemake.input.mapout
-    outfile = snakemake.output.figure
+    mapfile              = snakemake.input.mapout
+    outfile              = snakemake.output.figure
     dir_model_no_forcing = snakemake.params.dir_model_no_forcing
-    dir_run = snakemake.params.dir_run
-    datacat = snakemake.params.datacat
+    dir_run              = snakemake.params.dir_run
+    datacat              = snakemake.params.datacat
 else:
-    region = "sofala"
-    tc_name = "Idai"
-    wind_forcing = 'spw_IBTrACS'
-    precip_forcing = 'era5_hourly'
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    datacat = [
+    region               = "sofala"
+    tc_name              = "Idai"
+    wind_forcing         = 'spw_IBTrACS'
+    precip_forcing       = 'era5_hourly'
+    tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    datacat              = [
         '../../03_data_catalogs/datacatalog_general.yml',
         '../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
-        '../../03_data_catalogs/datacatalog_CF_forcing.yml',
-    ]
-    CF_SLR_txt = "0"
-    CF_wind_txt = "0"
-    CF_rain_txt = "0"
+        '../../03_data_catalogs/datacatalog_CF_forcing.yml'
+        ]
+    CF_SLR_txt           = "0"
+    CF_wind_txt          = "0"
+    CF_rain_txt          = "0"
     # mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/sfincs_map.nc"
     # outfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/plot_output/sfincs_basemap.png"
     # dir_run = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/sfincs_map.nc"
-    outfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/plot_output/sfincs_basemap.png"
-    dir_run = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}"
+    mapfile              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/sfincs_map.nc"
+    outfile              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/plot_output/sfincs_basemap.png"
+    dir_run              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}"
 
 print("------- Checking what we got ------")
 print("Model run directory: ", dir_run)

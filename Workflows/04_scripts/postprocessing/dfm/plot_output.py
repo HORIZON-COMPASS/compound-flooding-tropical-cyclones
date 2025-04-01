@@ -162,7 +162,7 @@ for ax in axes:
     dfmt.plot_coastlines(ax=ax, min_area=1000, linewidth=0.5, zorder=0)
     dfmt.plot_borders(ax=ax, zorder=0)
 
-# Display the plot
+# Show the plot
 plt.tight_layout()
 plt.show()
 

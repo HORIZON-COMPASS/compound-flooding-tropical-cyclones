@@ -89,7 +89,7 @@ zarr = "==2.18.3"
 [environments]
 default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
-compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow","wflow_extra"]}
+compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow"]}
 compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
 # compass-fiat-hydromt = { features = ["py311","hydromt_fiat"]}
 compass-fiat = { features = ["py311","fiat"]}

@@ -20,12 +20,6 @@ else:
     CF_SLR_txt = "-0.14"
     CF_wind_txt = "0"
     model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS"
-    CF_SLR_txt = "-0.14"
-    CF_wind_txt = "0"
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
     path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
     run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     root_dir = 'p:\\'
