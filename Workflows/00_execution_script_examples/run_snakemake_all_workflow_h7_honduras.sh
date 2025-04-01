@@ -33,7 +33,7 @@ snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_s
 
 # running workflow with snakemake
 snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_honduras.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras.yml --cores 'all' --latency-wait 180 --wait-for-files #--dry-run # --forceall --cores 4 
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras.yml --cores 'all' --latency-wait 180 --wait-for-files --rerun-incomplete #--dry-run # --forceall --cores 4 
 
 
 exit
