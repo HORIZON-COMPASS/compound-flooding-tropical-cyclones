@@ -62,7 +62,7 @@ rule make_base_model_wflow:
         region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
         dir_sfincs_model = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
         src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
-        config_file = get_config,
+        config_file = get_config  
     params:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
         data_cat = get_datacatalog,

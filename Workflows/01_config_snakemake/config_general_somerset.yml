@@ -8,7 +8,7 @@ runname_ids:
     SomersetLevels:   
         #Settings of the workflow                           # name of the model run
         tc_name: winterstorm                                # name of the storm. For tropical cyclones, this can be the name of the TC
-        region: somerset                                    # name of the region will be used in naming folders 
+        region: somerset_test                               # name of the region will be used in naming folders 
         
         #For all model setups
         start_time: 20131225 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
@@ -30,10 +30,16 @@ runname_ids:
         dfm_obs_file: coastal_coupling_DFM_obs_points_SMST  # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS
         dfm_verification_points: dfm_verif_points_SMST      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
 
+        #Wflow model user-defined settings
+        config_wflow_base: wflow_base_build.yml           # name of the SFINCS configuration file (default: wflow_base_build.yml)  
+
         #SFINCS model user-defined settings
-        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  ## I think this should be removed?
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_SMST         # DataCatalog handle for the coastal coupling mask
         coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used
         utmzone: 30u                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                
 
+
+        
