@@ -13,7 +13,7 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000                   
         forcing: era5_hourly                                # forcing dataset for the rainfall data (matching to the DataCatalog handle)
-        wind_forcing: spw_IBTrACS_CF0_Idai                  # wind and pressure dataset (used for coastal surge modelling)
+        wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
         dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
@@ -24,6 +24,12 @@ runname_ids:
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
         
+        #Models selections
+        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
+        use_wflow: True                                     # use the hydrological model Wflow      
+
+        coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+          
         # Change to:
         # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
         # wind_forcing: ["spw_IBTrACS_ext","IFS"]
