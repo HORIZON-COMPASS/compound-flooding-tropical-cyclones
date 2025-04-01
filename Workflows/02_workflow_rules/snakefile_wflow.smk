@@ -29,6 +29,10 @@ def get_bbox(wildcards):
     arg_bbox = "{" + "'bbox': "+ prebbox + "}"
     return arg_bbox
 
+def get_config(wildcards):
+    config_wflow_base = config["runname_ids"][wildcards.runname]['config_wflow_base']
+    return join(curdir, '..', "05_config_models", "01_wflow", config_wflow_base)
+
 # def get_dir_model_base(wildcards):
 #     print(wildcards)
 #     return join(root_dir, dir_models, config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
@@ -54,10 +58,11 @@ rule all_wflow:
 
 rule make_base_model_wflow:
     input:
-        config_file = join(curdir,'..', "05_config_models", "01_wflow", "config_wflow.yml"),
+        #config_file = join(curdir,'..', "05_config_models", "01_wflow", "config_wflow.yml"),
         region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
         dir_sfincs_model = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson")
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
+        config_file = get_config,
     params:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
         data_cat = get_datacatalog,
@@ -90,6 +95,8 @@ rule update_forcing_wflow_event:
     input: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
+        #Creates a serial dependency with the previous rule to avoid error when running the workflow
+        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "inmaps.nc") 
     output:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "inmaps.nc"),
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "wflow_sbm.toml"),
