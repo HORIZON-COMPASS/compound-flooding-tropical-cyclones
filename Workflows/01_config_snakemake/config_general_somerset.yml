@@ -8,12 +8,12 @@ runname_ids:
     SomersetLevels:   
         #Settings of the workflow                           # name of the model run
         tc_name: winterstorm                                # name of the storm. For tropical cyclones, this can be the name of the TC
-        region: somerset_test                               # name of the region will be used in naming folders 
+        region: somerset_test_rivers                        # name of the region will be used in naming folders 
         
         #For all model setups
         start_time: 20131225 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
         end_time: 20140115 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
-        forcing: era5_hourly_zarr                           # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        forcing: ceh_gear                                   # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
         wind_forcing: era5_hourly                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco                                        # DataCatalog handle for the bathymetry dataset
         #bathy: emodnet_bathy_E4_2018_msl                   # DataCatalog handle for the bathymetry dataset
