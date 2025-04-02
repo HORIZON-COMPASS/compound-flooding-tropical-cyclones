@@ -19,21 +19,12 @@ Workflows/slurm*
 Workflows/.nfs*
 Workflows/*/.nfs*
 Workflows/test_*
+Workflows/.snakemake
+Workflows/02_workflow_rules/.snakemake
 
 # Model data
-Delft3DFM/mozambique_model/computations
-DelftFIAT/computations
+Workflows/04_scripts/model_building/fiat/cache
 DelftFIAT/scripts/cache
-SFINCS/computations
-Delft3DFM/mozambique_model/results
-SFINCS/results
-*.snakemake
-*.svg
-*.pdf
-*.png
-
-DelftFIAT/scripts/cache
-DelftFIAT/computations
 
 # Distribution / packaging
 .Python
