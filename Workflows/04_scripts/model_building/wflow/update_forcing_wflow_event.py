@@ -1,8 +1,5 @@
 # %%
-from os.path import basename, join
-
-import pandas as pd
-from hydromt.config import configread
+from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
 from datetime import datetime as datetime
@@ -81,9 +78,6 @@ else:
         "precip_fn": f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}',
         "precip_clim_fn": None,  # Use a different forcing file
     }
-
-# Print for debugging
-print(opt["setup_precip_forcing"])
 
 #%%
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
