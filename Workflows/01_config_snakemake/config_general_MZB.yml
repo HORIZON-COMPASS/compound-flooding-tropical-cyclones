@@ -18,14 +18,11 @@ runname_ids:
         wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
-                 
-        # SFINCS model user-defined settings
-        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
-        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
-        sfincs_obs_file: obs_locs_sofala.geojson
-        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
-        coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
-               
+
+        # Models selections
+        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
+        use_wflow: True                                     # use the hydrological model Wflow      
+         
         # DFM model user-defined settings
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
         dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
@@ -34,10 +31,17 @@ runname_ids:
         dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
         dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
         tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
-
-        #Models selections
-        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
-        use_wflow: True                                     # use the hydrological model Wflow      
+        
+        # SFINCS model user-defined settings
+        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        sfincs_obs_file: obs_locs_sofala.geojson
+        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+        coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        
+        # Delft-FIAT user-defined settings
+        continent: Africa                                   # name of the continent for Delft-FIAT
+        country: Mozambique                                 # name of the country for Delft-FIAT
 
         # Counterfactual forcing settings
         CF_value_rain: [-7]
