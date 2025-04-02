@@ -12,6 +12,7 @@ from hydromt_sfincs import SfincsModel, utils
 if "snakemake" in locals():
     mapfile              = snakemake.input.mapout
     outfile              = snakemake.output.figure
+    floodmap             = snakemake.output.floodmap
     dir_model_no_forcing = snakemake.params.dir_model_no_forcing
     dir_run              = snakemake.params.dir_run
     datacat              = snakemake.params.datacat
@@ -22,26 +23,26 @@ else:
     precip_forcing       = 'era5_hourly'
     tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     datacat              = [
-        '../../03_data_catalogs/datacatalog_general.yml',
-        '../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
-        '../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
-        '../../03_data_catalogs/datacatalog_CF_forcing.yml'
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml'
         ]
     CF_SLR_txt           = "0"
-    CF_wind_txt          = "0"
+    CF_wind_txt          = "-10"
     CF_rain_txt          = "0"
-    # mapfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/sfincs_map.nc"
-    # outfile = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}/plot_output/sfincs_basemap.png"
-    # dir_run = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    mapfile              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/sfincs_map.nc"
-    outfile              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}/plot_output/sfincs_basemap.png"
-    dir_run              = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_precip_{precip_forcing}"
+    model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    dir_run            = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
+    mapfile              = f"{dir_run}/sfincs_map.nc"
+    outfile              = f"{dir_run}/plot_output/sfincs_basemap.png"
+    floodmap             = f"{dir_run}/plot_output/floodmap.tif"
 
+#%%
 print("------- Checking what we got ------")
 print("Model run directory: ", dir_run)
 print("mapfile: ", mapfile)
 print("Output figure basemap: ", outfile)
-
+#%%
 # select the model and datacatalog
 sfincs_root = dir_run
 mod = SfincsModel(sfincs_root, data_libs=datacat, mode="r")
@@ -51,7 +52,7 @@ mod = SfincsModel(sfincs_root, data_libs=datacat, mode="r")
 #mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
 #%%
 # select our highest-resolution elevation dataset
-depfile = join(dir_model_no_forcing, "subgrid", "dep_subgrid.tif")
+depfile = join(dir_run, "subgrid", "dep_subgrid.tif")
 da_dep = mod.data_catalog.get_rasterdataset(depfile)
 
 # read global surface water occurance (GSWO) data to mask permanent water
@@ -84,7 +85,9 @@ hmin = 0.05
 da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
-    hmin=hmin)
+    hmin=hmin,
+    floodmap_fn=floodmap # uncomment to save to <mod.root>/floodmap.tif)
+)
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
 gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
