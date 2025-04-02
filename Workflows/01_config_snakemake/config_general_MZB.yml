@@ -5,40 +5,45 @@ dir_data:    01_Data
 dir_models:  02_Models              # Folder where the base models will be saved (without dynamic forcing data)
 dir_runs:    03_Runs                # Folder where model runs will be saved (with forcing)
 runname_ids: 
-    Idai:                                                   # name of the model run
+    Idai2:                                                   # name of the model run
+        # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
-        sid: 2019063S18038                                  # Storm id from IBTrACS
         region: sofala                                      # name of the region will be used in naming folders 
-        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
-        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+        # For all model setups
         start_time: 20190309 000000
         end_time: 20190325 060000      
-        ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
         precip_forcing: era5_hourly                         # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
-        dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
-        dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
-        tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
-        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
-        dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
-        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
+                 
+        # SFINCS model user-defined settings
+        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
         sfincs_obs_file: obs_locs_sofala.geojson
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
-        
+        coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+               
+        # DFM model user-defined settings
+        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+        dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
+        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
+        dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
+        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
+
         #Models selections
         use_dfm: True                                       # use the coastal hydrodynamic model D-FM
         use_wflow: True                                     # use the hydrological model Wflow      
 
-        coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
-          
-        # Change to:
-        # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
-        # wind_forcing: ["spw_IBTrACS_ext","IFS"]
+        # Counterfactual forcing settings
         CF_value_rain: [0]
         CF_value_wind: [0]
         CF_value_SLR: [0]
+
     # Freddy1:
     #     tc_name: Freddy1
     #     sid: 2023036S12118
