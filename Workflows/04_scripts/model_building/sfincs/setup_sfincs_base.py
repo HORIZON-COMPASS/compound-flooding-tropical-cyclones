@@ -23,7 +23,7 @@ if "snakemake" in locals():
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
     region_name      = snakemake.wildcards.region
 else:
-    model_dir        = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs'
+    model_dir        = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test'
     config_file      = '../../../05_config_models/02_sfincs/sfincs_base_build.yml'
     data_cats        = ['../../../03_data_catalogs/datacatalog_general.yml',
                         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
@@ -33,6 +33,7 @@ else:
     dfm_coastal_mask = 'coastal_coupling_msk_MZB'
     region_name      = 'sofala'
 
+# Check whether model folder exists. If not, make one
 if not exists(model_dir):
     os.mkdir(model_dir)
 #%%
@@ -43,7 +44,6 @@ kwargs = opt.pop("global", {})
 
 # fill in the configuration for SFINCS with arguments from the snakemake config file
 opt['setup_dep']['datasets_dep'] = opt['setup_dep']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
-
 opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
 
 #%%
@@ -56,8 +56,13 @@ region = get_local_vector_data(
 #%%
 # Set up model region
 opt['setup_mask_active']['mask'] = region
-opt['setup_mask_active']['mask_buffer'] = 2000
+opt['setup_mask_active']['mask_buffer'] = 1000
 opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
+
+if region_name == 'sofala':
+    opt['setup_mask_active2']['include_mask'] = 'sofala_incl_polygon'
+else:
+    pass
 
 opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
 
@@ -73,19 +78,19 @@ mod.build(region={"geom": region}, opt=opt)
 
 # %%
 # Include extra polygon for Sofala region
-if region_name == 'sofala':
-    opt2 = {
-        'setup_mask_active': {
-        'include_mask': 'sofala_incl_polygon',
-        'reset_mask': False
-        }}
+# if region_name == 'sofala':
+#     opt2 = {
+#         'setup_mask_active': {
+#         'include_mask': 'sofala_incl_polygon',
+#         'reset_mask': False
+#         }}
     
-    mod.update(
-        write=True,
-        opt=opt2
-        )
-else:
-    pass
+#     mod.update(
+#         write=True,
+#         opt=opt2
+#         )
+# else:
+#     pass
 
 # %%
 # Set up river depths using r+ mode 
