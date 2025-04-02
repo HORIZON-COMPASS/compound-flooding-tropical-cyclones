@@ -107,13 +107,12 @@ era5_hourly_CF-7_Idai:
     combine: by_coords
     decode_times: true
     parallel: true
-    lock: false
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value -7%
   crs: 4326
 era5_hourly_zarr_CF-7_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-7_Idai.nc
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-7_Idai.zarr
   driver: zarr
   driver_kwargs:
     chunks: auto

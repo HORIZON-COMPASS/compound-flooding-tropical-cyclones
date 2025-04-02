@@ -191,7 +191,7 @@ era5_hourly_CF0_Idai:
   crs: 4326
 era5_hourly_zarr_CF-7_Idai:
   data_type: RasterDataset
-  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-7_Idai.nc
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-7_Idai.zarr
   driver: zarr
   driver_kwargs:
     chunks: auto

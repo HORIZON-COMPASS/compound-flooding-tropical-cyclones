@@ -70,7 +70,21 @@ precip_data_CF = precip_data_CF * ((100 + CF_value)/ 100)
 
 #%%
 # Saving CF precip dataset
-precip_data_CF.to_netcdf(output_CF_rainfall)
+input_file = data_catalog.get_source(precip_name).path
+
+if input_file.endswith(".nc"):
+    input_format = "netcdf"
+elif input_file.endswith(".zarr"):
+    input_format = "zarr"
+else:
+    raise ValueError("Unsupported file format")
+
+# Save the data in the same format as the input
+if input_format == "netcdf":
+    precip_data_CF.to_netcdf(output_CF_rainfall)
+elif input_format == "zarr":
+    output_CF_rainfall = output_CF_rainfall.replace(".nc", ".zarr")
+    precip_data_CF.to_zarr(output_CF_rainfall)
 
 #%%
 # Adding modified rainfall dataset to the CF data catalog
