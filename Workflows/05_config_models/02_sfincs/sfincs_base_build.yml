@@ -16,7 +16,6 @@ setup_dep:
 setup_mask_active:
   zmin: -10
   fill_area: 50
-  #exclude_mask: ocean_shape     #Make a decision - user-defined 
   #include_mask: ocean_shape
   reset_mask: True
 
@@ -28,8 +27,8 @@ setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
   zmin: -10
   #zmax: -1
-  #include_mask: osm_coastlines  #Make a decision - user-defined 
-  include_mask_buffer: 1000     #Changed to snap the mask boundary     ###
+  #include_mask: osm_coastlines  
+  include_mask_buffer: 2000    
   reset_bounds: True  
 
 setup_subgrid:
