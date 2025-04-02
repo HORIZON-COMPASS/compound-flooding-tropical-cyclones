@@ -33,9 +33,9 @@ else:
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ] 
-    precip_name = "era5_hourly"
+    precip_name = "era5_hourly_zarr"
     CF_value = -7
-    CF_value_txt = "-7"
+    CF_value_txt = f"{CF_value}"
     output_CF_rainfall = f"p:/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"
     CF_catalog_path = "../../../03_data_catalogs/datacatalog_CF_forcing.yml"
 
@@ -55,7 +55,7 @@ time_range = (start_dt, end_dt)
 #%%
 # Load raster data for specified region and time range
 precip_data = data_catalog.get_rasterdataset(
-    data_like = 'era5_hourly',
+    data_like = precip_name,
     time_tuple = time_range,
     variables = 'precip',
     geom=region, 

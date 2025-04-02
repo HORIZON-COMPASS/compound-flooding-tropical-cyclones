@@ -95,3 +95,28 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   meta:
     category: ocean
   crs: 4326
+era5_hourly_CF-7_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF-7_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+    lock: false
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -7%
+  crs: 4326
+era5_hourly_zarr_CF-7_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-7_Idai.nc
+  driver: zarr
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
+  crs: 4326

@@ -1,8 +1,8 @@
 meta:
-  root: p:\
+  root: c:\Code\COMPASS\Workflows\03_data_catalogs
 ERA5land_Idai_-7:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/ERA5land_Idai_-7.nc
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\ERA5land_Idai_-7.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -17,29 +17,14 @@ ERA5land_Idai_-7:
   crs: 4326
 TAMSAT_Idai_-7:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/TAMSAT_Idai_-7.nc
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\TAMSAT_Idai_-7.nc
   driver: netcdf
   meta:
     notes: Copied TAMSAT_Idai dataset and adjusted with CF value -7%
   crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP:
-  data_type: GeoDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_SLR2015.his
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
 dfm_output_MZB_Idai_noSLR2015:
   data_type: GeoDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_MZB_Idai_SLR2015.his
+  path: p:\11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -54,7 +39,7 @@ dfm_output_MZB_Idai_noSLR2015:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10/output/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10\output\event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -69,7 +54,7 @@ dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0\output\event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -84,7 +69,7 @@ dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10/output/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10\output\event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -99,7 +84,7 @@ dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0\output\event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -114,7 +99,7 @@ dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -128,23 +113,38 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
     category: ocean
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0\output\settings_0000_his.nc
+  driver: netcdf
   driver_kwargs:
     chunks:
       time: -1
       stations: 10
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0/output/settings_0000_his.nc
-  driver: netcdf
-  crs: 4326
-  meta:
-    category: ocean
   rename:
     stations: index
     station_y_coordinate: lat
     station_x_coordinate: lon
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP:
+  data_type: GeoDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_SLR2015.his
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+  crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -159,7 +159,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   crs: 4326
 era5_hourly_CF-7_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF-7_Idai.nc
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF-7_Idai.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -189,9 +189,18 @@ era5_hourly_CF0_Idai:
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value 0%
   crs: 4326
+era5_hourly_zarr_CF-7_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-7_Idai.nc
+  driver: zarr
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
+  crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
-  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/tide/future_tide_{year}_{month:02d}_v1.nc
+  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
