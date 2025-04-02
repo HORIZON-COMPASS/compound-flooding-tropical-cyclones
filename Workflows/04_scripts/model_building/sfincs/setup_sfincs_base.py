@@ -32,6 +32,7 @@ else:
     bathy            = 'gebco2024_MZB'
     dfm_coastal_mask = 'coastal_coupling_msk_MZB'
     region_name      = 'sofala'
+    
 
 # Check whether model folder exists. If not, make one
 if not exists(model_dir):
