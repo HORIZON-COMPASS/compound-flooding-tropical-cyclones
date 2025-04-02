@@ -854,11 +854,10 @@ axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for 
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
 
-    model['flood_volume_km3'] = flood_volume_km3
-    print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
+model['flood_volume_km3'] = flood_volume_km3
+print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
 
 #%% Calculate the flood volume difference between the factual and counterfactual datasets:
-
 factual_flood_volume = None 
 factual_flood_extent = None 
 
@@ -994,8 +993,8 @@ axes[-1].tick_params(axis="x", rotation=60, labelsize=14)  # Rotate x-ticks for 
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.02), ncol=2, fontsize=16)
 
-    model['flood_volume_km3'] = flood_volume_km3
-    print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
+model['flood_volume_km3'] = flood_volume_km3
+print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
 
 #%% Calculate the flood volume difference between the factual and counterfactual datasets:
 
