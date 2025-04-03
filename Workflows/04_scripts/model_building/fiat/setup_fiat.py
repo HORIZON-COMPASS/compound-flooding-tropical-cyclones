@@ -8,6 +8,7 @@ import geopandas as gpd
 import shutil
 from hydromt.config import configread
 import rasterio
+import toml
 
 #%%
 if "snakemake" in locals():
@@ -33,8 +34,8 @@ else:
     CF_wind_txt             = "-10"
     model_name              = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/{model_name}")
-    # model_folder            = (Path(os.path.join("p:/11210471-001-compass/03_Runs/sofala/Idai/fiat", model_name)))  # path to model folder
-    model_folder            = Path(os.path.join("c:/Code/Delft-FIAT/tests", model_name))
+    model_folder            = (Path(os.path.join("p:/11210471-001-compass/03_Runs/sofala/Idai/fiat", model_name)))  # path to model folder
+    # model_folder            = Path(os.path.join("c:/Code/Delft-FIAT/tests", model_name))
     config_file             = '../../../05_config_models/03_fiat/config_fiat.yml'
     floodmap                = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/{model_name}/plot_output/floodmap.tif"
 
@@ -72,5 +73,26 @@ fiat_model = FiatModel(root=model_folder, mode="w", data_libs=data_catalog, logg
 # Build and write the model
 fiat_model.build(region={"geom": region}, opt=config, write=True)
 
+
 #%%
+# Debugging to allow running the model from a different location than python environment is stored
+# Load the buildings.gpkg file
+gdf = gpd.read_file(f"{model_folder}/exposure/buildings.gpkg")
+
+# Save as .fgb
+gdf.to_file(f"{model_folder}/exposure/buildings.fgb", driver="FlatGeobuf")
+
+#%%
+# Refer to the new file in the settings.toml
+with open(f"{model_folder}/settings.toml", "r") as f:
+    settings = toml.load(f)
+
+# Update the file path
+settings["exposure"]["geom"]["file1"] = "exposure/buildings.fgb"
+settings["output"]["geom"]["name1"] = "spatial.fgb"
+
+# Save the updated TOML file
+with open(f"{model_folder}/settings.toml", "w") as f:
+    toml.dump(settings, f)
+# %%
 # To run the model, use the "execute_fiat_example.ipynb" script
