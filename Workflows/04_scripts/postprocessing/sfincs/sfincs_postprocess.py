@@ -87,6 +87,10 @@ ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
 
+# save as raster
+da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_output_hmax_AllTime.tif'))
+
+
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
 for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
@@ -123,6 +127,9 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
     for r in ((":", ""), (" ", "_"), ("-", "")):
         figname_ext = figname_ext.replace(*r)
     fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.png'))
+
+    # save as raster
+    da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.tif'))
 
 
 ### PLOT TIMESERIES OUTPUT POINTS
