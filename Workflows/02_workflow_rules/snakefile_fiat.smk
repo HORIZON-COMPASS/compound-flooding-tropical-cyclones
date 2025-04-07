@@ -82,7 +82,7 @@ rule build_fiat_model:
     params:
         dir_run_with_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
         datacat_fiat         = get_datacatalog,
-        model_folder         = directory(join(root_dir, dir_runs, "{region}", "{runname}", "fiat")),
+        model_folder         = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}"),
         continent            = get_continent,
         country              = get_country,
         config               = get_config,
