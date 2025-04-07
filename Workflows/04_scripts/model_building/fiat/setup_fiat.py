@@ -66,7 +66,7 @@ config["setup_hazard"]["crs"]                 = crs_flood
 # Set up model
 # if model_folder.exists():
 #     shutil.rmtree(model_folder)
-fiat_model = FiatModel(root=model_folder, mode="w", data_libs=[data_catalog], logger=logger, mode=w+)
+fiat_model = FiatModel(root=model_folder, mode="w+", data_libs=[data_catalog], logger=logger)
 
 #%%
 # Build and write the model
