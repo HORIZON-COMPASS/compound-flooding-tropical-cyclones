@@ -36,13 +36,9 @@ def get_config(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_fiat.yml")
-        ]
+        return join(curdir, '..', "03_data_catalogs", "datacatalog_fiat.yml")
     elif os.name == "posix": #Running on linux
-        return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_fiat___linux.yml"), 
-        ]
+        return join(curdir, '..', "03_data_catalogs", "datacatalog_fiat___linux.yml")
 
 
 runname_ids = list(config['runname_ids'].keys())
