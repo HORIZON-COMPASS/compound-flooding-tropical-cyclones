@@ -38,6 +38,7 @@ gdal = "*"
 delft_fiat = "*"
 pandas="*"
 matplotlib = "*"
+toml = "*"
 
 [feature.sfincs.dependencies]
 hydromt = ">=0.10.0, <0.10.1"
