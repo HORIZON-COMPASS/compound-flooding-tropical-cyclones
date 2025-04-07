@@ -66,7 +66,7 @@ config["setup_hazard"]["crs"]                 = crs_flood
 # Set up model
 # if model_folder.exists():
 #     shutil.rmtree(model_folder)
-fiat_model = FiatModel(root=model_folder, mode="w", data_libs=[data_catalog], logger=logger)
+fiat_model = FiatModel(root=model_folder, mode="w", data_libs=[data_catalog], logger=logger, mode=w+)
 
 #%%
 # Build and write the model
@@ -95,3 +95,5 @@ with open(f"{model_folder}/settings.toml", "w") as f:
     toml.dump(settings, f)
 # %%
 # To run the model, use the "execute_fiat_example.ipynb" script
+
+# %%
