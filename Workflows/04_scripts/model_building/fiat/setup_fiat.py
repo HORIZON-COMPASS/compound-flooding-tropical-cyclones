@@ -28,15 +28,15 @@ else:
     precip_forcing          = 'era5_hourly_zarr'
     bathy                   = "gebco2024_MZB"
     tidemodel               = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    data_catalog            = ['../../../03_data_catalogs/datacatalog_fiat.yml']    
-    CF_rain_txt             = "0"
+    data_catalog            = '../../../03_data_catalogs/datacatalog_fiat.yml'  
+    CF_rain_txt             = "-7"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
     model_name              = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/{model_name}")
     model_folder            = (Path(os.path.join("p:/11210471-001-compass/03_Runs/sofala/Idai/fiat", model_name)))  # path to model folder
     # model_folder            = Path(os.path.join("c:/Code/Delft-FIAT/tests", model_name))
-    config_file             = '../../../05_config_models/03_fiat/config_fiat.yml'
+    config_file             = '../../../05_config_models/03_fiat/fiat_base_build.yml'
     floodmap                = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/{model_name}/plot_output/floodmap.tif"
 
 # %%
@@ -66,7 +66,7 @@ config["setup_hazard"]["crs"]                 = crs_flood
 # Set up model
 # if model_folder.exists():
 #     shutil.rmtree(model_folder)
-fiat_model = FiatModel(root=model_folder, mode="w", data_libs=data_catalog, logger=logger)
+fiat_model = FiatModel(root=model_folder, mode="w", data_libs=[data_catalog], logger=logger)
 
 #%%
 # Build and write the model
