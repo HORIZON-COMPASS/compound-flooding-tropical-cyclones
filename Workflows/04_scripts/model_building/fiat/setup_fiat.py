@@ -13,7 +13,7 @@ import toml
 #%%
 if "snakemake" in locals():
     sfincs_mod_with_forcing = Path(os.path.abspath(snakemake.params.dir_run_with_forcing))
-    data_catalog            = snakemake.params.datacat_fiat
+    data_catalog            = Path(os.path.abspath(snakemake.params.datacat_fiat))
     model_folder            = Path(os.path.abspath(snakemake.params.model_folder))
     continent               = snakemake.params.continent
     country                 = snakemake.params.country
@@ -29,7 +29,7 @@ else:
     bathy                   = "gebco2024_MZB"
     tidemodel               = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     data_catalog            = '../../../03_data_catalogs/datacatalog_fiat.yml'  
-    CF_rain_txt             = "-7"
+    CF_rain_txt             = "0"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
     model_name              = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
