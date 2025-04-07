@@ -33,7 +33,7 @@ cd Workflows/02_workflow_rules
 snakemake --unlock -s snakefile_all_wflow_sfincs_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
 #running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
+snakemake -s snakefile_all_wflow_sfincs_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb.png
 snakemake -s snakefile_all_wflow_sfincs_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 180 --wait-for-files
 
 exit
