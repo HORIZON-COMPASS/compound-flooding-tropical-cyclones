@@ -68,36 +68,32 @@ region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR,
 
 rule all_fiat_model:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
-
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "spatial.fgb"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
 
 rule build_fiat_model:
     input:
         floodmap             = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "floodmap.tif")
     params:
-        dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
-                                                                  f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
-        datacat_fiat         = get_datacatalog
+        dir_run_with_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
+        datacat_fiat         = get_datacatalog,
         model_folder         = directory(join(root_dir, dir_runs, "{region}", "{runname}", "fiat")),
-        continent            = get_continent
-        country              = get_country
-        config               = config_file = join(curdir,'..', "05_config_models", "03_fiat", "config_fiat.yml"),
+        continent            = get_continent,
+        country              = get_country,
+        config               = join(curdir,'..', "05_config_models", "03_fiat", "config_fiat.yml"),
     output:
-        fiat_settings        = join(root_dir,  dir_runs, "{region}", "{runname}", "fiat","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
+        fiat_settings        = join(root_dir,  dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
     script:
         join( '..', "04_scripts", "model_building", "fiat", "setup_fiat.py")
 
 
 rule run_fiat_model:
     input:
-        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
-                             "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
+        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
     params:
-        dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
-                                                                  f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
+        dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "fiat", f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
     output:
-        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", 
-                      f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}", "fiat_output.nc"),
+        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "spatial.fgb")
     run:
         if os.name == 'nt':  # For Windows
             import subprocess
@@ -105,8 +101,7 @@ rule run_fiat_model:
             with open(join(params.dir_run_with_forcing, "fiat_log.txt"), "w") as log_file:
                 subprocess.run(["fiat", "run", input.fiat_settings], stdout=log_file, stderr=subprocess.PIPE, cwd=params.dir_run_with_forcing)
             print("Finished running FIAT on Windows.")
-        
-        elif os.name == 'posix':  # For Linux
+        if os.name == 'posix':  # For Linux
             print(f"Running FIAT model with settings: {input.fiat_settings}")
             shell(f"fiat run {input.fiat_settings}")
             print("Finished running FIAT on Linux.")
