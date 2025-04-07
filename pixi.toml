@@ -39,6 +39,7 @@ delft_fiat = "*"
 pandas="*"
 matplotlib = "*"
 toml = "*"
+libstdcxx-ng = ">=12"
 
 [feature.sfincs.dependencies]
 hydromt = ">=0.10.0, <0.10.1"
