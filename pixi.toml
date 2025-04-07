@@ -34,7 +34,6 @@ cartopy = ">=0.20.0"
 matplotlib = ">=3.8.4,<3.9" 
 
 [feature.fiat.dependencies]
-libstdcxx-ng= "=12"
 gdal = "*"
 delft_fiat = "*"
 matplotlib = "*"
