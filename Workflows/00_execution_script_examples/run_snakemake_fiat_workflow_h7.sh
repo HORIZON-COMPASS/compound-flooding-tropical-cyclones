@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=compass-sfincs                                              # Job name
+#SBATCH --job-name=compass-fiat                                              # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_fiat_%j.log     # Standard output and error log
 #SBATCH --time=0-2:00:00                                                       # Job duration (hh:mm:ss)
 #SBATCH --partition 4vcpu
@@ -18,7 +18,7 @@ cd "${ROOT}"
 # Installing pixi environment
 pixi install --environment compass-fiat
 pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
-pixi shell-hook --environment compass-snake-sfincs > hook.sh
+pixi shell-hook --environment compass-fiat > hook.sh
 source hook.sh
 
 
