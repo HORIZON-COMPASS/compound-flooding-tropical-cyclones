@@ -21,6 +21,7 @@ Workflows/*/.nfs*
 Workflows/test_*
 Workflows/.snakemake
 Workflows/02_workflow_rules/.snakemake
+Workflows/02_workflow_rules/cache
 
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
