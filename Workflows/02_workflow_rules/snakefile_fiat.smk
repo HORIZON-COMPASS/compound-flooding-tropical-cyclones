@@ -29,6 +29,11 @@ def get_country(wildcards):
 
 def get_continent(wildcards):
     return config['runname_ids'][wildcards.runname]['continent']
+
+def get_config(wildcards):
+    config_fiat_base = config["runname_ids"][wildcards.runname]['config_fiat_base']
+    return join(curdir, '..', "05_config_models", "03_fiat", config_fiat_base)
+
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return [
@@ -80,7 +85,7 @@ rule build_fiat_model:
         model_folder         = directory(join(root_dir, dir_runs, "{region}", "{runname}", "fiat")),
         continent            = get_continent,
         country              = get_country,
-        config               = join(curdir,'..', "05_config_models", "03_fiat", "config_fiat.yml"),
+        config               = get_config,
     output:
         fiat_settings        = join(root_dir,  dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
     script:
@@ -93,7 +98,7 @@ rule run_fiat_model:
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "fiat", f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
     output:
-        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "spatial.fgb")
+        out = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "spatial.fgb")
     run:
         if os.name == 'nt':  # For Windows
             import subprocess
