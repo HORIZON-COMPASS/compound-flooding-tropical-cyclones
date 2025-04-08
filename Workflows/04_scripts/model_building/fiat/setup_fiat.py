@@ -93,7 +93,15 @@ settings["output"]["geom"]["name1"] = "spatial.fgb"
 # Save the updated TOML file
 with open(f"{model_folder}/settings.toml", "w") as f:
     toml.dump(settings, f)
-# %%
-# To run the model, use the "execute_fiat_example.ipynb" script
 
 # %%
+# Ensure readability on linux
+with open(f'{model_folder}/vulnerability/vulnerability_curves.csv', 'r') as f:
+    lines = f.read().splitlines()
+
+with open(f'{model_folder}/vulnerability/vulnerability_curves.csv', 'w') as f:
+    for line in lines:
+        f.write(line + '\n')
+
+#%%
+# To run the model, use the "execute_fiat_example.ipynb" script
