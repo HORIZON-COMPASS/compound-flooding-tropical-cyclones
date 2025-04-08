@@ -28,6 +28,9 @@ pip = ">=25.0.1,<26"
 [feature.py311.dependencies]
 python = "3.11.*"
 
+[feature.py312.dependencies]
+python = "3.12.*"
+
 [feature.dataviz.dependencies]
 ffmpeg = ">=7.0.0" 
 cartopy = ">=0.20.0" 
@@ -89,7 +92,7 @@ default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
 compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
-compass-fiat = { features = ["py311", "fiat", "snake"]}
+compass-fiat = { features = ["py312", "fiat", "snake"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
