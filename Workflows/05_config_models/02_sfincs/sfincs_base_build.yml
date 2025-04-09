@@ -51,7 +51,6 @@ setup_river_inflow:
   # rivers: rivers_lin2019_v1    # inconsistent! --> gives strange source
   hydrography: merit_hydro
   river_upa: 30
-  buffer: 500
   river_len: 5000
   keep_rivers_geom: True
 
