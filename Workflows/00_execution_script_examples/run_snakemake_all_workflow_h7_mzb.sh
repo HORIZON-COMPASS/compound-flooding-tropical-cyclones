@@ -19,8 +19,15 @@ cd "${ROOT}"
 # Installing pixi environment
 pixi install --environment compass-wflow-sfincs-fiat
 pixi run --environment compass-wflow-sfincs-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
+pixi run --environment compass-wflow-sfincs-fiat conda install ibstdcxx-ng=12 
+pixi run --environment compass-wflow-sfincs-fiat conda install gcc
+pixi run --environment compass-wflow-sfincs-fiat conda install --force-reinstall pandas xarray
 pixi shell-hook --environment compass-wflow-sfincs-fiat > hook.sh
 source hook.sh
+
+# Make sure the correct version of libstdc++ is being loaded
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+echo "LD_LIBRARY_PATH set to: $LD_LIBRARY_PATH"
 
 # Install Julia environment
 julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'

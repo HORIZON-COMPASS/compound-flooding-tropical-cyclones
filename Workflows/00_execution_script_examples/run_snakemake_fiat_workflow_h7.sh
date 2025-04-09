@@ -17,10 +17,10 @@ cd "${ROOT}"
 
 # Installing pixi environment
 pixi install --environment compass-fiat
-#NOTE: uncomment below when using this environment for the first time
-# pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
-# pixi run --environment compass-fiat conda install ibstdcxx-ng=12 gcc
-# pixi run --environment compass-fiat conda install --force-reinstall pandas xarray
+pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
+pixi run --environment compass-fiat conda install ibstdcxx-ng=12 
+pixi run --environment compass-fiat conda install gcc
+pixi run --environment compass-fiat conda install --force-reinstall pandas xarray
 pixi shell-hook --environment compass-fiat > hook.sh
 source hook.sh
 
