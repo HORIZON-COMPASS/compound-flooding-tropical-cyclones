@@ -13,6 +13,7 @@ import cartopy.crs as ccrs
 import pandas as pd
 import seaborn as sns
 from pyproj import Transformer
+import numpy as np
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -27,6 +28,8 @@ def load_sfincs_models(config):
     base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/sfincs/"
     
     models = []
+    factual_model = None  # Initialize factual_model before the loop
+    
     for rain, wind, slr in itertools.product(run['CF_value_rain'], run['CF_value_wind'], run['CF_value_SLR']):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
         model_path = os.path.join(base_path, model_name)
@@ -40,17 +43,70 @@ def load_sfincs_models(config):
         non_zero_CF_info = {k: v for k, v in CF_info.items() if v != 0}
         CF_info_str      = ", ".join(f"{k}: {v}" for k, v in non_zero_CF_info.items())
 
-        models.append({
+        # Create model dictionary
+        model_dict = {
+            "model_name": model_name,
+            "model_path": model_path,
+            "utmzone": utmzone,
+            "sfincs_model": model_obj,
+            "sfincs_results": model_obj.results,
+            "category": categories[num_CF_diff],
+            "cat_short": short_cats[num_CF_diff],
+            "CF_info": CF_info,
+            "CF_info_str": CF_info_str
+        }
+
+        # If the model is factual (CF values are all 0), assign it to factual_model
+        if num_CF_diff == 0:
+            factual_model = model_dict
+        else:
+            models.append(model_dict)
+
+    # Ensure the factual model is the first one in the list
+    if factual_model is not None:
+        models.insert(0, factual_model)
+
+    return models
+
+
+def load_fiat_models(config):
+    run = config['runname_ids']['Idai']
+    base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/fiat/"
+    
+    models = []
+    factual_model = None  # Initialize factual_model before the loop
+    
+    for rain, wind, slr in itertools.product(run['CF_value_rain'], run['CF_value_wind'], run['CF_value_SLR']):
+        model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
+        model_path = os.path.join(base_path, model_name)
+        fiat_results = pd.read_csv(join(f"{model_path}", "output/output.csv"))
+
+        num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
+        categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
+        short_cats       = ["F", "CF_DR_single", "CF_DR_pair", "CF_DR_compound"]
+        CF_info          = {k: v for k, v in zip(["rain", "wind", "SLR"], [rain, wind, slr]) if v != 0}
+        non_zero_CF_info = {k: v for k, v in CF_info.items() if v != 0}
+        CF_info_str      = ", ".join(f"{k}: {v}" for k, v in non_zero_CF_info.items())
+
+        model_dict = {
             "model_name":     model_name,
             "model_path":     model_path,
-            "utmzone":        utmzone,
-            "sfincs_model":   model_obj,
-            "sfincs_results": model_obj.results,
+            "fiat_results":   fiat_results,
             "category":       categories[num_CF_diff],
             "cat_short":      short_cats[num_CF_diff],
             "CF_info":        CF_info,
             "CF_info_str":    CF_info_str
-        })
+        }
+
+        # If the model is factual (CF values are all 0), assign it to factual_model
+        if num_CF_diff == 0:
+            factual_model = model_dict
+        else:
+            models.append(model_dict)
+
+    # Ensure the factual model is the first one in the list
+    if factual_model is not None:
+        models.insert(0, factual_model)
 
     return models
 
@@ -195,8 +251,9 @@ def compute_hmax_diff(models):
     
     return models
 
+
 # Function to plot hmax_diff for counterfactual models
-def plot_hmax_diff(models, num_cols=2, zoom_region_latlon=None):
+def plot_hmax_diff(models, num_cols=1, zoom_region_latlon=None):
     """
     Plots the hmax_diff for counterfactual models with an optional zoom feature.
     Each subplot has its own x and y labels, and all subplots retain ticks.
@@ -225,6 +282,9 @@ def plot_hmax_diff(models, num_cols=2, zoom_region_latlon=None):
         zoom_region = (xmin, xmax, ymin, ymax)
 
     # Define grid dimensions
+    if num_models > 1:
+        num_cols = 2
+    
     num_rows = math.ceil(num_models / num_cols)
 
     # Create figure and subplots
@@ -373,11 +433,12 @@ def calculate_flood_differences(models):
         if factual_flood_volume is not None and model["category"] != "Factual":
             # Error handling for missing flood extent in counterfactual models
             flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
+
             if flood_volume is None:
                 print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if flood volume is missing
             
-            flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
+            flood_volume_diff = (flood_volume - factual_flood_volume) / factual_flood_volume * 100
             model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
             print(f"flood_volume_diff calculated for {model['model_name']}")
 
@@ -389,11 +450,38 @@ def calculate_flood_differences(models):
                 print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if flood extent is missing
 
-            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
+            flood_extent_diff = (flood_extent - factual_flood_extent) / factual_flood_extent * 100
             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
             print(f"flood_extent_diff calculated for {model['model_name']}")
 
     return models
+
+
+def calculate_damage_differences(fiat_models):
+    factual_total_damage = None  # Variable to store the factual total damage
+
+    for model in fiat_models:
+        # Store factual total damage for comparison
+        if model["category"] == "Factual":
+            factual_total_damage = model['fiat_results'].get("total_damage", None)
+
+            if factual_total_damage is None:
+                print(f"Error: 'total_damage' not found for factual model: {model['model_name']}")
+                continue  # Skip this model if factual total damage is missing
+
+        # Compute damage difference for counterfactual models
+        if factual_total_damage is not None and model["category"] != "Factual":
+            total_damage = model['fiat_results'].get('total_damage', None)
+            if total_damage is None:
+                print(f"Error: 'total_damage' not found for counterfactual model: {model['model_name']}")
+                continue  # Skip this model if total damage is missing
+            
+            # Calculate the damage difference from the factual model (in percentage)
+            damage_diff = (total_damage - factual_total_damage) / factual_total_damage * 100
+            model['fiat_results']['Damage_diff_from_F(%)'] = damage_diff
+            print(f"damage_diff calculated for {model['model_name']}")
+
+    return fiat_models
 
 
 # Function to create a categorical plot comparing flood volume differences by CF driver
@@ -429,6 +517,9 @@ def plot_flood_volume_difference_by_driver(models):
             print(drivers)
 
     # Create a DataFrame for plotting
+    print(len(model_names))
+    print(len(volume_diffs))
+    print(len(drivers))
     df = pd.DataFrame({
         "Model name": model_names,
         "Flood volume difference (F-CF in %)": volume_diffs,
@@ -447,6 +538,84 @@ def plot_flood_volume_difference_by_driver(models):
     plt.title("Flood Volume Difference by CF Driver")
     plt.tight_layout()
     plt.show()
+
+
+def plot_flood_and_damage_difference_by_driver(sfincs_models, fiat_models):
+    # Create lists for model names, volume differences, damage differences, and drivers
+    model_names = []
+    volume_diffs = []
+    damage_diffs = []
+    drivers = []
+
+    # Collect data from models excluding "Factual"
+    for sfincs, fiat in zip(sfincs_models, fiat_models):
+        if sfincs['category'] != "Factual":
+            model_names.append(sfincs["model_name"])
+            
+            # Flood volume difference
+            volume_diff_value = sfincs['sfincs_results'].get("Volume_diff_from_F(%)", None)
+            if volume_diff_value is not None:
+                print(volume_diff_value)
+                volume_diffs.append(volume_diff_value.values.flatten()[0])
+            
+            # Damage difference (from fiat results)
+            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
+            if mean_damage_diff is not None:
+                print(mean_damage_diff)
+                damage_diffs.append(mean_damage_diff)
+            
+            # Determine CF driver
+            CF_info = sfincs["CF_info"]
+            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
+                drivers.append("Compound")
+            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
+                drivers.append("Rain & wind")
+            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
+                drivers.append("Rain & SLR")
+            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
+                drivers.append("Wind & SLR")
+            elif "rain" in CF_info and CF_info["rain"] != 0:
+                drivers.append("Rain")
+            elif "wind" in CF_info and CF_info["wind"] != 0:
+                drivers.append("Wind")
+            elif "SLR" in CF_info and CF_info["SLR"] != 0:
+                drivers.append("SLR")
+
+    # Create a DataFrame for plotting
+    df = pd.DataFrame({
+        "Model name": model_names,
+        "Flood volume difference (F-CF in %)": volume_diffs,
+        "Mean damage difference (%)": damage_diffs,
+        "CF driver": drivers
+    })
+
+    # Create the seaborn categorical plot (swarm plot)
+    sns.set(style="whitegrid")
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    # Plot flood volume difference
+    catplot = sns.swarmplot(data=df, 
+                            x="CF driver", 
+                            y="Flood volume difference (F-CF in %)", 
+                            hue="CF driver", 
+                            ax=ax1, 
+                            palette="Set2")
+    ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)  # Rotate x-axis labels for better readability
+    ax1.set_xlabel("CF Driver")
+    ax1.set_ylabel("Flood volume difference (F-CF in %)")
+    
+    # Create a second y-axis for damage difference
+    ax2 = ax1.twinx()
+    ax2.plot(df["CF driver"], df["Mean damage difference (%)"], marker='o', color='r', linestyle='-', label="Damage difference", alpha=0.7)
+    ax2.set_ylabel("Damage difference (%)")
+    
+    # Title and layout
+    plt.title("Flood Volume and Damage Difference by CF Driver")
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
 
 
 ##############################################################
@@ -483,4 +652,9 @@ plot_flood_volume_difference_by_driver(models)
 zoom_region = (-19.95, -19.6, 34.55, 35.1)
 plot_hmax_diff(models, zoom_region_latlon=zoom_region)
 
+# %%
+fiat_models = load_fiat_models(cfg)
+fiat_models = calculate_damage_differences(fiat_models)
+ # %%
+plot_flood_and_damage_difference_by_driver(models, fiat_models)
 # %%
