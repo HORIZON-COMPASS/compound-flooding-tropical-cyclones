@@ -134,6 +134,7 @@ rule update_dis_forcing_sfincs:
 
 
 rule run_sfincs_model:
+    threads: 16 # increase when using more vcpu's
     input:
         dis_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"),
     params:
