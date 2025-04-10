@@ -8,7 +8,7 @@ __pycache__/
 
 # Pixi
 .pixi
-pixi.lock
+hook.sh
 
 #Workflow output files
 Workflows/dag*.png

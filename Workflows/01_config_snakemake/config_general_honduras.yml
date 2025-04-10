@@ -6,7 +6,7 @@ dir_models:  02_Models            # Folder where the base models will be saved (
 dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
 
 runname_ids: 
-    Eta_v3:                                                   # name of the model run     
+    Eta_v2:                                                   # name of the model run     
         #Settings of the workflow
         tc_name: Eta                                       # name of the storm. For tropical cyclones, this can be the name of the TC 
         region: honduras                                   # name of the region will be used in naming folders                
