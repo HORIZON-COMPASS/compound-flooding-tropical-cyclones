@@ -19,6 +19,7 @@ Workflows/slurm*
 Workflows/.nfs*
 Workflows/*/.nfs*
 Workflows/test_*
+**/.nfs*
 
 # Model data
 Delft3DFM/mozambique_model/computations

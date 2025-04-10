@@ -16,7 +16,7 @@ setup_dep:
 setup_mask_active:
   zmin: -10
   fill_area: 50
-  #include_mask: ocean_shape
+  include_mask: ocean_shape
   reset_mask: True
 
 setup_mask_active2:
@@ -25,7 +25,7 @@ setup_mask_active2:
 
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
-  zmin: -10
+  #zmin: -10
   #zmax: -1
   #include_mask: osm_coastlines  
   include_mask_buffer: 2000    
@@ -49,13 +49,13 @@ setup_cn_infiltration:
 
 setup_river_inflow:
   hydrography: merit_hydro
-  river_upa: 30
+#  river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
 
 setup_river_outflow:
   hydrography: merit_hydro
-  river_upa: 30
+#  river_upa: 30
   river_len: 5000
   keep_rivers_geom: True

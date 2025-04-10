@@ -16,6 +16,7 @@ runname_ids:
         forcing: ceh_gear                                   # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
         wind_forcing: era5_hourly                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco                                        # DataCatalog handle for the bathymetry dataset
+        river_upa: 5                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
         #bathy: emodnet_bathy_E4_2018_msl                   # DataCatalog handle for the bathymetry dataset
 
         #Models selections
