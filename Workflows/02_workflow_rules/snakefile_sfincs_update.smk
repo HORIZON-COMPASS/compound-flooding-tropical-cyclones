@@ -48,6 +48,12 @@ def get_datacatalog(wildcards):
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
         ]
 
+def get_use_dfm(wildcards):
+    return config['runname_ids'][wildcards.runname]['use_dfm']
+
+def get_coastal_ts(wildcards):
+    return config['runname_ids'][wildcards.runname]['coastal_ts']
+
 runname_ids = list(config['runname_ids'].keys())
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
@@ -73,6 +79,8 @@ rule add_forcing_coastal_meteo_sfincs:
         wind_forcing = get_wind_forcing,
         start_time = get_starttime, 
         end_time = get_endtime,
+        use_dfm = get_use_dfm,
+        coastal_ts = get_coastal_ts,
         dfm_output = lambda wildcards: "dfm_output_event_"+ config['runname_ids'][wildcards.runname]["dfm_res"] + "_" + config['runname_ids'][wildcards.runname]["bathy"] + "_" + config['runname_ids'][wildcards.runname]["tidemodel"] + "_" + config['runname_ids'][wildcards.runname]["wind_forcing"],
         utmzone = get_utmzone,
     output:

@@ -6,7 +6,7 @@ import ast
 from hydromt.log import setuplog
 import hydromt
 from hydromt_sfincs import SfincsModel
-
+#%%
 def get_local_vector_data(file, bbox, data_cat):
     dataCat = hydromt.data_catalog.DataCatalog(data_cat)
     vector = dataCat.get_geodataframe(
@@ -22,20 +22,29 @@ if "snakemake" in locals():
     bathy = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
 else:
-    model_dir = r'p:\11210471-001-compass\02_Models\quelimane\Freddy2\sfincs'
-    config_file = r'c:\Git_repos\COMPASS\Workflows\config_sfincs\sfincs_base_build.yml'
+    model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
+    config_file = r'n:\My Documents\unix\git_repos\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
     data_cats = [
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_general.yml',
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_obspoints.yml',
-        r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
-    ]
-    bbox ="[36.7,-18.35,37.41,-17.64]"
-    bathy = 'emodnet_bathy_E4_2018_msl'
-    dfm_coastal_mask = 'coastal_coupling_msk_MZB'
+        r'n:\My Documents\unix\git_repos\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
+        r'n:\My Documents\unix\git_repos\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_obspoints.yml',
+        r'n:\My Documents\unix\git_repos\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_general.yml']
+        ]
 
+    # data_cats = [
+    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_general.yml',
+    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_obspoints.yml',
+    #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
+    # ]
+
+    bbox ="[-3.2913,50.9637,-2.5063,51.3508]"
+    bathy = 'gebco'
+    #bathy = 'emodnet_bathy_E4_2018_msl'
+    dfm_coastal_mask = 'coastal_coupling_msk_SMST'
+
+#%%
 if not exists(model_dir):
     os.mkdir(model_dir)
-
+#%%
 # model and data paths/
 logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
 opt = configread(config_file, abs_path=True)  # read settings from ini file

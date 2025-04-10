@@ -44,7 +44,7 @@ def get_dfm_obs_points(wildcards):
     return dfm_obs_file
     
 def get_dfm_verification_points(wildcards):
-    dfm_obs_file = config["runname_ids"][wildcards.runname]["dfm_verification_points"]
+    verification_points = config["runname_ids"][wildcards.runname]["dfm_verification_points"]
     return verification_points
 
 def get_datacatalog(wildcards):
@@ -78,7 +78,7 @@ submit_script_system_copy = "run_parallel_copy.bat" if os.name == 'nt' else "run
 
 rule all_dfm:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "postprocessing_done.txt"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),   
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"), zip, region=region, runname=runname_ids, dfm_res=dfm_res, bathy=bathy, tidemodel=tidemodel, wind_forcing=wind_forcing),   
         
 
 rule make_model_dfm_base:
@@ -88,8 +88,8 @@ rule make_model_dfm_base:
         output_bbox = get_sfincs_bbox,
         dfm_dxy_base = get_dfm_dxy_base,
     output: 
-        dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_test")),
-        ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_test", "ext_file_new.ext"),
+        dir_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
+        ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
     resources:
         partition = '4vcpu',
         time = '0-0:30:00',
@@ -100,7 +100,7 @@ rule make_model_dfm_base:
         
 rule make_dfm_model_event:
     input:
-        ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}_test", "ext_file_new.ext"),
+        ext_file_new = join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}", "ext_file_new.ext"),
     params:
         tc_name = get_tcname,
         dir_base_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "dfm", "base_{dfm_res}_{bathy}_{tidemodel}")),
@@ -114,11 +114,11 @@ rule make_dfm_model_event:
         dimrset      = join(disk_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
         model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         dfm_obs_file = get_dfm_obs_points,
-        submit_script_file = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system),
+        submit_script_file = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     output:  
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test")),
-        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system),
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+        mdu_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}.mdu"),
+        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     resources:
         partition = '4vcpu',
         time = '0-0:30:00',
@@ -130,12 +130,12 @@ rule make_dfm_model_event:
 
 rule run_dfm:
     input:
-        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system),
+        submit_script = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system),
     params:
-        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test")),
-        submit_script_copy = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test",submit_script_system_copy),
+        dir_event_model = directory(join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}")),
+        submit_script_copy = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",submit_script_system_copy),
     output:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),        
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),        
     resources:
         partition = '16vcpu',
         time =  '0-3:00:00',
@@ -153,13 +153,13 @@ rule run_dfm:
 
 rule add_dfm_output_to_catalog:
     input:
-        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),
+        his_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "output", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_0000_his.nc"),
     params:
         model_name       = "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}",
         sfincs_data_cat  = get_sfincs_datacatalog,
         root_dir         = disk_dir,
     output:
-        done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}_test", "postprocessing_done.txt"),
+        done_file = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}", "postprocessing_done.txt"),
     resources:
         partition = '4vcpu',
         time = '0-0:30:00',
