@@ -32,6 +32,7 @@ SFINCS/results
 *.svg
 *.pdf
 *.png
+**/*.png
 
 DelftFIAT/scripts/cache
 DelftFIAT/computations
