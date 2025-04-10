@@ -14,6 +14,7 @@ if "snakemake" in locals():
     bbox = snakemake.params.arg_bbox
     region_geom = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
+    river_upa = snakemake.params.river_upa
 else:
     model_dir = r"p:/11210471-001-compass\02_Models\quelimane\Freddy2\wflow"
     config_file = r"c:\Git_repos\COMPASS\Workflows\config_wflow\wflow_build_quelimane.yml"
@@ -41,6 +42,8 @@ opt['setup_gauges'] = {
     'index_col': 'index',
     'basename': 'locs'
 }
+
+opt['setup_rivers']['river_upa'] = river_upa
 
 #%%
 

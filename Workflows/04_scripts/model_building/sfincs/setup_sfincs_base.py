@@ -21,6 +21,7 @@ if "snakemake" in locals():
     bbox = ast.literal_eval(snakemake.params.arg_bbox)
     bathy = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
+    river_upa = snakemake.params.river_upa
 else:
     model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
     config_file = r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
@@ -35,6 +36,7 @@ else:
     bathy = 'gebco'
     #bathy = 'emodnet_bathy_E4_2018_msl'
     dfm_coastal_mask = 'coastal_coupling_msk_SMST'
+    river_upa = 30
 
     # data_cats = [
     #     r'c:\Git_repos\COMPASS\Workflows\data_catalogs\datacatalog_general.yml',
@@ -69,6 +71,9 @@ opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
 
 opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
 
+opt['setup_river_inflow']['river_upa'] = river_upa
+opt['setup_river_outflow']['river_upa'] = river_upa
+
 #%%
 mod = SfincsModel(
     root=model_dir, data_libs=data_cats, mode="w+", logger=logger, **kwargs
@@ -76,5 +81,16 @@ mod = SfincsModel(
 
 # %% BUILD MODEL
 mod.build(region={"geom": region}, opt=opt)
+
+#%% Plot the region and boundaries
+fig, ax = mod.plot_basemap(
+    fn_out=model_dir, 
+    variable="dep",
+    plot_bounds=True,
+    plot_geoms=True, 
+    plot_region=True,
+    bmap="sat",
+    zoomlevel=12,
+    figsize=(8, 6))
 
 # %%
