@@ -59,3 +59,11 @@ setup_river_outflow:
 #  river_upa: 30
   river_len: 5000
   keep_rivers_geom: True
+
+plot_basemap:
+  variable: dep
+  plot_region: True
+  plot_bounds: True
+  plot_geoms: True
+  bmap: "sat"
+  zoomlevel: 12
