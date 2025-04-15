@@ -744,7 +744,7 @@ era5_daily_zarr:
   crs: 4326
 era5_hourly:
   data_type: RasterDataset
-  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}*_hourly.nc
+  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}_hourly.nc
   driver: netcdf
   driver_kwargs:
     chunks:
