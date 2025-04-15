@@ -113,6 +113,7 @@ rule update_forcing_wflow_event:
         join(curdir, '..',  "04_scripts", "model_building", "wflow", "update_forcing_wflow_event.py")
 
 rule run_wflow_warmup:
+    threads: 16
     input:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc"),
         toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "wflow_sbm.toml"),
@@ -127,6 +128,7 @@ rule run_wflow_warmup:
         """
 
 rule run_wflow_event:
+    threads: 16
     input:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
