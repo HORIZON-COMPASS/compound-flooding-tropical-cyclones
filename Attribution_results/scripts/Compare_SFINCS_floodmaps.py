@@ -14,6 +14,11 @@ import pandas as pd
 import seaborn as sns
 from pyproj import Transformer
 import numpy as np
+import matplotlib.patches as mpatches
+from matplotlib.patches import Wedge
+import xarray as xr
+import geopandas as gpd
+from pyproj import Transformer
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -80,6 +85,7 @@ def load_fiat_models(config):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
         model_path = os.path.join(base_path, model_name)
         fiat_results = pd.read_csv(join(f"{model_path}", "output/output.csv"))
+        fiat_results_spatial =  gpd.read_file(join(f"{model_path}", "output/spatial.fgb"))
 
         num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
         categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
@@ -89,13 +95,14 @@ def load_fiat_models(config):
         CF_info_str      = ", ".join(f"{k}: {v}" for k, v in non_zero_CF_info.items())
 
         model_dict = {
-            "model_name":     model_name,
-            "model_path":     model_path,
-            "fiat_results":   fiat_results,
-            "category":       categories[num_CF_diff],
-            "cat_short":      short_cats[num_CF_diff],
-            "CF_info":        CF_info,
-            "CF_info_str":    CF_info_str
+            "model_name":             model_name,
+            "model_path":             model_path,
+            "fiat_results":           fiat_results,
+            "fiat_results_spatial":   fiat_results_spatial,
+            "category":               categories[num_CF_diff],
+            "cat_short":              short_cats[num_CF_diff],
+            "CF_info":                CF_info,
+            "CF_info_str":            CF_info_str
         }
 
         # If the model is factual (CF values are all 0), assign it to factual_model
@@ -354,6 +361,75 @@ def plot_hmax_diff(models, num_cols=1, zoom_region_latlon=None):
     plt.show()
 
 
+def zoom_in_sfincs_data(models, zoom_region_latlon=None):
+    """
+    Filters each model's sfincs_results data to retain only the region within the zoom extent.
+
+    Parameters:
+        models (list): List of model dictionaries.
+        zoom_region_latlon (tuple, optional): (lat_min, lat_max, lon_min, lon_max)
+    """
+    if zoom_region_latlon:
+        lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
+
+        # Get CRS and transformer
+        model_crs = models[0]['sfincs_model'].crs
+        model_epsg = model_crs.to_epsg()
+        transformer = Transformer.from_crs("EPSG:4326", model_epsg, always_xy=True)
+
+        # Transform lat/lon to model coordinates
+        xmin, ymin = transformer.transform(lon_min, lat_min)
+        xmax, ymax = transformer.transform(lon_max, lat_max)
+
+        for model in models:
+            sfincs_results = model['sfincs_results']
+
+            for key, val in sfincs_results.items():
+                if isinstance(val, xr.DataArray) and {'x', 'y'}.issubset(val.dims):
+                    sfincs_results[key] = val.sel(x=slice(xmin, xmax), y=slice(ymin, ymax))
+
+            print(f"Model {model['model_name']} zoomed to region {zoom_region_latlon}")
+    
+    else:
+        print("No zoom region specified. Returning unzoomed models.")
+    
+    return models
+
+
+def load_and_zoom_fiat_fgb(fiat_models, zoom_region_latlon=None):
+    """
+    Filter spatial FIAT results within a zoom region for all fiat_models.
+    
+    Parameters:
+        fiat_models (list): List of fiat model dictionaries with a 'fiat_results_spatial' GeoDataFrame.
+        zoom_region_latlon (tuple): (lat_min, lat_max, lon_min, lon_max)
+    
+    Returns:
+        list: Updated fiat_models list with 'fiat_results_spatial' cropped to the zoom region.
+    """
+    if zoom_region_latlon:
+        lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
+
+        for fiat in fiat_models:
+            gdf = fiat['fiat_results_spatial']
+
+            # Ensure CRS is WGS84 (lat/lon)
+            if gdf.crs != "EPSG:4326":
+                gdf = gdf.to_crs("EPSG:4326")
+
+            # Spatial filter using bounds
+            gdf_filtered = gdf.cx[lon_min:lon_max, lat_min:lat_max]
+            print(f"[{fiat['model_name']}] Filtered to {len(gdf_filtered)} rows from original {len(gdf)}")
+
+            # Save the filtered GeoDataFrame back
+            fiat['fiat_results_spatial'] = gdf_filtered
+
+    else:
+        print("No zoom region specified. Returning unfiltered fiat models.")
+
+    return fiat_models
+
+
 # Function to calculate the surface area of one grid cell
 def calculate_cell_area(model):
     # Error handling for missing 'hmax_masked'
@@ -438,7 +514,7 @@ def calculate_flood_differences(models):
                 print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if flood volume is missing
             
-            flood_volume_diff = (flood_volume - factual_flood_volume) / factual_flood_volume * 100
+            flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
             model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
             print(f"flood_volume_diff calculated for {model['model_name']}")
 
@@ -450,7 +526,7 @@ def calculate_flood_differences(models):
                 print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if flood extent is missing
 
-            flood_extent_diff = (flood_extent - factual_flood_extent) / factual_flood_extent * 100
+            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
             print(f"flood_extent_diff calculated for {model['model_name']}")
 
@@ -464,6 +540,7 @@ def calculate_damage_differences(fiat_models):
         # Store factual total damage for comparison
         if model["category"] == "Factual":
             factual_total_damage = model['fiat_results'].get("total_damage", None)
+            factual_total_damage_spatial = model['fiat_results_spatial'].get("total_damage", None)
 
             if factual_total_damage is None:
                 print(f"Error: 'total_damage' not found for factual model: {model['model_name']}")
@@ -477,9 +554,21 @@ def calculate_damage_differences(fiat_models):
                 continue  # Skip this model if total damage is missing
             
             # Calculate the damage difference from the factual model (in percentage)
-            damage_diff = (total_damage - factual_total_damage) / factual_total_damage * 100
+            damage_diff = (factual_total_damage - total_damage) / factual_total_damage * 100
             model['fiat_results']['Damage_diff_from_F(%)'] = damage_diff
             print(f"damage_diff calculated for {model['model_name']}")
+        
+        if factual_total_damage_spatial is not None and model["category"] != "Factual":
+            total_spatial_damage = model['fiat_results_spatial'].get('total_damage', None)
+            if total_spatial_damage is None:
+                print(f"Error: 'total_damage' not found for counterfactual model: {model['model_name']}")
+                continue  # Skip this model if total damage is missing
+            
+            # Calculate the damage difference from the factual model (in percentage)
+            damage_diff = (factual_total_damage_spatial - total_spatial_damage) / factual_total_damage_spatial * 100
+            model['fiat_results_spatial']['Damage_diff_from_F(%)'] = damage_diff
+            print(f"damage_diff calculated for {model['model_name']}")
+
 
     return fiat_models
 
@@ -555,13 +644,11 @@ def plot_flood_and_damage_difference_by_driver(sfincs_models, fiat_models):
             # Flood volume difference
             volume_diff_value = sfincs['sfincs_results'].get("Volume_diff_from_F(%)", None)
             if volume_diff_value is not None:
-                print(volume_diff_value)
                 volume_diffs.append(volume_diff_value.values.flatten()[0])
             
             # Damage difference (from fiat results)
             mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
             if mean_damage_diff is not None:
-                print(mean_damage_diff)
                 damage_diffs.append(mean_damage_diff)
             
             # Determine CF driver
@@ -585,37 +672,181 @@ def plot_flood_and_damage_difference_by_driver(sfincs_models, fiat_models):
     df = pd.DataFrame({
         "Model name": model_names,
         "Flood volume difference (F-CF in %)": volume_diffs,
-        "Mean damage difference (%)": damage_diffs,
+        "Mean damage difference (F-CF in %)": damage_diffs,
         "CF driver": drivers
     })
 
-    # Create the seaborn categorical plot (swarm plot)
-    sns.set(style="whitegrid")
+    # Create the plot
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
     # Plot flood volume difference
-    catplot = sns.swarmplot(data=df, 
-                            x="CF driver", 
-                            y="Flood volume difference (F-CF in %)", 
-                            hue="CF driver", 
-                            ax=ax1, 
-                            palette="Set2")
-    ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)  # Rotate x-axis labels for better readability
-    ax1.set_xlabel("CF Driver")
-    ax1.set_ylabel("Flood volume difference (F-CF in %)")
-    
+    scatter1 = ax1.scatter(df['CF driver'], df['Flood volume difference (F-CF in %)'], 
+                           color='b', label="Flood Volume Difference", zorder=2)
+    ax1.set_xlabel("Counterfactual Flood Driver", fontsize=14, labelpad=15)  # Increase font size and space
+    ax1.set_ylabel("Flood volume difference (F-CF in %)", fontsize=14, color='b')  # Font size and color
+
+    # Set the ax1 color to match the scatter points
+    ax1.tick_params(axis='y', labelcolor='b', labelsize=12)  # Increase tick label size
+    ax1.set_ylabel("Flood volume difference (F-CF in %)", color='b')
+
     # Create a second y-axis for damage difference
     ax2 = ax1.twinx()
-    ax2.plot(df["CF driver"], df["Mean damage difference (%)"], marker='o', color='r', linestyle='-', label="Damage difference", alpha=0.7)
-    ax2.set_ylabel("Damage difference (%)")
+
+    # Plot damage difference
+    scatter2 = ax2.scatter(df['CF driver'], df['Mean damage difference (F-CF in %)'], 
+                           color='r', label="Damage Difference", zorder=1, alpha=0.7, marker='o')
+    ax2.set_ylabel("Damage difference (%)", fontsize=14, color='r')  # Font size and color
+
+    # Set the ax2 color to match the scatter points
+    ax2.tick_params(axis='y', labelcolor='r', labelsize=12)  # Increase tick label size
+    ax2.set_ylabel("Damage difference (%)", color='r')
+
+    # Rotate x-axis labels for better readability
+    ax1.set_xticklabels(df["CF driver"].unique(), fontsize=12)
+
+    # Calculate the y-limits for both axes based on data and add some padding
+    padding = 0.25  # You can adjust this padding value as needed
+
+    # For ax1 (Flood Volume Difference)
+    ax1_min = df['Flood volume difference (F-CF in %)'].min()
+    ax1_max = df['Flood volume difference (F-CF in %)'].max()
     
+    # For ax2 (Damage Difference)
+    ax2_min = df['Mean damage difference (F-CF in %)'].min()
+    ax2_max = df['Mean damage difference (F-CF in %)'].max()
+
+    # Set the same y-limits for both axes and ensure 0 is included
+    y_min = min(ax1_min, ax2_min, 0) - padding
+    y_max = max(ax1_max, ax2_max, 0) + padding
+
+    # Set y-limits to include the same range for both axes
+    ax1.set_ylim([y_min, y_max])
+    ax2.set_ylim([y_min, y_max])
+
+    # Add black horizontal line at zero
+    ax2.axhline(0, color='k', linewidth=0.2, zorder=0)
+
     # Title and layout
-    plt.title("Flood Volume and Damage Difference by CF Driver")
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
+    plt.title("Flood Volume and Damage Difference by CF Driver", fontsize=16)  # Title font size
     plt.tight_layout()
+
+    # Synchronize the gridlines between the two axes
+    ax1.grid(True)  # Enable grid on ax1
+    ax2.grid(False)  # Disable grid on ax2
+    ax1.set_axisbelow(True)  # Ensure gridlines are below the scatter points
+
+    # Show the plot
     plt.show()
 
+
+def plot_extent_and_damage_difference_by_driver(sfincs_models, fiat_models):
+    # Create lists for model names, volume differences, damage differences, and drivers
+    model_names = []
+    extent_diffs = []
+    damage_diffs = []
+    drivers = []
+
+    # Collect data from models excluding "Factual"
+    for sfincs, fiat in zip(sfincs_models, fiat_models):
+        if sfincs['category'] != "Factual":
+            model_names.append(sfincs["model_name"])
+            
+            # Flood volume difference
+            extent_diff_value = sfincs['sfincs_results'].get("Extent_diff_from_F(%)", None)
+            if extent_diff_value is not None:
+                extent_diffs.append(extent_diff_value.values.flatten()[0])
+            
+            # Damage difference (from fiat results)
+            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
+            if mean_damage_diff is not None:
+                damage_diffs.append(mean_damage_diff)
+            
+            # Determine CF driver
+            CF_info = sfincs["CF_info"]
+            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
+                drivers.append("Compound")
+            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
+                drivers.append("Rain & wind")
+            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
+                drivers.append("Rain & SLR")
+            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
+                drivers.append("Wind & SLR")
+            elif "rain" in CF_info and CF_info["rain"] != 0:
+                drivers.append("Rain")
+            elif "wind" in CF_info and CF_info["wind"] != 0:
+                drivers.append("Wind")
+            elif "SLR" in CF_info and CF_info["SLR"] != 0:
+                drivers.append("SLR")
+
+    # Create a DataFrame for plotting
+    df = pd.DataFrame({
+        "Model name": model_names,
+        "Flood extent difference (F-CF in %)": extent_diffs,
+        "Mean damage difference (F-CF in %)": damage_diffs,
+        "CF driver": drivers
+    })
+
+    # Create the plot
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+
+    # Plot flood volume difference
+    scatter1 = ax1.scatter(df['CF driver'], df['Flood extent difference (F-CF in %)'], 
+                           color='b', label="Flood Extent Difference", zorder=2)
+    ax1.set_xlabel("Counterfactual Flood Driver", fontsize=14, labelpad=15)  # Increase font size and space
+    ax1.set_ylabel("Flood extent difference (F-CF in %)", fontsize=14, color='b')  # Font size and color
+
+    # Set the ax1 color to match the scatter points
+    ax1.tick_params(axis='y', labelcolor='b', labelsize=12)  # Increase tick label size
+    # ax1.set_ylabel("Flood extent difference (F-CF in %)", color='b')
+
+    # Create a second y-axis for damage difference
+    ax2 = ax1.twinx()
+
+    # Plot damage difference
+    scatter2 = ax2.scatter(df['CF driver'], df['Mean damage difference (F-CF in %)'], 
+                           color='r', label="Damage Difference", zorder=1, alpha=0.7, marker='o')
+    ax2.set_ylabel("Damage difference (%)", fontsize=14, color='r')  # Font size and color
+
+    # Set the ax2 color to match the scatter points
+    ax2.tick_params(axis='y', labelcolor='r', labelsize=12)  # Increase tick label size
+    # ax2.set_ylabel("Damage difference (%)", color='r')
+
+    # Rotate x-axis labels for better readability
+    ax1.set_xticklabels(df["CF driver"].unique(), fontsize=12)
+
+    # Calculate the y-limits for both axes based on data and add some padding
+    padding = 0.25  # You can adjust this padding value as needed
+
+    # For ax1 (Flood Volume Difference)
+    ax1_min = df['Flood extent difference (F-CF in %)'].min()
+    ax1_max = df['Flood extent difference (F-CF in %)'].max()
+    
+    # For ax2 (Damage Difference)
+    ax2_min = df['Mean damage difference (F-CF in %)'].min()
+    ax2_max = df['Mean damage difference (F-CF in %)'].max()
+
+    # Set the same y-limits for both axes and ensure 0 is included
+    y_min = min(ax1_min, ax2_min, 0) - padding
+    y_max = max(ax1_max, ax2_max, 0) + padding
+
+    # Set y-limits to include the same range for both axes
+    ax1.set_ylim([y_min, y_max])
+    ax2.set_ylim([y_min, y_max])
+
+    # Add black horizontal line at zero
+    ax2.axhline(0, color='k', linewidth=0.2, zorder=0)
+
+    # Title and layout
+    plt.title("Flood Extent and Damage Difference by CF Driver", fontsize=16)  # Title font size
+    plt.tight_layout()
+
+    # Synchronize the gridlines between the two axes
+    ax1.grid(True)  # Enable grid on ax1
+    ax2.grid(False)  # Disable grid on ax2
+    ax1.set_axisbelow(True)  # Ensure gridlines are below the scatter points
+
+    # Show the plot
+    plt.show()
 
 
 ##############################################################
@@ -640,6 +871,7 @@ models = compute_hmax_diff(models)
 # Calculate flood characteristics 
 models = calculate_flood_extent(models)
 models = calculate_flood_volume(models)
+#%%
 models = calculate_flood_differences(models)
 
 #%%
@@ -654,7 +886,114 @@ plot_hmax_diff(models, zoom_region_latlon=zoom_region)
 
 # %%
 fiat_models = load_fiat_models(cfg)
+#%%
 fiat_models = calculate_damage_differences(fiat_models)
- # %%
+
+#%%
 plot_flood_and_damage_difference_by_driver(models, fiat_models)
+plot_extent_and_damage_difference_by_driver(models, fiat_models)
+#%%
+urban_models = zoom_in_sfincs_data(models, zoom_region_latlon=zoom_region)
+
+#%%
+urban_fiat = load_and_zoom_fiat_fgb(fiat_models, zoom_region_latlon=zoom_region)
+#%%
+plot_flood_and_damage_difference_by_driver(urban_models, urban_fiat)
+plot_extent_and_damage_difference_by_driver(urban_models, urban_fiat)
+
+#%%
+
+
+
+
+
+def plot_flood_and_damage_difference_by_driver_split(sfincs_models, fiat_models):
+    
+    model_names = []
+    volume_diffs = []
+    damage_diffs = []
+    drivers = []
+    driver_sets = []
+
+    for sfincs, fiat in zip(sfincs_models, fiat_models):
+        if sfincs['category'] != "Factual":
+            model_names.append(sfincs["model_name"])
+
+            volume_diff_value = sfincs['sfincs_results'].get("Volume_diff_from_F(%)", None)
+            if volume_diff_value is not None:
+                volume_diffs.append(volume_diff_value.values.flatten()[0])
+
+            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
+            if mean_damage_diff is not None:
+                damage_diffs.append(mean_damage_diff)
+
+            CF_info = sfincs["CF_info"]
+            active_drivers = [k.title() if k != "SLR" else "SLR" for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+            drivers.append(" & ".join(active_drivers) if len(active_drivers) > 1 else active_drivers[0])
+            driver_sets.append(active_drivers)
+
+    df = pd.DataFrame({
+        "Model name": model_names,
+        "Flood volume difference (F-CF in %)": volume_diffs,
+        "Mean damage difference (%)": damage_diffs,
+        "CF driver": drivers,
+        "Driver set": driver_sets
+    })
+
+    color_map = {
+        'SLR': '#0072B2',
+        'Wind': '#009E73',
+        'Rain': '#E69F00',
+    }
+
+    sns.set(style="whitegrid")
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    ax1.set_xlabel("CF driver", fontsize=14)
+    ax1.set_ylabel("Flood volume difference (F-CF in %)", fontsize=14)
+    ax1.tick_params(axis='x', labelsize=12)
+    ax1.tick_params(axis='y', labelsize=12)
+    ax1.set_xticks(range(len(df["CF driver"].unique())))
+    ax1.set_xticklabels(df["CF driver"].unique(), rotation=20)
+    
+
+    def plot_split_scatter(ax, x, y, driver_set, damage, color_map, radius_base=0.2, radius_scale=0.1):
+        radius = radius_base + radius_scale
+        angle_step = 360 / len(driver_set)
+        for i, driver in enumerate(driver_set):
+            start_angle = i * angle_step
+            end_angle = (i + 1) * angle_step
+            wedge = Wedge((x, y), radius, start_angle, end_angle,
+                          facecolor=color_map[driver], edgecolor='black', linewidth=0.3)
+            ax.add_patch(wedge)
+
+    unique_x = list(df["CF driver"].unique())
+    x_offsets = {driver: i for i, driver in enumerate(unique_x)}
+    swarm_offsets = {key: 0.0 for key in unique_x}
+    
+    y_spread = 0.5  # tighter vertical spread
+
+    for i, row in df.iterrows():
+        x_pos = x_offsets[row["CF driver"]]
+        y_pos = row["Flood volume difference (F-CF in %)"] + swarm_offsets[row["CF driver"]]
+        plot_split_scatter(ax1, x_pos, y_pos, row["Driver set"], row["Mean damage difference (%)"], color_map)
+        swarm_offsets[row["CF driver"]] += y_spread * (-1)**i * 1  # alternate up and down, tighter spread
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Damage difference (%)", fontsize=14)
+    ax2.tick_params(axis='y', labelsize=12)
+    ax2.set_yticks([])
+
+    ax1.set_xlim(-0.5, len(unique_x) - 0.5)
+    y_min = min(df["Flood volume difference (F-CF in %)"]) - 1.5
+    y_max = max(df["Flood volume difference (F-CF in %)"]) + 1.5
+    ax1.set_ylim(y_min, y_max)
+    
+
+    plt.title("Flood Volume and Damage Difference by CF Driver (Split Points)", fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+plot_flood_and_damage_difference_by_driver_split(models, fiat_models)
+# %%
 # %%
