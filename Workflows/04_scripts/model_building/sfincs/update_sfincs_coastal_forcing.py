@@ -50,8 +50,9 @@ else:
     CF_wind_txt             = "0"
     start_time              = '20190309 000000'
     end_time                = '20190325 060000'
-    dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    dfm_output             = f"dfm_output_{dfm_model}"
+    use_dfm                 = True
+    dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
+    dfm_output              = f"dfm_output_{dfm_model}"
     sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs_test")
     sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
     obs_points              = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
@@ -121,6 +122,8 @@ mod.update(
     forceful_overwrite=True,
     opt=opt
 )
+#%%
+mod.plot_forcing()
 
 # %%
 # Copy the subgrid folder from the base model to the event model for postprocessing of the results
