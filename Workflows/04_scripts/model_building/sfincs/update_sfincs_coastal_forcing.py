@@ -20,6 +20,8 @@ if "snakemake" in locals():
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     precip_forcing = snakemake.wildcards.forcing
+    use_dfm = snakemake.params.use_dfm
+    coastal_ts = snakemake.params.coastal_ts
     dfm_output = snakemake.params.dfm_output
     utmzone = snakemake.params.utmzone
 
@@ -43,8 +45,13 @@ opt["setup_config"]["tstop"] = end_time
 # Add rainfall forcing
 opt['setup_precip_forcing_from_grid'] = dict(precip=precip_forcing,aggregate=False)
 
-# Add coastal water level forcing
-opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
+#Add coastal water level forcing - either from DFM or from an existing time series such as GTSM
+if use_dfm:
+    # Add coastal water level forcing from Delft3D-FM model
+    opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
+else:
+    # Add coastal water level forcing from an existing time series
+    opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
 
 #%%
 mod = SfincsModel(

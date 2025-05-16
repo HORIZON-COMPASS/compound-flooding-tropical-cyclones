@@ -42,7 +42,7 @@ We provide examples on how to run each workflow in specific Jupyter notebook in 
 
 This translate to the following command lines in the terminal, taking as an example the snakefile_wflow.smk workflow:
 ```
-conda activate compass-wflow
+pixi shell -e compass-wflow
 cd Workflows
 snakemake -s snakefile_wflow --configfile config_snakemake/config_general.yml  --dag | dot -Tpng > dag_all.png
 snakemake --unlock -s snakefile_wflow --configfile config_snakemake/config_general.yml

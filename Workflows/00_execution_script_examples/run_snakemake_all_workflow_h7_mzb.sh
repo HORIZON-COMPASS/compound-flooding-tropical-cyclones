@@ -10,9 +10,9 @@ module load pixi
 module load julia
 
 #Going to the folder where git checkout is
-#ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
+ROOT="/u/couasnon/git_repos/compound-flooding-tropical-cyclones/"
 #ROOT="/u/bovensch/git_repos/COMPASS"
-ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
+#ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
 # Installing pixi environment
@@ -28,10 +28,10 @@ julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml 
+snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml 
 
 #running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --forceall --rulegraph | dot -Tpng > dag_smk_somerset_all.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_somerset.yml --cores 'all' --latency-wait 180 --wait-for-files
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml --cores 'all' --latency-wait 180 --wait-for-files
 
 exit
