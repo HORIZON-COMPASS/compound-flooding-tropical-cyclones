@@ -19,6 +19,9 @@ from matplotlib.patches import Wedge
 import xarray as xr
 import geopandas as gpd
 from pyproj import Transformer
+from matplotlib.patches import Patch
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from matplotlib.colors import LinearSegmentedColormap
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -30,8 +33,10 @@ def load_config(config_path):
 def load_sfincs_models(config):
     """Generates model paths and categories for SFINCS runs based on CF values."""
     run = config['runname_ids']['Idai']
+    # base_path = "D:/Code/Paper_1/Model_runs/sfincs"
     base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/sfincs/"
     
+
     models = []
     factual_model = None  # Initialize factual_model before the loop
     
@@ -77,6 +82,7 @@ def load_sfincs_models(config):
 def load_fiat_models(config):
     run = config['runname_ids']['Idai']
     base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/fiat/"
+    # base_path = "D:/Code/Paper_1/Model_runs/fiat"
     
     models = []
     factual_model = None  # Initialize factual_model before the loop
@@ -539,8 +545,8 @@ def calculate_damage_differences(fiat_models):
     for model in fiat_models:
         # Store factual total damage for comparison
         if model["category"] == "Factual":
-            factual_total_damage = model['fiat_results'].get("total_damage", None)
-            factual_total_damage_spatial = model['fiat_results_spatial'].get("total_damage", None)
+            factual_total_damage = model['fiat_results'].get("total_damage", None).sum()
+            factual_total_damage_spatial = model['fiat_results_spatial'].get("total_damage", None).sum()
 
             if factual_total_damage is None:
                 print(f"Error: 'total_damage' not found for factual model: {model['model_name']}")
@@ -548,306 +554,1378 @@ def calculate_damage_differences(fiat_models):
 
         # Compute damage difference for counterfactual models
         if factual_total_damage is not None and model["category"] != "Factual":
-            total_damage = model['fiat_results'].get('total_damage', None)
+            total_damage = model['fiat_results'].get('total_damage', None).sum()
             if total_damage is None:
                 print(f"Error: 'total_damage' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if total damage is missing
             
             # Calculate the damage difference from the factual model (in percentage)
             damage_diff = (factual_total_damage - total_damage) / factual_total_damage * 100
-            model['fiat_results']['Damage_diff_from_F(%)'] = damage_diff
+            model['Damage_diff_from_F(%)'] = damage_diff
             print(f"damage_diff calculated for {model['model_name']}")
         
         if factual_total_damage_spatial is not None and model["category"] != "Factual":
-            total_spatial_damage = model['fiat_results_spatial'].get('total_damage', None)
+            total_spatial_damage = model['fiat_results_spatial'].get('total_damage', None).sum()
             if total_spatial_damage is None:
                 print(f"Error: 'total_damage' not found for counterfactual model: {model['model_name']}")
                 continue  # Skip this model if total damage is missing
             
             # Calculate the damage difference from the factual model (in percentage)
             damage_diff = (factual_total_damage_spatial - total_spatial_damage) / factual_total_damage_spatial * 100
-            model['fiat_results_spatial']['Damage_diff_from_F(%)'] = damage_diff
+            model['Damage_spatial_diff_from_F(%)'] = damage_diff
             print(f"damage_diff calculated for {model['model_name']}")
 
 
     return fiat_models
 
-
+################# PLOTTING ###################
 # Function to create a categorical plot comparing flood volume differences by CF driver
-def plot_flood_volume_difference_by_driver(models):
-    # Create lists for model names, volume differences, and drivers
-    model_names = []
-    volume_diffs = []
-    drivers = []
 
-    # Collect data from models excluding "Factual"
-    for model in models:
-        if model['category'] != "Factual":
-            model_names.append(model["model_name"])
-            volume_diff_value = model['sfincs_results'].get("Volume_diff_from_F(%)", None)
-            if volume_diff_value is not None:
-                volume_diffs.append(volume_diff_value.values.flatten()[0])
+def plot_abs_flood_difference_by_driver(sfincs_models):
+    # Collect data by driver combination
+    model_dict = {}
+    for sf in (sfincs_models):
+        name = sf['model_name']
+        
+        # Flood volume
+        vol = sf['sfincs_results'].get("flood_volume_km3", None)
+        if vol is None:
+            continue
+        vol = vol.values.flatten()[0]
 
-            CF_info = model["CF_info"]
-            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
-                drivers.append("Compound")
-            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
-                drivers.append("Rain & wind")
-            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Rain & SLR")
-            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Wind & SLR")
-            elif "rain" in CF_info and CF_info["rain"] != 0:
-                drivers.append("Rain")
-            elif "wind" in CF_info and CF_info["wind"] != 0:
-                drivers.append("Wind")
-            elif "SLR" in CF_info and CF_info["SLR"] != 0:
-                drivers.append("SLR")
-            print(drivers)
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        model_dict[key] = {'volume': vol}
 
-    # Create a DataFrame for plotting
-    print(len(model_names))
-    print(len(volume_diffs))
-    print(len(drivers))
-    df = pd.DataFrame({
-        "Model name": model_names,
-        "Flood volume difference (F-CF in %)": volume_diffs,
-        "CF driver": drivers
-    })
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
 
-    # Create the seaborn categorical plot (swarm plot)
-    sns.set(style="whitegrid")
-    catplot = sns.catplot(data=df, 
-                          x="CF driver", 
-                          y="Flood volume difference (F-CF in %)", 
-                          kind="swarm", 
-                          height=6, 
-                          aspect=2)
-    catplot.set_xticklabels(rotation=45)  # Rotate x-axis labels for better readability
-    plt.title("Flood Volume Difference by CF Driver")
-    plt.tight_layout()
-    plt.show()
+    for key in all_keys:
+        vol_total = model_dict[key]['volume']
 
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "ALL"
 
-def plot_flood_and_damage_difference_by_driver(sfincs_models, fiat_models):
-    # Create lists for model names, volume differences, damage differences, and drivers
-    model_names = []
-    volume_diffs = []
-    damage_diffs = []
-    drivers = []
+        data_plot.append({
+            'label': label,
+            'volume': vol_total,
+        })
 
-    # Collect data from models excluding "Factual"
-    for sfincs, fiat in zip(sfincs_models, fiat_models):
-        if sfincs['category'] != "Factual":
-            model_names.append(sfincs["model_name"])
-            
-            # Flood volume difference
-            volume_diff_value = sfincs['sfincs_results'].get("Volume_diff_from_F(%)", None)
-            if volume_diff_value is not None:
-                volume_diffs.append(volume_diff_value.values.flatten()[0])
-            
-            # Damage difference (from fiat results)
-            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
-            if mean_damage_diff is not None:
-                damage_diffs.append(mean_damage_diff)
-            
-            # Determine CF driver
-            CF_info = sfincs["CF_info"]
-            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
-                drivers.append("Compound")
-            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
-                drivers.append("Rain & wind")
-            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Rain & SLR")
-            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Wind & SLR")
-            elif "rain" in CF_info and CF_info["rain"] != 0:
-                drivers.append("Rain")
-            elif "wind" in CF_info and CF_info["wind"] != 0:
-                drivers.append("Wind")
-            elif "SLR" in CF_info and CF_info["SLR"] != 0:
-                drivers.append("SLR")
+    # Sort data by the total magnitude of impact (volume + damage)
+    data_plot.sort(key=lambda d: abs(d['volume']))
 
-    # Create a DataFrame for plotting
-    df = pd.DataFrame({
-        "Model name": model_names,
-        "Flood volume difference (F-CF in %)": volume_diffs,
-        "Mean damage difference (F-CF in %)": damage_diffs,
-        "CF driver": drivers
-    })
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
 
-    # Create the plot
-    fig, ax1 = plt.subplots(figsize=(10, 6))
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
+    width = 0.4
 
-    # Plot flood volume difference
-    scatter1 = ax1.scatter(df['CF driver'], df['Flood volume difference (F-CF in %)'], 
-                           color='b', label="Flood Volume Difference", zorder=2)
-    ax1.set_xlabel("Counterfactual Flood Driver", fontsize=14, labelpad=15)  # Increase font size and space
-    ax1.set_ylabel("Flood volume difference (F-CF in %)", fontsize=14, color='b')  # Font size and color
+    # Iterate over each model and plot the bars
+    for i, d in enumerate(data_plot):
+        if d['label'] == "FACTUAL":
+            color = "#b0b0b0"  # grey for factual
+        else:
+            color = "#97a6c4"  # consistent pastel blue for all others
+        ax.bar(x[i], d['volume'], color=color, width=width, edgecolor='black')
+        ax.text(x[i], d['volume'] + 0.1, f"{d['volume']:.2f}", ha='center', va='bottom', fontsize=13)
+        
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Flood volume (km³)", fontsize=16)
+    ax.set_title("Factual and Counterfactual Flood Volume", fontsize=16)
+    ax.tick_params(axis='y', labelsize=13)
+    ax.xaxis.grid(False)
+    ax.yaxis.grid(True)
 
-    # Set the ax1 color to match the scatter points
-    ax1.tick_params(axis='y', labelcolor='b', labelsize=12)  # Increase tick label size
-    ax1.set_ylabel("Flood volume difference (F-CF in %)", color='b')
+    # Set x-axis to start from zero
+    ax.set_xlim(left=-0.5)
 
-    # Create a second y-axis for damage difference
-    ax2 = ax1.twinx()
+    legend_elements = [
+        Patch(facecolor='#b0b0b0', edgecolor='black', label='Factual'),
+        Patch(facecolor='#97a6c4', edgecolor='black', label='Counterfactual'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
 
-    # Plot damage difference
-    scatter2 = ax2.scatter(df['CF driver'], df['Mean damage difference (F-CF in %)'], 
-                           color='r', label="Damage Difference", zorder=1, alpha=0.7, marker='o')
-    ax2.set_ylabel("Damage difference (%)", fontsize=14, color='r')  # Font size and color
-
-    # Set the ax2 color to match the scatter points
-    ax2.tick_params(axis='y', labelcolor='r', labelsize=12)  # Increase tick label size
-    ax2.set_ylabel("Damage difference (%)", color='r')
-
-    # Rotate x-axis labels for better readability
-    ax1.set_xticklabels(df["CF driver"].unique(), fontsize=12)
-
-    # Calculate the y-limits for both axes based on data and add some padding
-    padding = 0.25  # You can adjust this padding value as needed
-
-    # For ax1 (Flood Volume Difference)
-    ax1_min = df['Flood volume difference (F-CF in %)'].min()
-    ax1_max = df['Flood volume difference (F-CF in %)'].max()
+    # Layout
     
-    # For ax2 (Damage Difference)
-    ax2_min = df['Mean damage difference (F-CF in %)'].min()
-    ax2_max = df['Mean damage difference (F-CF in %)'].max()
-
-    # Set the same y-limits for both axes and ensure 0 is included
-    y_min = min(ax1_min, ax2_min, 0) - padding
-    y_max = max(ax1_max, ax2_max, 0) + padding
-
-    # Set y-limits to include the same range for both axes
-    ax1.set_ylim([y_min, y_max])
-    ax2.set_ylim([y_min, y_max])
-
-    # Add black horizontal line at zero
-    ax2.axhline(0, color='k', linewidth=0.2, zorder=0)
-
-    # Title and layout
-    plt.title("Flood Volume and Damage Difference by CF Driver", fontsize=16)  # Title font size
     plt.tight_layout()
-
-    # Synchronize the gridlines between the two axes
-    ax1.grid(True)  # Enable grid on ax1
-    ax2.grid(False)  # Disable grid on ax2
-    ax1.set_axisbelow(True)  # Ensure gridlines are below the scatter points
-
-    # Show the plot
     plt.show()
 
 
-def plot_extent_and_damage_difference_by_driver(sfincs_models, fiat_models):
-    # Create lists for model names, volume differences, damage differences, and drivers
-    model_names = []
-    extent_diffs = []
-    damage_diffs = []
-    drivers = []
+def plot_abs_flood_ext_difference_by_driver(sfincs_models):
+    # Collect data by driver combination
+    model_dict = {}
+    for sf in (sfincs_models):
+        name = sf['model_name']
+        
+        # Flood extent
+        ext = sf['sfincs_results'].get("flood_extent_km2", None)
+        if ext is None:
+            continue
+        ext = ext.values.flatten()[0]
 
-    # Collect data from models excluding "Factual"
-    for sfincs, fiat in zip(sfincs_models, fiat_models):
-        if sfincs['category'] != "Factual":
-            model_names.append(sfincs["model_name"])
-            
-            # Flood volume difference
-            extent_diff_value = sfincs['sfincs_results'].get("Extent_diff_from_F(%)", None)
-            if extent_diff_value is not None:
-                extent_diffs.append(extent_diff_value.values.flatten()[0])
-            
-            # Damage difference (from fiat results)
-            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
-            if mean_damage_diff is not None:
-                damage_diffs.append(mean_damage_diff)
-            
-            # Determine CF driver
-            CF_info = sfincs["CF_info"]
-            if all(k in CF_info and CF_info[k] != 0 for k in ["rain", "wind", "SLR"]):
-                drivers.append("Compound")
-            elif "rain" in CF_info and "wind" in CF_info and CF_info["rain"] != 0 and CF_info["wind"] != 0:
-                drivers.append("Rain & wind")
-            elif "rain" in CF_info and "SLR" in CF_info and CF_info["rain"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Rain & SLR")
-            elif "wind" in CF_info and "SLR" in CF_info and CF_info["wind"] != 0 and CF_info["SLR"] != 0:
-                drivers.append("Wind & SLR")
-            elif "rain" in CF_info and CF_info["rain"] != 0:
-                drivers.append("Rain")
-            elif "wind" in CF_info and CF_info["wind"] != 0:
-                drivers.append("Wind")
-            elif "SLR" in CF_info and CF_info["SLR"] != 0:
-                drivers.append("SLR")
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        model_dict[key] = {'extent': ext}
 
-    # Create a DataFrame for plotting
-    df = pd.DataFrame({
-        "Model name": model_names,
-        "Flood extent difference (F-CF in %)": extent_diffs,
-        "Mean damage difference (F-CF in %)": damage_diffs,
-        "CF driver": drivers
-    })
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
 
-    # Create the plot
-    fig, ax1 = plt.subplots(figsize=(10, 6))
+    for key in all_keys:
+        ext_total = model_dict[key]['extent']
 
-    # Plot flood volume difference
-    scatter1 = ax1.scatter(df['CF driver'], df['Flood extent difference (F-CF in %)'], 
-                           color='b', label="Flood Extent Difference", zorder=2)
-    ax1.set_xlabel("Counterfactual Flood Driver", fontsize=14, labelpad=15)  # Increase font size and space
-    ax1.set_ylabel("Flood extent difference (F-CF in %)", fontsize=14, color='b')  # Font size and color
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "ALL"
 
-    # Set the ax1 color to match the scatter points
-    ax1.tick_params(axis='y', labelcolor='b', labelsize=12)  # Increase tick label size
-    # ax1.set_ylabel("Flood extent difference (F-CF in %)", color='b')
+        data_plot.append({
+            'label': label,
+            'extent': ext_total,
+        })
 
-    # Create a second y-axis for damage difference
-    ax2 = ax1.twinx()
+    # Sort data by the total magnitude of impact (volume + damage)
+    data_plot.sort(key=lambda d: abs(d['extent']))
 
-    # Plot damage difference
-    scatter2 = ax2.scatter(df['CF driver'], df['Mean damage difference (F-CF in %)'], 
-                           color='r', label="Damage Difference", zorder=1, alpha=0.7, marker='o')
-    ax2.set_ylabel("Damage difference (%)", fontsize=14, color='r')  # Font size and color
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
 
-    # Set the ax2 color to match the scatter points
-    ax2.tick_params(axis='y', labelcolor='r', labelsize=12)  # Increase tick label size
-    # ax2.set_ylabel("Damage difference (%)", color='r')
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
+    width = 0.4
 
-    # Rotate x-axis labels for better readability
-    ax1.set_xticklabels(df["CF driver"].unique(), fontsize=12)
+    # Iterate over each model and plot the bars
+    for i, d in enumerate(data_plot):
+        if d['label'] == "FACTUAL":
+            color = "#b0b0b0"  # grey for factual
+        else:
+            color = "#97a6c4"  # consistent pastel blue for all others
+        ax.bar(x[i], d['extent'], color=color, width=width, edgecolor='black')
+        ax.text(x[i], d['extent'] + 0.1, f"{d['extent']:.2f}", ha='center', va='bottom', fontsize=13)
+        
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Flood extent (km²)", fontsize=16)
+    ax.set_title("Factual and Counterfactual Flood Extent", fontsize=16)
+    ax.tick_params(axis='y', labelsize=13)
+    ax.xaxis.grid(False)
+    ax.yaxis.grid(True)
 
-    # Calculate the y-limits for both axes based on data and add some padding
-    padding = 0.25  # You can adjust this padding value as needed
+    # Set x-axis to start from zero
+    ax.set_xlim(left=-0.5)
 
-    # For ax1 (Flood Volume Difference)
-    ax1_min = df['Flood extent difference (F-CF in %)'].min()
-    ax1_max = df['Flood extent difference (F-CF in %)'].max()
+    legend_elements = [
+        Patch(facecolor='#b0b0b0', edgecolor='black', label='Factual'),
+        Patch(facecolor='#97a6c4', edgecolor='black', label='Counterfactual'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
+
+    # Layout
     
-    # For ax2 (Damage Difference)
-    ax2_min = df['Mean damage difference (F-CF in %)'].min()
-    ax2_max = df['Mean damage difference (F-CF in %)'].max()
-
-    # Set the same y-limits for both axes and ensure 0 is included
-    y_min = min(ax1_min, ax2_min, 0) - padding
-    y_max = max(ax1_max, ax2_max, 0) + padding
-
-    # Set y-limits to include the same range for both axes
-    ax1.set_ylim([y_min, y_max])
-    ax2.set_ylim([y_min, y_max])
-
-    # Add black horizontal line at zero
-    ax2.axhline(0, color='k', linewidth=0.2, zorder=0)
-
-    # Title and layout
-    plt.title("Flood Extent and Damage Difference by CF Driver", fontsize=16)  # Title font size
     plt.tight_layout()
-
-    # Synchronize the gridlines between the two axes
-    ax1.grid(True)  # Enable grid on ax1
-    ax2.grid(False)  # Disable grid on ax2
-    ax1.set_axisbelow(True)  # Ensure gridlines are below the scatter points
-
-    # Show the plot
     plt.show()
 
+
+def plot_abs_damage_difference_by_driver(fiat_models):
+    # Collect data by driver combination
+    model_dict = {}
+    for fiat in (fiat_models):
+       
+        # Flood damage
+        dam = fiat['fiat_results']['total_damage'].sum()
+
+        # Drivers active
+        CF_info = fiat["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        model_dict[key] = {'damage': dam}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        vol_total = model_dict[key]['damage']
+
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "ALL"
+
+        data_plot.append({
+            'label': label,
+            'damage': vol_total,
+        })
+
+    # Sort data by the total magnitude of impact (damage)
+    data_plot.sort(key=lambda d: abs(d['damage']))
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
+    
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
+    width = 0.4
+
+    # Iterate over each model and plot the bars
+    for i, d in enumerate(data_plot):
+        if d['label'] == "FACTUAL":
+            color = "#b0b0b0"  # grey for factual
+        else:
+            color = "#384860"  # consistent pastel blue for all others
+        ax.bar(x[i], d['damage'], color=color, width=width, edgecolor='black')
+
+        ax.text(x[i], d['damage'] + 0.1, f"{d['damage']:.1f}", ha='center', va='bottom', fontsize=13)
+
+
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Flood damage ($)", fontsize=16)
+    ax.set_title("Factual and Counterfactual Flood Damage", fontsize=16)
+    ax.tick_params(axis='y', labelsize=13)
+    ax.xaxis.grid(False)
+    
+    ax.yaxis.get_offset_text().set_fontsize(12)  # Set your desired font size
+
+    # Set x-axis to start from zero
+    ax.set_xlim(left=-0.5)
+
+    legend_elements = [
+        Patch(facecolor='#b0b0b0', edgecolor='black', label='Factual'),
+        Patch(facecolor='#384860', edgecolor='black', label='Counterfactual'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
+    
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_driver_combination_volume_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):    
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):      
+        # Volume
+        vol = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        if vol is None:
+            continue
+        vol = vol.values.flatten()[0]
+
+        # Damage
+        dam = fiat['Damage_diff_from_F(%)']
+
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        model_dict[key] = {'volume': vol, 'damage': dam}
+
+    # Build and sort data
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+    for key in all_keys:
+        vol_total = model_dict[key]['volume']
+        dam_total = model_dict[key]['damage']
+        if abs(vol_total) < tolerance and abs(dam_total) < tolerance:
+            continue
+
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "ALL"
+        data_plot.append({'label': label, 'volume': vol_total, 'damage': dam_total, 'key': key})
+    
+    data_plot.sort(key=lambda d: d['volume'])
+
+    # Apply filtering
+    if filter_keys is not None:
+        filter_keys_normalized = [tuple(sorted(fk.split(" & "))) if isinstance(fk, str) else tuple(sorted(fk)) for fk in filter_keys]
+        data_plot = [d for d in data_plot if tuple(sorted(d['key'])) in filter_keys_normalized]
+
+    if not data_plot:
+        print("No data available for the selected driver combinations.")
+        return
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(14, 8), dpi=300)
+    x = np.arange(len(data_plot))
+
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
+    width = 0.3
+
+    max_y = 0
+    for i, d in enumerate(data_plot):
+        # Volume bar
+        ax.bar(x[i] - width/2, d['volume'], width=width, color="#97a6c4", edgecolor='black')
+        # Damage bar
+        ax.bar(x[i] + width/2, d['damage'], width=width, color="#384860", edgecolor='black',)
+        
+        # Annotate the value on top of the bar
+        ax.text(x[i] - width/2, d['volume'] + 0.1, f"{d['volume']:.2f}", ha='center', va='bottom', fontsize=13)
+        ax.text(x[i] + width/2, d['damage'] + 0.1, f"{d['damage']:.2f}", ha='center', va='bottom', fontsize=13)
+
+        max_y = max(max_y, d['volume'], d['damage'])
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Attribution (F-CF) (%)", fontsize=16)
+    ax.set_title("Flood Volume and Damage Attribution by CF Driver (Set)", fontsize=16)
+    ax.set_ylim(0, max_y + 5)
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+    ax.tick_params(axis='y', labelsize=12)
+    ax.xaxis.grid(False)
+
+    legend_elements = [
+        Patch(facecolor='#97a6c4', edgecolor='black', label='Flood Volume'),
+        Patch(facecolor='#384860', edgecolor='black', label='Damage'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
+
+    plt.tight_layout(pad=4.0)
+    plt.show()
+
+
+def plot_driver_combination_extent_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):    
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):      
+        # Volume
+        ext = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+        if ext is None:
+            continue
+        ext = ext.values.flatten()[0]
+
+        # Damage
+        dam = fiat['Damage_diff_from_F(%)']
+
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        model_dict[key] = {'extent': ext, 'damage': dam}
+
+    # Build and sort data
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+    for key in all_keys:
+        ext_total = model_dict[key]['extent']
+        dam_total = model_dict[key]['damage']
+        if abs(ext_total) < tolerance and abs(dam_total) < tolerance:
+            continue
+
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "ALL"
+        data_plot.append({'label': label, 'extent': ext_total, 'damage': dam_total, 'key': key})
+    
+    data_plot.sort(key=lambda d: d['damage'])
+
+    # Apply filtering
+    if filter_keys is not None:
+        filter_keys_normalized = [tuple(sorted(fk.split(" & "))) if isinstance(fk, str) else tuple(sorted(fk)) for fk in filter_keys]
+        data_plot = [d for d in data_plot if tuple(sorted(d['key'])) in filter_keys_normalized]
+
+    if not data_plot:
+        print("No data available for the selected driver combinations.")
+        return
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(14, 8), dpi=300)
+    x = np.arange(len(data_plot))
+
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
+    width = 0.3
+
+    max_y = 0
+    for i, d in enumerate(data_plot):
+        # Extent bar
+        ax.bar(x[i] - width/2, d['extent'], width=width, color="#97a6c4", edgecolor='black')
+        # Damage bar
+        ax.bar(x[i] + width/2, d['damage'], width=width, color="#384860", edgecolor='black',)
+        
+        # Annotate the value on top of the bar
+        ax.text(x[i] - width/2, d['extent'] + 0.1, f"{d['extent']:.2f}", ha='center', va='bottom', fontsize=13)
+        ax.text(x[i] + width/2, d['damage'] + 0.1, f"{d['damage']:.2f}", ha='center', va='bottom', fontsize=13)
+
+        max_y = max(max_y, d['extent'], d['damage'])
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Attribution (F-CF) (%)", fontsize=16)
+    ax.set_title("Flood Extent and Damage Attribution by CF Driver (Set)", fontsize=16)
+    ax.set_ylim(0, max_y + 5)
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+    ax.tick_params(axis='y', labelsize=12)
+    ax.xaxis.grid(False)
+
+    legend_elements = [
+        Patch(facecolor='#97a6c4', edgecolor='black', label='Flood Extent'),
+        Patch(facecolor='#384860', edgecolor='black', label='Damage'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
+
+    plt.tight_layout(pad=4.0)
+    plt.show()
+
+
+# Plot functions with driver decomposition for EGU ppt
+def plot_driver_decomposition_volume_only(sfincs_models, fiat_models):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',        # purple
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        name = sf['model_name']
+        
+        # Flood volume
+        vol = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        if vol is None:
+            continue
+        vol = vol.values.flatten()[0]
+
+        # Damage (though not used in this plot, we still need to track the max_y)
+        dam = fiat['fiat_results']['Damage_diff_from_F(%)']
+        dam = dam[np.isfinite(dam)].mean()
+        if dam is None:
+            continue
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers))
+        model_dict[key] = {'volume': vol, 'damage': dam}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        vol_total = model_dict[key]['volume']
+        dam_total = model_dict[key]['damage']
+
+        # Use individual driver contributions to calculate ratios
+        vol_parts = {d: model_dict.get((d,), {}).get('volume', 0) for d in key}
+        dam_parts = {d: model_dict.get((d,), {}).get('damage', 0) for d in key}
+
+        # Calculate the total of individual contributions
+        vol_sum = sum(vol_parts.values())
+        dam_sum = sum(dam_parts.values())
+
+        # Calculate the ratios for coloring
+        vol_ratios = {d: vol_parts[d] / vol_sum if vol_sum > 0 else 0 for d in key}
+        dam_ratios = {d: dam_parts[d] / dam_sum if dam_sum > 0 else 0 for d in key}
+
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "COMPOUND"
+
+        data_plot.append({
+            'label': label,
+            'volume': vol_total,
+            'damage': dam_total,
+            'volume_ratios': vol_ratios,
+            'damage_ratios': dam_ratios
+        })
+
+    # Sort data by the total magnitude of impact (volume + damage)
+    data_plot.sort(key=lambda d: abs(d['volume']) + abs(d['damage']))
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
+    width = 0.35
+
+    max_y = 0  # To dynamically track the maximum y-value for proper axis limits
+
+    # Iterate over each model and plot the bars
+    for i, d in enumerate(data_plot):
+        vol_bottom = 0
+        dam_bottom = 0
+
+        # Plot flood volume for the combination (single bar for the total value)
+        for part, ratio in d['volume_ratios'].items():
+            # Color the bars based on the ratio for each driver in the combination
+            ax.bar(x[i] - width/2, d['volume'] * ratio, bottom=vol_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black')
+            vol_bottom += d['volume'] * ratio
+
+        # Track the maximum y-value considering both flood volume and damage
+        max_y = max(max_y, vol_bottom, dam_bottom, d['damage'])
+
+        # Add symbols (~) for flood volume
+        ax.text(x[i] - width/2, vol_bottom + 0.5, "~", ha='center', va='bottom', fontsize=18)
+
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot])
+    ax.set_ylabel("Difference (%)")
+    ax.set_title("Flood Volume Differences by CF Driver Set")
+
+    # Set x-axis to start from zero
+    ax.set_xlim(left=0)
+
+    # Set y-axis to start at zero (removes extra space below bars) and dynamically adjust based on data
+    ax.set_ylim(bottom=0, top=max_y + 5)
+
+    # Legend
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        Patch(facecolor='white', edgecolor='black', label='Flood Volume'),
+    ]
+    ax.legend(handles=legend_elements, title="Legend", loc='upper left', bbox_to_anchor=(1, 1))
+
+    # Layout
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_driver_decomposition_extent_only(sfincs_models, fiat_models):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',        # purple
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        name = sf['model_name']
+        
+        # Flood extent
+        ext = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+        if ext is None:
+            continue
+        ext = ext.values.flatten()[0]
+
+        # Damage (though not used in this plot, we still need to track the max_y)
+        dam = fiat['fiat_results']['Damage_diff_from_F(%)']
+        dam = dam[np.isfinite(dam)].mean()
+        if dam is None:
+            continue
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers))
+        model_dict[key] = {'extent': ext, 'damage': dam}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        ext_total = model_dict[key]['extent']
+        dam_total = model_dict[key]['damage']
+
+        # Use individual driver contributions to calculate ratios
+        ext_parts = {d: model_dict.get((d,), {}).get('extent', 0) for d in key}
+        dam_parts = {d: model_dict.get((d,), {}).get('damage', 0) for d in key}
+
+        # Calculate the total of individual contributions
+        ext_sum = sum(ext_parts.values())
+        dam_sum = sum(dam_parts.values())
+
+        # Calculate the ratios for coloring
+        ext_ratios = {d: ext_parts[d] / ext_sum if ext_sum > 0 else 0 for d in key}
+        dam_ratios = {d: dam_parts[d] / dam_sum if dam_sum > 0 else 0 for d in key}
+
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "COMPOUND"
+
+        data_plot.append({
+            'label': label,
+            'extent': ext_total,
+            'damage': dam_total,
+            'extent_ratios': ext_ratios,
+            'damage_ratios': dam_ratios
+        })
+
+    # Sort data by the total magnitude of impact (extent + damage)
+    data_plot.sort(key=lambda d: abs(d['extent']) + abs(d['damage']))
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
+    width = 0.35
+
+    max_y = 0  # To dynamically track the maximum y-value for proper axis limits
+
+    # Iterate over each model and plot the bars
+    for i, d in enumerate(data_plot):
+        ext_bottom = 0
+        dam_bottom = 0
+
+        # Plot flood extent for the combination (single bar for the total value)
+        for part, ratio in d['extent_ratios'].items():
+            # Color the bars based on the ratio for each driver in the combination
+            ax.bar(x[i] - width/2, d['extent'] * ratio, bottom=ext_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black')
+            ext_bottom += d['extent'] * ratio
+
+        # Track the maximum y-value considering both flood extent and damage
+        max_y = max(max_y, ext_bottom, dam_bottom, d['damage'])
+
+        # Add symbols (~) for flood extent
+        ax.text(x[i] - width/2, ext_bottom + 0.5, "~", ha='center', va='bottom', fontsize=18)
+
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot])
+    ax.set_ylabel("Difference (%)")
+    ax.set_title("Flood Extent Differences by CF Driver Set")
+
+    # Set x-axis to start from zero
+    ax.set_xlim(left=0)
+
+    # Set y-axis to start at zero (removes extra space below bars) and dynamically adjust based on data
+    ax.set_ylim(bottom=0, top=max_y + 5)
+
+    # Legend
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        Patch(facecolor='white', edgecolor='black', label='Flood Extent'),
+    ]
+    ax.legend(handles=legend_elements, title="Legend", loc='upper left', bbox_to_anchor=(1, 1))
+
+    # Layout
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_driver_decomposition_volume_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',        # purple
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        name = sf['model_name']
+        
+        # Flood volume
+        vol = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        if vol is None:
+            continue
+        vol = vol.values.flatten()[0]  # Flatten the array to get a scalar value
+
+        # Damage
+        dam = fiat['Damage_diff_from_F(%)']
+
+        # Print values for debugging
+        print(f"Model: {name}, Volume: {vol}, Damage: {dam}")
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers))  # Sort the driver combination to ensure consistency
+        model_dict[key] = {'volume': vol, 'damage': dam}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        vol_total = model_dict[key]['volume']
+        dam_total = model_dict[key]['damage']
+
+        # Use individual driver contributions to calculate ratios
+        vol_parts = {d: model_dict.get((d,), {}).get('volume', 0) for d in key}
+        dam_parts = {d: model_dict.get((d,), {}).get('damage', 0) for d in key}
+
+        # Calculate the total of individual contributions
+        vol_sum = sum(vol_parts.values())
+        dam_sum = sum(dam_parts.values())
+
+        # Apply tolerance: skip combinations with very small totals
+        if abs(vol_sum) < tolerance and abs(dam_sum) < tolerance:
+            continue
+
+        # Calculate the ratios for coloring
+        vol_ratios = {d: vol_parts[d] / vol_sum if vol_sum > 0 else 0 for d in key}
+        dam_ratios = {d: dam_parts[d] / dam_sum if dam_sum > 0 else 0 for d in key}
+
+        # Generate a label
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "COMPOUND"
+
+        data_plot.append({
+            'label': label,
+            'volume': vol_total,
+            'damage': dam_total,
+            'volume_ratios': vol_ratios,
+            'damage_ratios': dam_ratios,
+            'key': key  # Store the key for filtering purposes
+        })
+
+    # Sort data by the total magnitude of impact (volume + damage)
+    data_plot.sort(key=lambda d: abs(d['volume']) + abs(d['damage']))
+
+    # Optional filter: only plot selected combinations
+    if filter_keys is not None:
+        # Normalize filter_keys (handle string and tuple types)
+        filter_keys_normalized = [tuple(sorted(fk.split(" & "))) if isinstance(fk, str) else tuple(sorted(fk)) for fk in filter_keys]
+        
+        # Filter the data_plot based on the normalized keys
+        filtered_data = []
+        for d in data_plot:
+            if tuple(sorted(d['key'])) in filter_keys_normalized:
+                filtered_data.append(d)
+            else:
+                print(f"Filtered out {d['label']} with volume: {d['volume']} and damage: {d['damage']}")  # Debugging info
+
+        data_plot = filtered_data
+
+    # Check if any valid data exists after filtering
+    if not data_plot:
+        print("No data available for the selected driver combinations.")
+        return
+
+    fig, ax = plt.subplots(figsize=(14, 8), dpi=300)
+    x = np.arange(len(data_plot))
+    width = 0.3
+
+    max_y = 0  # To dynamically track the maximum y-value for proper axis limits
+
+    for i, d in enumerate(data_plot):
+        vol_bottom = 0
+        dam_bottom = 0
+
+        # Plot flood volume for the combination (single bar for the total value)
+        for part, ratio in d['volume_ratios'].items():
+            # Color the bars based on the ratio for each driver in the combination
+            ax.bar(x[i] - width/2, d['volume'] * ratio, bottom=vol_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black')
+            vol_bottom += d['volume'] * ratio
+
+        # Plot damage for the combination (single bar for the total value)
+        for part, ratio in d['damage_ratios'].items():
+            ax.bar(x[i] + width/2, d['damage'] * ratio, bottom=dam_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black', hatch='//')
+            dam_bottom += d['damage'] * ratio
+
+        # Update the max_y to ensure the y-axis is properly adjusted
+        max_y = max(max_y, vol_bottom, dam_bottom)
+
+        # Add symbols (~) for flood volume and ($) for damage
+        ax.text(x[i] - width/2, vol_bottom + 0.5, "~", ha='center', va='bottom', fontsize=22)
+        ax.text(x[i] + width/2, dam_bottom + 0.5, "$", ha='center', va='bottom', fontsize=22)
+
+    # Axis setup with larger font sizes
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=16)
+    ax.set_ylabel("Difference (%)", fontsize=22)
+    ax.set_title("Flood Volume and Damage Differences by CF Driver Set", fontsize=22)
+
+    # Set y-axis to start at zero (removes extra space below bars) and dynamically adjust based on data
+    ax.set_ylim(bottom=0, top=max_y + 5)
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+
+    # Increase the font size of the y-axis ticks
+    ax.tick_params(axis='y', labelsize=16)
+
+    # Legend with larger font size and title
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        Patch(facecolor='white', edgecolor='black', label='Flood Volume'),
+        Patch(facecolor='white', edgecolor='black', hatch='//', label='Damage'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
+
+
+    # Layout with more space
+    plt.tight_layout(pad=4.0)
+    plt.show()
+
+
+def plot_driver_decomposition_extent_damage(sfincs_models, fiat_models, filter_keys=None):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',        # purple
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        name = sf['model_name']
+        
+        # Flood extent
+        ext = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+        if ext is None:
+            continue
+        ext = ext.values.flatten()[0]
+
+        # Damage
+        dam = fiat['Damage_diff_from_F(%)']
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(drivers)
+        model_dict[key] = {'extent': ext, 'damage': dam}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        ext_total = model_dict[key]['extent']
+        dam_total = model_dict[key]['damage']
+
+        ext_parts = {d: 0 for d in key}
+        dam_parts = {d: 0 for d in key}
+
+        for d in key:
+            ext_parts[d] = model_dict.get((d,), {}).get('extent', 0)
+            dam_parts[d] = model_dict.get((d,), {}).get('damage', 0)
+
+        ext_sum = sum(ext_parts.values())
+        dam_sum = sum(dam_parts.values())
+
+        ext_ratios = {d: ext_parts[d] / ext_sum if ext_sum > 0 else 0 for d in key}
+        dam_ratios = {d: dam_parts[d] / dam_sum if dam_sum > 0 else 0 for d in key}
+
+        sorted_key = tuple(sorted(key))
+        label = " & ".join(sorted_key)
+        if set(sorted_key) == {"RAIN", "SLR", "WIND"}:
+            label = "COMPOUND"
+
+        data_plot.append({
+            'label': label,
+            'extent': ext_total,
+            'damage': dam_total,
+            'extent_ratios': ext_ratios,
+            'damage_ratios': dam_ratios,
+            'key': sorted_key
+        })
+
+    # Filter data_plot based on filter_keys (only for plotting)
+    if filter_keys:
+        normalized_filter = [tuple(sorted(fk)) for fk in filter_keys]
+        data_plot = [d for d in data_plot if d['key'] in normalized_filter]
+
+    print("\nData to plot (after filtering and processing):")
+    for entry in data_plot:
+        print(entry)
+
+    if not data_plot:
+        print("No data to plot after filtering. Please check the filter_keys.")
+        return
+
+    data_plot.sort(key=lambda d: abs(d['extent']) + abs(d['damage']))
+
+    fig, ax = plt.subplots(figsize=(14, 8), dpi=300)
+    x = np.arange(len(data_plot))
+    width = 0.3
+    max_y = 0
+
+    for i, d in enumerate(data_plot):
+        ext_bottom = 0
+        dam_bottom = 0
+
+        for part, ratio in d['extent_ratios'].items():
+            ax.bar(x[i] - width/2, d['extent'] * ratio, bottom=ext_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black')
+            ext_bottom += d['extent'] * ratio
+
+        for part, ratio in d['damage_ratios'].items():
+            ax.bar(x[i] + width/2, d['damage'] * ratio, bottom=dam_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black', hatch='//')
+            dam_bottom += d['damage'] * ratio
+
+        max_y = max(max_y, ext_bottom, dam_bottom)
+
+        ax.text(x[i] - width/2, ext_bottom + 0.5, "~", ha='center', va='bottom', fontsize=22)
+        ax.text(x[i] + width/2, dam_bottom + 0.5, "$", ha='center', va='bottom', fontsize=22)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=16)
+    ax.set_ylabel("Difference (%)", fontsize=20)
+    ax.set_title("Flood Extent and Damage Differences by CF Driver Set", fontsize=22)
+
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+    ax.set_ylim(bottom=0, top=max_y + 5)
+    ax.tick_params(axis='y', labelsize=16)
+    
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        Patch(facecolor='white', edgecolor='black', label='Flood Extent'),
+        Patch(facecolor='white', edgecolor='black', hatch='//', label='Damage'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
+
+    plt.tight_layout(pad=4.0)
+    plt.show()
+
+
+def plot_driver_decomposition_volume_damage_interaction(sfincs_models, fiat_models):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',       # purple
+        'INTERACTION': '#999999' # gray
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        name = sf['model_name']
+        
+        # Flood volume
+        vol = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        if vol is None:
+            continue
+        vol = vol.values.flatten()[0]
+
+        # Damage
+        dam = fiat['Damage_diff_from_F(%)']
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers))
+        model_dict[key] = {'volume': vol, 'damage': dam, 'CF_info': CF_info}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        vol_total = model_dict[key]['volume']
+        dam_total = model_dict[key]['damage']
+        CF_info = model_dict[key]['CF_info']
+
+        # Individual driver
+        if len(key) == 1:
+            data_plot.append({
+                'label': key[0],
+                'volume_parts': {key[0]: vol_total},
+                'damage_parts': {key[0]: dam_total},
+                'CF_info': CF_info
+            })
+        else:
+            # Sum of individual contributions
+            vol_parts = {d: model_dict.get((d,), {}).get('volume', 0) for d in key}
+            dam_parts = {d: model_dict.get((d,), {}).get('damage', 0) for d in key}
+
+            vol_sum = sum(vol_parts.values())
+            dam_sum = sum(dam_parts.values())
+
+            # Add interaction effect
+            vol_parts['INTERACTION'] = vol_total - vol_sum
+            dam_parts['INTERACTION'] = dam_total - dam_sum
+
+            label = " & ".join(key)
+            data_plot.append({
+                'label': label,
+                'volume_parts': vol_parts,
+                'damage_parts': dam_parts,
+                'CF_info': CF_info
+            })
+
+    # Sort data by the combined magnitude of volume and damage (low to high)
+    data_plot.sort(key=lambda d: abs(sum(d['volume_parts'].values())) + abs(sum(d['damage_parts'].values())))
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+    x = np.arange(len(data_plot))
+    width = 0.35
+
+    max_y = 0  # To dynamically track the maximum y-value for proper axis limits
+
+    for i, d in enumerate(data_plot):
+        vol_bottom = 0
+        dam_bottom = 0
+
+        # Flood volume bar (left)
+        for part, val in d['volume_parts'].items():
+            # If it's the interaction part, set transparency
+            alpha = 0.2 if part == 'INTERACTION' else 1.0
+            ax.bar(x[i] - width/2, val, bottom=vol_bottom, width=width,
+                   color=color_map.get(part, '#cccccc'), edgecolor='black', alpha=alpha)
+            vol_bottom += val
+
+        # Damage bar (right)
+        for part, val in d['damage_parts'].items():
+            # If it's the interaction part, adjust hatch pattern and transparency
+            alpha = 0.7 if part == 'INTERACTION' else 1.0  # Less transparency for negative interactions
+            hatch_pattern = '\\\\' if part == 'INTERACTION' and val < 0 else '//'
+            
+            bar = ax.bar(x[i] + width/2, val, bottom=dam_bottom, width=width,
+                         color=color_map.get(part, '#cccccc'), edgecolor='black', hatch=hatch_pattern, alpha=alpha)
+            dam_bottom += val
+
+            # For interaction, if negative, make only the bottom border bold
+            if part == 'INTERACTION' and val < 0:
+                # Get the current bar's rectangle and modify the bottom edge
+                rect = bar[0]
+                # The bottom edge is at y = dam_bottom (start position) and extends to the bottom
+                rect.set_edgecolor('black')  # Set the edge color to black
+                rect.set_linewidth(1)  # Set normal line width for the other edges
+                
+                # Draw the bottom line manually with thicker line
+                ax.plot([rect.get_x(), rect.get_x() + rect.get_width()],
+                        [dam_bottom, dam_bottom], color='black', linewidth=3)
+
+        # Update the max_y to ensure the y-axis is properly adjusted
+        max_y = max(max_y, vol_bottom, dam_bottom)
+
+        # Add actual value text for flood volume above bars
+        ax.text(x[i] - width/2, vol_bottom + 0.5, f"{vol_total:.2f}%", ha='center', va='bottom', fontsize=12)
+
+        # Add actual value text for damage above bars
+        ax.text(x[i] + width/2, dam_bottom + 0.5, f"${dam_total:.2f}", ha='center', va='bottom', fontsize=12)
+
+        # Add wave symbol (~) above the flood volume bars
+        ax.text(x[i] - width/2, vol_bottom + 1.5, "~", ha='center', va='bottom', fontsize=18)
+
+        # Add dollar sign ($) above the damage bars
+        ax.text(x[i] + width/2, dam_bottom + 1.5, "$", ha='center', va='bottom', fontsize=18)
+
+    # Axis setup
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], rotation=20)
+    ax.set_ylabel("Difference (%)")
+    ax.set_title("Flood Volume and Damage Differences by CF Driver Set")
+
+    # Set x-axis to start from zero
+    ax.set_xlim(left=0)
+
+    # Set y-axis to start at zero (removes extra space below bars) and dynamically adjust based on data
+    ax.set_ylim(bottom=0, top=max_y + 5)
+
+    # Legend
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        Patch(facecolor=color_map['INTERACTION'], edgecolor='black', label='Interaction'),
+        Patch(facecolor='white', edgecolor='black', label='Flood Volume'),
+        Patch(facecolor='white', edgecolor='black', hatch='//', label='Damage'),
+    ]
+    ax.legend(handles=legend_elements, title="Legend", loc='upper left', bbox_to_anchor=(1, 1))
+
+    # Layout
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_masked_hmax_factual_only(models, num_cols=1, figsize=(6, 8), dpi=300):
+    """
+    Plots only the factual model's masked hmax flood map with coordinate labels.
+    """
+
+    # Filter for factual model only
+    factual_models = [m for m in models if all(v == 0 for v in m['CF_info'].values())]
+
+    if not factual_models:
+        print("No factual model found.")
+        return
+
+    projection = factual_models[0]['sfincs_model'].crs.to_epsg()
+    num_models = len(factual_models)
+    num_rows = math.ceil(num_models / num_cols)
+
+    fig, axes = plt.subplots(nrows=num_rows,
+                             ncols=num_cols,
+                             figsize=figsize,
+                             dpi=dpi,
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.epsg(projection)})
+
+    if num_models == 1:
+        axes = [axes]  # Ensure iterable
+
+    fig.suptitle("Factual Scenario: Masked $h_{max}$", fontsize=20, y=1.02)
+
+    for model, ax in zip(factual_models, axes):
+        # Plot hmax masked
+        im = model['sfincs_results']['hmax_masked'].plot.pcolormesh(
+            ax=ax, cmap="Blues", vmin=0, vmax=5.0, add_colorbar=False
+        )
+
+        # Add basemap
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery,
+                        zoom=10,
+                        crs=model['sfincs_results']['hmax_masked'].rio.crs,
+                        attribution=False)
+
+        # Add gridlines and format tick labels
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.xlabel_style = {'size': 12}
+        gl.ylabel_style = {'size': 12}
+        gl.xformatter = LONGITUDE_FORMATTER
+        gl.yformatter = LATITUDE_FORMATTER
+
+        # Titles
+        # ax.set_title(f"", fontsize=16)
+
+        # Add shared colorbar with larger size and labels
+        cbar = fig.colorbar(im, ax=axes, orientation="vertical", 
+                            fraction=0.035, pad=0.05)
+        cbar.set_label('Flood depth (m)', rotation=270, labelpad=20, fontsize=14)
+        cbar.ax.tick_params(labelsize=12)
+        
+    plt.show()
+
+
+def plot_hmax_diff_rain_only(models, num_cols=1, zoom_region_latlon=None, savefig_path=None):
+    """
+    Plots the hmax_diff for RAIN-only counterfactual models with enhanced visuals,
+    including latitude/longitude gridlines for presentations.
+    """
+    import cartopy.crs as ccrs
+    import matplotlib.ticker as mticker
+    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
+    rain_only_models = [
+        m for m in models 
+        if "hmax_diff" in m["sfincs_results"] and m["CF_info"].get("rain", 0) != 0 
+        and all(m["CF_info"].get(k, 0) == 0 for k in ["wind", "SLR"])
+    ]
+
+    if not rain_only_models:
+        print("No RAIN-only models with 'hmax_diff' found.")
+        return
+
+    model_crs = rain_only_models[0]['sfincs_model'].crs
+    model_epsg = model_crs.to_epsg()
+
+    zoom_region = None
+    if zoom_region_latlon:
+        transformer = Transformer.from_crs("EPSG:4326", model_epsg, always_xy=True)
+        lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
+        xmin, ymin = transformer.transform(lon_min, lat_min)
+        xmax, ymax = transformer.transform(lon_max, lat_max)
+        zoom_region = (xmin, xmax, ymin, ymax)
+
+    num_models = len(rain_only_models)
+    num_cols = 2 if num_models > 1 else 1
+    num_rows = math.ceil(num_models / num_cols)
+
+    fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols,
+                             figsize=(num_cols * 7, num_rows * 6),
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.epsg(model_epsg)},
+                             dpi=300)
+
+    axes = np.array(axes).flatten() if num_models > 1 else [axes]
+    
+    cmap = LinearSegmentedColormap.from_list("white_red", ["red", "white"])
+    vmin, vmax = 0, -0.4  # Adjust range if needed
+
+    for i, model in enumerate(rain_only_models):
+        ax = axes[i]
+        hmax_diff = model["sfincs_results"]["hmax_diff"]
+
+        # Plot
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=10,
+                        crs=model_crs, attribution=False)
+
+        # Gridlines with lat/lon labels
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.6, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.xlabel_style = {"size": 10}
+        gl.ylabel_style = {"size": 10}
+        gl.xformatter = LONGITUDE_FORMATTER
+        gl.yformatter = LATITUDE_FORMATTER
+        gl.xlocator = mticker.MaxNLocator(nbins=5)
+        gl.ylocator = mticker.MaxNLocator(nbins=5)
+
+        # Apply zoom
+        if zoom_region:
+            ax.set_xlim(zoom_region[0], zoom_region[1])
+            ax.set_ylim(zoom_region[2], zoom_region[3])
+
+        # cf_str = ", ".join(f"{k}: {v}" for k, v in model["CF_info"].items() if v != 0)
+        ax.set_title(f"Counterfactual Rain", fontsize=14)
+
+    for j in range(num_models, len(axes)):
+        fig.delaxes(axes[j])
+
+    # Colorbar
+    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.035, pad=0.04)
+    cbar.set_label('Difference in Max Water Level (m)', fontsize=14, rotation=270, labelpad=20)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_ticks(np.arange(-0.4, 0.1, 0.1))  # From -0.4 to 0 with steps of 0.1
+
+    # if savefig_path:
+    #     plt.savefig(savefig_path, bbox_inches='tight', dpi=300)
+
+    plt.show()
+
+
+def plot_hmax_diff_slr_rain(models, zoom_region_latlon=None):
+    """
+    Plots the hmax_diff for RAIN-only and SLR-only models side by side with shared colorbar.
+    """
+
+
+    # Filter first RAIN-only and SLR-only models
+    rain_model = next((m for m in models if m["CF_info"].get("rain", 0) != 0 and m["CF_info"].get("SLR", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
+    slr_model = next((m for m in models if m["CF_info"].get("SLR", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
+
+    if not rain_model or not slr_model:
+        print("Either RAIN-only or SLR-only model with 'hmax_diff' not found.")
+        return
+
+    model_epsg = rain_model['sfincs_model'].crs.to_epsg()
+
+
+    # Create figure
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6), dpi=300, constrained_layout=True,
+                             subplot_kw={"projection": ccrs.epsg(model_epsg)})
+
+    cmap = LinearSegmentedColormap.from_list("white_red", ["red", "white"])
+    vmin, vmax = -0.4, 0
+    plots = [(rain_model, axes[0], "Rain"), (slr_model, axes[1], "SLR")]
+
+    for model, ax, title in plots:
+        hmax_diff = model["sfincs_results"]["hmax_diff"]
+
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9,
+                        crs=model['sfincs_model'].crs, attribution=False)
+
+        # Add gridlines with lat/lon
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = gl.right_labels = False
+        gl.xlabel_style = gl.ylabel_style = {'size': 11}
+
+        ax.set_title(title, fontsize=16)  # You can increase to 16 or more
+
+    # Shared colorbar
+    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
+    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=13)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_ticks(np.arange(-0.4, 0.1, 0.1))
+
+    
+    plt.show()
+
+
+def plot_driver_decomposition_extent(sfincs_models, filter_keys=None):
+    color_map = {
+        'RAIN': '#56B4E9',       # turquoise
+        'WIND': '#3AA17E',       # ocean green
+        'SLR':  '#8E7CC3',        # purple
+    }
+
+    # Collect data by driver combination
+    model_dict = {}
+    for sf in (sfincs_models):
+        name = sf['model_name']
+        
+        # Flood extent
+        ext = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+        if ext is None:
+            continue
+        ext = ext.values.flatten()[0]
+
+        # Drivers active
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(drivers)
+        model_dict[key] = {'extent': ext}
+
+    # Build data for plotting
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+
+    for key in all_keys:
+        ext_total = model_dict[key]['extent']
+
+        ext_parts = {d: 0 for d in key}
+
+        for d in key:
+            ext_parts[d] = model_dict.get((d,), {}).get('extent', 0)
+
+        ext_sum = sum(ext_parts.values())
+
+        ext_ratios = {d: ext_parts[d] / ext_sum if ext_sum > 0 else 0 for d in key}
+
+        sorted_key = tuple(sorted(key))
+        label = " & ".join(sorted_key)
+        if set(sorted_key) == {"RAIN", "SLR", "WIND"}:
+            label = "COMPOUND"
+
+        data_plot.append({
+            'label': label,
+            'extent': ext_total,
+            'extent_ratios': ext_ratios,
+            'key': sorted_key
+        })
+
+    # Filter data_plot based on filter_keys (only for plotting)
+    if filter_keys:
+        normalized_filter = [tuple(sorted(fk)) for fk in filter_keys]
+        data_plot = [d for d in data_plot if d['key'] in normalized_filter]
+
+    print("\nData to plot (after filtering and processing):")
+    for entry in data_plot:
+        print(entry)
+
+    if not data_plot:
+        print("No data to plot after filtering. Please check the filter_keys.")
+        return
+
+    data_plot.sort(key=lambda d: abs(d['extent']))
+
+    fig, ax = plt.subplots(figsize=(12, 8), dpi=300)
+    x = np.arange(len(data_plot))
+    width = 0.5
+    max_y = 0
+
+    for i, d in enumerate(data_plot):
+        ext_bottom = 0
+
+        for part, ratio in d['extent_ratios'].items():
+            ax.bar(x[i], d['extent'] * ratio, bottom=ext_bottom, width=width,
+                color=color_map.get(part, '#cccccc'), edgecolor='black')
+            ext_bottom += d['extent'] * ratio
+
+        max_y = max(max_y, ext_bottom)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=18)
+    ax.set_ylabel("Flood difference (%)", fontsize=20)
+    ax.set_title("Flood Extent Differences by Counterfactual Driver", fontsize=22)
+
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+    ax.set_ylim(bottom=0, top=max_y + 5)
+    ax.tick_params(axis='y', labelsize=16)
+    
+    legend_elements = [
+        Patch(facecolor=color_map['RAIN'], edgecolor='black', label='Rain'),
+        Patch(facecolor=color_map['WIND'], edgecolor='black', label='Wind'),
+        Patch(facecolor=color_map['SLR'], edgecolor='black', label='SLR'),
+        ]
+    # ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=18)
+
+    plt.tight_layout(pad=4.0)
+    plt.show()
 
 ##############################################################
 # Use of functions
@@ -874,126 +1952,53 @@ models = calculate_flood_volume(models)
 #%%
 models = calculate_flood_differences(models)
 
-#%%
-# SOME PLOTTING
-plot_hmax_diff(models)
-plot_masked_hmax(models)
-plot_flood_volume_difference_by_driver(models)
-
-# %%
-zoom_region = (-19.95, -19.6, 34.55, 35.1)
-plot_hmax_diff(models, zoom_region_latlon=zoom_region)
-
 # %%
 fiat_models = load_fiat_models(cfg)
 #%%
 fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
-plot_flood_and_damage_difference_by_driver(models, fiat_models)
-plot_extent_and_damage_difference_by_driver(models, fiat_models)
-#%%
-urban_models = zoom_in_sfincs_data(models, zoom_region_latlon=zoom_region)
+# SOME PLOTTING of spatial flood maps
+plot_hmax_diff(models)
+plot_masked_hmax(models)
 
-#%%
-urban_fiat = load_and_zoom_fiat_fgb(fiat_models, zoom_region_latlon=zoom_region)
-#%%
-plot_flood_and_damage_difference_by_driver(urban_models, urban_fiat)
-plot_extent_and_damage_difference_by_driver(urban_models, urban_fiat)
 
 #%%
+# PLOTTING paper outline
+plot_abs_flood_difference_by_driver(models)
+plot_abs_flood_ext_difference_by_driver(models)
+plot_abs_damage_difference_by_driver(fiat_models)
 
+plot_driver_combination_volume_damage(models, fiat_models)
+plot_driver_combination_extent_damage(models, fiat_models)
 
-
-
-
-def plot_flood_and_damage_difference_by_driver_split(sfincs_models, fiat_models):
-    
-    model_names = []
-    volume_diffs = []
-    damage_diffs = []
-    drivers = []
-    driver_sets = []
-
-    for sfincs, fiat in zip(sfincs_models, fiat_models):
-        if sfincs['category'] != "Factual":
-            model_names.append(sfincs["model_name"])
-
-            volume_diff_value = sfincs['sfincs_results'].get("Volume_diff_from_F(%)", None)
-            if volume_diff_value is not None:
-                volume_diffs.append(volume_diff_value.values.flatten()[0])
-
-            mean_damage_diff = fiat['fiat_results']['Damage_diff_from_F(%)'][np.isfinite(fiat['fiat_results']['Damage_diff_from_F(%)'])].mean()
-            if mean_damage_diff is not None:
-                damage_diffs.append(mean_damage_diff)
-
-            CF_info = sfincs["CF_info"]
-            active_drivers = [k.title() if k != "SLR" else "SLR" for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
-            drivers.append(" & ".join(active_drivers) if len(active_drivers) > 1 else active_drivers[0])
-            driver_sets.append(active_drivers)
-
-    df = pd.DataFrame({
-        "Model name": model_names,
-        "Flood volume difference (F-CF in %)": volume_diffs,
-        "Mean damage difference (%)": damage_diffs,
-        "CF driver": drivers,
-        "Driver set": driver_sets
-    })
-
-    color_map = {
-        'SLR': '#0072B2',
-        'Wind': '#009E73',
-        'Rain': '#E69F00',
-    }
-
-    sns.set(style="whitegrid")
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-
-    ax1.set_xlabel("CF driver", fontsize=14)
-    ax1.set_ylabel("Flood volume difference (F-CF in %)", fontsize=14)
-    ax1.tick_params(axis='x', labelsize=12)
-    ax1.tick_params(axis='y', labelsize=12)
-    ax1.set_xticks(range(len(df["CF driver"].unique())))
-    ax1.set_xticklabels(df["CF driver"].unique(), rotation=20)
-    
-
-    def plot_split_scatter(ax, x, y, driver_set, damage, color_map, radius_base=0.2, radius_scale=0.1):
-        radius = radius_base + radius_scale
-        angle_step = 360 / len(driver_set)
-        for i, driver in enumerate(driver_set):
-            start_angle = i * angle_step
-            end_angle = (i + 1) * angle_step
-            wedge = Wedge((x, y), radius, start_angle, end_angle,
-                          facecolor=color_map[driver], edgecolor='black', linewidth=0.3)
-            ax.add_patch(wedge)
-
-    unique_x = list(df["CF driver"].unique())
-    x_offsets = {driver: i for i, driver in enumerate(unique_x)}
-    swarm_offsets = {key: 0.0 for key in unique_x}
-    
-    y_spread = 0.5  # tighter vertical spread
-
-    for i, row in df.iterrows():
-        x_pos = x_offsets[row["CF driver"]]
-        y_pos = row["Flood volume difference (F-CF in %)"] + swarm_offsets[row["CF driver"]]
-        plot_split_scatter(ax1, x_pos, y_pos, row["Driver set"], row["Mean damage difference (%)"], color_map)
-        swarm_offsets[row["CF driver"]] += y_spread * (-1)**i * 1  # alternate up and down, tighter spread
-
-    ax2 = ax1.twinx()
-    ax2.set_ylabel("Damage difference (%)", fontsize=14)
-    ax2.tick_params(axis='y', labelsize=12)
-    ax2.set_yticks([])
-
-    ax1.set_xlim(-0.5, len(unique_x) - 0.5)
-    y_min = min(df["Flood volume difference (F-CF in %)"]) - 1.5
-    y_max = max(df["Flood volume difference (F-CF in %)"]) + 1.5
-    ax1.set_ylim(y_min, y_max)
-    
-
-    plt.title("Flood Volume and Damage Difference by CF Driver (Split Points)", fontsize=16)
-    plt.tight_layout()
-    plt.show()
-
-plot_flood_and_damage_difference_by_driver_split(models, fiat_models)
 # %%
-# %%
+################################################
+########## PPT SLIDES FIGS EGU 2025 ############
+################################################
+# plotting all driver(s) combinations for hazard and impact
+plot_driver_decomposition_volume_damage(models, fiat_models)
+plot_driver_decomposition_volume_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+
+plot_driver_decomposition_extent_damage(models, fiat_models)
+
+# Plotting potential interaction of drivers, compared to their individual sum
+plot_driver_decomposition_volume_damage_interaction(models, fiat_models)
+
+# plotting the change in flood extent and damage for specific driver(s) combinations
+plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN", "WIND", "SLR")])
+plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+
+#%%
+# Spatial plot of factual simulated compound flooding
+plot_masked_hmax_factual_only(models)
+
+# Plot the difference in flooding due to changes in rain only - spatial map
+plot_hmax_diff_rain_only(models)
+
+# Plot the difference in flooding for rain and SLR in one plot spatially
+plot_hmax_diff_slr_rain(models)
+
+# Plot the change in flood extent for specific driver (combinations)
+plot_driver_decomposition_extent(models,  filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+
