@@ -60,7 +60,8 @@ hmin = 0.05
 da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
-    hmin=hmin)
+    hmin=hmin, 
+    reproj_method ="bilinear")
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
 gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
@@ -81,6 +82,7 @@ fig, ax = mod.plot_basemap(
     vmax=2.5,
     cbar_kwargs={"shrink": 0.6, "anchor": (0, 0)},
 )
+
 tstart = np.datetime_as_string(mod.results['zs'].time.values[0],'m').replace('T',' ')
 tend = np.datetime_as_string(mod.results['zs'].time.values[-1],'m').replace('T',' ')
 ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")

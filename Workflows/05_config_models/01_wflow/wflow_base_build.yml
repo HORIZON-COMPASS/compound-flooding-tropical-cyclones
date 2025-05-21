@@ -66,5 +66,5 @@ setup_constant_pars:
   G_TT: 1.3
 
 setup_ksathorfrac:
-  ksat_fn: ksathorfrac_global
+  ksat_fn: ksathorfrac_global  # source for ksat maps - obtained from Random Forest (RF) and Boosted Regression Trees (BRT) methods. see datacatalog description
   variable: RF_250_KsatHorFrac_global

@@ -32,14 +32,14 @@ runname_ids:
         dfm_verification_points: dfm_verif_points_SMST      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
 
         #Wflow model user-defined settings
-        config_wflow_base: config_wflow.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_build.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
 
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_SMST         # DataCatalog handle for the coastal coupling mask
         coastal_ts: gtsm_codec_reanalysis_hourly_v2         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
-        #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used
+        #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
         utmzone: 30u                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                
 
 
