@@ -6,7 +6,7 @@ dir_models:  02_Models            # Folder where the base models will be saved (
 dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
 
 runname_ids: 
-    Eta:                                                   # name of the model run     
+    Eta_v2:                                                   # name of the model run     
         #Settings of the workflow
         tc_name: Eta                                       # name of the storm. For tropical cyclones, this can be the name of the TC 
         region: honduras                                   # name of the region will be used in naming folders                
@@ -17,10 +17,11 @@ runname_ids:
         forcing: era5_hourly_zarr                          # DataCatalog handle for forcing dataset for the rainfall data     
         wind_forcing: era5_hourly_zarr                     # wind and pressure dataset (used for coastal surge modelling)     
         bathy: gebco2024_HND                               # DataCatalog handle for the bathymetry dataset   
+        river_upa: 30                                      # minimum upstream area threshold for the SFINCS and wflow [km2]
         
         #Models selections
         use_dfm: False                                     # use the coastal hydrodynamic model D-FM      
-        use_wflow: True                                    # use the hydrological model Wflow
+        #use_wflow: True                                    # use the hydrological model Wflow
 
         #DFM model user-defined settings
         bbox_dfm: "[-89.0,-82.4,14.9,17.7]"                # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]    
@@ -29,10 +30,14 @@ runname_ids:
         tidemodel: 'GTSMv41opendap'                        # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap                     
         dfm_obs_file: coastal_coupling_DFM_obs_points_HND  # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS         
         dfm_verification_points:  test                     # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes - check this            
-        
+
+        #Wflow model user-defined settings
+        config_wflow_base: config_wflow.yml                 # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)
+
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build.yml          # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
         bbox_sfincs: "[-88.3,15.1,-87.6,16.0]"             # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
+        #discharge_ts: discharge_era5_hourly_zarr          # DataCatalog handle for the discharge boundary conditions if wflow is NOT used
         utmzone: 16p                                       # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)     
         coastal_ts: gtsm_codec_reanalysis_hourly_v2        # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used   # gtsm_codec_reanalysis until 2018 only
         dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask                                                                               

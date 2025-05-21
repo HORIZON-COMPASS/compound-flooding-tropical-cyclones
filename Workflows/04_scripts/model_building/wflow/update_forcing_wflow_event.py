@@ -58,7 +58,8 @@ opt = {
         "precip_clim_fn": None,
     },
     "setup_temp_pet_forcing": {
-        "temp_pet_fn": meteo_fn,
+        #"temp_pet_fn": meteo_fn,
+        "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,
         "pet_method": "debruin",
