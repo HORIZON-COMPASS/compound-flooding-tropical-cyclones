@@ -122,7 +122,7 @@ rule run_sfincs_model:
                 print("Finished running")
         if os.name == 'posix':
             shell("docker image ls")
-            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:sfincs-v2.1.3 sfincs")
+            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs")
 
 
 
