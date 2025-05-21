@@ -15,7 +15,7 @@ Workflows/dag*.png
 Workflows/dag*.pdf
 Workflows/*.dot
 Workflows/hook.sh
-./hook.sh
+hook.sh
 Workflows/slurm*
 Workflows/.nfs*
 Workflows/*/.nfs*
