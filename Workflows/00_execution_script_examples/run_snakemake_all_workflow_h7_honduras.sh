@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=0-2:00:00           # Job duration (hh:mm:ss)
+#SBATCH --time=0-10:00:00           # Job duration (hh:mm:ss)
 #SBATCH --partition 16vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
@@ -11,10 +11,10 @@ module load julia
 
 
 #Going to the folder where git checkout is
-ROOT="/u/couasnon/git_repos/compound-flooding-tropical-cyclones/"
+#ROOT="/u/couasnon/git_repos/compound-flooding-tropical-cyclones/"
 #ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
 #ROOT="/u/bovensch/git_repos/COMPASS"
-#ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
+ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
 # Installing pixi environment
