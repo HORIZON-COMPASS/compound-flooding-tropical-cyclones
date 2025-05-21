@@ -69,7 +69,8 @@ if 'spw' in wind_forcing:
     spw_copy = os.path.join(sfincs_mod_with_forcing,spw_file)
     shutil.copyfile(spw_input, spw_copy)
     opt["setup_config"]["spwfile"] =  os.path.basename(spw_file)
-# Add other specifications for when the wind fields are prescribed via another format
+else: # assuming gridded data like ERA5
+    opt["setup_wind_forcing_from_grid"] = dict(wind=wind_forcing)
 
 mod.update(
     model_out = sfincs_mod_with_forcing,
