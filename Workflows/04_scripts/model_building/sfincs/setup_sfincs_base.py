@@ -23,7 +23,7 @@ if "snakemake" in locals():
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
     region_name      = snakemake.wildcards.region
 else:
-    model_dir        = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test'
+    model_dir        = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_riverburning2'
     config_file      = '../../../05_config_models/02_sfincs/sfincs_base_build.yml'
     data_cats        = ['../../../03_data_catalogs/datacatalog_general.yml',
                         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
@@ -77,21 +77,6 @@ mod = SfincsModel(
 mod.build(region={"geom": region}, opt=opt)
 
 
-# %%
-# Include extra polygon for Sofala region
-# if region_name == 'sofala':
-#     opt2 = {
-#         'setup_mask_active': {
-#         'include_mask': 'sofala_incl_polygon',
-#         'reset_mask': False
-#         }}
-    
-#     mod.update(
-#         write=True,
-#         opt=opt2
-#         )
-# else:
-#     pass
 
 # %%
 # Set up river depths using r+ mode 
@@ -125,4 +110,6 @@ mod.build(region={"geom": region}, opt=opt)
 # #%%
 # mod.write()
 
+# # %%
+# mod.config()
 # %%
