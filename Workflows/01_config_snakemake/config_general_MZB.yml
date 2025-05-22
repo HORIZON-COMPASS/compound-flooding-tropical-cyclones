@@ -45,9 +45,9 @@ runname_ids:
         config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
 
         # Counterfactual forcing settings
-        CF_value_rain: [0]
-        CF_value_wind: [0]
-        CF_value_SLR: [0]
+        CF_value_rain: [0, -7]
+        CF_value_wind: [0, -10]
+        CF_value_SLR: [0, -0.14]
 
     # Freddy1:
     #     tc_name: Freddy1
