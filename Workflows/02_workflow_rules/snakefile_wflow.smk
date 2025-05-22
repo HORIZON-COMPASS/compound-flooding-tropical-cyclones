@@ -57,8 +57,7 @@ region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
 
 rule all_wflow:
     input:
-        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "warmup", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
 
 rule make_base_model_wflow:
     input:
@@ -81,11 +80,11 @@ rule update_forcing_wflow_warmup:
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr", "warmup", "inmaps.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr", "warmup", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
-        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr"),
+        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}"),
         start_time = get_start_time,
         end_time = get_end_time,
         data_cat = get_datacatalog,
@@ -97,13 +96,13 @@ rule update_forcing_wflow_event:
     input: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
-        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr", "warmup", "inmaps.nc")
+        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc")
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr", "events", "inmaps.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr", "events", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "wflow")),
-        wflow_root_forcing= directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30yr")),
+        wflow_root_forcing= directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
         start_time = get_start_time,
         end_time = get_end_time,
         forcing = "{precip_forcing}",
@@ -113,13 +112,13 @@ rule update_forcing_wflow_event:
         join(curdir, '..',  "04_scripts", "model_building", "wflow", "update_forcing_wflow_event.py")
 
 rule run_wflow_warmup:
+    threads: 16
     input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "warmup", "inmaps.nc"),
-        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "warmup", "wflow_sbm.toml"),
-        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "inmaps.nc"),  
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc"),
+        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "wflow_sbm.toml"),
+        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),  
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "instate", "instates.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "warmup", "run_default", "output_scalar.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
         julia_env_fn = "~/.julia/environments/v1.9"
@@ -129,12 +128,13 @@ rule run_wflow_warmup:
         """
 
 rule run_wflow_event:
+    threads: 16
     input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "instate", "instates.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "inmaps.nc"),
-        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
+        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "wflow_sbm.toml"),
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_30ry", "events", "run_default", "output_scalar.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
         julia_env_fn = "~/.julia/environments/v1.9",
