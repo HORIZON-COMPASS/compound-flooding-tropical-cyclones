@@ -9,6 +9,7 @@ import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
 import xarray as xr
 import hydromt
+import pyproj
 
 #%%
 if "snakemake" in locals():
@@ -27,12 +28,16 @@ else:
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
     tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    CF_value = -0.14
-    CF_value_txt = "-0.14"
+    CF_value = 0
+    CF_value_txt = "0"
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
-    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_general.yml")
-
+    path_data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        ]
+    
 # Correct for the missing . in the snake that snakemake cannot read
 if tidemodel == "GTSMv41opendap":
     tidemodel = "GTSMv4.1_opendap"
@@ -45,7 +50,7 @@ else:
     pass
 #%%
 # Define hydromt datacatalog
-data_catalog = DataCatalog(data_libs = [path_data_cat])
+data_catalog = hydromt.data_catalog.DataCatalog(data_libs = path_data_cat)
 
 # needed to define wind_forcing and bathy paths
 #%%
