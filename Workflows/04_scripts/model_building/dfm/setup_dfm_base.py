@@ -13,15 +13,15 @@ import pyproj
 
 #%%
 if "snakemake" in locals():
-    dfm_res = float(snakemake.wildcards.dfm_res)
-    dxy_base = float(snakemake.params.dfm_dxy_base)
-    bathy = snakemake.wildcards.bathy
-    tidemodel = snakemake.wildcards.tidemodel
+    dfm_res         = float(snakemake.wildcards.dfm_res)
+    dxy_base        = float(snakemake.params.dfm_dxy_base)
+    bathy           = snakemake.wildcards.bathy
+    tidemodel       = snakemake.wildcards.tidemodel
     dir_output_main = os.path.abspath(snakemake.output.dir_model)
-    bbox_dfm = snakemake.params.dfm_bbox
-    path_data_cat = os.path.abspath(snakemake.params.data_cat)
-    CF_value = float(snakemake.wildcards.CF_SLR)
-    CF_value_txt = snakemake.wildcards.CF_SLR
+    bbox_dfm        = snakemake.params.dfm_bbox
+    path_data_cat   = snakemake.params.data_cat
+    CF_value        = float(snakemake.wildcards.CF_SLR)
+    CF_value_txt    = snakemake.wildcards.CF_SLR
 else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
