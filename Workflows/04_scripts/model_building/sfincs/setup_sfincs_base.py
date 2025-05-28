@@ -77,6 +77,16 @@ mod = SfincsModel(
 mod.build(region={"geom": region}, opt=opt)
 
 
+#%% Plot the region and boundaries
+fig, ax = mod.plot_basemap(
+    fn_out=model_dir, 
+    variable="dep",
+    plot_bounds=True,
+    plot_geoms=True, 
+    plot_region=True,
+    bmap="sat",
+    zoomlevel=12,
+    figsize=(8, 6))
 
 # %%
 # Set up river depths using r+ mode 
