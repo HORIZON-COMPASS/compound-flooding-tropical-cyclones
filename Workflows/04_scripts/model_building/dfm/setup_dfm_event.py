@@ -47,8 +47,8 @@ else:
     tc_name              = "Idai"
     dfm_res              = "450"
     bathy                = "gebco2024_MZB"
-    tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing         = "spw_IBTrACS"
+    tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    wind_forcing         = "era5_hourly_zarr"
     CF_SLR               = 0
     CF_SLR_txt           = f"{CF_SLR}"
     CF_wind              = 0

@@ -27,7 +27,7 @@ else:
     dfm_res = 450 # m
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_value = 0
     CF_value_txt = "0"
     dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
