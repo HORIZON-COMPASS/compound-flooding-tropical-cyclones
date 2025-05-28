@@ -49,7 +49,6 @@ setup_config_output_timeseries:
   param: ["lateral.river.q_av"]
 
 setup_constant_pars:
-  KsatHorFrac: 100
   Cfmax: 3.75653
   cf_soil: 0.038
   EoverR: 0.11
@@ -64,3 +63,7 @@ setup_constant_pars:
   G_Cfmax: 5.3
   G_SIfrac: 0.002
   G_TT: 1.3
+
+setup_ksathorfrac:
+  ksat_fn: ksathorfrac_global  # source for ksat maps - obtained from Random Forest (RF) and Boosted Regression Trees (BRT) methods. see datacatalog description
+  variable: RF_250_KsatHorFrac_global
