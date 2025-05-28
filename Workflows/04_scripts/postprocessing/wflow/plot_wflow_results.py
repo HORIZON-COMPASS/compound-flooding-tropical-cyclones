@@ -108,9 +108,81 @@ def plot_region_with_satellite(region, runname, discharge_locations_gdf, dischar
         plt.show()
 
 
+def plot_region_with_gauges_only(region, runname, discharge_locations_gdf, save=True, custom_offsets=None):
+    geojson_path = f'p:/11210471-001-compass/02_Models/{region}/{runname}/wflow/staticgeoms/basins.geojson'
+    geojson_path_sfincs = f'p:/11210471-001-compass/02_Models/{region}/{runname}/sfincs/gis/region.geojson'
+    geojson_path_rivers = f'p:/11210471-001-compass/02_Models/{region}/{runname}/wflow/staticgeoms/rivers.geojson'
+    
+    # Read GeoJSONs
+    gdf = gpd.read_file(geojson_path)
+    gdf2 = gpd.read_file(geojson_path_sfincs).to_crs(gdf.crs)
+    rivers = gpd.read_file(geojson_path_rivers).to_crs(gdf.crs)
 
+    # Plot base map
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_aspect('equal', 'box')
+    gdf.plot(ax=ax, edgecolor='black', facecolor='lightblue', alpha=0.7)
+    gdf2.plot(ax=ax, edgecolor='black', facecolor='red', alpha=0.7)
+    rivers.plot(ax=ax, edgecolor='blue', facecolor='none', alpha=1, lw=0.4)
 
+    # Zoom to SFINCS region instead of Wflow
+    minx, miny, maxx, maxy = gdf2.total_bounds
+    buffer = 0.2  # Smaller buffer for a tighter zoom
+    ax.set_xlim(minx - buffer, maxx + buffer)
+    ax.set_ylim(miny - buffer, maxy + buffer)
 
+    ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.Esri.WorldImagery, attribution=False)
+
+    # Add north arrow
+    north_arrow = mpatches.FancyArrowPatch((0.9, 0.05), (0.9, 0.1), transform=ax.transAxes, color='white', arrowstyle='->', lw=2, mutation_scale=15)
+    ax.add_patch(north_arrow)
+    ax.text(0.91, 0.07, "N", transform=ax.transAxes, fontsize=14, color='white', va='bottom', ha='left', fontweight='bold')
+
+    # Add legend
+    legend_elements = [
+        mpatches.Patch(facecolor='lightblue', label='Wflow region', edgecolor='black'),
+        mpatches.Patch(facecolor='red', label='SFINCS region', edgecolor='black')
+    ]
+    ax.legend(handles=legend_elements, loc='upper right', fontsize=12, title="Regions", frameon=True, facecolor='white', edgecolor='black')
+
+    custom_offsets = {
+    '1': (-0.02, 0.02),  
+    '12': (-0.02, -0.02), 
+    '14': (-0.02, -0.03), 
+    '15': (-0.01, 0.035), 
+    '16': (-0.01, 0.03), 
+}
+    # Annotate gauge locations with gauge IDs
+    for idx, loc in discharge_locations_gdf.iterrows():
+        point_geom = loc['geometry']
+        point_x, point_y = point_geom.x, point_geom.y
+
+        gauge_id = loc['index']
+
+        # Plot gauge point
+        ax.scatter(point_x, point_y, color='orange', s=30, edgecolor='black', zorder=5)
+
+        # Annotate to the left with staggered vertical spacing
+        dx = -0.02  # shift left
+        dy = 0
+
+        # Override if custom offset is provided
+        if str(gauge_id) in custom_offsets:
+            dx, dy = custom_offsets[str(gauge_id)]
+
+        ax.text(point_x + dx, point_y + dy, str(gauge_id),
+                fontsize=10, color='white', ha='right', va='center', fontweight='bold',
+                bbox=dict(facecolor='black', edgecolor='none', pad=1.5, alpha=0.7))
+    
+    ax.set_title(f"Wflow gauge locations in {region.capitalize()} for Hurricane {runname}", fontsize=18)
+    ax.set_axis_off()
+    plt.tight_layout()
+
+    if save:
+        os.makedirs('p:/11210471-001-compass/04_Results/wflow', exist_ok=True)
+        fig.savefig(f'p:/11210471-001-compass/04_Results/wflow/{region}_{runname}_wflow_gauge_map.png', dpi=300)
+    else:
+        plt.show()
 
 
 #%%
@@ -126,7 +198,7 @@ event = 'Idai'
 
 # Example discharge locations: [(x_pos, y_pos, (width, height), name)]
 discharge_locations_gdf = gpd.read_file(f'p:/11210471-001-compass/02_Models/{region}/{event}/wflow/staticgeoms/gauges_locs.geojson')
-mod = WflowModel(f'p:/11210471-001-compass/03_Runs/{region}/{event}/wflow/event_precip_era5_hourly/events', mode='r')
+mod = WflowModel(f'p:/11210471-001-compass/03_Runs/{region}/{event}/wflow/event_precip_era5_hourly_zarr_CF0/events', mode='r')
 mod.read_results()
 
 
@@ -135,6 +207,11 @@ discharge_timeseries = discharge_timeseries = mod.results['netcdf']
 
 # Plot region with timeseries insets
 plot_region_with_satellite('sofala', 'Idai', discharge_locations_gdf, discharge_timeseries, save=True, custom_offsets=custom_offsets)
+
+#%%
+
+plot_region_with_gauges_only(region="sofala", runname="Idai", discharge_locations_gdf=discharge_locations_gdf)
+
 
 # %%
 
