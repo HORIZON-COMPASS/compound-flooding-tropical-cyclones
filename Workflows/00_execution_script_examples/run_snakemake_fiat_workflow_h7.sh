@@ -18,7 +18,7 @@ cd "${ROOT}"
 # Installing pixi environment
 pixi install --environment compass-fiat
 pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
-pixi run --environment compass-fiat conda install ibstdcxx-ng=12 
+pixi run --environment compass-fiat conda install libstdcxx-ng=12 
 pixi run --environment compass-fiat conda install gcc
 pixi run --environment compass-fiat conda install --force-reinstall pandas xarray
 pixi shell-hook --environment compass-fiat > hook.sh
@@ -36,6 +36,6 @@ snakemake --unlock -s snakefile_fiat.smk --configfile ../01_config_snakemake/con
 
 # # running workflow with snakemake
 snakemake -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_fiat.png
-snakemake -n -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
+snakemake -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
 
 exit
