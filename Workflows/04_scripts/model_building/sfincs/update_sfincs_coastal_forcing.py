@@ -74,7 +74,6 @@ if wind_forcing_str not in SKIP_WIND_KEYWORDS:
         spw_copy = os.path.join(sfincs_mod_with_forcing,spw_file)
         shutil.copyfile(spw_input, spw_copy)
         opt["setup_config"]["spwfile"] =  os.path.basename(spw_file)
-        opt["setup_config"]["meteotype"] = "spiderweb" # Explicitly set meteotype for SFINCS
 
         logger.info(f"Set SFINCS config: spwfile='{os.path.basename(spw_file)}', meteotype='spiderweb'")
 

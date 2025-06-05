@@ -11,8 +11,8 @@ runname_ids:
         region: test                                    # name of the region will be used in naming folders 
         
         #For all model setups
-        start_time: 20190424 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
-        end_time: 20190428 060000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
+        start_time: 20190425 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+        end_time: 20190430 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
         forcing: era5_hourly_zarr                           # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: no_wind                          # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco2024_MZB                                        # DataCatalog handle for the bathymetry dataset
