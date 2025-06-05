@@ -49,14 +49,12 @@ setup_cn_infiltration:
 
 setup_river_inflow:
   hydrography: merit_hydro
-#  river_upa: 30
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
 
 setup_river_outflow:
   hydrography: merit_hydro
-#  river_upa: 30
   river_len: 5000
   keep_rivers_geom: True
 
