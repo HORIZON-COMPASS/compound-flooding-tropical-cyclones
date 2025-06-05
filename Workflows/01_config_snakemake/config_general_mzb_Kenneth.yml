@@ -11,8 +11,8 @@ runname_ids:
         region: test                                    # name of the region will be used in naming folders 
         
         #For all model setups
-        start_time: 20190409 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
-        end_time: 20190425 060000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
+        start_time: 20190424 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+        end_time: 20190428 060000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
         forcing: era5_hourly_zarr                           # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: no_wind                          # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco2024_MZB                                        # DataCatalog handle for the bathymetry dataset
@@ -36,7 +36,7 @@ runname_ids:
         
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  ## I think this should be removed?
-        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        bbox_sfincs: "[40.20, -13.38, 40.84, -12.58]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_MZB         # DataCatalog handle for the coastal coupling mask
         coastal_ts: gtsm_codec_reanalysis_hourly_v3                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET

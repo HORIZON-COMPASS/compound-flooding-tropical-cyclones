@@ -34,6 +34,6 @@ snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_s
 
 #running workflow with snakemake
 snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Kenneth.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Kenneth.yml --cores 'all' --latency-wait 180 --wait-for-files
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Kenneth.yml --cores 'all' --latency-wait 180 --wait-for-files 
 
 exit
