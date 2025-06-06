@@ -1,10 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=compass-dfm          # Job name
-#SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=0-2:00:00           # Job duration (hh:mm:ss)
-#SBATCH --partition 16vcpu
-#SBATCH --exclusive 
-#SBATCH --ntasks=1                  # Number of tasks (analyses) to run
+#SBATCH --job-name=compass-dfm
+#SBATCH --output=output_log_%j.log
+#SBATCH --time=0-4:00:00
+#SBATCH --partition=16vcpu
+#SBATCH --nodes=1                    # Adjust as needed
+#SBATCH --ntasks-per-node=16        # Match Snakemake's `taskspernode`
+#SBATCH --exclusive
 
 set -euo pipefail
 
