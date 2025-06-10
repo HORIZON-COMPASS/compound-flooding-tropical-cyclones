@@ -6,15 +6,16 @@ from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    disk_dir = join("p:/")
+    p_dir = join("p:/")
 elif os.name == "posix": #Running on linux
-    disk_dir = join("/p")
+    p_dir = join("/p")
 
-root_dir = join(disk_dir,config['root_dir'])
+root_dir = join(p_dir,config['root_dir'])
 
 # define other directories:
 dir_models = config["dir_models"]
 dir_runs   = config["dir_runs"]
+dir_data   = config["dir_data"]
 
 def get_forcing(wildcards):
     return config["runname_ids"][wildcards.runname]['forcing']
@@ -142,7 +143,7 @@ rule make_dfm_model_event:
         start_time      = get_start_time,
         end_time        = get_end_time,
         dfm_bbox        = get_dfm_bbox,
-        sfincs_region   = join(root_dir, dir_models, "{region}", "{tc_name}", "sfincs", "gis", "region.geojson"),
+        sfincs_region   = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
         verif_points    = get_dfm_verification_points,
         data_cat        = get_datacatalog,
         dimrset         = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
@@ -158,7 +159,6 @@ rule make_dfm_model_event:
         jobname = 'dfm_event',
         taskspernode = 4,
     script:
-        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 
