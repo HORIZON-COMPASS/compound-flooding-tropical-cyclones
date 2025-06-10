@@ -51,6 +51,7 @@ else:
     start_time              = '20190309 000000'
     end_time                = '20190325 060000'
     use_dfm                 = True
+    use_waves               = True
     dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
     dfm_output              = f"dfm_output_{dfm_model}"
     sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs_test")
@@ -87,7 +88,10 @@ else:
 
 
 #Add coastal water level forcing - either from DFM or from an existing time series such as GTSM
-if use_dfm:
+if use_dfm and use_waves:
+    # Add coastal water level forcing from Delft3D-FM model
+    opt['setup_waterlevel_forcing'] = dict(geodataset=f'{dfm_output}_waves',buffer=1000,merge=False)
+elif use_dfm:
     # Add coastal water level forcing from Delft3D-FM model
     opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
 else:
