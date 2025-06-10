@@ -4,43 +4,36 @@ from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
 from hydromt_sfincs.sfincs_input import SfincsInput
+import pandas as pd
 
 # %%
 # model and data paths/
 logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
-    sfincs_model_folder = snakemake.params.dir_run_with_forcing
-    wflow_root          = snakemake.params.wflow_root_forcing
-    data_cats           = snakemake.params.data_cats
+    sfincs_model_folder   = snakemake.params.dir_run_with_forcing
+    wflow_root            = snakemake.params.wflow_root_forcing
+    data_cats             = snakemake.params.data_cats
+    wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
 else:
     curdir              = '../../../'
     region              = "sofala"
     tc_name             = "Idai"
-    precip_forcing      = "era5_hourly"
+    precip_forcing      = "era5_hourly_zarr"
     wind_forcing        = 'spw_IBTrACS'
     tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_rain_txt         = "0"
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
     wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
-    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
     data_cats           = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
+    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
 
-
-#%%
-# Read wflow event model to get the discharge
-mod = WflowModel(
-    root=join(wflow_root, "events"),
-    data_libs=data_cats,
-    mode="r",
-    logger=logger,
-)
-mod.read()
 #%%
 # Read config rile from sfincs model with coastal and meteo forcing
 inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
@@ -49,7 +42,8 @@ config = inp.to_dict()
 
 # Write dis file to sfincs event model folder
 reftime_object = config["tref"]
-df = mod.results['netcdf']['Q'].to_pandas()
+# Read wflow qbankfull corrected discharge
+df = pd.read_csv(wflow_dis_no_bankfull)
 df.index = (df.index - reftime_object).total_seconds()
 df.to_csv(
     join(sfincs_model_folder, "sfincs.dis"),
