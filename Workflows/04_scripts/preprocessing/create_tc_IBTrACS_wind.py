@@ -26,8 +26,8 @@ else:
     start_date = np.datetime64("2019-03-09") 
     end_date = np.datetime64("2019-03-26") 
     tc_name = "Idai"
-    CF_value = -10
-    CF_value_txt = "-10"
+    CF_value = 0
+    CF_value_txt = "0"
     output_CF_wind = "p:/11210471-001-compass/01_Data/SPW_forcing_files"
     path_data_cat = os.path.abspath("../../03_data_catalogs/datacatalog_general.yml")
     root_dir = 'p:\\'
@@ -46,9 +46,9 @@ def create_track(ds_tc):
     # Initialize the tropical cyclone object
     print('- Initializing tc object...')
     tc = TropicalCyclone(name=tc_name)
-    tc.nr_radial_bins = 600
+    tc.nr_radial_bins = 500
     tc.phi_spiral = 22.6
-    tc.spiderweb_radius = 900
+    tc.spiderweb_radius = 500
     tc.extend_track = extend_days+1
 
     # Only keep the data that is not NaN (filtered based on rmw availability)
