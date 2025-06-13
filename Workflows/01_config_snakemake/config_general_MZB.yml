@@ -6,38 +6,53 @@ dir_models:  02_Models              # Folder where the base models will be saved
 dir_runs:    03_Runs                # Folder where model runs will be saved (with forcing)
 runname_ids: 
     Idai:                                                   # name of the model run
+        # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
         region: sofala                                      # name of the region will be used in naming folders 
-        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
-        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+        # For all model setups
         start_time: 20190309 000000
-        end_time: 20190325 060000                   
-        forcing: era5_hourly                                # forcing dataset for the rainfall data (matching to the DataCatalog handle)
-        wind_forcing: spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
+        end_time: 20190325 060000      
+        forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wind_forcing: era5_hourly_zarr   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
+        ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
+
+        # Models selections
+        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
+        use_wflow: True   
+        use_waves: True                                  # use the hydrological model Wflow      
+         
+        # DFM model user-defined settings
+        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
         dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
         dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
-        tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
         dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
         dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
-        dfm_verification_points: 'MZB_Sofala_IHO_obs.xyn'   # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
-        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
-        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        tidemodel: 'GTSMv41'                                # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
         
-        #Models selections
-        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
-        use_wflow: True                                     # use the hydrological model Wflow      
-
+        # SFINCS model user-defined settings
+        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        sfincs_obs_file: obs_locs_sofala.geojson
+        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
         coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
-          
-        # Change to:
-        # precip_forcing: ["ERA5land_Idai","TAMSAT_Idai"]
-        # wind_forcing: ["spw_IBTrACS_ext","IFS"]
-        # CF_value_rain: [-7]
-        # CF_value_wind: [-10, -12]
-        # CF_value_SLR: [14]
+        
+        # Delft-FIAT user-defined settings
+        continent: Africa                                   # name of the continent for Delft-FIAT
+        country: Mozambique                                 # name of the country for Delft-FIAT
+        config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+        # Counterfactual forcing settings
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
+
     # Freddy1:
     #     tc_name: Freddy1
+    #     sid: 2023036S12118
     #     region: quelimane #?
     #     bbox_sfincs: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[34,-23.3,36,-21] "
@@ -47,6 +62,7 @@ runname_ids:
     #     forcing: era5_hourly
     # Freddy2:
     #     tc_name: Freddy2
+    #     sid: 2023061S22036
     #     region: quelimane
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     bbox_dfm: "[36.3,-19.7,38,-16.7]"
@@ -61,6 +77,7 @@ runname_ids:
     #     verification_points: ''
     # Kenneth:
     #     tc_name: Kenneth
+    #     sid: 2019112S10053
     #     region: 
     #     bbox: "[36.7,-18.35,37.41,-17.64]"
     #     dfm_output_bbox: "[40,-13.5,42,-11.2]"
@@ -68,7 +85,3 @@ runname_ids:
     #     start_time: 20190421 210000
     #     end_time: 20190505 000000
     #     forcing: era5_hourly
-
-
-
-
