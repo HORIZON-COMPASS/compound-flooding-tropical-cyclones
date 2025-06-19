@@ -12,8 +12,7 @@ module load julia
 #Going to the folder where git checkout is
 #ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
 #ROOT="/u/bovensch/git_repos/COMPASS"
-ROOT="/u/vertegaa/git_repos/COMPASS"
-# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
+ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
 # Installing pixi environment

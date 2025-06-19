@@ -25,19 +25,19 @@ if "snakemake" in locals():
     output_CF_rainfall = os.path.abspath(snakemake.output.CF_rainfall)
     CF_data_cat = os.path.abspath(snakemake.params.CF_data_cat) 
 else:
-    tc_name = "Idai"
-    start_date = "20190309 000000"
-    end_date = "20190325 060000"
-    wflow_region = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow/staticgeoms/region.geojson"
+    tc_name = "Kenneth"
+    start_date = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+    end_date = "20190430 000000"                    
+    wflow_region = "/p/11210471-001-compass/02_Models/test/Kenneth/wflow/staticgeoms/region.geojson"
     data_cat = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+        '../../../03_data_catalogs/datacatalog_general___linux.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
     ] 
-    precip_name = "era5_hourly_zarr"
-    CF_value = -7
+    precip_name = "era5_hourly"
+    CF_value = -8
     CF_value_txt = f"{CF_value}"
-    output_CF_rainfall = f"p:/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"
-    CF_catalog_path = "../../../03_data_catalogs/datacatalog_CF_forcing.yml"
+    output_CF_rainfall = f"/p/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"
+    CF_catalog_path = "../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml"
 
 #%%
 # Read data catalog
@@ -84,7 +84,7 @@ if input_format == "netcdf":
     precip_data_CF.to_netcdf(output_CF_rainfall)
 elif input_format == "zarr":
     output_CF_rainfall = output_CF_rainfall.replace(".nc", ".zarr")
-    precip_data_CF.to_zarr(output_CF_rainfall)
+    precip_data_CF.to_zarr(output_CF_rainfall, mode='w')
 
 #%%
 # Adding modified rainfall dataset to the CF data catalog

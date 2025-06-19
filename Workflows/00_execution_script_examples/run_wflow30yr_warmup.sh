@@ -14,8 +14,7 @@ module load julia
 echo "Starting job on $(hostname) at $(date)"
 
 #Going to the folder where git checkout is
-ROOT="/u/vertegaa/git_repos/COMPASS"
-cd "${ROOT}"
+ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/cd "${ROOT}"
 
 # Installing pixi environment
 echo "Setting up pixi environment"

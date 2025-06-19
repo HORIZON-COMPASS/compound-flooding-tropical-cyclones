@@ -1758,6 +1758,43 @@ gtsm_codec_reanalysis:
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
+gtsm_codec_reanalysis_{freq}_v3:
+  crs: 4326
+  data_type: GeoDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  meta:
+    category: ocean
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: v3
+  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v3.nc
+  placeholders:
+    freq: [10min, hourly, dailymax]
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+guf_bld_2012:
+  data_type: RasterDataset
+  path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 1000
+      y: 1000
+  meta:
+    category: socio-economic
+    paper_doi: 10.1016/j.isprsjprs.2017.10.012
+    paper_ref: Esch et al (2017)
+    source_license: https://www.dlr.de/eoc/en/PortalData/60/Resources/dokumente/guf/DLR-GUF_LicenseAgreement-and-OrderForm.pdf
+    source_url: http://www.dlr.de/guf
+  crs: 4326
 gtsm_codec_reanalysis_{freq}_v2:
   crs: 4326
   data_type: GeoDataset
@@ -3080,3 +3117,21 @@ merit_basins_cat:
   metadata:
     source_url: https://www.reachhydro.org/home/params/merit-basins
     paper_doi: 10.1029/2019WR025287
+ksathorfrac_global:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 2400
+      y: 2400
+  meta:
+    category: soil
+    resolution: 225 metres
+    resolution_real: 7.5 arc seconds
+    source_author: Awad Mohammed Ali - Deltares
+    source_info:  KsatHorFrac estimated with Random Forest (RF) and Boosted Regression Trees (BRT) methods. These ML-based transfer functions are trained on soilgrids and validated with CAMELS-UK dataset in the UK. With these global maps, we expect good results in regions with geology and soil types similar to the UK. For other regions, this has still to be tested. see 10.22541/essoar.174016989.99005964/v1
+    source_version: 1.0
+  path: wflow_global/hydromt_staging/ksathorfrac_thesis_awadali/*.tif
+
+ 

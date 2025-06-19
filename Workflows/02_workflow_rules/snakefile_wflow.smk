@@ -144,15 +144,15 @@ rule run_wflow_event:
         {params.exe} {input.toml} || julia +1.9 --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
 
-# remove bankfull discharge 
-rule postprocess_discharge:
-    input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"),
-    output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv")
-    params:
-        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr")),
-        wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
-        data_cat = get_datacatalog,
-    script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")
+# # remove bankfull discharge 
+# rule postprocess_discharge:
+#     input:
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"),
+#     output:
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv")
+#     params:
+#         wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr")),
+#         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
+#         data_cat = get_datacatalog,
+#     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")

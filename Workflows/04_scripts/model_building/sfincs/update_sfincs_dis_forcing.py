@@ -13,7 +13,7 @@ if "snakemake" in locals():
     sfincs_model_folder   = snakemake.params.dir_run_with_forcing
     wflow_root            = snakemake.params.wflow_root_forcing
     data_cats             = snakemake.params.data_cats
-    wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
+    # wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
 else:
     curdir              = '../../../'
     region              = "sofala"
@@ -32,9 +32,18 @@ else:
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
-    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
+    # wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
 
 #%%
+#%%
+mod = WflowModel(
+    root=join(wflow_root, 'events'),
+    data_libs=data_cats,
+    mode="r",
+    logger=logger,
+)
+mod.read()
+
 # Read config rile from sfincs model with coastal and meteo forcing
 inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
 config = inp.to_dict()
@@ -42,14 +51,14 @@ config = inp.to_dict()
 
 # Write dis file to sfincs event model folder
 reftime_object = config["tref"]
-# Read wflow qbankfull corrected discharge
-df = pd.read_csv(wflow_dis_no_bankfull)
+df = mod.results['netcdf']['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
 df.to_csv(
     join(sfincs_model_folder, "sfincs.dis"),
     sep=" ",
     header=False,
 )
+
 
 config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})
