@@ -72,6 +72,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Jobs
+Workflows/02_workflow_rules/slurm*.out
+Workflows/02_workflow_rules/dag*
 # Translations
 *.mo
 *.pot
