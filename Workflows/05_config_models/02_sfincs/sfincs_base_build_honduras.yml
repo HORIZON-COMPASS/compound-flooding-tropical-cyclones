@@ -35,12 +35,7 @@ setup_subgrid:
   datasets_rgh:
   - lulc: vito  #TODO change to esa_worldcover? 
     reclass_table: vito_mapping
-<<<<<<< HEAD:Workflows/05_config_models/02_sfincs/.nfs0000000005de628e0013f268
-#    datasets_riv = datasets_riv, # = river burning
-  nr_subgrid_pixels: 3  
-=======
   nr_subgrid_pixels: 10  
->>>>>>> origin/main:Workflows/05_config_models/02_sfincs/sfincs_base_build_honduras.yml
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 2000  # set tile size a bit larger speed up processing (default 2000)
@@ -50,22 +45,13 @@ setup_cn_infiltration:
   antecedent_moisture: dry
 
 setup_river_inflow:
-<<<<<<< HEAD:Workflows/05_config_models/02_sfincs/.nfs0000000005de628e0013f268
-  rivers: rivers_lin2019_v1 # will become merit_hydro or removed
-=======
->>>>>>> origin/main:Workflows/05_config_models/02_sfincs/sfincs_base_build_honduras.yml
   hydrography: merit_hydro
   buffer: 500
   river_len: 5000
   keep_rivers_geom: True
 
-<<<<<<< HEAD:Workflows/05_config_models/02_sfincs/.nfs0000000005de628e0013f268
-#TODO setup_river_outflow
-
-=======
 setup_river_outflow:
   hydrography: merit_hydro
   river_len: 5000
   keep_rivers_geom: True
->>>>>>> origin/main:Workflows/05_config_models/02_sfincs/sfincs_base_build_honduras.yml
 

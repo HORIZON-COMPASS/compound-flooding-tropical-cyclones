@@ -85,14 +85,8 @@ hmin = 0.05
 da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
-<<<<<<< HEAD
-    hmin=hmin,
-    floodmap_fn=floodmap # uncomment to save to <mod.root>/floodmap.tif)
-)
-=======
     hmin=hmin, 
     reproj_method ="bilinear")
->>>>>>> origin/main
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
 gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
@@ -120,14 +114,10 @@ ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
 
-<<<<<<< HEAD
-#%%
-=======
 # save as raster
 da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_output_hmax_AllTime.tif'))
 
 
->>>>>>> origin/main
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
 for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
@@ -165,14 +155,10 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
         figname_ext = figname_ext.replace(*r)
     fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.png'))
 
-<<<<<<< HEAD
-#%%
-=======
     # save as raster
     da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_{figname_ext}.tif'))
 
 
->>>>>>> origin/main
 ### PLOT TIMESERIES OUTPUT POINTS
 if os.path.exists(join(dir_run,"sfincs_his.nc")):
     hisfile = os.path.join(dir_run,"sfincs_his.nc")

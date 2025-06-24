@@ -31,10 +31,6 @@ snakemake --unlock -s 02_workflow_rules/snakefile_wflow.smk --configfile ../01_c
 
 # running workflow with snakemake
 snakemake -s snakefile_wflow.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpdf > dag.pdf
-<<<<<<< HEAD
 snakemake -n -s snakefile_wflow.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --forceall # --cores 4
-=======
-snakemake -s snakefile_wflow.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files  --forceall # --cores 4
->>>>>>> origin/main
 
 exit

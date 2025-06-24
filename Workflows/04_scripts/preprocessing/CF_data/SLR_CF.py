@@ -19,10 +19,7 @@ start_date = np.datetime64('2019-03-09T00:00')
 end_date = np.datetime64('2019-03-24T00:00') 
 #%% Reading in ISIMIP data
 cat = hydromt.DataCatalog("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-<<<<<<< HEAD
-=======
 cat = hydromt.DataCatalog("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
->>>>>>> 5ce40228fac14f7a35e7064eac4ab3ae86d2ab52
 # %%
 # dfm_idai = cat.get_dataset("dfm_output_MZB_Idai")
 dfm_Idai_CF0 = cat.get_dataset("dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0")
@@ -41,17 +38,13 @@ dfm_Idai_CF0_copy.close()
 # Set up the subplots
 fig, ax = plt.subplots(figsize=(15, 10))
 # mean_data_F.plot(ax=ax)
-<<<<<<< HEAD
-dfm_idai_CF['waterlevel'].plot(ax=ax)
-=======
 dfm_Idai_CF0_copy['waterlevel'].plot(ax=ax)
->>>>>>> 5ce40228fac14f7a35e7064eac4ab3ae86d2ab52
 
 # %% Select water level data for one station
 # Create the plot
 fig, ax = plt.subplots(figsize=(15, 10))
-ax.plot(dfm_idai_CF['time'], dfm_idai_CF['waterlevel'].sel(stations=[4]), label=f"CF")
-ax.plot(dfm_idai['time'], dfm_idai['waterlevel'].sel(stations=[4]), label=f"F")
+ax.plot(dfm_Idai_CF0_copy['time'], dfm_Idai_CF0_copy['waterlevel'].sel(stations=[4]), label=f"CF")
+# ax.plot(dfm_idai['time'], dfm_idai['waterlevel'].sel(stations=[4]), label=f"F")
 
 # Add labels and title
 ax.set_xlabel("Time")
