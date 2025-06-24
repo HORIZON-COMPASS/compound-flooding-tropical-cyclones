@@ -30,33 +30,35 @@ if "snakemake" in locals():
     CF_rain                 = float(snakemake.wildcards.CF_rain)
     CF_rain_txt             = snakemake.wildcards.CF_rain
 else:
-    region                  = "sofala"
+    region                  = "test"
     utmzone                 = '36s'
-    tc_name                 = "Idai"
-    wind_forcing            = 'spw_IBTrACS'
-    precip_forcing          = 'era5_hourly'
+    tc_name                 = "Kenneth"
+    wind_forcing            = 'no_wind'
+    precip_forcing          = 'era5_hourly_zarr'
     dfm_res                 = "450"
     bathy                   = "gebco2024_MZB"
     tidemodel               = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     data_cats               = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
-        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
-        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+        '../../../03_data_catalogs/datacatalog_general___linux.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints___linux.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling___linux.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
     ]    
-    CF_rain                 = -7
+    CF_rain                 = -8
     CF_rain_txt             = f"{CF_rain}"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
-    start_time              = '20190309 000000'
-    end_time                = '20190325 060000'
-    use_dfm                 = True
-    use_waves               = True
-    dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
-    dfm_output              = f"dfm_output_{dfm_model}"
-    sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs_test")
-    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
-    obs_points              = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
+    start_time = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+    end_time = "20190430 000000"     
+    use_dfm                 = False
+    use_waves               = False
+    # dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
+    # dfm_output              = f"dfm_output_{dfm_model}"
+    sfincs_mod_no_forcing   = os.path.join(f"/p/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
+    sfincs_mod_with_forcing = os.path.join(f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
+    obs_points              = os.path.join("/p/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Kenneth.geojson")
+    coastal_ts = "gtsm_codec_reanalysis_hourly_v3"                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+
 
 #%%
 data_cat = data_catalog.DataCatalog(data_cats)

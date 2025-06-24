@@ -114,6 +114,15 @@ era5_hourly_zarr_CF-7_Idai:
   meta:
     notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
   crs: 4326
+era5_hourly_zarr_CF-8_Kenneth:
+  data_type: RasterDataset
+  path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-8_Kenneth.zarr
+  driver: zarr
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
   path: /p/archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc

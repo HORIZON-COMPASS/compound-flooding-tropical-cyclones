@@ -3,12 +3,18 @@
 import os
 import numpy as np
 import ast
-import xarray as xr
+import zarr
+import xarray
 import hydromt
 import geopandas as gpd
 import copy
 import yaml
 from datetime import datetime
+
+print("--- DIAGNOSTIC PRINTS ---")
+print(f"Zarr version: {zarr.__version__}")
+print(f"Xarray version: {xarray.__version__}")
+print("-------------------------")
 
 # Read snakemake values if run in workflow, 
 # otherwise use absolute values to test script
@@ -33,7 +39,7 @@ else:
         '../../../03_data_catalogs/datacatalog_general___linux.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
     ] 
-    precip_name = "era5_hourly"
+    precip_name = "era5_hourly_zarr"
     CF_value = -8
     CF_value_txt = f"{CF_value}"
     output_CF_rainfall = f"/p/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"
@@ -64,11 +70,12 @@ precip_data = data_catalog.get_rasterdataset(
 
 #%%
 # Adjust precipitation values acc to the CF_value expressed as a factor
-precip_data.load()
-precip_data_CF = precip_data.copy(deep=True)
-precip_data_CF = precip_data_CF * ((100 + CF_value)/ 100)
-
-#%%
+# precip_data.load()
+# precip_data_CF = precip_data.copy(deep=True)
+# precip_data_CF = precip_data_CF * ((100 + CF_value)/ 100)
+precip_data_CF = precip_data * ((100 + CF_value)/ 100)
+precip_data_CF.encoding.clear()
+precip_data_CF = precip_data_CF.chunk("auto")
 # Saving CF precip dataset
 input_file = data_catalog.get_source(precip_name).path
 
@@ -81,11 +88,16 @@ else:
 
 # Save the data in the same format as the input
 if input_format == "netcdf":
+    # For NetCDF, clearing encoding is also good practice to avoid issues
     precip_data_CF.to_netcdf(output_CF_rainfall)
 elif input_format == "zarr":
+    #print dim and coord names
+    print(f"Dimensions: {precip_data_CF.dims}")
+    print(f"Coordinates: {precip_data_CF.coords}")
     output_CF_rainfall = output_CF_rainfall.replace(".nc", ".zarr")
+    # This call will now succeed because there are no legacy settings.
+    # Zarr will use its modern defaults for compression.
     precip_data_CF.to_zarr(output_CF_rainfall, mode='w')
-
 #%%
 # Adding modified rainfall dataset to the CF data catalog
 CF_datacatalog = hydromt.data_catalog.DataCatalog(data_libs=[CF_catalog_path])
