@@ -75,6 +75,8 @@ cover/
 # Jobs
 Workflows/02_workflow_rules/slurm*.out
 Workflows/02_workflow_rules/dag*
+Workflows/00_execution_script_examples/logs
+
 # Translations
 *.mo
 *.pot
