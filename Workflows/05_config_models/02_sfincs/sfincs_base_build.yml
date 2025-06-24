@@ -25,10 +25,7 @@ setup_mask_active2:
 
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
-  zmin: -10
-  #zmax: -1
-  #include_mask: osm_coastlines  #Make a decision - user-defined 
-  include_mask_buffer: 1000     #Changed to snap the mask boundary     ###
+  include_mask_buffer: 2000    
   reset_bounds: True  
 
 setup_subgrid:
@@ -50,12 +47,16 @@ setup_cn_infiltration:
 setup_river_inflow:
   # rivers: rivers_lin2019_v1    # inconsistent! --> gives strange source
   hydrography: merit_hydro
+<<<<<<< HEAD
   river_upa: 30
+=======
+  buffer: 500
+>>>>>>> origin/main
   river_len: 5000
   keep_rivers_geom: True
 
 setup_river_outflow:           # Should be same values as river inflow
   hydrography: merit_hydro
-  river_upa: 30
   river_len: 5000
   keep_rivers_geom: True
+

@@ -39,6 +39,7 @@ runname_ids:
         sfincs_obs_file: obs_locs_Kenneth.geojson
         bbox_sfincs: "[40.20, -13.38, 40.84, -12.58]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_MZB         # DataCatalog handle for the coastal coupling mask
+<<<<<<< HEAD:Workflows/01_config_snakemake/config_general_mzb_Kenneth.yml
         coastal_ts: gtsm_codec_reanalysis_hourly_v3                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)      
@@ -47,6 +48,11 @@ runname_ids:
         continent: Africa                                   # name of the continent for Delft-FIAT
         country: Mozambique                                 # name of the country for Delft-FIAT
         config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+=======
+        coastal_ts: gtsm_codec_reanalysis_hourly_v2                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
+        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                
+>>>>>>> origin/main:Workflows/01_config_snakemake/config_general_MZB3.yml
 
         # Counterfactual forcing settings
         CF_value_rain: [-8] #, -8] # % change

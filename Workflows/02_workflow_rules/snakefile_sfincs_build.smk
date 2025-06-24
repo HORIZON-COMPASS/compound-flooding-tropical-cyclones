@@ -30,6 +30,9 @@ def get_dfm_coastal_mask(wildcards):
     dfm_coastal_mask = config["runname_ids"][wildcards.runname]["dfm_coastal_mask"]
     return dfm_coastal_mask 
 
+def get_river_upa(wildcards):    
+    return config["runname_ids"][wildcards.runname]["river_upa"]
+
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return [
@@ -61,6 +64,7 @@ rule make_base_model_sfincs:
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
+        river_upa = get_river_upa
     input:
         config_file = get_config,
     output: 

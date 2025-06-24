@@ -13,6 +13,7 @@ if "snakemake" in locals():
     data_cat         = snakemake.params.data_cat
     region_geom      = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
+    river_upa = snakemake.params.river_upa
 else:
     model_dir        = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
     config_file      = "../../../05_config_models/01_wflow/config_wflow.yml"
@@ -45,6 +46,8 @@ opt['setup_gauges'] = {
     'index_col': 'index',
     'basename': 'locs'
 }
+
+opt['setup_rivers']['river_upa'] = river_upa
 
 #%%
 # Read SFINCS region

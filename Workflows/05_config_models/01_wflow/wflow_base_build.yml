@@ -7,6 +7,7 @@ setup_basemaps:
 setup_rivers:
   hydrography_fn: merit_hydro      # source hydrography data, should correspond to hydrography_fn in setup_basemaps
   river_geom_fn: rivers_lin2019_v1 # river source data with river width and bankfull discharge
+<<<<<<< HEAD:Workflows/05_config_models/01_wflow/config_wflow.yml
   river_upa: 30                    # minimum upstream area threshold for the river map [km2]
   rivdph_method: powlaw            # method to estimate depth {'powlaw', 'manning', 'gvf'}
   min_rivdph: 1                    # minimum river depth [m]
@@ -14,6 +15,14 @@ setup_rivers:
   slope_len: 2000                  # length over which tp calculate river slope [m]
   smooth_len: 5000                 # length over which to smooth river depth and river width [m]
   river_routing: kinematic-wave    # {'kinematic-wave', 'local-inertial'}
+=======
+  rivdph_method: powlaw           # method to estimate depth {'powlaw', 'manning', 'gvf'}
+  min_rivdph: 1                # minimum river depth [m]
+  min_rivwth: 30               # minimum river width [m]
+  slope_len: 2000             # length over which tp calculate river slope [m]
+  smooth_len: 5000             # length over which to smooth river depth and river width [m]
+  river_routing: kinematic-wave  # {'kinematic-wave', 'local-inertial'}
+>>>>>>> origin/main:Workflows/05_config_models/01_wflow/wflow_base_build.yml
 
 setup_reservoirs:
   reservoirs_fn: hydro_reservoirs  # source for reservoirs based on GRAND: {hydro_reservoirs}; None to skip

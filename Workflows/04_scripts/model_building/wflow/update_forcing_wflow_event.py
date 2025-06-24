@@ -57,6 +57,10 @@ opt = {
         "input.path_forcing":"inmaps.nc",
     },
     "setup_temp_pet_forcing": {
+<<<<<<< HEAD
+=======
+        #"temp_pet_fn": meteo_fn,
+>>>>>>> origin/main
         "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,

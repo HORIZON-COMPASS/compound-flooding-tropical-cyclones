@@ -111,6 +111,7 @@ mod = SfincsModel(
     logger=logger,
 )
 
+<<<<<<< HEAD
 
 wind_forcing_str = str(wind_forcing).lower() if wind_forcing is not None else "none"
 
@@ -133,6 +134,18 @@ if wind_forcing_str not in SKIP_WIND_KEYWORDS:
         opt["setup_wind_forcing_from_grid"] = dict(wind=wind_forcing)
 else:
     logger.info(f"Skipping wind forcing based on configuration value: '{wind_forcing}'")
+=======
+if 'spw' in wind_forcing:
+    meteo_type = 'spiderweb'
+    spw = 1 
+    spw_input = data_catalog[wind_forcing].path
+    spw_file = os.path.basename(spw_input)
+    spw_copy = os.path.join(sfincs_mod_with_forcing,spw_file)
+    shutil.copyfile(spw_input, spw_copy)
+    opt["setup_config"]["spwfile"] =  os.path.basename(spw_file)
+else: # assuming gridded data like ERA5
+    opt["setup_wind_forcing_from_grid"] = dict(wind=wind_forcing)
+>>>>>>> origin/main
 
 mod.update(
     model_out = sfincs_mod_with_forcing,
