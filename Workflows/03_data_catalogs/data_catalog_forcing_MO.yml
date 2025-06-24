@@ -1,0 +1,49 @@
+meta:
+  root: p:\11210471-001-compass\01_Data\forMetOfficeUK\forcing
+era5_hourly:
+  data_type: RasterDataset
+  path: era5_hourly.nc
+  driver: netcdf
+  filesystem: local
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  crs: 4326
+gtsm_codec_reanalysis_hourly_v2:
+  data_type: GeoDataset
+  path: gtsm_codec_reanalysis_hourly_v2.nc
+  filesystem: local
+  meta:
+    category: ocean
+    source_version: v2
+  crs: 4326
+ceh_gear_hourly:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    category: meteo
+    history: 
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: CEH_GEAR
+  path: p:\wflow_global\forcing\UK_NERC_HEAR_1h\CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  rename:
+    rainfall_amount: precip
+  unit_mult:
+    precip: 1

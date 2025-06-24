@@ -91,3 +91,6 @@ compass-fiat = { features = ["py311","fiat"]}
 compass-cht = { features = ["py311","cht"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
 
+[pypi-dependencies]
+pyqt6 = ">=6.9.1, <7"
+

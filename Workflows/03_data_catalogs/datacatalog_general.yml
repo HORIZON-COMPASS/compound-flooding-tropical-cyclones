@@ -3118,3 +3118,28 @@ ceh_gear:
     rainfall_amount: precip
   unit_mult:
     precip: 1
+ceh_gear_hourly:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    category: meteo
+    history: 
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: CEH_GEAR
+  path: wflow_global/forcing/UK_NERC_HEAR_1h/CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  rename:
+    rainfall_amount: precip
+  unit_mult:
+    precip: 1
