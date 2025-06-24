@@ -49,7 +49,7 @@ else:
     dfm_res              = "450"
     bathy                = "gebco2024_MZB"
     tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing         = "era5_hourly"
+    wind_forcing         = "era5_hourly_spw_IBTrACS"
     CF_SLR               = 0
     CF_SLR_txt           = f"{CF_SLR}"
     CF_wind              = 0
@@ -193,49 +193,23 @@ if meteo_type == 'spiderweb_era5_merged':
     shutil.copyfile(spw_file_origin, spw_copy)
 
     # Add uniform wind file to set background wind speed to 0 and enable blending of the spw file with the background wind
-    preprocess_era5_Idai_path = os.path.join("p:/11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_chnk_20190306to20190325_ERA5.nc")
+    preprocess_era5_Idai_path = os.path.join("p:/11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_20190306to20190325_ERA5.nc")
     preprocess_era5_Idai_file = os.path.basename(preprocess_era5_Idai_path)
     preprocess_era5_Idai_dest = os.path.join(dir_output_main, preprocess_era5_Idai_file)
     shutil.copyfile(preprocess_era5_Idai_path, preprocess_era5_Idai_dest)
 
     # Create forcing with only file names for Linux
-    ext_old.forcing.append(hcdfm.ExtOldForcing(quantity='airpressure_windx_windy_charnock',
+    ext_old.forcing.append(hcdfm.ExtOldForcing(quantity='airpressure_windx_windy',
                                                 filename=preprocess_era5_Idai_file,
-                                                varname='msl u10n v10n chnk',
+                                                varname='msl u10n v10n',
                                                 filetype=hcdfm.ExtOldFileType.NetCDFGridData, #11
                                                 method=hcdfm.ExtOldMethod.InterpolateTimeAndSpaceSaveWeights, #3
                                                 operand=hcdfm.Operand.override, #O
                                                 ))
+    # Operand add (+) has been tested for desired spw+ERA5 behaviour. Override was not successful for ERA5 merging
     ext_old.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
-                                          hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override, use_basename=True))
+                                          hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.add, use_basename=True))
     ext_old.save(filepath=ext_file_old) # save the file
-
-    # Modify ext_file_old to new dfm setting that allow era5+spw merging
-    with open(ext_old, "r") as f:
-        lines = f.readlines()
-
-        replacements = {
-        "QUANTITY=": "quantity=",
-        "FILENAME=": "forcingFile=",
-        "VARNAME=": "forcingVariableName=",
-        "FILETYPE=11": "forcingFileType=netcdf",
-        "FILETYPE=5": "forcingFileType=spiderWeb",
-        "METHOD=3": "interpolationMethod=linearSpaceTime",
-        "METHOD=1": "interpolationMethod=linearSpaceTime",
-        "OPERAND=": "operand=",
-        }
-
-        updated_lines = []
-        for line in lines:
-            for old, new in replacements.items():
-                if old in line:
-                    line = line.replace(old, new)
-            updated_lines.append(line)
-
-        with open(ext_old, "w") as f:
-            f.writelines(updated_lines)
-
-        print(f"Rewritten file saved to: {ext_old}")
 
     # Add setting to spw to be merge with era5 at the radius of 0.75
     with open(spw_copy, "r") as f:
@@ -256,13 +230,13 @@ if meteo_type == 'spiderweb_era5_merged':
         f.writelines(new_lines)
 
     print(f"Added spw_merge_frac to: {spw_copy}")
-
+    
 
 elif 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
     dir_output_data_era5 = os.path.join(dir_output_bc,'meteo', 'ERA5')
     os.makedirs(dir_output_data_era5, exist_ok=True)
         
-    varlist_list = [['msl','u10n','v10n','chnk']]
+    varlist_list = [['msl','u10n','v10n']]
     for varlist in varlist_list:
         for varkey in varlist:
             #TODO change to use data catalog?
@@ -305,12 +279,13 @@ elif meteo_type == 'spiderweb':
 # Read shp file of points along the coastline and the sfincs region
 gdfp = gpd.read_file(data_catalog[dfm_obs_file].path)
 region_poly = gpd.read_file(sfincs_region)
+region_poly = region_poly.to_crs(crs)
 
 # Ensure both have the same CRS
-gdfp = gdfp.to_crs(region_poly.crs)
+gdfp = gdfp.to_crs(crs)
 
 # Buffer the region_poly and clip the points along the coastline by the buffered region
-buffer_size = 100  # Set buffer distance (adjust as needed)
+buffer_size = 0.01  # Set buffer distance (adjust as needed)
 region_poly_buffered = region_poly.buffer(buffer_size)
 gdfp_clipped = gpd.clip(gdfp, region_poly_buffered)
 
@@ -337,7 +312,7 @@ except ValueError as e:
     # If 'verification_points' is defined but empty, set pd_obs to tmp
     pd_obs = tmp
     print(f"{e} Using 'tmp' as pd_obs.")
-    
+
 # save obs points
 file_obs = os.path.join(dir_output_main, f'obs_points.xyn')
 pd_obs.to_csv(file_obs, sep=' ', header=False, index=False, float_format='%.6f')
@@ -346,7 +321,8 @@ pd_obs.to_csv(file_obs, sep=' ', header=False, index=False, float_format='%.6f')
 fig, ax = plt.subplots(figsize=(8,4))
 xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='k',alpha=0.2)
 ax.plot(pd_obs['x'],pd_obs['y'],'rx')
-dfmt.plot_coastlines(ax=ax, crs=crs)
+region_poly.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1)
+dfmt.plot_coastlines(ax=ax, crs=region_poly.crs)
 
 # Save the figure
 output_path = os.path.join(dir_output_geom, 'grid_obs_points.png')
