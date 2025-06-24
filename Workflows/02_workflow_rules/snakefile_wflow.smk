@@ -116,8 +116,6 @@ rule update_forcing_wflow_event:
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
         previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc")
-        #Creates a serial dependency with the previous rule to avoid error when running the workflow
-        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "inmaps.nc") 
     output:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "wflow_sbm.toml"),
