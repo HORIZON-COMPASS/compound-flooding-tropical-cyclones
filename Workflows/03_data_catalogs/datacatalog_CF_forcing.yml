@@ -143,11 +143,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0_waves:
   meta:
     notes: DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto
     category: ocean
-  variants:
-  - meta:
-      creation_date: '2025-06-24T15:36:19.706212'
-  - meta:
-      creation_date: '2025-06-25T10:07:51.060775'
+    creation_date: '2025-06-24T15:36:19.706212'
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc

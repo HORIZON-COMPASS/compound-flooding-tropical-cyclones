@@ -204,7 +204,6 @@ if use_wave:
         meta={
             "category": "ocean",
             "notes": "DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto",
-            "creation_date": pd.Timestamp.now().isoformat()
         },
         crs=4326
         )

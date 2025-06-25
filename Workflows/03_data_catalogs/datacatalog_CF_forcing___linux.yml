@@ -35,6 +35,23 @@ gtsm_codec_future_tide_v1:
     source_url: https://doi.org/10.24381/cds.8c59054f
     source_version: v1
   crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0_waves:
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  rename:
+    station_y_coordinate: lat
+    station: index
+    station_x_coordinate: lon
+  data_type: GeoDataset
+  driver_kwargs:
+    chunks:
+      time: -1
+      station: 10
+  crs: 4326
+  driver: netcdf
+  meta:
+    notes: DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto
+    category: ocean
+    creation_date: '2025-06-24T15:36:19.706212'
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc
