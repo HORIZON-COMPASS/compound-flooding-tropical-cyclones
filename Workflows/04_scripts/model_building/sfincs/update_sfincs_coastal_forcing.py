@@ -114,7 +114,7 @@ mod = SfincsModel(
 if 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
     spw = 1 
-    spw_input = data_cat[f"{wind_forcing}_CF{CF_wind_txt}_{tc_name}"].path
+    spw_input = data_cat[f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"].path
     spw_file = os.path.basename(spw_input)
     spw_copy = os.path.join(sfincs_mod_with_forcing, spw_file)
     shutil.copyfile(spw_input, spw_copy)
