@@ -199,7 +199,13 @@ ext_new.save(filepath=ext_new_path)
 
 #%% 
 # Add SLR using dfmt functionality
-dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=CF_value)
+if CF_value == 0:   # factual
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.04)
+elif CF_value == -0.14:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.1)
+else:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0)
+
 ext_new.save(filepath=ext_new_path)
 
 # Make the paths relative

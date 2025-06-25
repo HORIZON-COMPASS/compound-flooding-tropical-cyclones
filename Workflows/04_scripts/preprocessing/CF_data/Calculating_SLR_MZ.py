@@ -1,4 +1,5 @@
 # %% In this script the regional SLR is calculate by using ISIMIP data from Treu et al. (2023): https://data.isimip.org/search/query/10.48364/ISIMIP.749905.1/
+# Use the 'compass-snake-dfm' python environment
 # Import the necessary packages
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -31,12 +32,13 @@ lon_DFM = [lon_min, lon_max]
 # case study settings
 start_date = np.datetime64('2019-03-09T00:00') 
 end_date = np.datetime64('2019-03-24T00:00') 
+     
 
 # %%
 # Reading in Factual (F) and Counterfactual (CF) data
 SLR_hist_F  = xr.open_dataset(r"c:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
 SLR_hist_CF = xr.open_dataset(r"c:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
-
+                                                         
 # %%
 # Load lat and lon variables into memory
 lat = SLR_hist_F['lat'].values
@@ -49,7 +51,6 @@ mask_DFM = (lat >= lat_DFM[0]) & (lat <= lat_DFM[1]) & (lon >= lon_DFM[0]) & (lo
 # Apply the mask to filter stations within the region
 stations_MZB_F  = SLR_hist_F.sel(stations=mask_MZB)
 stations_DFM_F  = SLR_hist_F.sel(stations=mask_DFM)
-stations_DFM_F_long = SLR_hist_F_long.sel(stations=mask_DFM)
 
 ## Do the same for the counterclim ##
 # Load lat and lon variables into memory
@@ -124,14 +125,13 @@ fig, axs = plt.subplots(
 )
 
 # Prepare the datasets and titles for looping
-plot_datasets = [stations_DFM_F, selected_stations_DFM_F]
-titles = ['All stations within DFM domain','Selected Stations']
+titles = ['Selected Stations F','Selected Stations CF']
 colors = ['orange','blue']
 bbox_polygon = box(lon_min, lat_min, lon_max, lat_max)
 bbox_patch = mpatches.Patch(edgecolor='red', facecolor='none', linewidth=1, linestyle='--', label='DFM domain')
 
 # Loop through each axis and corresponding dataset
-for i, (ax, data, title, color) in enumerate(zip(axs, DFM_sel_datasets, titles, colors)):
+for i, (ax, data, title, color) in enumerate(zip(axs, sel_stations_DFM, titles, colors)):
     ax.set_extent(zoom_extent, crs=ccrs.PlateCarree())
     ax.coastlines()
     ax.add_feature(cfeature.BORDERS)
@@ -164,7 +164,6 @@ fig.subplots_adjust(wspace=0.05)  # Smaller wspace = less space between columns
 
 plt.tight_layout()
 plt.show()
-
 
 # %%
 # To be sure, reindex one dataset to the other for the stations aound Beira (MZB), and the whole of Mozambique (MZ)
@@ -256,5 +255,137 @@ ax.legend()
 ax.grid()
 plt.tight_layout()
 plt.show()
+
+
+
+
+# %%
+#################################################################################
+### Do the same for the long dataset to get the correct SLR for the Bathy ref ###
+#################################################################################
+# Load the 1990 & 2000 F and CF dataset to calculte the average SLR in this period
+SLR_hist_F_1990 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
+SLR_hist_CF_1990 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
+
+SLR_hist_F_2000 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
+SLR_hist_CF_2000 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
+
+# Apply spatial mask to the long term monthly data
+SLR_hist_F_1990 = SLR_hist_F_1990.sel(stations=mask_DFM)
+SLR_hist_CF_1990 = SLR_hist_CF_1990.sel(stations=mask_DFM)
+SLR_hist_F_2000 = SLR_hist_F_2000.sel(stations=mask_DFM)
+SLR_hist_CF_2000 = SLR_hist_CF_2000.sel(stations=mask_DFM)
+
+# Select only five stations in the region
+sel_stations_F_1990  = SLR_hist_F_1990.sel(stations=combined_mask)
+sel_stations_CF_1990 = SLR_hist_CF_1990.sel(stations=combined_mask)
+sel_stations_F_2000  = SLR_hist_F_2000.sel(stations=combined_mask)
+sel_stations_CF_2000 = SLR_hist_CF_2000.sel(stations=combined_mask)
+
+sel_stations_DFM_1990 = [sel_stations_F_1990, sel_stations_CF_1990]
+sel_stations_DFM_2000 = [sel_stations_F_2000, sel_stations_CF_2000]
+
+# Create a figure with higher resolution and shared y-axis
+fig, axs = plt.subplots(
+    1, 2, 
+    figsize=(8, 8), 
+    dpi=300,  # ⬅️ increase resolution
+    sharey=True, 
+    subplot_kw={'projection': ccrs.PlateCarree()}
+)
+
+# Prepare the datasets and titles for looping
+titles = ['Selected Stations F long','Selected Stations CF long']
+
+# Loop through each axis and corresponding dataset
+for i, (ax, data, title, color) in enumerate(zip(axs, sel_stations_DFM_2000, titles, colors)):
+    ax.set_extent(zoom_extent, crs=ccrs.PlateCarree())
+    ax.coastlines()
+    ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.LAND)
+    ax.add_feature(cfeature.OCEAN)
+
+    ax.add_geometries(
+        [bbox_polygon],
+        crs=ccrs.PlateCarree(),
+        edgecolor='red',
+        facecolor='None',
+        linewidth=1.5,
+        linestyle='--'
+    )
+    
+    # Setup gridlines with control over labels
+    gl = ax.gridlines(draw_labels=True)
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.left_labels = i == 0        # only show y-axis on the first subplot
+    gl.bottom_labels = True        # show x-axis on both; set to i == 1 if only on right
+
+    ax.scatter(data['lon'], data['lat'], color=color, edgecolors='black', label=title, marker='o')
+
+# Create combined legend on figure level
+handles = [mpatches.Patch(color=c, label=t) for c, t in zip(colors, titles)] + [bbox_patch]
+fig.legend(handles=handles, loc='upper right', bbox_to_anchor=(1, 1.03), borderaxespad=0.)
+
+fig.subplots_adjust(wspace=0.05)  # Smaller wspace = less space between columns
+
+plt.tight_layout()
+plt.show()
+
+
+#%%
+# To be sure, reindex one dataset to the other for the stations of the whole of Mozambique (MZ)
+stations_DFM_CF_1990_aligned = sel_stations_DFM_1990[1]['geocentricwaterlevel'].sel(time=sel_stations_DFM_1990[0]['time'])
+stations_DFM_CF_2000_aligned = sel_stations_DFM_2000[1]['geocentricwaterlevel'].sel(time=sel_stations_DFM_2000[0]['time'])
+
+# Subtract the CounterFactual (CF) from the Factual (F) dataset for the five selected stations in the whole of Mozambique
+water_level_difference_1990  = sel_stations_DFM_1990[0]['geocentricwaterlevel'] - stations_DFM_CF_1990_aligned
+water_level_difference_2000  = sel_stations_DFM_2000[0]['geocentricwaterlevel'] - stations_DFM_CF_2000_aligned
+
+
+# %%
+# Calculate the mean and standard deviation across stations
+mean_water_level_difference_1990 = water_level_difference_1990.mean(dim='stations')
+std_water_level_difference_1990 = water_level_difference_1990.std(dim='stations')
+mean_water_level_difference_2000 = water_level_difference_2000.mean(dim='stations')
+std_water_level_difference_2000 = water_level_difference_2000.std(dim='stations')
+
+mean_water_level_difference_1990 = water_level_difference_1990.mean(dim='stations')
+std_water_level_difference_1990 = water_level_difference_1990.std(dim='stations')
+mean_water_level_difference_2000 = water_level_difference_2000.mean(dim='stations')
+std_water_level_difference_2000 = water_level_difference_2000.std(dim='stations')
+
+#%%
+bathy_mean_SLR_ref = mean_water_level_difference_1990.mean() + (mean_water_level_difference_2000.mean() - mean_water_level_difference_1990.mean())/2
+
+#%%
+# Create a figure with two subplots side-by-side
+fig, axes = plt.subplots(1, 1, figsize=(8, 5))
+
+# --- Plot 1: Mean Water Level Difference for MZB and MZ with Uncertainty Bounds ---
+axes.plot(mean_water_level_difference_1990['time'], mean_water_level_difference_1990, label="SLR 1990 along five stations of MZ coast", color='orange')
+axes.fill_between(mean_water_level_difference_1990['time'],
+                     mean_water_level_difference_1990 - std_water_level_difference_1990,
+                     mean_water_level_difference_1990 + std_water_level_difference_1990,
+                     color='orange', alpha=0.2)
+
+axes.plot(mean_water_level_difference_2000['time'], mean_water_level_difference_2000, label="SLR 2000 along five stations of MZ coast", color='blue')
+axes.fill_between(mean_water_level_difference_2000['time'],
+                     mean_water_level_difference_2000 - std_water_level_difference_2000,
+                     mean_water_level_difference_2000 + std_water_level_difference_2000,
+                     color='blue', alpha=0.2)
+
+axes.axhline(y=bathy_mean_SLR_ref, color='red', linestyle='--', linewidth=1, label = "Mean SLR between 1990 & 2000")
+# Annotate the line
+axes.annotate(f'{bathy_mean_SLR_ref.values:.2f}', xy=((np.datetime64('2000-01-01T00:00')), bathy_mean_SLR_ref), xytext=((np.datetime64('2000-01-01T00:00')), bathy_mean_SLR_ref - 2.5),
+            arrowprops=dict(arrowstyle='->'), fontsize=8)
+
+# Customize the first plot
+axes.set_title('Mean Difference of 2015 Geocentric Water Levels (Factual - Counterfactual)')
+axes.set_xlabel('Time')
+axes.set_ylabel('Mean Water Level Difference (mm)')
+axes.grid()
+axes.legend()
+
 
 # %%

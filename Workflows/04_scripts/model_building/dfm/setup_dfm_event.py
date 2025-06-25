@@ -348,8 +348,13 @@ if os.path.exists(pathfile_illegalcells):
 
 # add the grid (grid_network.nc, network file)
 mdu.geometry.netfile = netfile
-# Adjust initial water in case of SLR
-mdu.geometry.waterlevini = CF_SLR
+# Adjust initial water in case of SLR for Idai
+if CF_SLR == 0:
+    mdu.geometry.waterlevini = 0.04
+elif CF_SLR == -0.14:
+    mdu.geometry.waterlevini = -0.1
+else:
+    pass
 
 # add the external forcing files (.ext)
 mdu.external_forcing.extforcefile = ext_file_old
