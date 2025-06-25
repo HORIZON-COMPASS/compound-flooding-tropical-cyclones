@@ -6,12 +6,12 @@ dfm_output_MZB_Idai_noSLR2015:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
   meta:
     category: ocean
   crs: 4326
@@ -41,12 +41,12 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
   meta:
     category: ocean
   crs: 4326
@@ -56,12 +56,12 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
   meta:
     category: ocean
   crs: 4326
@@ -71,12 +71,12 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF-10:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
   meta:
     category: ocean
   crs: 4326
@@ -86,12 +86,12 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
   meta:
     category: ocean
   crs: 4326
