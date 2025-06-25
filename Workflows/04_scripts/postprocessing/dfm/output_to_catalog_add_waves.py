@@ -227,6 +227,12 @@ if use_wave:
 else:
     pass
 
+
+#%% Make a file for snakemake to track the cata,log update
+with open(snake_done, 'w') as file:
+    # Write content to the file
+    file.write("# Empty file used to make the snakemake dfm workflow add_data_to_catalog rule work\n")
+
 #%% ###########################################
 #############    SOME PLOTTING    #############
 ###############################################
