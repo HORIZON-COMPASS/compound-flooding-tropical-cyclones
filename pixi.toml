@@ -54,6 +54,7 @@ pyflwdir = "=0.5.8"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
+pyextremes = "==2.3.3"
 
 [feature.snake.dependencies]
 snakemake = ">=8.10.6,<8.11"
