@@ -7,12 +7,14 @@ import dfm_tools as dfmt
 import os
 import glob
 from matplotlib.gridspec import GridSpec
-#import cartopy.crs as ccrs
+import cartopy.crs as ccrs
 import contextily as ctx
 import geopandas as gpd
 from shapely.geometry import LineString
 import ast
 import cartopy.crs as ccrs
+import pyproj
+from pyproj import Transformer
 
 if "snakemake" in locals():
     dir_runs = os.path.abspath(snakemake.output.dir_event_model) 
@@ -26,42 +28,367 @@ else:
     tc_name = "Idai"
     dfm_res = "450"
     bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS"
+    tidemodel = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    wind_forcing = "era5_hourly"
     CF_SLR = 0
     CF_SLR_txt = "0"
     CF_wind = 0
     CF_wind_txt = "0"
     dir_runs = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm'
-    model = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    dfm_bbox = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
+    # model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nochnk'
+    model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0'
+    dfm_bbox_model = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
     crop_bbox = ast.literal_eval("[34, -20.2, 35.6, -19.2]")
     sfincs_bbox = ast.literal_eval("[34.33,-20.12,34.95,-19.30]")
     dfm_obs_file = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp"
     
-#%% Open the his files in the output folder
-for fname in os.listdir(os.path.join(dir_runs,model,'output')):
-    if fname.endswith('_his.nc'):
-        file_nc_his = os.path.join(dir_runs,model,'output',fname)
 
-#open hisfile with xarray and print netcdf structure
-if file_nc_his is not None:
-    ds_his = xr.open_mfdataset(file_nc_his, preprocess=dfmt.preprocess_hisnc)
+# Open the his files in the output folder
+def open_ds_his(dir, model):
+    for fname in os.listdir(os.path.join(dir,model,'output')):
+        if fname.endswith('_his.nc'):
+            print(fname)
+            file_nc_his = os.path.join(dir,model,'output',fname)
 
-    # locate map files 
-file_nc_map = []
-for fname in os.listdir(os.path.join(dir_runs,model,'output')):
-    if fname.endswith("map.nc"):
-        print(fname)
-        file_nc_map.append(os.path.join(dir_runs,model,'output',fname))
+    #open hisfile with xarray and print netcdf structure
+    if file_nc_his is not None:
+        ds = xr.open_mfdataset(file_nc_his, preprocess=dfmt.preprocess_hisnc)
 
-ds_map = dfmt.open_partitioned_dataset(file_nc_map)
+    ds['windmag'] = np.sqrt(ds['windx']**2 + ds['windy']**2)
+    ds['windmag'].attrs['long_name'] = 'wind speed'
+    ds['windmag'].attrs['units'] = 'm/s'
 
-# compute magnitude of wind
-ds_map['mesh2d_windmag'] = np.sqrt(ds_map['mesh2d_windx']**2 + ds_map['mesh2d_windy']**2)
+    return ds
+
+# Open the map files in the output folder
+def open_ds_map(dir, model): 
+    file_nc_map = []
+    for fname in os.listdir(os.path.join(dir,model,'output')):
+        if fname.endswith("map.nc"):
+            print(fname)
+            file_nc_map.append(os.path.join(dir,model,'output',fname))
+
+    ds = dfmt.open_partitioned_dataset(file_nc_map)
+
+    # compute magnitude of wind
+    ds['mesh2d_windmag'] = np.sqrt(ds['mesh2d_windx']**2 + ds['mesh2d_windy']**2)
+
+    return ds
+
+# Some functions to plot the model results
+def plot_timeserie(data, variable, station_name='BEIRA IHO'):
+    # Plot the stations
+    fig, ax = plt.subplots(1,1,figsize=(8,5))
+    # Find the index of the station
+    station_idx  = data.station.values.tolist().index(station_name)
+
+    # Plot the water level for the selected station over time for the different simulations
+    ax.plot(data.time.values, data[variable][:, station_idx], label=f'{station_name}')
+    print(data[variable].attrs['long_name'])
+    # Set labels and title
+    unit = data[variable].attrs['units']
+    long_name = data[variable].attrs['long_name']
+    ax.set_ylabel(f'{long_name} ({unit})')
+    ax.set_xlabel('Time')
+    ax.set_title(f'{variable} for Station {station_name}')
+    # Add legend
+    ax.legend(loc=1, fontsize=8)
+
+
+def plot_timeseries_multi(datasets, variable, station_name='BEIRA IHO', labels=None):
+    """
+    Plot a time series for the same variable and station across multiple datasets,
+    with varying line thicknesses for better visibility.
+    """
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+    if labels is not None and len(labels) != len(datasets):
+        raise ValueError("Length of labels must match length of datasets.")
+
+    for i, data in enumerate(datasets):
+        if station_name not in data.station.values:
+            print(f"Station '{station_name}' not found in dataset {i}")
+            continue
+        station_idx = data.station.values.tolist().index(station_name)
+
+        label = labels[i] if labels is not None else f'Dataset {i+1}'
+        line_width = 6 - i * 1  # Increase line width for each dataset
+        ax.plot(data.time.values, data[variable][:, station_idx], label=label)
+
+    # Use metadata from the first dataset for labels
+    unit = datasets[0][variable].attrs.get('units', '')
+    long_name = datasets[0][variable].attrs.get('long_name', variable)
+
+    ax.set_ylabel(f'{long_name} ({unit})')
+    ax.set_xlabel('Time')
+    ax.set_title(f'{long_name} at Station {station_name}')
+    ax.legend(loc='upper right', fontsize=8)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_stations_and_grid(ds_his, ds_map, dfm_bbox, crop_bbox_str="[34.8, -20.5, 35.4, -19.3]", crs='EPSG:4326', input_crs="EPSG:32736"):
+    crop_bbox = ast.literal_eval(crop_bbox_str)
+    transformer = Transformer.from_crs(input_crs, crs, always_xy=True)
+    lon, lat = transformer.transform(ds_his.station_x_coordinate.values, ds_his.station_y_coordinate.values)
+    ds_his = ds_his.assign_coords({"station_lon": ("station", lon), "station_lat": ("station", lat)})
+    
+    fig, ax = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
+    
+    # Full domain plot
+    ds_map.grid.plot(ax=ax[0], edgecolor='grey', linewidth=0.5, alpha=0.5)
+    ctx.add_basemap(ax=ax[0], source=ctx.providers.Esri.WorldImagery, zoom=7, crs=crs, attribution=False)
+    ax[0].set_title("Full DFM model domain")
+    
+    letter_stations = [s for s in ds_his.station.values if not s.isdigit() and s.lower() not in ["airport", "beira off"]]
+    ds_his.sel(station=letter_stations).plot.scatter(ax=ax[0], x='station_x_coordinate', y='station_y_coordinate', marker="o")
+    for txt in letter_stations:
+        ax[0].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7, color='white', fontweight='bold')
+    ax[0].set_xticks(range(int(dfm_bbox[0]), int(dfm_bbox[2]) + 1, 2))
+    ax[0].set_yticks(range(int(dfm_bbox[1]), int(dfm_bbox[3]) + 1, 2))
+    ax[0].set_xticklabels([str(i) for i in range(int(dfm_bbox[0]), int(dfm_bbox[2]) + 1, 5)])
+    ax[0].set_yticklabels([str(i) for i in range(int(dfm_bbox[1]), int(dfm_bbox[3]) + 1, 5)])
+    
+    # Zoomed domain
+    stations_in_bbox = ds_his.where(
+        (ds_his.station_lon >= crop_bbox[0]) & (ds_his.station_lon <= crop_bbox[2]) &
+        (ds_his.station_lat >= crop_bbox[1]) & (ds_his.station_lat <= crop_bbox[3]),
+        drop=True
+    )
+    stations_in_bbox_letter = ds_his.where(
+        (ds_his.station_x_coordinate >= crop_bbox[0]) & (ds_his.station_x_coordinate <= crop_bbox[2]) &
+        (ds_his.station_y_coordinate >= crop_bbox[1]) & (ds_his.station_y_coordinate <= crop_bbox[3]),
+        drop=True
+    )
+    no_airport = [s for s in stations_in_bbox_letter.station.values if s.lower() != "airport"]
+
+    ds_map.grid.plot(ax=ax[1], edgecolor='grey', linewidth=0.5, alpha=0.5)
+    ctx.add_basemap(ax=ax[1], source=ctx.providers.Esri.WorldImagery, zoom=9, crs=crs, attribution=False)
+    ax[1].plot(ds_his['station_lon'], ds_his['station_lat'], 'xc')
+    ax[1].set_xlim(crop_bbox[0], crop_bbox[2])
+    ax[1].set_ylim(crop_bbox[1], crop_bbox[3])
+    ax[1].set_title("Model domain zoomed into SFINCS bbox")
+
+    stations_in_bbox.plot.scatter(ax=ax[1], x='station_lon', y='station_lat')
+    for txt in stations_in_bbox.station.values[::5]:
+        ax[1].text(stations_in_bbox.station_lon.sel(station=txt), stations_in_bbox.station_lat.sel(station=txt), txt, size=7, color='white', fontweight='bold')
+
+    stations_in_bbox_letter.plot.scatter(ax=ax[1], x='station_x_coordinate', y='station_y_coordinate', marker="o")
+    for txt in no_airport:
+        ax[1].text(stations_in_bbox_letter.station_x_coordinate.sel(station=txt), stations_in_bbox_letter.station_y_coordinate.sel(station=txt), txt, size=7, color='white', fontweight='bold')
+
+    ax[1].set_xticks(range(int(crop_bbox[0]), int(crop_bbox[2]) + 1, 2))
+    ax[1].set_yticks(range(int(crop_bbox[1]), int(crop_bbox[3]) + 1, 2))
+    ax[1].set_xticklabels([str(i) for i in range(int(crop_bbox[0]), int(crop_bbox[2]) + 1, 5)])
+    ax[1].set_yticklabels([str(i) for i in range(int(crop_bbox[1]), int(crop_bbox[3]) + 1, 5)])
+
+    for a in ax:
+        dfmt.plot_coastlines(ax=a, min_area=1000, linewidth=0.5, zorder=0)
+        dfmt.plot_borders(ax=a, zorder=0)
+        a.set_xlabel("Longitude")
+        a.set_ylabel("Latitude")
+
+    plt.tight_layout()
+    return fig, ax
+
+
+def plot_wind_slice(ds, time_str, var='mesh2d_windmag', title=None):
+    """Plot wind magnitude at a specific time from a UGRID dataset."""
+    fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()}, figsize=(10, 6))
+
+    da = ds[var].sel(time=time_str)
+    da.ugrid.plot(ax=ax, transform=ccrs.PlateCarree(), cmap='viridis')
+
+    ax.coastlines()
+    ax.set_title(title or f"Wind magnitude at {time_str}")
+    return ax
+
+
+def plot_wind_difference(ds1, ds2, time_str, var='mesh2d_windmag', title=None):
+    """Plot wind magnitude difference between two datasets at a specific time."""
+    fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()}, figsize=(10, 6))
+
+    da1 = ds1[var].sel(time=time_str)
+    da2 = ds2[var].sel(time=time_str)
+
+    da_diff = da1 - da2
+    da_diff.ugrid.plot(ax=ax, transform=ccrs.PlateCarree(), cmap='RdBu_r')
+
+    ax.coastlines()
+    ax.set_title(title or f"Wind magnitude difference at {time_str}")
+    return ax
+
+
+def compute_and_plot_max_waterlevel(ds, var='mesh2d_s1', title="Maximum water level", add_coastlines=True):
+    """
+    Efficiently compute and plot the maximum water level from a UGRID dataset.
+
+    Parameters:
+        ds (xarray.Dataset): Input dataset with UGRID mesh.
+        var (str): Variable name for water level.
+        title (str): Title of the plot.
+        add_coastlines (bool): If True, adds coastlines to the plot.
+    
+    Returns:
+        matplotlib.axes.Axes: The plot axis.
+    """
+    max_var = f'max_{var}'
+
+    # Cache max value if not already in dataset
+    if max_var not in ds:
+        ds[max_var] = ds[var].max(dim='time', keep_attrs=True)
+
+    da_max = ds[max_var]
+
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+
+    da_max.ugrid.plot(
+        ax=ax,
+        transform=ccrs.PlateCarree(),
+        cmap='Blues',
+        rasterized=True
+    )
+
+    if add_coastlines:
+        ax.coastlines(resolution='10m')
+
+    ax.set_title(title)
+    return ax
+
+
+def plot_waterlevel_difference(ds1, ds2, var='mesh2d_s1', title='Water level difference', time_dim='time'):
+    """
+    Plot the spatial difference in maximum water level between two datasets over time.
+
+    Automatically caches max values as 'max_<var>' in each dataset.
+    """
+    max_var = f'max_{var}'
+
+    # Compute max only if not already cached
+    if max_var not in ds1:
+        ds1[max_var] = ds1[var].max(dim=time_dim, keep_attrs=True)
+    if max_var not in ds2:
+        ds2[max_var] = ds2[var].max(dim=time_dim, keep_attrs=True)
+
+    # Compute spatial difference
+    diff = ds1[max_var] - ds2[max_var]
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+    diff.ugrid.plot(ax=ax, transform=ccrs.PlateCarree(), cmap='RdBu_r', center=0, rasterized=True)
+
+    ax.coastlines(resolution='10m')
+    ax.set_title(title)
+    return ax
+
+
+def plot_waterlevel_difference(ds1, ds2, var='mesh2d_s1', title='Water level difference', time_dim='time'):
+    """
+    Plot the spatial difference in maximum water level between two datasets over time.
+    
+    Parameters:
+        ds1, ds2 (xarray.Dataset): Datasets with UGRID structure and water level variable.
+        var (str): Variable name for water level.
+        title (str): Title for the plot.
+        time_dim (str): Name of the time dimension to reduce over.
+    """
+    # Compute max water level over time
+    da1_max = ds1[var].max(dim=time_dim)
+    da2_max = ds2[var].max(dim=time_dim)
+
+    # Calculate the difference
+    diff = da1_max - da2_max
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+    diff.ugrid.plot(ax=ax, transform=ccrs.PlateCarree(), cmap='RdBu_r', center=0, rasterized=True)
+
+    ax.coastlines(resolution='10m')
+    ax.set_title(title)
+    return ax
+
+#%% Plot the timeserie for the specified variable and staion (default is BEIRA IHO)
+# model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0'
+ds_his = open_ds_his(dir_runs, model_name)
+plot_timeserie(ds_his, variable='waterlevel')
+plot_timeserie(ds_his, variable='windmag')
+
+#%%
+# Compare the timeseries of different models
+# model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_trad'
+# ds_his_ERA5_spw_chnk_noOperand = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0'
+ds_his_ERA5_spw = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0_constChnk'
+ds_his_ERA5_constChnk = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0_nochnk'
+ds_his_ERA5_nochnk = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0'
+ds_his_ERA5_nochnk_lindrag = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0'
+ds_his_spw = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_mergefrac'
+ds_his_ERA5_spw_mergefrac = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_plusoperand_500km'
+ds_his_ERA5_spw_plusoperand_500km = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_plusoperand'
+ds_his_ERA5_spw_plusoperand = open_ds_his(dir_runs, model_name)
+
+#%%
+ds_his_list = [ds_his_ERA5_spw, ds_his_ERA5_spw_plusoperand_500km, ds_his_ERA5_spw_plusoperand, ds_his_spw]
+annot = ['ERA5_spw','ERA5_spw_merged0.75_rad500km', 'ERA5_spw_merged0.75_rad900km', 'his_spw']
+
+plot_timeseries_multi(ds_his_list, variable='waterlevel', labels=annot)
+plot_timeseries_multi(ds_his_list, variable='windmag', labels=annot)
+
+
+#%%
+# open map files 
+model_name = "event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_plusoperand"
+ds_map_ERA5_spw_plusoperand = open_ds_map(dir_runs, model_name)
+
+#%%
+model_name = "event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_plusoperand_500km"
+ds_map_ERA5_spw_plusoperand_500km = open_ds_map(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0' 
+ds_map_ERA5 = open_ds_map(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0' 
+ds_map_ERA5_spw = open_ds_map(dir_runs, model_name)
+
+#%%
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0' 
+ds_map_spw = open_ds_map(dir_runs, model_name)
+
+#%%
+# Plot wind speed spatially
+plot_wind_slice(ds_map_ERA5_spw, time_str='2019-03-14 12:00:00')
+
+#%%
+# Plot the wind speed difference between two model runs
+plot_wind_difference(ds_map_spw, ds_map_ERA5_spw_plusoperand, time_str='2019-03-14 12:00:00')
+
+#%%
+# Calculate the maximum water levels spatially and plot it
+compute_and_plot_max_waterlevel(ds_map_ERA5_spw_plusoperand)
+
+compute_and_plot_max_waterlevel(ds_map_spw)
+
+
+#%%
+plot_waterlevel_difference(ds_map_ERA5_spw_plusoperand, ds_map_spw)
 
 #%% Load the DFM model grid for visualisation
-grid_ds = xr.open_dataset(os.path.join(dir_runs,model,"grid_network.nc"))
+grid_ds = xr.open_dataset(os.path.join(dir_runs,model_name,"grid_network.nc"))
 dfm_obs = gpd.read_file(dfm_obs_file)
 
 #%% Load the TC track as shapefile
@@ -72,107 +399,12 @@ line = LineString(tc_track.geometry)
 line_gdf = gpd.GeoDataFrame(geometry=[line], crs=tc_track.crs)
 
 #%%
-dfm_bbox_strp = [float(x) for x in dfm_bbox.strip("[]").split(",")]
-lon_min_dfm, lon_max_dfm, lat_min_dfm, lat_max_dfm = dfm_bbox_strp
-#%% Plot the stations
-fig, ax = plt.subplots(1,1,figsize=(10,5))
-# Find the index of the station 'BEIRA IHO'
-station_name = 'BEIRA IHO'
-station_idx  = ds_his.station.values.tolist().index(station_name)
+# Plot spatially the different station and the model grid
+plot_stations_and_grid(ds_his_ERA5_spw, ds_map_ERA5_spw, dfm_bbox_model)
 
-# Plot the water level for the selected station over time for the different simulations
-ax.plot(ds_his.time.values, ds_his.waterlevel[:, station_idx], label='BEIRA IHO - F')
 
-# Set labels and title
-ax.set_xlabel('Time')
-ax.set_ylabel('Water Level (m)')
-ax.set_title(f'Water Level for Station {station_name}')
-# Add legend
-ax.legend(loc=1, fontsize=8)
-
-# Show the plot
-plt.tight_layout()
-plt.show()
 
 #%%
-# Extract x and y coordinates from the 'geometry' column of dfm_obs
-x_coords = [point.x for point in dfm_obs.geometry if point is not None]
-y_coords = [point.y for point in dfm_obs.geometry if point is not None]
-
-# Plotting
-fig, axes = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})  # Two subplots side by side
-
-# Plot 1: Stations with letter names
-letter_stations = [s for s in ds_his.station.values if not s.isdigit()]
-ds_his.sel(station=letter_stations).plot.scatter(ax=axes[0], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(letter_stations):
-    axes[0].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[0].set_title("Stations with Names (Letters)")
-
-# Grid network points in a nicer blue with transparency
-axes[0].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, 
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
-
-# Add background features
-axes[0].set_facecolor('lightblue')
-axes[0].coastlines(resolution='50m', color='black', linewidth=1)
-axes[0].add_feature(cfeature.LAND, facecolor='lightgray', zorder=1)
-axes[0].add_feature(cfeature.OCEAN, facecolor='lightblue', zorder=0)
-
-# Plot bounding boxes
-axes[0].plot([lon_min_dfm, lon_max_dfm, lon_max_dfm, lon_min_dfm, lon_min_dfm],
-             [lat_min_dfm, lat_min_dfm, lat_max_dfm, lat_max_dfm, lat_min_dfm],
-             color="orange", label="BBox 1", transform=ccrs.PlateCarree())
-axes[0].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-             [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],
-             color="red", label="BBox 2", transform=ccrs.PlateCarree())
-
-axes[0].set_xlabel("Longitude")  # Add x-axis label
-axes[0].set_ylabel("Latitude")  # Add y-axis label
-
-# Plot 2: Stations with numeric names at the SFINCS bbox
-numeric_stations = [s for s in ds_his.station.values if s.isdigit()]
-ds_his.sel(station=numeric_stations).plot.scatter(ax=axes[1], x='station_x_coordinate', y='station_y_coordinate', marker="o")
-for tt, txt in enumerate(numeric_stations):
-    axes[1].text(ds_his.station_x_coordinate.sel(station=txt), ds_his.station_y_coordinate.sel(station=txt), txt, size=7)
-axes[1].set_title("Stations with Numeric Names")
-
-# Grid network points in a nicer blue with transparency
-axes[1].scatter(grid_ds['mesh2d_node_x'].values, grid_ds['mesh2d_node_y'].values, 
-                s=2, color=(0, 0, 1, 0.5), label="Grid Network", transform=ccrs.PlateCarree())
-
-# Plot the observation line (connecting the points from dfm_obs)
-axes[1].plot(x_coords, y_coords, color="yellow", linewidth=2, label="Observation Line", transform=ccrs.PlateCarree())
-
-# Set limits for Plot 2 (zoom into the SFINCS bbox)
-axes[1].set_xlim([sfincs_bbox[0], sfincs_bbox[2]])
-axes[1].set_ylim([sfincs_bbox[1], sfincs_bbox[3]])
-
-# Add background features
-axes[1].set_facecolor('lightblue')
-axes[1].coastlines(resolution='50m', color='black', linewidth=1)
-axes[1].add_feature(cfeature.LAND, facecolor='lightgray', zorder=1)
-axes[1].add_feature(cfeature.OCEAN, facecolor='lightblue', zorder=0)
-
-axes[1].set_xlabel("Longitude")  # Add x-axis label
-axes[1].set_ylabel("Latitude")  # Add y-axis label
-
-# Show coastlines and borders for both plots
-for ax in axes:
-    dfmt.plot_coastlines(ax=ax, min_area=1000, linewidth=0.5, zorder=0)
-    dfmt.plot_borders(ax=ax, zorder=0)
-
-# Show the plot
-plt.tight_layout()
-plt.show()
-
-#%%
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import numpy as np
-from cartopy.io.shapereader import natural_earth
-
 # Load topography/bathymetry data
 import xarray as xr
 topo_bathy_ds = xr.open_dataset("path_to_topography_or_bathymetry_file.nc")  # Replace with your dataset path
@@ -243,114 +475,3 @@ plt.show()
 
 
 #%%
-# plot net/grid for the whole DFM domain and zoomed into the SFINCS domain
-fig, ax = plt.subplots(1, 2, figsize=(15, 7), subplot_kw={'projection': ccrs.PlateCarree()})
-
-pc = ds_map.grid.plot(ax=ax[0], edgecolor='white', linewidth=0.5, alpha=0.5)
-ctx.add_basemap(ax=ax[0], source=ctx.providers.Esri.WorldImagery, zoom=7, crs=ccrs.PlateCarree(), attribution=False)
-ax[0].plot(ds_his['station_x_coordinate'], ds_his['station_y_coordinate'], 'xc')
-ax[0].set_title("Full DFM model domain")
-
-# Set x and y ticks
-ax[0].set_xticks(range(int(dfm_bbox[0]), int(dfm_bbox[2])+1, 2))  # Adjust tick interval as needed
-ax[0].set_yticks(range(int(dfm_bbox[1]), int(dfm_bbox[3])+1, 2))  # Adjust tick interval as needed
-ax[0].set_xticklabels([str(i) for i in range(int(dfm_bbox[0]), int(dfm_bbox[2])+1, 5)])  # Longitude labels
-ax[0].set_yticklabels([str(i) for i in range(int(dfm_bbox[1]), int(dfm_bbox[3])+1, 5)])  # Latitude labels
-
-# Plotting the second map with the cropped bbox to SFINCS region
-pc2 = ds_map.grid.plot(ax=ax[1], edgecolor='white', linewidth=0.5, alpha=0.5)
-ctx.add_basemap(ax=ax[1], source=ctx.providers.Esri.WorldImagery, zoom=9, crs=ccrs.PlateCarree(), attribution=False)
-ax[1].plot(ds_his['station_x_coordinate'], ds_his['station_y_coordinate'], 'xc')
-ax[1].set_xlim([crop_bbox[0], crop_bbox[2]])
-ax[1].set_ylim([crop_bbox[1], crop_bbox[3]])  # Set the extent for the bounding box
-ax[1].set_title("Model zomain zoomed into SFINCS bbox")
-ax[1].plot([sfincs_bbox[0], sfincs_bbox[2], sfincs_bbox[2], sfincs_bbox[0], sfincs_bbox[0]],
-           [sfincs_bbox[1], sfincs_bbox[1], sfincs_bbox[3], sfincs_bbox[3], sfincs_bbox[1]],color="red", label="BBox 1", transform=ccrs.PlateCarree())
-
-# Set x and y ticks for the cropped region
-ax[1].set_xticks(range(int(crop_bbox[0]), int(crop_bbox[2])+1, 2))  # Adjust tick interval as needed
-ax[1].set_yticks(range(int(crop_bbox[1]), int(crop_bbox[3])+1, 2))  # Adjust tick interval as needed
-ax[1].set_xticklabels([str(i) for i in range(int(crop_bbox[0]), int(crop_bbox[2])+1, 2)])  # Longitude labels
-ax[1].set_yticklabels([str(i) for i in range(int(crop_bbox[1]), int(crop_bbox[3])+1, 2)])  # Latitude labels
-
-# Show coastlines and borders for both plots
-for a in ax:
-    dfmt.plot_coastlines(ax=a, min_area=1000, linewidth=0.5, zorder=0)
-    dfmt.plot_borders(ax=a, zorder=0)
-    # ax.legend(loc='lower right', fontsize=8)
-    a.set_xlabel("Longitude")
-    a.set_ylabel("Latitude")
-    a.set_xticks
-    a.set_yticks
-
-
-
-#%% 
-# Find time of max WL at the output location
-id_ts_max = ds_his['waterlevel'].sel(station=['BEIRA IHO']).argmax().values.tolist()
-time_ts_max = ds_his['time'].isel(time=id_ts_max).values
-
-
-
-
-
-
-
-
-
-
-#%% Plot the water level at the Beira IHO and offshore station, and the obs_points
-if file_nc_his is not None:
-    fig, ax = plt.subplots(1,1,figsize=(10,5))
-    ds_his_sel.sel(stations=['BEIRA IHO']).waterlevel.plot.line(ax=ax, x='time')
-    ax.legend(ds_his_sel.stations.to_series(),bbox_to_anchor=(1.04, 1),loc="upper left",fontsize=8) 
-    plt.grid()
-
-#%% Open the produced waterlevel maps
-files_nc_map = glob.glob(os.path.join(dir_runs,model,'output','*map.nc'))
-ds_dfm_map = dfmt.open_partitioned_dataset(files_nc_map)
-
-# Find time of max WL at the output location
-id_ts_max = ds_his['waterlevel'].sel(station=['BEIRA IHO']).argmax().values.tolist()
-time_ts_max = ds_his['time'].isel(time=id_ts_max).values
-
-#%%
-
-# Check the contents of the GeoDataFrame
-print(gdf.head())
-line = LineString(gdf.geometry)
-line_gdf = gpd.GeoDataFrame(geometry=[line], crs=gdf.crs)
-# Plot the TC track and max total water level
-fig = plt.figure(layout="constrained",figsize=(12,4))
-gs = GridSpec(1, 3, figure=fig)
-ax1 = fig.add_subplot(gs[0, 0])#projection = ccrs.epsg(32736))
-
-ax1.set_title('Total water level [mMSL]')
-#sc = ax1.scatter(ds_dfm_map['mesh2d_face_x'].values, ds_dfm_map['mesh2d_face_y'].values, c=ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').values,vmin=-3,vmax=3,  cmap='viridis',s=5)
-sc = ds_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
-plot_loc = ax1.scatter(ds_his.sel(station=['BEIRA IHO']).station_x_coordinate, ds_his.sel(station=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
-ax1.set_aspect('equal')
-ax1.set_ylim([-22,-19]); ax1.set_xlim([34.2,37])
-ctx.add_basemap(ax=ax1, source=ctx.providers.Esri.WorldTopoMap, crs='EPSG:4326', attribution=False)
-tc_track.plot(ax=ax1,color='mediumblue', linewidth=1)
-sc = ds_dfm_map['mesh2d_s1'].sel(time=time_ts_max,method='nearest').ugrid.plot(ax=ax1,vmin=-3,vmax=3,cmap='viridis')
-plot_loc = ax1.scatter(ds_his_sel.sel(stations=['BEIRA IHO']).station_x_coordinate, ds_his_sel.sel(stations=['BEIRA IHO']).station_y_coordinate,c='k',label='Model output point')
-ax1.set_aspect('equal')
-ax1.set_ylim([-22,-19]); ax1.set_xlim([34.2,37])
-ctx.add_basemap(ax=ax1, source=ctx.providers.Esri.WorldTopoMap, crs='EPSG:4326', attribution=False)
-tc_track.plot(ax=ax1,color='mediumblue', linewidth=1)
-line_gdf.plot(ax=ax1, color='mediumblue', linewidth=1, label='TC track Idai (IBTrACS)')
-ax1.legend(loc='lower right')
-
-# plot the waterlevel over time at the output point
-ax2 = fig.add_subplot(gs[0, 1:])
-ax2.plot(ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').time,ds_his.sel(time=slice('2019-03-11','2019-03-20')).sel(station='BEIRA IHO').waterlevel,color='k')
-ax2.plot(ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').time,ds_his_sel.sel(time=slice('2019-03-11','2019-03-20')).sel(stations='BEIRA IHO').waterlevel,color='k')
-lims = ax2.get_ylim()
-ax2.plot([time_ts_max,time_ts_max],lims,'k--')
-ax2.set_ylim(lims)
-ax2.grid()
-ax2.set_title('Timeseries of water levels at model output point')
-
-fig.suptitle('Delft3D-FM model output for tropical cyclone Idai based on IBTrACS')
-# %%
