@@ -29,6 +29,7 @@ if "snakemake" in locals():
     CF_wind_txt             = snakemake.wildcards.CF_wind
     CF_rain                 = float(snakemake.wildcards.CF_rain)
     CF_rain_txt             = snakemake.wildcards.CF_rain
+    use_waves               = snakemake.params.use_waves
 else:
     region                  = "sofala"
     utmzone                 = '36s'
@@ -37,14 +38,14 @@ else:
     precip_forcing          = 'era5_hourly'
     dfm_res                 = "450"
     bathy                   = "gebco2024_MZB"
-    tidemodel               = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel               = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     data_cats               = [
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ]    
-    CF_rain                 = -7
+    CF_rain                 = 0
     CF_rain_txt             = f"{CF_rain}"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
@@ -52,10 +53,10 @@ else:
     end_time                = '20190325 060000'
     use_dfm                 = True
     use_waves               = True
-    dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
+    dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     dfm_output              = f"dfm_output_{dfm_model}"
     sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs_test")
-    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
+    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_waves")
     obs_points              = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
 
 #%%
@@ -108,6 +109,7 @@ mod = SfincsModel(
     mode="r",
     logger=logger,
 )
+#%%
 
 if 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
@@ -137,3 +139,4 @@ else:
     print(f"Folder already exists: {os.path.join(sfincs_mod_with_forcing, 'subgrid')}")
 
 # %%
+
