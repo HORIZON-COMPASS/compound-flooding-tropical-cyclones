@@ -19,7 +19,7 @@ logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
     wflow_root_30yr  = snakemake.params.wflow_root_forcing_30yr
     wflow_root_event = snakemake.params.wflow_root_forcing
-    data_cat         = snakemake.params.data_cat
+    data_cats        = snakemake.params.data_cat
 else:
     region           = "sofala"
     TC_name          = "Idai"
