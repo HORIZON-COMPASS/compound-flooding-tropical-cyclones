@@ -20,7 +20,7 @@ else:
     region               = "sofala"
     tc_name              = "Idai"
     wind_forcing         = 'spw_IBTrACS'
-    precip_forcing       = 'era5_hourly'
+    precip_forcing       = 'era5_hourly_zarr'
     tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     datacat              = [
         '../../../03_data_catalogs/datacatalog_general.yml',
@@ -32,7 +32,7 @@ else:
     CF_wind_txt          = "-10"
     CF_rain_txt          = "0"
     model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-    dir_run            = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
+    dir_run              = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
     mapfile              = f"{dir_run}/sfincs_map.nc"
     outfile              = f"{dir_run}/plot_output/sfincs_basemap.png"
     floodmap             = f"{dir_run}/plot_output/floodmap.tif"
@@ -86,7 +86,8 @@ da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
     hmin=hmin,
-    floodmap_fn=floodmap # uncomment to save to <mod.root>/floodmap.tif)
+    reproj_method = "bilinear",
+    # floodmap_fn=floodmap # uncomment to save to <mod.root>/floodmap.tif)
 )
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
@@ -94,6 +95,9 @@ gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
 
 # permanent water where water occurence > 5%
 da_hmax_masked = da_hmax.where(gswo_mask <= 5)
+
+# save the masked floodmap
+da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)), floodmap))
 
 # basemap plot the masked hmax on top
 fig, ax = mod.plot_basemap(
