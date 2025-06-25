@@ -38,6 +38,7 @@ if "snakemake" in locals():
     dir_output_main      = os.path.abspath(snakemake.params.dir_event_model)
     dimrset_folder       = os.path.abspath(snakemake.params.dimrset)
     uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
+    era5wind_path        = os.path.abspath(snakemake.params.era5wind)
     submit_script_file   = os.path.abspath(snakemake.output.submit_script)
     CF_SLR               = float(snakemake.wildcards.CF_SLR)
     CF_SLR_txt           = snakemake.wildcards.CF_SLR
@@ -49,7 +50,7 @@ else:
     dfm_res              = "450"
     bathy                = "gebco2024_MZB"
     tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing         = "era5_hourly_spw_IBTrACS"
+    wind_forcing         = "spw_IBTrACS"
     CF_SLR               = 0
     CF_SLR_txt           = f"{CF_SLR}"
     CF_wind              = 0
@@ -193,7 +194,7 @@ if meteo_type == 'spiderweb_era5_merged':
     shutil.copyfile(spw_file_origin, spw_copy)
 
     # Add uniform wind file to set background wind speed to 0 and enable blending of the spw file with the background wind
-    preprocess_era5_Idai_path = os.path.join("p:/11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_20190306to20190325_ERA5.nc")
+    preprocess_era5_Idai_path = era5wind_path
     preprocess_era5_Idai_file = os.path.basename(preprocess_era5_Idai_path)
     preprocess_era5_Idai_dest = os.path.join(dir_output_main, preprocess_era5_Idai_file)
     shutil.copyfile(preprocess_era5_Idai_path, preprocess_era5_Idai_dest)
