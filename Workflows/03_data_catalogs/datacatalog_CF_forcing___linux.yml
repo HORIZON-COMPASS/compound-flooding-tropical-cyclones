@@ -136,3 +136,12 @@ era5_hourly_zarr_CF-7_Idai:
   meta:
     notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
   crs: 4326
+era5_hourly_zarr_CF-8_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-8_Idai.zarr
+  driver: zarr
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  crs: 4326
