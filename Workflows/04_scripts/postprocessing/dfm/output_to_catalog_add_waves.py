@@ -51,7 +51,9 @@ else:
     use_wave = True
 
 #%%
-config_file = "../../../01_config_snakemake/config_general_MZB.yml"
+script_dir = Path(__file__).resolve().parent
+config_file = script_dir / "../../../01_config_snakemake/config_general_MZB.yml"
+
 with open(config_file, "r") as f:
     config = yaml.safe_load(f)
     config = config['runname_ids']['Idai']
