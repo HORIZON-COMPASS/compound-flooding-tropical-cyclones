@@ -231,136 +231,136 @@ else:
 #############    SOME PLOTTING    #############
 ###############################################
 # plot variable for one of the matched stations
-def plot_station_wave_components(station_idx=79):
-    station_to_plot = ds_combined["match"].values[station_idx]
+# def plot_station_wave_components(station_idx=79):
+#     station_to_plot = ds_combined["match"].values[station_idx]
 
-    tide_surge = ds_combined["tide_surge"].sel(match=station_to_plot).compute()
-    wave_wl = ds_combined["wave_setup"].sel(match=station_to_plot).compute()
-    waterlevel = ds_combined["waterlevel"].sel(match=station_to_plot).compute()
+#     tide_surge = ds_combined["tide_surge"].sel(match=station_to_plot).compute()
+#     wave_wl = ds_combined["wave_setup"].sel(match=station_to_plot).compute()
+#     waterlevel = ds_combined["waterlevel"].sel(match=station_to_plot).compute()
 
-    plt.figure(figsize=(12,6))
-    plt.plot(waterlevel["time"], waterlevel, label="Waterlevel")
-    plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
-    plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
+#     plt.figure(figsize=(12,6))
+#     plt.plot(waterlevel["time"], waterlevel, label="Waterlevel")
+#     plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
+#     plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
 
-    wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
+#     wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
 
-    plt.xlabel("Time")
-    plt.ylabel("Water Level (m)")
-    plt.title(f"Water levels for station {station_to_plot} with max wave setup of {wave_max:.2f} m")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+#     plt.xlabel("Time")
+#     plt.ylabel("Water Level (m)")
+#     plt.title(f"Water levels for station {station_to_plot} with max wave setup of {wave_max:.2f} m")
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.show()
 
-# Plot the selected staions and their tide+surge, waves only and combined
-def plot_wave_impact():
-    # Plot the selected staions and their tide+surge, waves only and combined
-    # ------------------------------------------------------------------
-    # MAP: max(wave_setup)
-    # ------------------------------------------------------------------
-    fig = plt.figure(figsize=(14, 6), dpi=150)
-    gs = gridspec.GridSpec(1, 3, width_ratios=[1.2, 1, 1], wspace=0.3)
-    ax_map = fig.add_subplot(gs[0, 0], projection = ccrs.PlateCarree())
+# # Plot the selected staions and their tide+surge, waves only and combined
+# def plot_wave_impact():
+#     # Plot the selected staions and their tide+surge, waves only and combined
+#     # ------------------------------------------------------------------
+#     # MAP: max(wave_setup)
+#     # ------------------------------------------------------------------
+#     fig = plt.figure(figsize=(14, 6), dpi=150)
+#     gs = gridspec.GridSpec(1, 3, width_ratios=[1.2, 1, 1], wspace=0.3)
+#     ax_map = fig.add_subplot(gs[0, 0], projection = ccrs.PlateCarree())
 
-    transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
+#     transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
 
-    vmin = 0.0
-    vmax = df_dfm["max_component"].max()
-    vcenter = (vmin + vmax) / 2.0
-    norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+#     vmin = 0.0
+#     vmax = df_dfm["max_component"].max()
+#     vcenter = (vmin + vmax) / 2.0
+#     norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
 
-    sc1 = ax_map.scatter(
-        df_dfm.lon,
-        df_dfm.lat,
-        c=df_dfm["max_component"],
-        cmap="viridis",
-        norm=norm,
-        s=40,
-        edgecolor="k",
-        linewidth=0.2,
-        label="DFM"
-    )
+#     sc1 = ax_map.scatter(
+#         df_dfm.lon,
+#         df_dfm.lat,
+#         c=df_dfm["max_component"],
+#         cmap="viridis",
+#         norm=norm,
+#         s=40,
+#         edgecolor="k",
+#         linewidth=0.2,
+#         label="DFM"
+#     )
 
-    df_wave_cut = df_wave[
-        (df_wave.lon >= df_dfm.lon.min()) & (df_wave.lon <= df_dfm.lon.max()) &
-        (df_wave.lat >= df_dfm.lat.min()) & (df_wave.lat <= df_dfm.lat.min())
-    ]
+#     df_wave_cut = df_wave[
+#         (df_wave.lon >= df_dfm.lon.min()) & (df_wave.lon <= df_dfm.lon.max()) &
+#         (df_wave.lat >= df_dfm.lat.min()) & (df_wave.lat <= df_dfm.lat.min())
+#     ]
 
-    ctx.add_basemap(ax_map, source=ctx.providers.OpenStreetMap.Mapnik, crs="EPSG:4326", attribution=False)
+#     ctx.add_basemap(ax_map, source=ctx.providers.OpenStreetMap.Mapnik, crs="EPSG:4326", attribution=False)
 
-    lon_ticks = np.linspace(*ax_map.get_xlim(), 5)
-    lat_ticks = np.linspace(*ax_map.get_ylim(), 5)
-    ax_map.set_xticks(lon_ticks)
-    ax_map.set_yticks(lat_ticks)
-    ax_map.set_xticklabels([f"{transformer.transform(x, df_dfm.lat.min())[0]:.1f}°E" for x in lon_ticks], fontsize=11)
-    ax_map.set_yticklabels([f"{transformer.transform(df_dfm.lon.min(), y)[1]:.1f}°S" for y in lat_ticks], fontsize=11)
-    ax_map.set_xlabel("Longitude", fontsize=11)
-    ax_map.set_ylabel("Latitude", fontsize=11)
-    ax_map.set_title("DFM output points", fontsize=12)
+#     lon_ticks = np.linspace(*ax_map.get_xlim(), 5)
+#     lat_ticks = np.linspace(*ax_map.get_ylim(), 5)
+#     ax_map.set_xticks(lon_ticks)
+#     ax_map.set_yticks(lat_ticks)
+#     ax_map.set_xticklabels([f"{transformer.transform(x, df_dfm.lat.min())[0]:.1f}°E" for x in lon_ticks], fontsize=11)
+#     ax_map.set_yticklabels([f"{transformer.transform(df_dfm.lon.min(), y)[1]:.1f}°S" for y in lat_ticks], fontsize=11)
+#     ax_map.set_xlabel("Longitude", fontsize=11)
+#     ax_map.set_ylabel("Latitude", fontsize=11)
+#     ax_map.set_title("DFM output points", fontsize=12)
 
-    sm = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
-    sm.set_array([])
-    cbar = fig.colorbar(sm, ax=ax_map, orientation="vertical", fraction=0.04, pad=0.02)
-    cbar.set_label("Max Water Level Component (m)")
+#     sm = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
+#     sm.set_array([])
+#     cbar = fig.colorbar(sm, ax=ax_map, orientation="vertical", fraction=0.04, pad=0.02)
+#     cbar.set_label("Max Water Level Component (m)")
 
-    ax_map.legend(loc="upper left", fontsize=11)
+#     ax_map.legend(loc="upper left", fontsize=11)
 
-    # ------------------------------------------------------------------
-    # BAR CHART 1: Original datasets
-    # ------------------------------------------------------------------
-    ax_abs = fig.add_subplot(gs[0, 1])
-    lat = ds_filtered.lat.values
-    y_min, y_max = lat.min() - 0.01, lat.max() + 0.01
-    bar_h = (y_max - y_min) / len(lat) * 0.6
+#     # ------------------------------------------------------------------
+#     # BAR CHART 1: Original datasets
+#     # ------------------------------------------------------------------
+#     ax_abs = fig.add_subplot(gs[0, 1])
+#     lat = ds_filtered.lat.values
+#     y_min, y_max = lat.min() - 0.01, lat.max() + 0.01
+#     bar_h = (y_max - y_min) / len(lat) * 0.6
 
-    ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wl_max_component"],
-                height=0.005, color="steelblue", label="Tide + Surge")
+#     ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wl_max_component"],
+#                 height=0.005, color="steelblue", label="Tide + Surge")
 
-    ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wave_max_component"],
-                left=gdf_dfm_matched["wl_max_component"],
-                height=0.005, color="orange", label="Wave Setup")
+#     ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wave_max_component"],
+#                 left=gdf_dfm_matched["wl_max_component"],
+#                 height=0.005, color="orange", label="Wave Setup")
 
-    ax_abs.set_ylim(y_min, y_max)
-    ax_abs.set_xlabel("Max Water Level Component (m)")
-    ax_abs.set_title("Max of Tide & Surge + Wave")
-    ax_abs.grid(axis="x", alpha=0.3)
-    ax_abs.legend(fontsize=8, loc="lower right")
-    ax_abs.set_yticklabels([])
+#     ax_abs.set_ylim(y_min, y_max)
+#     ax_abs.set_xlabel("Max Water Level Component (m)")
+#     ax_abs.set_title("Max of Tide & Surge + Wave")
+#     ax_abs.grid(axis="x", alpha=0.3)
+#     ax_abs.legend(fontsize=8, loc="lower right")
+#     ax_abs.set_yticklabels([])
 
-    # ------------------------------------------------------------------
-    # BAR CHART 2: Combined dataset
-    # ------------------------------------------------------------------
-    ax_abs = fig.add_subplot(gs[0, 2])
-    df_combined = pd.DataFrame({
-        'lon': ds_combined.lon.values,
-        'lat': ds_combined.lat.values,
-        'wl_max_component': ds_combined["waterlevel"].max(dim='time').values,
-        'wave_max_component': ds_combined["wave_setup"].max(dim='time').values,
-        'tide_surge_max_component': ds_combined["tide_surge"].max(dim='time').values
-    })
+#     # ------------------------------------------------------------------
+#     # BAR CHART 2: Combined dataset
+#     # ------------------------------------------------------------------
+#     ax_abs = fig.add_subplot(gs[0, 2])
+#     df_combined = pd.DataFrame({
+#         'lon': ds_combined.lon.values,
+#         'lat': ds_combined.lat.values,
+#         'wl_max_component': ds_combined["waterlevel"].max(dim='time').values,
+#         'wave_max_component': ds_combined["wave_setup"].max(dim='time').values,
+#         'tide_surge_max_component': ds_combined["tide_surge"].max(dim='time').values
+#     })
 
-    ax_abs.barh(df_combined['lat'], df_combined["wave_max_component"],
-                left=df_combined["tide_surge_max_component"],
-                height=0.005, color="orange", label="Wave Setup (on top of T+S)")
+#     ax_abs.barh(df_combined['lat'], df_combined["wave_max_component"],
+#                 left=df_combined["tide_surge_max_component"],
+#                 height=0.005, color="orange", label="Wave Setup (on top of T+S)")
 
-    ax_abs.barh(df_combined['lat'], df_combined["tide_surge_max_component"],
-                height=0.005, color="steelblue", label="Tide + Surge")
+#     ax_abs.barh(df_combined['lat'], df_combined["tide_surge_max_component"],
+#                 height=0.005, color="steelblue", label="Tide + Surge")
 
-    ax_abs.barh(df_combined['lat'], df_combined["wl_max_component"],
-                height=0.005, color="green", label="Total waterlevel")
+#     ax_abs.barh(df_combined['lat'], df_combined["wl_max_component"],
+#                 height=0.005, color="green", label="Total waterlevel")
 
-    ax_abs.set_ylim(y_min, y_max)
-    ax_abs.set_xlabel("Max Water Level Component (m)")
-    ax_abs.set_title("Max of Tide & Surge + Wave, and Combined")
-    ax_abs.grid(axis="x", alpha=0.3)
-    ax_abs.legend(fontsize=8, loc="lower right")
-    ax_abs.set_yticklabels([])
+#     ax_abs.set_ylim(y_min, y_max)
+#     ax_abs.set_xlabel("Max Water Level Component (m)")
+#     ax_abs.set_title("Max of Tide & Surge + Wave, and Combined")
+#     ax_abs.grid(axis="x", alpha=0.3)
+#     ax_abs.legend(fontsize=8, loc="lower right")
+#     ax_abs.set_yticklabels([])
 
-    plt.show()
+#     plt.show()
 
 
-if use_wave:
-    plot_wave_impact()
-    plot_station_wave_components()
+# if use_wave:
+#     plot_wave_impact()
+#     plot_station_wave_components()
 
 # %%
