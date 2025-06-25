@@ -18,37 +18,39 @@ from pathlib import Path
 
 #%%
 if "snakemake" in locals():
-    his_path = os.path.abspath(snakemake.input.his_file)
-    path_data_cat = os.path.abspath(snakemake.params.cf_data_cat)
-    model_name = snakemake.params.model_name
-    root_dir = os.path.abspath(snakemake.params.root_dir)
-    snake_done = os.path.abspath(snakemake.output.done_file)
-    use_wave = snakemake.params.use_waves
+    his_path            = os.path.abspath(snakemake.input.his_file)
+    path_data_cat       = os.path.abspath(snakemake.params.cf_data_cat)
+    model_name          = snakemake.params.model_name
+    root_dir            = os.path.abspath(snakemake.params.root_dir)
+    snake_done          = os.path.abspath(snakemake.output.done_file)
+    use_wave            = snakemake.params.use_waves
     path_data_cat_coast = os.path.abspath(snakemake.params.coast_data_cat)
-    wave_output = snakemake.params.wave_output
+    wave_output         = snakemake.params.wave_output
+    start_date          = snakemake.params.start_time
+    end_date            = snakemake.params.start_time
 else:
-    region = "sofala"
-    tc_name = "Idai"
-    dfm_res = "450"
-    bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing = "spw_IBTrACS"
-    CF_SLR_txt = "0"
-    CF_wind_txt = "0"
-    start_date = "20190309 000000"
-    end_date = "20190325 060000"
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    path_data_cat = os.path.abspath("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
-    run_dir = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
-    root_dir = 'p:\\'
-    snake_done = os.path.join(run_dir, "postprocessing_done.txt")
-    his_path1 = os.path.join(run_dir, "output", f"{model_name}_0000_his.nc")
-    his_path2 = os.path.join(run_dir, "output", f"settings_0000_his.nc")  # Alternative file name
+    region              = "sofala"
+    tc_name             = "Idai"
+    dfm_res             = "450"
+    bathy               = "gebco2024_MZB"
+    tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    wind_forcing        = "spw_IBTrACS"
+    CF_SLR_txt          = "0"
+    CF_wind_txt         = "0"
+    start_date          = "20190309 000000"
+    end_date            = "20190325 060000"
+    model_name          = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    path_data_cat       = os.path.abspath("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
+    run_dir             = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
+    root_dir            = 'p:\\'
+    snake_done          = os.path.join(run_dir, "postprocessing_done.txt")
+    his_path1           = os.path.join(run_dir, "output", f"{model_name}_0000_his.nc")
+    his_path2           = os.path.join(run_dir, "output", f"settings_0000_his.nc")  # Alternative file name
     # Use the first path that exists
-    his_path = his_path1 if os.path.exists(his_path1) else his_path2
-    wave_output = 'SNAPWAVE_Idai_setup'
+    his_path            = his_path1 if os.path.exists(his_path1) else his_path2
+    wave_output         = 'SNAPWAVE_Idai_setup'
     path_data_cat_coast = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-    use_wave = True
+    use_wave            = True
 
 #%%
 script_dir = Path(__file__).resolve().parent

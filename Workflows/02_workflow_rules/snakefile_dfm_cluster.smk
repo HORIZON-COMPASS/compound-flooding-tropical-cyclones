@@ -210,6 +210,8 @@ rule add_waves_and_output_to_catalog:
         use_waves      = get_use_waves,
         coast_data_cat = get_coast_datacatalog,
         wave_output    = get_wave_output,
+        start_time      = get_start_time,
+        end_time        = get_end_time,
     output:
         done_file    = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     resources:
