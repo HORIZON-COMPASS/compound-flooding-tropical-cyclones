@@ -7,7 +7,9 @@ from matplotlib import cm
 import matplotlib.lines as mlines
 import xarray as xr
 import cartopy.crs as ccrs
-import seaborn as sns
+# import seaborn as sns
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
 
 #%% Load TC track shapefiles as geopandas geodataframe
 shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
@@ -139,3 +141,62 @@ ax.legend(handles=handles + size_handles, fontsize=10, loc="upper left")
 # plt.savefig("mozambique_tc_tracks.png", dpi=300, bbox_inches="tight", transparent=True)
 
 plt.show()
+# %% PLOTTING MODEL DOMAIN FIGURES FOR PAPER
+# Getting the model regions
+gdf_wflow = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\wflow\staticgeoms\basins.geojson")
+gdf_sfincs = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\sfincs\gis\region.geojson")
+gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
+grid_dfm = xr.open_dataset(r"p:\11210471-001-compass\02_Models\sofala\Idai\dfm\base_450_gebco2024_MZB_GTSMv41opendap\grid_network.nc")
+
+# Set up figure
+fig, ax = plt.subplots(figsize=(8, 6))
+# fig.set_size_inches(10, 8, forward=True)
+
+# Plot SFINCS region and set up legend entry
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
+sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
+
+# Plot wflow basins region and set up legend entry
+gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=2)
+wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
+
+# Efficient Plotting of DFM Grid (reduce marker size or plot subset of points)
+dfm_scatter = ax.scatter(grid_dfm['mesh2d_node_x'], grid_dfm['mesh2d_node_y'], 
+                         s=1, color="white", alpha=0.7, label="DFM Grid", zorder=1)
+
+# Plot TC Tracks
+tc_scatter = ax.scatter(tc_idai.geometry.x, tc_idai.geometry.y, s=tc_idai["size"]*0.5,  # Size based on wind speed
+                        c=tc_idai["USA_WIND"], cmap=cmap_idai, alpha=0.7, label="Track TC Idai", zorder=6)
+ax.plot(tc_idai.geometry.x, tc_idai.geometry.y, color="grey", linewidth=1, alpha=0.7, linestyle="-", zorder=5)
+# Create a custom legend entry for the TC scatter plot (you can modify the color or markersize)
+tc_marker = Line2D([0], [0], marker='o', color='darkgrey', markerfacecolor='red', markersize=5, label='Track TC Idai')
+
+# Add basemap (LOWER zoom = faster)
+ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=tc_idai.crs, attribution=False, zorder=0)
+
+# Set limits
+ax.set_xlim([32, 41])
+ax.set_ylim([-21.2, -15])
+
+# Add Legend
+size_handles = [
+    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', alpha=0.5, markersize=2.5, label=size_labels[0], linestyle=''),
+    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', alpha=0.5, markersize=3.75, label=size_labels[1], linestyle=''),
+    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', alpha=0.5, markersize=5, label=size_labels[2], linestyle='')
+]
+
+# Combine all legend handles into one list
+combined_handles = size_handles + [sfincs_patch, wflow_patch, dfm_scatter, tc_marker]
+
+# Add the combined legend with the title for wind speed size
+ax.legend(handles=combined_handles, loc="upper left", fontsize=8, facecolor='grey', edgecolor='white', title="Wind Speed", title_fontsize=8)
+
+ax.set_xlabel("Longitude", fontsize=10)
+ax.set_ylabel("Latitude", fontsize=10)
+
+
+# plt.savefig(r"p:\11210471-001-compass\04_Results\model_regions\sofala_Idai_dfm_legends.png", dpi=300, bbox_inches="tight", transparent=False)
+
+# Show plot
+plt.show()
+# %%
