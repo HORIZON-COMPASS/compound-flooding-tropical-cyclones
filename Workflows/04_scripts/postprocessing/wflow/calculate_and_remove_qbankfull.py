@@ -4,6 +4,7 @@
 # This script is based on: https://scaling-robot-wgkjqqr.pages.github.io/notebooks/Fit_univariate.html
 
 # First, load the packages
+import os
 from datetime import datetime as datetime
 from os.path import join
 from hydromt.log import setuplog
