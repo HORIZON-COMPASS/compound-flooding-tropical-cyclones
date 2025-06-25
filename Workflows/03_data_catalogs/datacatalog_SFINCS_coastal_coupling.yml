@@ -92,12 +92,12 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
+    station: index
 coastal_coupling_msk_SMST:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Somerset_5mMSL_polygon.geojson
@@ -121,4 +121,26 @@ dfm_verif_points_MZB:
     source_license: na
     source_url: none
     source_version: 1.0
+  crs: 4326
+SNAPWAVE_Idai_runup:
+  data_type: GeoDataset
+  path: 11210471-001-compass/01_Data/SNAPWAVE_waves/runup/wave_induced_timeseries_transposed.nc
+  driver: netcdf
+  rename:
+    transect: station
+    obs_id: station_name
+  meta:
+    notes: SNAPWAVE simulation using ERA5 significant wave height
+    source_author: Fernaldi Gradiyanto
+  crs: 4326
+SNAPWAVE_Idai_setup:
+  data_type: GeoDataset
+  path: 11210471-001-compass/01_Data/SNAPWAVE_waves/setup/setup_timeseries_transposed.nc
+  driver: netcdf
+  rename:
+    transect: station
+    obs_id: station_name
+  meta:
+    notes: SNAPWAVE simulation using ERA5 significant wave height
+    source_author: Fernaldi Gradiyanto
   crs: 4326
