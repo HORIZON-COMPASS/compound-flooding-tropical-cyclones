@@ -1,4 +1,5 @@
 #%% Adding DFM output to the SFINCS coastal coupling data catalog
+# use compass-snake-dfm environment
 # Importing the necessary packages
 import os
 import hydromt
@@ -34,8 +35,8 @@ else:
     dfm_res             = "450"
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing        = "spw_IBTrACS"
-    CF_SLR_txt          = "0"
+    wind_forcing        = "era5_hourly_spw_IBTrACS"
+    CF_SLR_txt          = "-0.14"
     CF_wind_txt         = "0"
     start_date          = "20190309 000000"
     end_date            = "20190325 060000"
@@ -192,7 +193,7 @@ if use_wave:
     dfm_run_waves = f"dfm_output_{model_name}_waves"
 
     adapter = hydromt.data_adapter.GeoDatasetAdapter(
-        path=os.path.abspath(his_path),
+        path=os.path.join(output_path, "settings_0000_his_WAVES.nc"),
         driver="netcdf",
         driver_kwargs={
             "chunks": {
@@ -258,7 +259,7 @@ with open(snake_done, 'w') as file:
 #     plt.tight_layout()
 #     plt.show()
 
-# # Plot the selected staions and their tide+surge, waves only and combined
+# Plot the selected staions and their tide+surge, waves only and combined
 # def plot_wave_impact():
 #     # Plot the selected staions and their tide+surge, waves only and combined
 #     # ------------------------------------------------------------------
@@ -330,7 +331,7 @@ with open(snake_done, 'w') as file:
 #     ax_abs.set_xlabel("Max Water Level Component (m)")
 #     ax_abs.set_title("Max of Tide & Surge + Wave")
 #     ax_abs.grid(axis="x", alpha=0.3)
-#     ax_abs.legend(fontsize=8, loc="lower right")
+#     ax_abs.legend(fontsize=8, loc="lower left")
 #     ax_abs.set_yticklabels([])
 
 #     # ------------------------------------------------------------------
@@ -359,7 +360,7 @@ with open(snake_done, 'w') as file:
 #     ax_abs.set_xlabel("Max Water Level Component (m)")
 #     ax_abs.set_title("Max of Tide & Surge + Wave, and Combined")
 #     ax_abs.grid(axis="x", alpha=0.3)
-#     ax_abs.legend(fontsize=8, loc="lower right")
+#     ax_abs.legend(fontsize=8, loc="lower left")
 #     ax_abs.set_yticklabels([])
 
 #     plt.show()
