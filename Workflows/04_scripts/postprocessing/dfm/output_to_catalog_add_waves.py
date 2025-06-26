@@ -35,8 +35,8 @@ else:
     dfm_res             = "450"
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing        = "spw_IBTrACS"
-    CF_SLR_txt          = "0"
+    wind_forcing        = "era5_hourly_spw_IBTrACS"
+    CF_SLR_txt          = "-0.14"
     CF_wind_txt         = "0"
     start_date          = "20190309 000000"
     end_date            = "20190325 060000"
@@ -186,6 +186,8 @@ if use_wave:
 
     # Add the station names as a coordinate to align with the original dataset
     ds_combined = ds_combined.assign_coords(match=("match", ds_combined.station.values))
+    ds_combined = ds_combined.drop_vars('station')
+    ds_combined = ds_combined.rename({'match': 'station'})
 
     print("Export the combined dataset")
     output_path = Path(datacatalog[dfm_run].path).parent
