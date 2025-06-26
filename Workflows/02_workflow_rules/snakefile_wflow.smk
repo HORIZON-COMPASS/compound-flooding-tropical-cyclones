@@ -1,3 +1,5 @@
+workflow.global_resources["io_heavy"] = 1  # Only allow 1 job at a time
+
 #%%### Import some useful python libraries
 import os
 from snakemake.io import Wildcards
