@@ -1959,7 +1959,7 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # SOME PLOTTING of spatial flood maps
-plot_hmax_diff(models)
+# plot_hmax_diff(models)
 plot_masked_hmax(models)
 
 
