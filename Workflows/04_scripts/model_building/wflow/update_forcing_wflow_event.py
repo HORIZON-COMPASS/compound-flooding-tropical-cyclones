@@ -19,6 +19,7 @@ if "snakemake" in locals():
     precip_forcing       = snakemake.wildcards.precip_forcing
     CF_rain              = float(snakemake.wildcards.CF_rain)
     CF_rain_txt          = snakemake.wildcards.CF_rain
+    meteo_fn             = snakemake.params.forcing
 else:
     tc_name              = "Idai"
     precip_forcing       = "era5_hourly"
@@ -57,8 +58,8 @@ opt = {
         "input.path_forcing":"inmaps.nc",
     },
     "setup_temp_pet_forcing": {
-        #"temp_pet_fn": meteo_fn,
-        "temp_pet_fn": "era5_hourly_zarr",
+        "temp_pet_fn": meteo_fn,
+        # "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,
         "pet_method": "debruin",

@@ -26,6 +26,7 @@ hydromt_wflow = ">=0.4.1,<0.9"
 hydromt = ">=0.9.3,<0.11"
 xarray = ">=2024.3.0,<2026"
 zarr = "<3"
+numba = ">=0.59.0,<0.62"
 # descartes = ">=1.1.0" 
 # cftime = ">=1.6.4"
 
@@ -44,17 +45,17 @@ matplotlib = "*"
 toml = "*"
 
 [feature.sfincs.dependencies]
-hydromt = ">=0.10.0, <0.10.1"
-hydromt_sfincs = ">=1.1.0"
+hydromt = ">=0.10.0"
+hydromt_sfincs = ">=1.2.0"
 numba = "=0.59.0"
 rasterio = "=1.3.11"
 libgdal-hdf5 = "*"
 cartopy = "*"
 
 [feature.wflow.dependencies]
-hydromt = ">=0.10.0, <1.0.0"
-hydromt_wflow = ">=0.7.0, <0.7.1"
-pyflwdir = "=0.5.8"
+hydromt = ">=0.10.0"
+hydromt_wflow = ">=0.7.0"
+pyflwdir = ">=0.5.8"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"

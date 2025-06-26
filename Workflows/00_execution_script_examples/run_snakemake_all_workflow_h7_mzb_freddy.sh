@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=0-3:00:00           # Job duration (hh:mm:ss)
+#SBATCH --time=0-4:00:00           # Job duration (hh:mm:ss)
 #SBATCH --partition 4vcpu #test #4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
@@ -35,5 +35,8 @@ snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_s
 #running workflow with snakemake
 snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
 snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml --cores 'all' --latency-wait 180 --wait-for-files --forceall # --forceall #--rerun-incomplete
+
+# snakemake --dry-run -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml --cores 'all' --latency-wait 180 --wait-for-files --rerun-incomplete # --forceall #--rerun-incomplete
+
 
 exit

@@ -85,8 +85,9 @@ hmin = 0.05
 da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
-    hmin=hmin, 
-    reproj_method ="bilinear")
+    hmin=hmin,
+    floodmap_fn=floodmap,  # Keep this for Snakemake
+    reproj_method="bilinear")  # And add this for better quality
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
 gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
@@ -116,7 +117,7 @@ del da_zsmax
 
 # save as raster
 da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_output_hmax_AllTime.tif'))
-
+da_hmax_masked.raster.to_raster(floodmap)  # This creates the expected floodmap.tif
 
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable

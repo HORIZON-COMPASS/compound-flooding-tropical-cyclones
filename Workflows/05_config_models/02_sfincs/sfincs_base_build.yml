@@ -10,7 +10,7 @@ setup_grid_from_region:
 
 setup_dep:
   datasets_dep:
-  - elevtn: merit_hydro        # 1st elevation dataset !TODO change to fabdem 
+  - elevtn: fabdem        # 1st elevation dataset !TODO change to fabdem 
     zmin: 0.001                # only use where values > 0.001
 
 setup_mask_active:
@@ -30,12 +30,12 @@ setup_mask_bounds:
 
 setup_subgrid:
   datasets_dep:
-  - elevtn: merit_hydro        # !TODO change to fabdem     
+  - elevtn: fabdem        # !TODO change to fabdem     
     zmin: 0.001              
   datasets_rgh:
   - lulc: vito
     reclass_table: vito_mapping
-  nr_subgrid_pixels: 3  
+  nr_subgrid_pixels: 4  
   write_dep_tif: True          # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 5000                  # set tile size a bit larger speed up processing (default 2000)

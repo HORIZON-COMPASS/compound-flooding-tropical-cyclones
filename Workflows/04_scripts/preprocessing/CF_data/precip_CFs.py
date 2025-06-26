@@ -31,15 +31,15 @@ if "snakemake" in locals():
     output_CF_rainfall = os.path.abspath(snakemake.output.CF_rainfall)
     CF_data_cat = os.path.abspath(snakemake.params.CF_data_cat) 
 else:
-    tc_name = "Kenneth"
-    start_date = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
-    end_date = "20190430 000000"                    
-    wflow_region = "/p/11210471-001-compass/02_Models/test/Kenneth/wflow/staticgeoms/region.geojson"
+    tc_name = "Freddy"
+    start_date = "20230310 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+    end_date = "20230314 000000"                   
+    wflow_region = "/p/11210471-001-compass/02_Models/test/Freddy/wflow/staticgeoms/region.geojson"
     data_cat = [
         '../../../03_data_catalogs/datacatalog_general___linux.yml',
         '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
     ] 
-    precip_name = "era5_hourly_zarr"
+    precip_name = "era5_hourly"
     CF_value = -8
     CF_value_txt = f"{CF_value}"
     output_CF_rainfall = f"/p/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"

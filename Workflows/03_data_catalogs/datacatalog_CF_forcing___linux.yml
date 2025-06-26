@@ -90,6 +90,21 @@ era5_hourly_CF-7_Idai:
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value -7%
   crs: 4326
+era5_hourly_CF-8_Freddy:
+  data_type: RasterDataset
+  path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Freddy.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -8%
+  crs: 4326
 era5_hourly_CF-8_Kenneth:
   data_type: RasterDataset
   path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Kenneth.nc

@@ -84,7 +84,7 @@ opt["setup_config"]["tstop"] = end_time
 if CF_rain is None:
     print(f"Error: CF_rain value not found")
 elif CF_rain == 0:
-    opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}', aggregate=False)
+    opt['setup_precip_forcing_from_grid'] = dict(precip=precip_forcing, aggregate=False)
 else:
     opt['setup_precip_forcing_from_grid'] = dict(precip=f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}', aggregate=False)
 
