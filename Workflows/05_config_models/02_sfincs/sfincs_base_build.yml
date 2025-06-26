@@ -10,7 +10,7 @@ setup_grid_from_region:
 
 setup_dep:
   datasets_dep:
-  - elevtn: merit_hydro        # 1st elevation dataset !TODO change to fabdem 
+  - elevtn: fabdem        # 1st elevation dataset !TODO change to fabdem 
     zmin: 0.001                # only use where values > 0.001
 
 setup_mask_active:
@@ -27,18 +27,18 @@ setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
   zmin: -10
   #zmax: -1
-  #include_mask: osm_coastlines  #Make a decision - user-defined 
-  include_mask_buffer: 1000     #Changed to snap the mask boundary     ###
+  #include_mask: osm_coastlines  # Make a decision - user-defined 
+  include_mask_buffer: 1000     # Changed to snap the mask boundary     ###
   reset_bounds: True  
 
 setup_subgrid:
   datasets_dep:
-  - elevtn: merit_hydro        # !TODO change to fabdem     
+  - elevtn: fabdem        # !TODO change to fabdem     
     zmin: 0.001              
   datasets_rgh:
   - lulc: vito
     reclass_table: vito_mapping
-  nr_subgrid_pixels: 3  
+  nr_subgrid_pixels: 4  
   write_dep_tif: True          # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 5000                  # set tile size a bit larger speed up processing (default 2000)
@@ -48,14 +48,16 @@ setup_cn_infiltration:
   antecedent_moisture: dry     # TBD
 
 setup_river_inflow:
-  # rivers: rivers_lin2019_v1    # inconsistent! --> gives strange source
+  # rivers: rivers_lin2019_v1    # incomplete!
   hydrography: merit_hydro
-  river_upa: 30
+  river_upa: 100
   river_len: 5000
+  # buffer: 500                  # Necssary when using rivers_lin2019_v1
   keep_rivers_geom: True
+  # reverse_river_geom: True     # otherwise no inflow points are found when using rivers_lin2019_v1
 
 setup_river_outflow:           # Should be same values as river inflow
   hydrography: merit_hydro
-  river_upa: 30
+  river_upa: 100
   river_len: 5000
   keep_rivers_geom: True
