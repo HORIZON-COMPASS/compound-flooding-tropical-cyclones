@@ -35,13 +35,13 @@ else:
     dfm_res             = "450"
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing        = "era5_hourly_spw_IBTrACS"
-    CF_SLR_txt          = "-0.14"
+    wind_forcing        = "spw_IBTrACS"
+    CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
     start_date          = "20190309 000000"
     end_date            = "20190325 060000"
     model_name          = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
-    path_data_cat       = os.path.abspath("../../../03_data_catalogs/datacatalog_CF_forcing.yml")
+    path_data_cat       = "C:/Code/COMPASS/Workflows/03_data_catalogs/datacatalog_CF_forcing.yml"
     run_dir             = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
     root_dir            = 'p:\\'
     snake_done          = os.path.join(run_dir, "postprocessing_done.txt")
@@ -50,7 +50,7 @@ else:
     # Use the first path that exists
     his_path            = his_path1 if os.path.exists(his_path1) else his_path2
     wave_output         = 'SNAPWAVE_Idai_setup'
-    path_data_cat_coast = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+    path_data_cat_coast = "C:/Code/COMPASS/Workflows/03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
     use_wave            = True
 
 #%%
@@ -183,6 +183,9 @@ if use_wave:
     # rename variables and sum them to get the waterlevel incl. waves
     ds_combined = ds_combined.rename({"waterlevel": "tide_surge", "wave_induced_wl": "wave_setup"})
     ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"].where(~ds_combined["wave_setup"].isnull(), 0)
+
+    # Add the station names as a coordinate to align with the original dataset
+    ds_combined = ds_combined.assign_coords(match=("match", ds_combined.station.values))
 
     print("Export the combined dataset")
     output_path = Path(datacatalog[dfm_run].path).parent
