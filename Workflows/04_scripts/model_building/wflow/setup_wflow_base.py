@@ -28,9 +28,13 @@ if not exists(model_dir):
 # model and data paths/
 logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
 
+print("Reading config file:", model_dir)
+print("dir_sfincs_model:", dir_sfincs_model)
+print("region_geom:", region_geom)
+print("data_cat:", data_cat)
 
 
-opt = configread(config_file, abs_path=True)  # read settings from ini file
+opt = configread(config_file, abs_path=True)  # read settings from yml file
 kwargs = opt.pop("global", {})
 
 opt['setup_gauges'] = {

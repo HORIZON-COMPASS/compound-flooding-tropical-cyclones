@@ -1747,6 +1747,28 @@ gswo_v2019:
     paper_ref: Pekel et al. (2016)
     source_url: https://global-surface-water.appspot.com/download
     source_version: v1_1_2019
+gtsm_codec_reanalysis_{freq}_v3:
+  crs: 4326
+  data_type: GeoDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  meta:
+    category: ocean
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: v2
+  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v3.nc
+  placeholders:
+    freq: [10min, hourly, dailymax]
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
 gtsm_codec_reanalysis_{freq}_v2:
   crs: 4326
   data_type: GeoDataset

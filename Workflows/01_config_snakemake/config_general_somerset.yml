@@ -5,16 +5,16 @@ dir_models:  02_Models            # Folder where the base models will be saved (
 dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
 
 runname_ids: 
-    SomersetLevels:   
+    Somerset:   
         #Settings of the workflow                           # name of the model run
         tc_name: winterstorm                                # name of the storm. For tropical cyclones, this can be the name of the TC
-        region: somerset_test_rivers                        # name of the region will be used in naming folders 
+        region: test_MO                        # name of the region will be used in naming folders 
         
         #For all model setups
         start_time: 20131225 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
         end_time: 20140115 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
-        forcing: ceh_gear                                   # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
-        wind_forcing: era5_hourly                           # wind and pressure dataset (used for coastal surge modelling)
+        forcing: ceh_gear_hourly                            # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
+        wind_forcing: era5_hourly_zarr                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco                                        # DataCatalog handle for the bathymetry dataset
         river_upa: 5                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
         #bathy: emodnet_bathy_E4_2018_msl                   # DataCatalog handle for the bathymetry dataset
@@ -32,13 +32,13 @@ runname_ids:
         dfm_verification_points: dfm_verif_points_SMST      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
 
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_somerset.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
 
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_SMST         # DataCatalog handle for the coastal coupling mask
-        coastal_ts: gtsm_codec_reanalysis_hourly_v2         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        coastal_ts: gtsm_codec_reanalysis_hourly_v3         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
         utmzone: 30u                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                
 

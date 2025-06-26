@@ -1,8 +1,56 @@
 meta:
-  root: p:\11210471-001-compass\01_Data\forMetOfficeUK\data_static
+  root: /p/11210471-001-compass/01_Data/forMetOfficeUK
+
+####### STATIC DATA CATALOG #######
+ksathorfrac_global:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 2400
+      y: 2400
+  meta:
+    category: soil
+    resolution: 225 metres
+    resolution_real: 7.5 arc seconds
+    source_author: Awad Mohammed Ali - Deltares
+    source_info: KsatHorFrac estimated with Random Forest (RF) and Boosted Regression
+      Trees (BRT) methods. These ML-based transfer functions are trained on soilgrids
+      and validated with CAMELS-UK dataset in the UK. With these global maps, we expect
+      good results in regions with geology and soil types similar to the UK. For other
+      regions, this has still to be tested. see 10.22541/essoar.174016989.99005964/v1
+    source_version: 1.0
+    paper_doi: 10.22541/essoar.174016989.99005964/v1
+  path: data_static/ksathorfrac_global/*.tif
+# rgi:
+#   data_type: GeoDataFrame
+#   path: data_static/rgi/rgi.fgb
+#   driver: vector
+#   rename:
+#     C3S_ID: C3S_id
+#     GLIMSID: GLIMS_id
+#     ID: simple_id
+#     RGIID: RGI_id
+#   meta:
+#     category: surface water
+#     notes: Randolph Glacier Inventory
+#     paper_doi: 10.3189/2014JoG13J176
+#     paper_ref: Pfeffer et al. (2014)
+#     source_license: CC BY 4.0
+#     source_url: https://cds.climate.copernicus.eu/cdsapp#!/dataset/insitu-glaciers-extent?tab=overview
+#     source_version: 6.0
+#   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: data_static/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 gebco:
   data_type: RasterDataset
-  path: gebco.tif
+  path: data_static/gebco.tif
   driver: raster
   filesystem: local
   meta:
@@ -16,7 +64,7 @@ gebco:
   crs: 4326
 gcn250:
   data_type: RasterDataset
-  path: gcn250/*.tif
+  path: data_static/gcn250/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -36,7 +84,7 @@ gcn250:
     source_version: v1
 merit_hydro:
   data_type: RasterDataset
-  path: merit_hydro/*.tif
+  path: data_static/merit_hydro/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -61,7 +109,7 @@ merit_hydro:
   crs: 4326
 soilgrids:
   data_type: RasterDataset
-  path: soilgrids/*.tif
+  path: data_static/soilgrids/*.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -151,7 +199,7 @@ soilgrids:
   crs: 4326
 vito:
   data_type: RasterDataset
-  path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
+  path: data_static/vito.tif
   driver: raster
   driver_kwargs:
     chunks:
@@ -167,13 +215,13 @@ vito:
 vito_mapping:
   data_type: DataFrame
   provider: user
-  path: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
+  path: data_static/vito_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
 hydro_lakes:
   data_type: GeoDataFrame
-  path: hydro_lakes.gpkg
+  path: data_static/hydro_lakes.gpkg
   driver: vector
   rename:
     Depth_avg: Depth_avg
@@ -193,7 +241,7 @@ hydro_lakes:
   crs: 4326
 hydro_reservoirs:
   data_type: GeoDataFrame
-  path: hydro_reservoirs.gpkg
+  path: data_static/hydro_reservoirs.gpkg
   driver: vector
   nodata: -99
   rename:
@@ -223,7 +271,7 @@ hydro_reservoirs:
   crs: 4326
 merit_hydro_index:
   data_type: GeoDataFrame
-  path: merit_hydro_index.gpkg
+  path: data_static/merit_hydro_index.gpkg
   driver: vector
   meta:
     category: topography
@@ -233,7 +281,7 @@ merit_hydro_index:
   crs: 4326
 osm_coastlines:
   data_type: GeoDataFrame
-  path: osm_coastlines.gpkg
+  path: data_static/osm_coastlines.gpkg
   driver: vector
   rename:
     fid: coastline_id
@@ -247,7 +295,7 @@ osm_coastlines:
   crs: 4326
 rivers_lin2019_v1:
   data_type: GeoDataFrame
-  path: rivers_lin2019_v1.gpkg
+  path: data_static/rivers_lin2019_v1.gpkg
   driver: vector
   rename:
     width_m: rivwth
@@ -261,8 +309,8 @@ rivers_lin2019_v1:
     source_version: 1
 modis_lai:
   data_type: RasterDataset
-  path: modis_lai.nc
-  driver: netcdf
+  path: data_static/modis/MODIS_MCD15A3H_LAI/*.tif
+  driver: raster
   driver_kwargs:
     chunks:
       x: 3600
@@ -280,3 +328,148 @@ modis_lai:
     source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
     source_version: MCD15A3H V006
   crs: 4326
+basin_atlas_level12_v10:
+  data_type: GeoDataFrame
+  path: data_static/basin_atlas_level12_v10.gpkg
+  driver: vector
+  filesystem: local
+  meta:
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+  crs: 4326
+
+####### FORCING DATA CATALOG #######
+era5_daily:
+  data_type: RasterDataset
+  path: forcing/era5_daily/nc_merged/era5_{year}*_daily.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    d2m: temp_dew
+    msl: press_msl
+    ssrd: kin
+    t2m: temp
+    tisr: kout
+    tmax: temp_max
+    tmin: temp_min
+    tp: precip
+    u10: wind10_u
+    v10: wind10_v
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    press_msl: 0.01
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
+    temp_max: -273.15
+    temp_min: -273.15
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store; resampled by Deltares to
+      daily frequency
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.bd0915c6
+    source_version: ERA5 daily data on pressure levels
+  crs: 4326
+era5_orography:
+  data_type: RasterDataset
+  path: forcing/era5_daily/meta/era5_orography_2018.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 120
+      longitude: 125
+  rename:
+    z: elevtn
+  unit_mult:
+    elevtn: 0.10197162129779283
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://apps.ecmwf.int/codes/grib/param-db?id=129
+  crs: 4326
+era5_hourly_zarr:
+  data_type: RasterDataset
+  path: forcing/era5_hourly_zarr.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  rename:
+    d2m: temp_dew
+    msl: press_msl
+    ssrd: kin
+    t2m: temp
+    tisr: kout
+    tp: precip
+    u10: wind10_u
+    v10: wind10_v
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    precip: 1000
+    press_msl: 0.01
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  crs: 4326
+gtsm_codec_reanalysis_hourly_v3:
+  data_type: GeoDataset
+  path: forcing/gtsm_codec_reanalysis_hourly_v3.nc
+  filesystem: local
+  meta:
+    category: ocean
+    source_version: v3
+  crs: 4326
+ceh_gear_hourly:
+  crs: 27700
+  data_type: RasterDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    category: meteo
+    history: 
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: CEH_GEAR
+  path: /p/wflow_global/forcing/UK_NERC_HEAR_1h/CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  rename:
+    rainfall_amount: precip
+  unit_mult:
+    precip: 1

@@ -41,9 +41,9 @@ def get_river_upa(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "../03_data_catalogs/datacatalog_general.yml"
+        return "../03_data_catalogs/data_catalog_MO.yml"
     elif os.name == "posix": #Running on linux
-        return "../03_data_catalogs/datacatalog_general___linux.yml"
+        return "../03_data_catalogs/data_catalog_MO.yml"
 
 runname_ids = list(config['runname_ids'].keys())
 regions = [value['region'] for key, value in config['runname_ids'].items()]

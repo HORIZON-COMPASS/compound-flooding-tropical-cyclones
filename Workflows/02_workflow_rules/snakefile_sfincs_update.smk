@@ -37,16 +37,17 @@ def get_utmzone(wildcards):
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, '..', "03_data_catalogs", "data_catalog_MO.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml")
         ]
     elif os.name == "posix": #Running on linux
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
+            join(curdir, '..', "03_data_catalogs", "data_catalog_MO.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
         ]
+
 
 def get_use_dfm(wildcards):
     return config['runname_ids'][wildcards.runname]['use_dfm']
