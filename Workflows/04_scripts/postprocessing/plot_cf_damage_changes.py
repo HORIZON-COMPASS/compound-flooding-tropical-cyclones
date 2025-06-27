@@ -13,7 +13,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
@@ -24,8 +24,8 @@ OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -121,23 +121,29 @@ damage_diff = merged['damage_diff']
 if DAMAGE_COLUMN == 'relative_damage':
     print(f"CF0 max damage: {cf0_damage.max():.1f}%")
     print(f"CF0 mean damage: {cf0_damage.mean():.1f}%")
+    print(f"CF0 total damage: {cf0_damage.sum():.0f}%")
     print(f"CF0 buildings with >0% damage: {(cf0_damage > 0).sum()}")
     print(f"CF-8 max damage: {cf8_damage.max():.1f}%")
     print(f"CF-8 mean damage: {cf8_damage.mean():.1f}%")
+    print(f"CF-8 total damage: {cf8_damage.sum():.0f}%")
     print(f"CF-8 buildings with >0% damage: {(cf8_damage > 0).sum()}")
+    print(f"Difference in total damage: {cf0_damage.sum() - cf8_damage.sum():.0f}%")
+    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
     print(f"Max increase (CF0 vs CF-8): {damage_diff.max():.1f}%")
     print(f"Max decrease (CF0 vs CF-8): {damage_diff.min():.1f}%")
     print(f"Mean difference: {damage_diff.mean():.1f}%")
 else:
-    print(f"CF0 max damage: {cf0_damage.max():.3f}")
-    print(f"CF0 mean damage: {cf0_damage.mean():.3f}")
-    print(f"CF0 total damage: {cf0_damage.sum():.0f}")
-    print(f"CF-8 max damage: {cf8_damage.max():.3f}")
-    print(f"CF-8 mean damage: {cf8_damage.mean():.3f}")
-    print(f"CF-8 total damage: {cf8_damage.sum():.0f}")
-    print(f"Max increase (CF0 vs CF-8): {damage_diff.max():.3f}")
-    print(f"Max decrease (CF0 vs CF-8): {damage_diff.min():.3f}")
-    print(f"Mean difference: {damage_diff.mean():.3f}")
+    print(f"CF0 max damage: ${cf0_damage.max():.0f}")
+    print(f"CF0 mean damage: ${cf0_damage.mean():.0f}")
+    print(f"CF0 total damage: ${cf0_damage.sum():.0f}")
+    print(f"CF-8 max damage: ${cf8_damage.max():.0f}")
+    print(f"CF-8 mean damage: ${cf8_damage.mean():.0f}")
+    print(f"CF-8 total damage: ${cf8_damage.sum():.0f}")
+    print(f"Difference in total damage: ${cf0_damage.sum() - cf8_damage.sum():.0f}")
+    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
+    print(f"Max increase (CF0 vs CF-8): ${damage_diff.max():.0f}")
+    print(f"Max decrease (CF0 vs CF-8): ${damage_diff.min():.0f}")
+    print(f"Mean difference: ${damage_diff.mean():.0f}")
 
 # ===== DETERMINE COORDINATE SYSTEM =====
 try:
@@ -198,7 +204,7 @@ else:
 diff_max = damage_diff.quantile(0.6)
 if DAMAGE_COLUMN == 'relative_damage':
     # For relative damage differences, use smaller intervals
-    diff_boundaries = np.linspace(-20, 20, 11)  # 5% intervals from -50% to +50%
+    diff_boundaries = np.linspace(-20, 20, 11)  # intervals from -20% to +20%
 else:
     # For absolute damage differences
     diff_boundaries = np.linspace(-diff_max, diff_max, 11)
@@ -209,7 +215,7 @@ diff_cmap = plt.get_cmap('RdBu_r')  # Red for increases, Blue for decreases
 print(f"Damage boundaries: {boundaries}")
 print(f"Difference boundaries: {diff_boundaries}")
 
-# ===== CREATE MAIN COMPARISON PLOT =====
+# ===== CREATE MAIN COMPARISON PLOT (3-PANEL) =====
 print("Creating damage comparison plots...")
 
 if use_cartopy:
@@ -219,59 +225,53 @@ else:
     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
 
 # Plot settings
-point_size = 17  # Increased point size for better visibility
-alpha = 0.9      # Increased transparency for better colors
+point_size = 20  # Point size for visibility
+alpha = 0.8      # Transparency for better colors
 
 # Plot CF0 (Factual)
-ax1 = axes[0]
 if use_cartopy:
-    scatter1 = ax1.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
+    scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, 
                           transform=crs)
-    # ax1.coastlines(resolution='10m')
-    # ax1.add_feature(cfeature.BORDERS)
-    ax1.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+    axes[0].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
-    scatter1 = ax1.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
+    axes[0].set_facecolor('lightgray')
+    scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha)
-ax1.set_title('Factual', fontsize=12, fontweight='bold')
+axes[0].set_title('Factual', fontsize=12, fontweight='bold')
 
 # Plot CF-8 (Counterfactual)
-ax2 = axes[1]
 if use_cartopy:
-    scatter2 = ax2.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, 
                           transform=crs)
-    # ax2.coastlines(resolution='10m')
-    # ax2.add_feature(cfeature.BORDERS)
-    ax2.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+    axes[1].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
-    scatter2 = ax2.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
+    axes[1].set_facecolor('lightgray')
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha)
-ax2.set_title('Counterfactual', fontsize=12, fontweight='bold')
+axes[1].set_title('Counterfactual', fontsize=12, fontweight='bold')
 
 # Plot Difference
-ax3 = axes[2]
 if use_cartopy:
-    scatter3 = ax3.scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
+    scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
                           cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha, 
                           transform=crs)
-    # ax3.coastlines(resolution='10m')
-    # ax3.add_feature(cfeature.BORDERS)
-    ax3.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+    axes[2].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
-    scatter3 = ax3.scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
+    axes[2].set_facecolor('lightgray')
+    scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
                           cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha)
-ax3.set_title('Damage Changes: Factual vs Counterfactual', fontsize=12, fontweight='bold')
+axes[2].set_title('Damage Changes: Factual vs Counterfactual', fontsize=12, fontweight='bold')
 
 # Add colorbars
-cbar1 = plt.colorbar(scatter1, ax=ax1, shrink=0.8, pad=0.1)
+cbar1 = plt.colorbar(scatter1, ax=axes[0], shrink=0.8, pad=0.1)
 cbar1.set_label(damage_label, fontsize=10)
 
-cbar2 = plt.colorbar(scatter2, ax=ax2, shrink=0.8, pad=0.1)
+cbar2 = plt.colorbar(scatter2, ax=axes[1], shrink=0.8, pad=0.1)
 cbar2.set_label(damage_label, fontsize=10)
 
-cbar3 = plt.colorbar(scatter3, ax=ax3, shrink=0.8, pad=0.1)
+cbar3 = plt.colorbar(scatter3, ax=axes[2], shrink=0.8, pad=0.1)
 cbar3.set_label(f'{damage_label} Difference', fontsize=10)
 
 # Adjust layout and add main title
@@ -283,6 +283,105 @@ plt.suptitle(f'Economic Damage Analysis - {EVENT_NAME}: Factual vs Counterfactua
 output_file_main = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_comparison.png'
 plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
 plt.show()
+
+# ===== CREATE SEPARATE BAR CHART (ONLY FOR TOTAL DAMAGE) =====
+if DAMAGE_COLUMN == 'total_damage':
+    print("Creating separate total damage bar chart...")
+    # Calculate total damage for bar chart
+    total_cf0 = cf0_damage.sum()
+    total_cf8 = cf8_damage.sum()
+    bar_label = 'Total Damage [USD]'
+
+    # Create separate bar chart figure
+    fig_bar, ax_bar = plt.subplots(1, 1, figsize=(6, 6))
+
+    # Create bar chart
+    scenarios = ['Counterfactual', 'Factual']
+    totals = [total_cf8, total_cf0]
+    bars = ax_bar.bar(scenarios, totals, color=['lightcoral', 'lightcoral'],
+                      alpha=1, width=0.4)
+
+    # Style the bar chart
+    ax_bar.set_ylabel(bar_label, fontsize=12, fontweight='bold')
+    ax_bar.set_title(f'Total Damage - {EVENT_NAME}', fontsize=14, fontweight='bold')
+    ax_bar.set_axisbelow(True)
+
+    # Calculate difference for annotation
+    difference = abs(total_cf0 - total_cf8)
+    percentage_diff = (difference / min(total_cf0, total_cf8)) * 100 if min(total_cf0, total_cf8) > 0 else 0
+
+    # Add annotation showing climate change attribution
+    # Get bar positions
+    bar_positions = [bar.get_x() + bar.get_width()/2 for bar in bars]
+    bar_heights = [bar.get_height() for bar in bars]
+
+    # Determine which bar is higher
+    higher_bar_idx = 0 if totals[0] > totals[1] else 1
+    lower_bar_idx = 1 - higher_bar_idx
+
+    # Annotation parameters for vertical difference line
+    line_x_position = bar_positions[1] + (bar_positions[1] - bar_positions[0]) * 0.3  # Position to the right of the rightmost bar
+    line_extension = (bar_positions[1] - bar_positions[0]) * 0.04  # Small horizontal ticks
+
+    # Draw the vertical difference line
+    # Main vertical line showing the height difference
+    ax_bar.plot([line_x_position, line_x_position], 
+               [bar_heights[lower_bar_idx], bar_heights[higher_bar_idx]], 
+               'k-', linewidth=2)
+
+    # Add extended dashed horizontal lines from y-axis to the vertical difference line
+    left_edge = ax_bar.get_xlim()[0]
+    for total in totals:
+        ax_bar.plot([left_edge, line_x_position], [total, total], 
+                   linestyle='--', color='gray', alpha=0.7, linewidth=1)
+
+    # Small horizontal ticks at both ends
+    ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
+               [bar_heights[lower_bar_idx], bar_heights[lower_bar_idx]], 
+               'k-', linewidth=1.5)
+    ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
+               [bar_heights[higher_bar_idx], bar_heights[higher_bar_idx]], 
+               'k-', linewidth=1.5)
+
+    # Add text annotation positioned at the center between bars
+    text_x = line_x_position + (bar_positions[1] - bar_positions[0]) * 0.1  # Position to the right of the line
+    text_y = ((bar_heights[lower_bar_idx] + bar_heights[higher_bar_idx]) / 2) *0.97  # Center vertically on the line
+
+    # Format the difference text based on damage type
+    # Format large numbers nicely
+    if difference >= 1e9:
+        diff_text = f'${difference/1e9:.1f}B ({percentage_diff:.0f}%)'
+    elif difference >= 1e6:
+        diff_text = f'${difference/1e6:.1f}M ({percentage_diff:.0f}%)'
+    elif difference >= 1e3:
+        diff_text = f'${difference/1e3:.1f}K ({percentage_diff:.0f}%)'
+    else:
+        diff_text = f'${difference:.0f} ({percentage_diff:.0f}%)'
+
+    # Add the annotation text
+    ax_bar.text(text_x, text_y, diff_text, 
+               ha='left', va='center', fontsize=10, rotation=0)
+    # Use a small vertical offset for the second text line
+    text_offset = (bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]) * 0.35  # Smaller vertical offset
+    ax_bar.text(text_x, text_y + text_offset, 'Climate change \n attribution:', 
+               ha='left', va='center', fontsize=9, style='italic', rotation=0)
+
+    # Set y-axis to start from 0 with appropriate margin
+    ax_bar.set_ylim(0, max(totals) * 1.1)
+
+    # Remove top and right spines for cleaner look
+    ax_bar.spines['top'].set_visible(False)
+    ax_bar.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+
+    # Save the bar chart
+    output_file_bar = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_totals_barchart.png'
+    plt.savefig(output_file_bar, dpi=300, bbox_inches='tight')
+    plt.show()
+else:
+    print("Skipping bar chart generation for relative damage visualization...")
+    output_file_bar = None
 
 # ===== DETAILED DIFFERENCE PLOT =====
 print("Creating detailed damage difference plot...")
@@ -297,10 +396,9 @@ if use_cartopy:
     scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha, 
                              transform=crs)
-    # ax.coastlines(resolution='10m')
-    # ax.add_feature(cfeature.BORDERS)
     ax.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
+    ax.set_facecolor('lightgray')
     scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['damage_diff'], 
                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha)
 
@@ -329,14 +427,16 @@ if DAMAGE_COLUMN == 'relative_damage':
 else:
     threshold_low = diff_max * 0.1
     threshold_high = diff_max * 0.25
-    print(f"Buildings with >{threshold_low:.0f} damage increase: {(damage_diff > threshold_low).sum()}")
-    print(f"Buildings with >{threshold_low:.0f} damage decrease: {(damage_diff < -threshold_low).sum()}")
-    print(f"Buildings with >{threshold_high:.0f} damage increase: {(damage_diff > threshold_high).sum()}")
-    print(f"Buildings with >{threshold_high:.0f} damage decrease: {(damage_diff < -threshold_high).sum()}")
+    print(f"Buildings with >${threshold_low:.0f} damage increase: {(damage_diff > threshold_low).sum()}")
+    print(f"Buildings with >${threshold_low:.0f} damage decrease: {(damage_diff < -threshold_low).sum()}")
+    print(f"Buildings with >${threshold_high:.0f} damage increase: {(damage_diff > threshold_high).sum()}")
+    print(f"Buildings with >${threshold_high:.0f} damage decrease: {(damage_diff < -threshold_high).sum()}")
 
 print(f"\nAnalysis complete for {EVENT_NAME}! Check the saved PNG files in: {OUTPUT_DIR}")
 print("Files created:")
 print(f"  - {output_file_main}")
+if DAMAGE_COLUMN == 'total_damage' and output_file_bar:
+    print(f"  - {output_file_bar}")
 print(f"  - {output_file_diff}")
 print(f"\nTotal buildings analyzed: {len(merged)}")
 if DAMAGE_COLUMN == 'relative_damage':
