@@ -14,7 +14,7 @@ runname_ids:
         start_time: 20190425 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
         end_time: 20190430 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
         forcing: era5_hourly_zarr                           # forcing dataset for the rainfall data (matching to the DataCatalog handle)
-        wind_forcing: no_wind                          # wind and pressure dataset (used for coastal surge modelling)
+        wind_forcing: no_wind                               # wind and pressure dataset (used for coastal surge modelling) - if not using wind, select one of ["no_wind", "none", "false", ""]
         bathy: gebco2024_MZB                                        # DataCatalog handle for the bathymetry dataset
         #bathy: emodnet_bathy_E4_2018_msl                   # DataCatalog handle for the bathymetry dataset
         river_upa: 30                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
