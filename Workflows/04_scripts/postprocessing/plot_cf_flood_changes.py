@@ -10,6 +10,8 @@ warnings.filterwarnings('ignore')
 
 # File paths
 from pathlib import Path
+# by @dumontgoulart
+#TODO: this is a preliminary script that is still not fully embedded in the snakemake workflow. The user is required to change the events & input files for now.
 
 # ===== CONFIGURATION =====
 # Set your event name here
