@@ -35,7 +35,7 @@ setup_subgrid:
   datasets_rgh:
   - lulc: vito
     reclass_table: vito_mapping
-  nr_subgrid_pixels: 3  
+  nr_subgrid_pixels: 4  
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 5000  # set tile size a bit larger speed up processing (default 2000)

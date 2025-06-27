@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=0-00:30:00           # Job duration (hh:mm:ss)
+#SBATCH --time=0-01:30:00           # Job duration (hh:mm:ss)
 #SBATCH --partition 4vcpu #test #4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
