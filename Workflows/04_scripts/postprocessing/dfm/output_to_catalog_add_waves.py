@@ -36,7 +36,7 @@ else:
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing        = "era5_hourly_spw_IBTrACS"
-    CF_SLR_txt          = "-0.14"
+    CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
     start_date          = "20190309 000000"
     end_date            = "20190325 060000"
@@ -77,8 +77,7 @@ adapter = hydromt.data_adapter.GeoDatasetAdapter(
     },
     rename={
         "station_x_coordinate": "lon",
-        "station_y_coordinate": "lat",
-        "station": "index"
+        "station_y_coordinate": "lat"
     },
     meta={
         "category": "ocean"
@@ -98,9 +97,7 @@ else:
 
 # Save the updated catalog
 datacatalog.to_yml(path_data_cat, root=root_dir)
-
-
-    
+   
 # %% ------------------------------------------ #
 # Add simulated SNAPWAVE waves to the DFM output
 # Using model output and code developed by Fernaldi Gradiyanto
@@ -118,11 +115,11 @@ if use_wave:
 
     # Get the dfm run output
     print("Loading DFM data")
-    ds_dfm = datacatalog.get_geodataframe(dfm_run, variables='waterlevel')
+    ds_dfm = datacatalog.get_geodataframe(dfm_run)
     ds_dfm = ds_dfm.sel(time=slice(*time_range))
 
     # --- Filter DFM DataArray (remove IHO stations) ---
-    ds_filtered = ds_dfm.sel(
+    ds_filtered = ds_dfm['waterlevel'].sel(
         station=~ds_dfm['station_name'].astype(str).str.match(r'^[A-Za-z]')
     )
 
@@ -183,12 +180,13 @@ if use_wave:
     # rename variables and sum them to get the waterlevel incl. waves
     ds_combined = ds_combined.rename({"waterlevel": "tide_surge", "wave_induced_wl": "wave_setup"})
     ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"].where(~ds_combined["wave_setup"].isnull(), 0)
+    ds_combined["waterlevel"].attrs = ds_dfm["waterlevel"].attrs.copy()
 
     # Add the station names as a coordinate to align with the original dataset
     ds_combined = ds_combined.assign_coords(match=("match", ds_combined.station.values))
     ds_combined = ds_combined.drop_vars('station')
     ds_combined = ds_combined.rename({'match': 'station'})
-
+    
     print("Export the combined dataset")
     output_path = Path(datacatalog[dfm_run].path).parent
     ds_combined.to_netcdf(os.path.join(output_path, "settings_0000_his_WAVES.nc"))
@@ -208,8 +206,7 @@ if use_wave:
         },
         rename={
             "station_x_coordinate": "lon",
-            "station_y_coordinate": "lat",
-            "station": "index"
+            "station_y_coordinate": "lat"
         },
         meta={
             "category": "ocean",
@@ -243,26 +240,26 @@ with open(snake_done, 'w') as file:
 #############    SOME PLOTTING    #############
 ###############################################
 # plot variable for one of the matched stations
-# def plot_station_wave_components(station_idx=79):
-#     station_to_plot = ds_combined["match"].values[station_idx]
+def plot_station_wave_components(station_idx=79):
+    station_to_plot = ds_combined["station"].values[station_idx]
 
-#     tide_surge = ds_combined["tide_surge"].sel(match=station_to_plot).compute()
-#     wave_wl = ds_combined["wave_setup"].sel(match=station_to_plot).compute()
-#     waterlevel = ds_combined["waterlevel"].sel(match=station_to_plot).compute()
+    tide_surge = ds_combined["tide_surge"].sel(station=station_to_plot).compute()
+    wave_wl = ds_combined["wave_setup"].sel(station=station_to_plot).compute()
+    waterlevel = ds_combined["waterlevel"].sel(station=station_to_plot).compute()
 
-#     plt.figure(figsize=(12,6))
-#     plt.plot(waterlevel["time"], waterlevel, label="Waterlevel")
-#     plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
-#     plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
+    plt.figure(figsize=(12,6))
+    plt.plot(waterlevel["time"], waterlevel, label="Waterlevel")
+    plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
+    plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
 
-#     wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
+    wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
 
-#     plt.xlabel("Time")
-#     plt.ylabel("Water Level (m)")
-#     plt.title(f"Water levels for station {station_to_plot} with max wave setup of {wave_max:.2f} m")
-#     plt.legend()
-#     plt.tight_layout()
-#     plt.show()
+    plt.xlabel("Time")
+    plt.ylabel("Water Level (m)")
+    plt.title(f"Water levels for station {station_to_plot} with max wave setup of {wave_max:.2f} m")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 # Plot the selected staions and their tide+surge, waves only and combined
 # def plot_wave_impact():
@@ -371,8 +368,8 @@ with open(snake_done, 'w') as file:
 #     plt.show()
 
 
-# if use_wave:
+if use_wave:
 #     plot_wave_impact()
-#     plot_station_wave_components()
+    plot_station_wave_components()
 
 # %%
