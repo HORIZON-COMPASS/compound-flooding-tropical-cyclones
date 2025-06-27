@@ -14,7 +14,8 @@ runname_ids:
         #For all model setups
         start_time: 20201101 000000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
         end_time: 20201113 000000                          # End time of the model run in format: YYYYMMDD HHMMSS              
-        forcing: era5_hourly_zarr                          # DataCatalog handle for forcing dataset for the rainfall data     
+        precip_forcing: era5_hourly_zarr                   # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        meteo_forcing: era5_hourly_zarr                    # DataCatalog handle for forcing dataset for the other meteo data     
         wind_forcing: era5_hourly_zarr                     # wind and pressure dataset (used for coastal surge modelling)     
         bathy: gebco2024_HND                               # DataCatalog handle for the bathymetry dataset   
         river_upa: 30                                      # minimum upstream area threshold for the SFINCS and wflow [km2]
@@ -49,7 +50,8 @@ runname_ids:
         #For all model setups
         start_time: 20201112 120000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
         end_time: 20201122 000000                          # End time of the model run in format: YYYYMMDD HHMMSS              
-        forcing: era5_hourly_zarr                          # DataCatalog handle for forcing dataset for the rainfall data     
+        precip_forcing: era5_hourly_zarr                   # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        meteo_forcing: era5_hourly_zarr                    # DataCatalog handle for forcing dataset for the other meteo data     
         wind_forcing: era5_hourly_zarr                     # wind and pressure dataset (used for coastal surge modelling)     
         bathy: gebco2024_HND                               # DataCatalog handle for the bathymetry dataset   
         river_upa: 30                                      # minimum upstream area threshold for the SFINCS and wflow [km2]
@@ -85,7 +87,8 @@ runname_ids:
         #For all model setups
         start_time: 20201103 180000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
         end_time: 20201122 000000                          # End time of the model run in format: YYYYMMDD HHMMSS              
-        forcing: era5_hourly_zarr                          # DataCatalog handle for forcing dataset for the rainfall data     
+        precip_forcing: era5_hourly_zarr                   # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        meteo_forcing: era5_hourly_zarr                    # DataCatalog handle for forcing dataset for the other meteo data     
         wind_forcing: era5_hourly_zarr                     # wind and pressure dataset (used for coastal surge modelling)     
         bathy: gebco2024_HND                               # DataCatalog handle for the bathymetry dataset   
         river_upa: 30                                      # minimum upstream area threshold for the SFINCS and wflow [km2]

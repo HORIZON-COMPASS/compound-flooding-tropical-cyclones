@@ -19,7 +19,7 @@ if "snakemake" in locals():
     wind_forcing = snakemake.params.wind_forcing
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
-    precip_forcing = snakemake.wildcards.forcing
+    precip_forcing = snakemake.wildcards.precip_forcing
     use_dfm = snakemake.params.use_dfm
     coastal_ts = snakemake.params.coastal_ts
     dfm_output = snakemake.params.dfm_output

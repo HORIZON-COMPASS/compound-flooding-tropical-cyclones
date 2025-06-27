@@ -18,9 +18,10 @@ dir_runs = config['dir_runs']
 
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 runname_ids = list(config['runname_ids'].keys())  #
-forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
+forcing = [value['meteo_forcing'] for key, value in config['runname_ids'].items()]
+precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
 
 rule all_general:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{forcing}", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, forcing=forcing),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_precip_{precip_forcing}", "plot_output", "sfincs_basemap.png"), zip, region=regions, runname=runname_ids, precip_forcing=precip_forcing),
 

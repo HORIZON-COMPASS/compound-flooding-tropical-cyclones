@@ -16,7 +16,7 @@ dir_models = config["dir_models"]
 dir_runs   = config["dir_runs"]
 
 def get_forcing(wildcards):
-    return config["runname_ids"][wildcards.runname]['forcing']
+    return config["runname_ids"][wildcards.runname]['meteo_forcing']
 
 def get_tcname(wildcards):
     return config["runname_ids"][wildcards.runname]['tc_name']

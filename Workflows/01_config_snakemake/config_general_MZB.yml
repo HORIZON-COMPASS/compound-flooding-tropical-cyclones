@@ -14,8 +14,9 @@ runname_ids:
         # For all model setups
         start_time: 20190309 000000
         end_time: 20190325 060000      
-        forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
-        wind_forcing: era5_hourly_zarr   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
+        precip_forcing: era5_hourly_zarr               # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        meteo_forcing: era5_hourly_zarr                # forcing dataset for the other meteo data (matching to the DataCatalog handle)
+        wind_forcing: era5_hourly_zarr   # spw_IBTrACS  # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period               
 
@@ -59,7 +60,7 @@ runname_ids:
     #     file_spw: tc_Freddy_CF0_2023036S12118_ext9d.spw
     #     start_time: 20230221 000000
     #     end_time: 20230305 060000
-    #     forcing: era5_hourly
+    #     meteo_forcing: era5_hourly
     # Freddy2:
     #     tc_name: Freddy2
     #     sid: 2023061S22036
@@ -69,7 +70,7 @@ runname_ids:
     #     file_spw: spw_IBTrACS_ext_Freddy2_factual
     #     start_time: 20230304 000000
     #     end_time: 20230323 060000
-    #     forcing: era5_hourly
+    #     meteo_forcing: era5_hourly
     #     dfm_res: "450"
     #     bathy: "gebco2024"
     #     wind_forcing: "spw_IBTrACS_ext"
@@ -84,4 +85,4 @@ runname_ids:
     #     file_spw: tc_Kenneth_CF0_2019112S10053_ext9d.spw
     #     start_time: 20190421 210000
     #     end_time: 20190505 000000
-    #     forcing: era5_hourly
+    #     meteo_forcing: era5_hourly

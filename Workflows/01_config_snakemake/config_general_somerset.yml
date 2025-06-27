@@ -13,7 +13,8 @@ runname_ids:
         #For all model setups
         start_time: 20131225 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
         end_time: 20140115 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
-        forcing: ceh_gear                                   # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
+        precip_forcing: ceh_gear                            # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
+        meteo_forcing: ceh_gear                             # forcing dataset for the other meteo data (matching to the DataCatalog handle)
         wind_forcing: era5_hourly                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco                                        # DataCatalog handle for the bathymetry dataset
         river_upa: 5                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
