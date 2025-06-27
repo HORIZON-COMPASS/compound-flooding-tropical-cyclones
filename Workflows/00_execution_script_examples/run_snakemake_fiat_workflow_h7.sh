@@ -35,6 +35,6 @@ snakemake --unlock -s snakefile_fiat.smk --configfile ../01_config_snakemake/con
 
 # # running workflow with snakemake
 snakemake -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_fiat.png
-snakemake -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
+snakemake -s snakefile_fiat.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --forceall
 
 exit

@@ -1,44 +1,27 @@
 import geopandas as gpd
 import pandas as pd
-import argparse
 from pathlib import Path
 
 def main():
     """
     Main function to calculate and save relative damage.
     """
-    parser = argparse.ArgumentParser(
-        description="Calculates relative damage by merging FIAT's spatial output with exposure data."
-    )
-    parser.add_argument(
-        "--spatial_path",
-        type=str,
-        required=True,
-        help="Path to the spatial file (e.g., spatial.fgb) with 'object_id' and 'total_damage'.",
-    )
-    parser.add_argument(
-        "--exposure_path",
-        type=str,
-        required=True,
-        help="Path to the exposure CSV file with 'object_id' and 'max_damage_total'.",
-    )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        required=True,
-        help="Path to the directory to save the output file.",
-    )
-
-    args = parser.parse_args()
+    event_name = "Freddy"  # Change this to your event name
+    print(f"Processing event: {event_name}")
+    directory = Path(f"/p/11210471-001-compass/03_Runs/test/{event_name}/fiat/event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0")
+    spatial_path = directory / "output" / "spatial.fgb"
+    exposure_path = directory / "exposure" / "exposure.csv"
+    output_dir = directory / "output"
 
     try:
         # Load the spatial data
-        print(f"Reading spatial data from: {args.spatial_path}")
-        spatial_gdf = gpd.read_file(args.spatial_path)
+        print(f"Reading spatial data from: {spatial_path}")
+        spatial_gdf = gpd.read_file(spatial_path)
+        spatial_gdf = spatial_gdf[spatial_gdf['total_damage'] > 0]
 
         # Load the exposure data
-        print(f"Reading exposure data from: {args.exposure_path}")
-        exposure_df = pd.read_csv(args.exposure_path)
+        print(f"Reading exposure data from: {exposure_path}")
+        exposure_df = pd.read_csv(exposure_path)
 
         # Select only necessary columns from exposure data to avoid memory issues
         exposure_df_subset = exposure_df[['object_id', 'max_damage_total']]
@@ -60,7 +43,7 @@ def main():
         )
 
         # Save the result
-        output_path = Path(args.output_dir) / "output_relative_damage.fgb"
+        output_path = Path(output_dir) / "output_relative_damage.fgb"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
         print(f"Saving updated spatial data to: {output_path}")
