@@ -21,8 +21,8 @@ runname_ids:
 
         # Models selections
         use_dfm: True                                       # use the coastal hydrodynamic model D-FM
-        use_wflow: True   
-        use_waves: True                                  # use the hydrological model Wflow      
+        use_wflow: True                                     # use the hydrological model Wflow
+        use_waves: True                                     # use the waves generation   
          
         # DFM model user-defined settings
         bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
