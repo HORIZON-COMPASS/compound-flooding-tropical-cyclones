@@ -36,8 +36,8 @@ else:
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
     wind_forcing        = "era5_hourly_spw_IBTrACS"
-    CF_SLR_txt          = "0"
-    CF_wind_txt         = "0"
+    CF_SLR_txt          = "-0.14"
+    CF_wind_txt         = "-10"
     start_date          = "20190309 000000"
     end_date            = "20190325 060000"
     model_name          = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
@@ -112,7 +112,8 @@ if use_wave:
     datacatalog_coast = hydromt.DataCatalog(data_libs=[path_data_cat_coast])
     print("Loading wave data")
     ds_wave = datacatalog_coast.get_geodataset(wave_output)
-
+    ds_wave = ds_wave.drop_vars(["x", "y"])  # Drop x and y coordinates if they exist
+    
     # Get the dfm run output
     print("Loading DFM data")
     ds_dfm = datacatalog.get_geodataframe(dfm_run)
