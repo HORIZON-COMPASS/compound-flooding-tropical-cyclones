@@ -21,11 +21,11 @@ if "snakemake" in locals():
     CF_rain_txt          = snakemake.wildcards.CF_rain
 else:
     tc_name              = "Idai"
-    precip_forcing       = "era5_hourly"
-    CF_rain              = -7
+    precip_forcing       = "era5_hourly_zarr"
+    CF_rain              = 0
     CF_rain_txt          = f"{CF_rain}"
     wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
-    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_f_"
     start_time           = "20190309 000000"
     end_time             = "20190325 060000"
     data_cat             = ['../../../03_data_catalogs/datacatalog_general.yml',
@@ -83,5 +83,6 @@ else:
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing()
+mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 # %%
