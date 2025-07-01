@@ -36,7 +36,7 @@ gtsm_codec_future_tide_v1:
     source_version: v1
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0_waves:
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
   rename:
     station_y_coordinate: lat
     station: index
