@@ -83,6 +83,6 @@ else:
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing()
-mod.set_config("input.vertical.f", "f_")
+# mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 # %%
