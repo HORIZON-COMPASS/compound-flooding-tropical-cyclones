@@ -78,7 +78,7 @@ mod.setup_precip_forcing(**opt["setup_precip_forcing"])
 mod.setup_temp_pet_forcing(**opt["setup_temp_pet_forcing"])
 mod.write_forcing(chunksize=10)
 mod.write_grid()
-mod.set_config("input.vertical.f", "f_")
+# mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 
 # %%
