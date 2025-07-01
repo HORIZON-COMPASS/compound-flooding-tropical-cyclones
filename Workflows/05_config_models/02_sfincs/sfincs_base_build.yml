@@ -23,6 +23,10 @@ setup_mask_active2:
   fill_area: 500
   reset_mask: False
 
+setup_mask_active3:
+  fill_area: 500
+  reset_mask: False
+
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
   zmin: -10

@@ -48,8 +48,8 @@ runname_ids:
 
         # Counterfactual forcing settings
         CF_value_rain: [0, -8]
-        CF_value_wind: [0]
-        CF_value_SLR: [0]
+        CF_value_wind: [0, -10]
+        CF_value_SLR: [0, -0.14]
 
     # Freddy1:
     #     tc_name: Freddy1
