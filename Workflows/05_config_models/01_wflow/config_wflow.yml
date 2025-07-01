@@ -68,6 +68,7 @@ setup_constant_pars:
   G_Cfmax: 5.3
   G_SIfrac: 0.002
   G_TT: 1.3
+  soilthickness: 4000
 
 setup_ksathorfrac:
   ksat_fn: ksathorfrac_global  # source for ksat maps - obtained from Random Forest (RF) and Boosted Regression Trees (BRT) methods. see datacatalog description
