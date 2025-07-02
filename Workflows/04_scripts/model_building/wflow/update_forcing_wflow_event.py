@@ -51,7 +51,7 @@ opt = {
     "setup_config": {
         "starttime": start_time,
         "endtime": end_time,
-        "timestepsecs": 3600,
+        "timestepsecs": 86400,
         "model.reinit": False,
         "input.path_static": join("..","staticmaps.nc"),
         "input.path_forcing":"inmaps.nc",
@@ -83,6 +83,6 @@ else:
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing()
-# mod.set_config("input.vertical.f", "f_")
+mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 # %%
