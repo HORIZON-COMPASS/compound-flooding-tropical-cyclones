@@ -8,6 +8,8 @@
 
 set -euo pipefail
 
+module load julia
+
 echo "Running Wflow model manually..."
 
 # Set run configuration
