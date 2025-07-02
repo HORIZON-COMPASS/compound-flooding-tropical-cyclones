@@ -7,18 +7,18 @@ setup_basemaps:
 setup_rivers:
   hydrography_fn: merit_hydro      # source hydrography data, should correspond to hydrography_fn in setup_basemaps
   river_geom_fn: rivers_lin2019_v1 # river source data with river width and bankfull discharge
-  river_upa: 30                   # minimum upstream area threshold for the river map [km2]
+  river_upa: 100                   # minimum upstream area threshold for the river map [km2]
   rivdph_method: powlaw            # method to estimate depth {'powlaw', 'manning', 'gvf'}
   min_rivdph: 1                    # minimum river depth [m]
   min_rivwth: 30                   # minimum river width [m]
   slope_len: 2000                  # length over which tp calculate river slope [m]
   smooth_len: 5000                 # length over which to smooth river depth and river width [m]
-  river_routing: kinematic-wave    # {'kinematic-wave', 'local-inertial'}
+  river_routing: local-inertial    # {'kinematic-wave', 'local-inertial'}
 
-# setup_floodplains:
-#   floodplain_type: 1d              # floodplain type: 1d (1D floodplain) or 2d (2D floodplain) 
-#   hydrography_fn: merit_hydro      # source hydrography data, should correspond to hydrography_fn in setup_basemaps
-#   river_upa: 100                    # minimum upstream area threshold for the floodplain map [km2]
+setup_floodplains:
+  floodplain_type: 1d              # floodplain type: 1d (1D floodplain) or 2d (2D floodplain) 
+  hydrography_fn: merit_hydro      # source hydrography data, should correspond to hydrography_fn in setup_basemaps
+  river_upa: 100                    # minimum upstream area threshold for the floodplain map [km2]
 
 setup_reservoirs:
   reservoirs_fn: hydro_reservoirs  # source for reservoirs based on GRAND: {hydro_reservoirs}; None to skip
@@ -68,7 +68,7 @@ setup_constant_pars:
   G_Cfmax: 5.3
   G_SIfrac: 0.002
   G_TT: 1.3
-  # soilthickness: 4000
+  soilthickness: 4000
 
 setup_ksathorfrac:
   ksat_fn: ksathorfrac_global  # source for ksat maps - obtained from Random Forest (RF) and Boosted Regression Trees (BRT) methods. see datacatalog description
