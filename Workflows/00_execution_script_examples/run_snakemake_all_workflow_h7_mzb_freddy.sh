@@ -2,9 +2,11 @@
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
 #SBATCH --time=0-3:00:00           # Job duration (hh:mm:ss)
-#SBATCH --partition 4vcpu          #test #4vcpu
+#SBATCH --partition 4vcpu #test #4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
+
+export HDF5_USE_FILE_LOCKING=FALSE
 
 module load pixi
 module load julia
@@ -28,10 +30,10 @@ julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml 
+snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml 
 
 #running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB3.yml --cores 'all' --latency-wait 180 --wait-for-files --rerun-incomplete
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml --forceall --rulegraph | dot -Tpng > dag_smk_all_mzb3.png
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_mzb_Freddy.yml --cores 'all' --latency-wait 180 --wait-for-files --rerun-incomplete
 
 exit

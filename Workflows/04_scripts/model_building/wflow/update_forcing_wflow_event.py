@@ -18,7 +18,8 @@ if "snakemake" in locals():
     start_time = snakemake.params.start_time
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
-    meteo_fn = snakemake.params.forcing
+    precip_forcing = snakemake.params.precip_forcing
+    meteo_forcing = snakemake.params.meteo_forcing
 
 # else:
 #     script_root = r"p:\11208614-de-370a\02_scripts\wflow_sfincs_snake"
@@ -54,12 +55,12 @@ opt = {
         "input.path_forcing":"inmaps.nc",
     },
     "setup_precip_forcing": {
-        "precip_fn": meteo_fn,
+        "precip_fn": precip_forcing,
         "precip_clim_fn": None,
     },
     "setup_temp_pet_forcing": {
-        #"temp_pet_fn": meteo_fn,
-        "temp_pet_fn": "era5_hourly_zarr",
+        "temp_pet_fn": meteo_forcing,
+        # "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,
         "pet_method": "debruin",

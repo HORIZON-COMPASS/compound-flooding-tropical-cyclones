@@ -34,7 +34,7 @@ tc_name=config["tc_name"]
 CF_value_wind=config["CF_value_wind"]
 
 runname_ids = list(config['runname_ids'].keys())
-forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
+forcing = [value['meteo_forcing'] for key, value in config['runname_ids'].items()]
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 spw_files = [value['file_spw'] for key, value in config['runname_ids'].items()]
 # tidemodel = config["tidemodel"]

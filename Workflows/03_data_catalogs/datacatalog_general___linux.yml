@@ -1756,7 +1756,7 @@ gtsm_codec_reanalysis:
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-gtsm_codec_reanalysis_{freq}_v2:
+gtsm_codec_reanalysis_{freq}_v3:
   crs: 4326
   data_type: GeoDataset
   driver: netcdf
@@ -1770,8 +1770,8 @@ gtsm_codec_reanalysis_{freq}_v2:
     paper_ref: 
     source_license: 
     source_url: 
-    source_version: v2
-  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v2.nc
+    source_version: v3
+  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v3.nc
   placeholders:
     freq: [10min, hourly, dailymax]
   rename:
