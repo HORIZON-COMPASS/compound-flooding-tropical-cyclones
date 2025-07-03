@@ -51,6 +51,7 @@ cartopy = "*"
 hydromt = ">=0.10.0, <1.0.0"
 hydromt_wflow = ">=0.7.0, <0.7.1"
 pyflwdir = "=0.5.8"
+contextily  = "*"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
