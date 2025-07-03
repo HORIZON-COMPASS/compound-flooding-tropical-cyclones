@@ -133,7 +133,10 @@ def load_fiat_models(config):
 
 # read global surface water occurance (GSWO) data to mask permanent water for the model region
 def gwso_sfincs_region(model):
-    datacat_path = os.path.abspath("../../Workflows/03_data_catalogs/datacatalog_general.yml")
+    if platform.system() == "Windows":
+        datacat_path = os.path.abspath("../../Workflows/03_data_catalogs/datacatalog_general.yml")
+    else:
+        datacat_path = os.path.abspath("../../Workflows/03_data_catalogs/datacatalog_general___linux.yml")
     data_catalog = DataCatalog(data_libs = [datacat_path])
     sfincs_region = model["sfincs_model"].region
     gwso_region = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
