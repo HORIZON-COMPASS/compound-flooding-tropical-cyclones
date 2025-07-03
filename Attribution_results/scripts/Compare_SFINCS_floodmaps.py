@@ -22,6 +22,11 @@ from pyproj import Transformer
 from matplotlib.patches import Patch
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.colors import LinearSegmentedColormap
+import gc
+import xarray as xr
+import platform, os
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -33,8 +38,7 @@ def load_config(config_path):
 def load_sfincs_models(config):
     """Generates model paths and categories for SFINCS runs based on CF values."""
     run = config['runname_ids']['Idai']
-    # base_path = "D:/Code/Paper_1/Model_runs/sfincs"
-    base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/sfincs/"
+    base_path = join(prefix, "11210471-001-compass", "03_Runs", run["region"], run["tc_name"], "sfincs")
     
 
     models = []
@@ -42,7 +46,7 @@ def load_sfincs_models(config):
     
     for rain, wind, slr in itertools.product(run['CF_value_rain'], run['CF_value_wind'], run['CF_value_SLR']):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
-        model_path = os.path.join(base_path, model_name)
+        model_path = join(base_path, model_name)
         utmzone    = run['utmzone']
         model_obj  = SfincsModel(model_path, mode="r")
 
@@ -81,8 +85,7 @@ def load_sfincs_models(config):
 
 def load_fiat_models(config):
     run = config['runname_ids']['Idai']
-    base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/fiat/"
-    # base_path = "D:/Code/Paper_1/Model_runs/fiat"
+    base_path = os.path.join(prefix, "11210471-001-compass", "03_Runs", run['region'], run['tc_name'], "fiat")
     
     models = []
     factual_model = None  # Initialize factual_model before the loop
@@ -117,10 +120,14 @@ def load_fiat_models(config):
         else:
             models.append(model_dict)
 
+        # Free memory where possible
+        del fiat_results, fiat_results_spatial, CF_info_str, CF_info
+        
     # Ensure the factual model is the first one in the list
     if factual_model is not None:
         models.insert(0, factual_model)
-
+    
+    gc.collect()
     return models
 
 
@@ -135,6 +142,7 @@ def gwso_sfincs_region(model):
 
 # Compute the maximum water level (hmax) and mask out permanent water
 def compute_hmax_masked(models, gwso_region):
+    import gc
     # we set a threshold to mask minimum flood depth
     hmin = 0.05
 
@@ -164,6 +172,9 @@ def compute_hmax_masked(models, gwso_region):
         model["sfincs_results"]['hmax'] = da_hmax
         model["sfincs_results"]['hmax_masked'] = da_hmax_masked
 
+        del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
+        gc.collect()
+        
         # Open the existing NetCDF dataset in append mode
         # nc_file = join(model["model_path"], "sfincs_his.nc")
         
@@ -192,51 +203,42 @@ def compute_hmax_masked(models, gwso_region):
 # Plot the maximum water spatially
 def plot_masked_hmax(models, num_cols=2, figsize=(8, 10)):
     """
-    Creates a series of subplots based on the given models, plotting the masked hmax values.
-
-    Parameters:
-    - models: List of model dictionaries, each containing 'sfincs_model' and 'category' data.
-    - num_cols: Number of columns for the subplots. Default is 2.
-    - figsize: Tuple for the figure size. Default is (8, 10).
+    Efficiently plots masked hmax for each model, loading data from disk if needed.
     """
-    # Determine the projection from the first model
     projection = models[0]['sfincs_model'].crs.to_epsg()
-
-    # Determine subplot grid size
     num_models = len(models)
     num_rows = math.ceil(num_models / num_cols)
 
-    # Create the subplots
     fig, axes = plt.subplots(nrows=num_rows, 
                              ncols=num_cols, 
                              figsize=figsize, 
                              constrained_layout=True, 
                              subplot_kw={"projection": ccrs.epsg(projection)})
 
-    # Add a super title
     fig.suptitle("Masked hmax", fontsize=12, y=1.02)
 
-    # Loop through datasets and plot
     for model, ax in zip(models, axes.flatten()):
-        # Plot the masked water depth and add basemap
-        im = model['sfincs_results']['hmax_masked'].plot.pcolormesh(
-            ax=ax, cmap="Blues", vmin=0, vmax=3.0, add_colorbar=False
+        # Load hmax_masked from file if only path is stored
+        hmax_masked = model['sfincs_results'].get('hmax_masked', None)
+        if hmax_masked is None:
+            hmax_masked = xr.open_dataarray(model['sfincs_results']['hmax_masked_path'])
+        # Plot and immediately close if loaded from file
+        im = hmax_masked.plot.pcolormesh(
+            ax=ax, cmap="Blues", vmin=0, vmax=5.0, add_colorbar=False
         )
-        
-        # Add basemap
-        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=model['sfincs_results']['hmax_masked'].rio.crs, attribution=False)
-        
-        # Set axis labels and title
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=12, crs=hmax_masked.rio.crs, attribution=False)
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
-
         ax.set_title(f"{model['cat_short']} ({model['CF_info_str']})", fontsize=11)
+        
+        hmax_masked.close()
+        del hmax_masked
+       
 
-    # Add colorbar and label
     fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.04).set_label('Masked hmax (m)', rotation=270, labelpad=15)
-
-    # Show the plot
+    fig.savefig(join("../figures/all_masked_hmax.png"), dpi=300, bbox_inches='tight')
     plt.show()
+    gc.collect()
 
 
 # Compute the differences between the Factual and Counterfactual masked hmax variables
@@ -250,7 +252,7 @@ def compute_hmax_diff(models):
             if factual_hmax is None:
                 print(f"Error: 'hmax_masked' not found for factual model: {model['model_name']}")
                 return models  # Exit early if 'hmax_masked' is missing
-
+            
     # Compute difference for counterfactual models
     for model in models:
         if model["category"] != "Factual":
@@ -261,31 +263,26 @@ def compute_hmax_diff(models):
                 print(f"hmax_diff calculated for {model['model_name']}")
             else:
                 print(f"Warning: 'hmax_masked' not found for counterfactual model: {model['model_name']}")
-    
+            
+    del factual_hmax, hmax_masked, hmax_diff  # Clean up to free memory
+    gc.collect()       
+
     return models
 
 
-# Function to plot hmax_diff for counterfactual models
-def plot_hmax_diff(models, num_cols=1, zoom_region_latlon=None):
+def plot_hmax_diff(models, num_cols=1, zoom_region_latlon=None, add_basemap = True, save_path="../figures/all_hmax_diff.png"):
     """
-    Plots the hmax_diff for counterfactual models with an optional zoom feature.
-    Each subplot has its own x and y labels, and all subplots retain ticks.
-
-    Parameters:
-        models (list): List of model dictionaries.
-        num_cols (int): Number of columns in the subplot grid.
-        figsize (tuple): Size of the figure.
-        zoom_region_latlon (tuple, optional): (lat_min, lat_max, lon_min, lon_max) in latitude/longitude.
+    Plots hmax_diff for counterfactual models with optional zoom, using memory-efficient handling.
     """
-    # Filter out only counterfactual models with hmax_diff
     counterfactual_models = [m for m in models if "hmax_diff" in m["sfincs_results"]]
-    num_models = len(counterfactual_models)
+    if not counterfactual_models:
+        print("No counterfactual models with 'hmax_diff' found.")
+        return
 
-    # Get projection from the first model (assuming all models have the same CRS)
-    model_crs = models[0]['sfincs_model'].crs
+    model_crs = counterfactual_models[0]['sfincs_model'].crs
     model_epsg = model_crs.to_epsg()
 
-    # Convert lat/lon zoom to the model’s coordinate system
+    # Convert zoom region to projected coords
     zoom_region = None
     if zoom_region_latlon:
         lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
@@ -294,77 +291,76 @@ def plot_hmax_diff(models, num_cols=1, zoom_region_latlon=None):
         xmax, ymax = transformer.transform(lon_max, lat_max)
         zoom_region = (xmin, xmax, ymin, ymax)
 
-    # Define grid dimensions
+    num_models = len(counterfactual_models)
     if num_models > 1:
         num_cols = 2
-    
     num_rows = math.ceil(num_models / num_cols)
 
-    # Create figure and subplots
-    fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, 
-                             figsize=(num_cols * 5, num_rows * 6), 
-                             constrained_layout=True,
-                             subplot_kw={"projection": ccrs.epsg(model_epsg)})
+    fig, axes = plt.subplots(
+        nrows=num_rows, ncols=num_cols,
+        figsize=(num_cols * 5, num_rows * 5),
+        constrained_layout=True,
+        subplot_kw={"projection": ccrs.epsg(model_epsg)}
+    )
 
-    # Flatten axes array for easy indexing (handles both single and multiple rows)
-    if num_models == 1:
-        axes = [axes]
-    else:
-        axes = axes.flatten()
-
-    # Define colormap settings
+    # Flatten axes
+    axes = [axes] if num_models == 1 else axes.flatten()
     cmap = "RdBu"
     vmin, vmax = -0.3, 0.3
+    colorbar_added = False
 
-    # Loop through counterfactual models and plot
-    for idx, model in enumerate(counterfactual_models):
-        ax = axes[idx]
-        hmax_diff = model['sfincs_results'].get("hmax_diff", None)
+    for idx, (model, ax) in enumerate(zip(counterfactual_models, axes)):
+        hmax_diff = model["sfincs_results"].get("hmax_diff")
+        if hmax_diff is None:
+            print(f"Missing hmax_diff for model: {model['model_name']}")
+            continue
 
-        if hmax_diff is not None:
-            # Plot difference
-            im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+        # Plot diff
+        im = hmax_diff.plot.pcolormesh(
+            ax=ax, cmap=cmap, vmin=vmin, vmax=vmax,
+            add_colorbar=False
+        )
+        # or: ctx.providers.Esri.WorldImagery
+        if add_basemap:
+            try:
+                ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, zoom=8, crs=model_crs, attribution=False)
+            except Exception as e:
+                print(f"Warning: Basemap not added for model {model['model_name']}: {e}")
 
-            # Add basemap
-            ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9, 
-                            crs=model_crs, attribution=False)
+        # Apply zoom
+        if zoom_region:
+            ax.set_xlim(zoom_region[0], zoom_region[1])
+            ax.set_ylim(zoom_region[2], zoom_region[3])
 
-            # Apply zoom if region is specified
-            if zoom_region:
-                xmin, xmax, ymin, ymax = zoom_region
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
+        # Title & axis labels
+        non_zero_CF_info = {k: v for k, v in model["CF_info"].items() if v != 0}
+        cf_info_str = ", ".join(f"{k}: {v}" for k, v in non_zero_CF_info.items())
+        ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
 
-            # Construct title with CF info
-            non_zero_CF_info = {key: value for key, value in model["CF_info"].items() if value != 0}
-            cf_info_str = ", ".join(f"{key}: {value}" for key, value in non_zero_CF_info.items())
-            ax.set_title(f"{model['cat_short']} ({cf_info_str})", fontsize=12)
+        utmzone = model.get("utmzone", "UTM")
+        ax.set_xlabel(f"x [{utmzone}] (m)", fontsize=10)
+        ax.set_ylabel(f"y [{utmzone}] (m)", fontsize=10)
+        ax.tick_params(axis="both", labelsize=9)
 
-            # Set individual x and y labels for each subplot
-            ax.set_xlabel(f"x coordinate UTM zone {model['utmzone']} [m]", fontsize=10)
-            ax.set_ylabel(f"y coordinate UTM zone {model['utmzone']} [m]", fontsize=10)
-            ax.xaxis.set_visible(True)
-            ax.yaxis.set_visible(True)
+        
 
-            # Ensure tick labels are visible
-            ax.tick_params(axis="both", labelsize=9)
-        else:
-            print(f"Error: 'hmax_diff' not found for counterfactual model: {model['model_name']}")
+        # Free memory (optional if images are large)
+        del hmax_diff
+    
+    # Add colorbar only once
+    if not colorbar_added:
+        cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
+        cbar.set_label("Δ Max Water Level (m)", rotation=270, labelpad=15, fontsize=12)
+        cbar.ax.tick_params(labelsize=10)
+        colorbar_added = True
 
-    # Hide any unused subplots (if the grid is larger than the number of models)
-    for idx in range(num_models, len(axes)):
+    # Hide unused axes
+    for idx in range(len(counterfactual_models), len(axes)):
         fig.delaxes(axes[idx])
 
-    # Add shared colorbar
-    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
-    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=15, fontsize=12)
-    cbar.ax.tick_params(labelsize=10)
-
-    # Reduce whitespace between subplots
-    fig.subplots_adjust(wspace=0.02, hspace=0.15)
-
-    # Show the plot
-    plt.show()
+    # Save and close
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)  # Release memory
 
 
 def zoom_in_sfincs_data(models, zoom_region_latlon=None):
@@ -447,6 +443,8 @@ def calculate_cell_area(model):
     # Calculate the cell area
     dx = abs(hmax_masked.x[1] - hmax_masked.x[0])  # Grid resolution in x-direction (meters)
     dy = abs(hmax_masked.y[1] - hmax_masked.y[0])  # Grid resolution in y-direction (meters)
+    
+    del hmax_masked
     return dx * dy  # Area of one grid cell (m²)
 
 
@@ -468,6 +466,9 @@ def calculate_flood_extent(models):
         # Store in the model dictionary
         model['sfincs_results']['flood_extent_km2'] = flood_extent_km2
         print(f"for model {model['model_name']}, the flooded area: {flood_extent_km2}")
+
+    del hmax_masked, flooded_cells, flood_extent, flood_extent_km2  # Clean up to free memory
+    gc.collect()
     return models
 
 
@@ -489,6 +490,9 @@ def calculate_flood_volume(models):
         # Store in the model dictionary
         model['sfincs_results']['flood_volume_km3'] = flood_volume_km3
         print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
+        
+    del hmax_masked, flooded_cells, flood_volume, flood_volume_km3  # Clean up to free memory
+    gc.collect()
     return models
 
 
@@ -535,6 +539,9 @@ def calculate_flood_differences(models):
             flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
             print(f"flood_extent_diff calculated for {model['model_name']}")
+        
+    del factual_flood_volume, factual_flood_extent  # Clean up to free memory
+    gc.collect()
 
     return models
 
@@ -575,6 +582,8 @@ def calculate_damage_differences(fiat_models):
             model['Damage_spatial_diff_from_F(%)'] = damage_diff
             print(f"damage_diff calculated for {model['model_name']}")
 
+    del factual_total_damage, factual_total_damage_spatial  # Clean up to free memory
+    gc.collect()
 
     return fiat_models
 
@@ -582,80 +591,65 @@ def calculate_damage_differences(fiat_models):
 # Function to create a categorical plot comparing flood volume differences by CF driver
 
 def plot_abs_flood_difference_by_driver(sfincs_models):
-    # Collect data by driver combination
     model_dict = {}
-    for sf in (sfincs_models):
-        name = sf['model_name']
-        
-        # Flood volume
+
+    for sf in sfincs_models:
         vol = sf['sfincs_results'].get("flood_volume_km3", None)
         if vol is None:
             continue
-        vol = vol.values.flatten()[0]
+        try:
+            vol = float(vol)
+        except Exception:
+            continue
 
-        # Drivers active
         CF_info = sf["CF_info"]
-        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
-        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
-        model_dict[key] = {'volume': vol}
+        drivers = tuple(sorted(k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0))
+        if not drivers:
+            drivers = ("FACTUAL",)
 
-    # Build data for plotting
-    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
-    data_plot = []
+        model_dict[drivers] = vol  # Only one model per driver combo assumed
 
-    for key in all_keys:
-        vol_total = model_dict[key]['volume']
+    # Sort keys by combination length then alphabetically
+    sorted_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
 
+    # Setup plot
+    fig, ax = plt.subplots(figsize=(10, 5))  # Slightly smaller figsize
+    x = np.arange(len(sorted_keys))
+    width = 0.4
+
+    for i, key in enumerate(sorted_keys):
+        vol = model_dict[key]
         label = " & ".join(key)
         if label == "RAIN & SLR & WIND":
             label = "ALL"
 
-        data_plot.append({
-            'label': label,
-            'volume': vol_total,
-        })
+        color = "#b0b0b0" if label == "FACTUAL" else "#97a6c4"
+        ax.bar(x[i], vol, color=color, width=width, edgecolor='black')
+        ax.text(x[i], vol + 0.1, f"{vol:.2f}", ha='center', va='bottom', fontsize=11)
 
-    # Sort data by the total magnitude of impact (volume + damage)
-    data_plot.sort(key=lambda d: abs(d['volume']))
+        # Remove label text immediately if not needed further
+        del label
 
-    fig, ax = plt.subplots(figsize=(14, 6))
-    x = np.arange(len(data_plot))
-
-    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
-    ax.set_axisbelow(True)  # This makes grid lines render below plot elements
-    width = 0.4
-
-    # Iterate over each model and plot the bars
-    for i, d in enumerate(data_plot):
-        if d['label'] == "FACTUAL":
-            color = "#b0b0b0"  # grey for factual
-        else:
-            color = "#97a6c4"  # consistent pastel blue for all others
-        ax.bar(x[i], d['volume'], color=color, width=width, edgecolor='black')
-        ax.text(x[i], d['volume'] + 0.1, f"{d['volume']:.2f}", ha='center', va='bottom', fontsize=13)
-        
-    # Axis setup
     ax.set_xticks(x)
-    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
-    ax.set_ylabel("Flood volume (km³)", fontsize=16)
-    ax.set_title("Factual and Counterfactual Flood Volume", fontsize=16)
-    ax.tick_params(axis='y', labelsize=13)
-    ax.xaxis.grid(False)
-    ax.yaxis.grid(True)
-
-    # Set x-axis to start from zero
+    ax.set_xticklabels([" & ".join(k) if k != ("RAIN", "SLR", "WIND") else "ALL" for k in sorted_keys], fontsize=12)
+    ax.set_ylabel("Flood volume (km³)", fontsize=14)
+    ax.set_title("Factual and Counterfactual Flood Volume", fontsize=14)
+    ax.tick_params(axis='y', labelsize=12)
     ax.set_xlim(left=-0.5)
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
 
-    legend_elements = [
+    ax.legend(handles=[
         Patch(facecolor='#b0b0b0', edgecolor='black', label='Factual'),
-        Patch(facecolor='#97a6c4', edgecolor='black', label='Counterfactual'),
-    ]
-    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
+        Patch(facecolor='#97a6c4', edgecolor='black', label='Counterfactual')
+    ], loc='upper left', bbox_to_anchor=(1, 1), fontsize=13)
 
-    # Layout
-    
     plt.tight_layout()
-    plt.show()
+    plt.savefig("../figures/abs_flood_difference_by_driver.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)  # More memory-efficient than plt.show() for batch runs
+
+    # Clean-up
+    del model_dict, sorted_keys, x, fig, ax
+    gc.collect()
 
 
 def plot_abs_flood_ext_difference_by_driver(sfincs_models):
@@ -730,6 +724,7 @@ def plot_abs_flood_ext_difference_by_driver(sfincs_models):
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
 
     # Layout
+    plt.savefig("../figures/abs_flood_ext_difference_by_driver.png", dpi=300, bbox_inches="tight")
     
     plt.tight_layout()
     plt.show()
@@ -804,6 +799,8 @@ def plot_abs_damage_difference_by_driver(fiat_models):
         Patch(facecolor='#384860', edgecolor='black', label='Counterfactual'),
     ]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
+    
+    plt.savefig("../figures/abs_damage_diff_by_driver.png", dpi=300, bbox_inches="tight")
     
     plt.tight_layout()
     plt.show()
@@ -887,6 +884,8 @@ def plot_driver_combination_volume_damage(sfincs_models, fiat_models, filter_key
     ]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
 
+    plt.savefig("../figures/volume_damage_diff_combined.png", dpi=300, bbox_inches="tight")
+    
     plt.tight_layout(pad=4.0)
     plt.show()
 
@@ -969,6 +968,8 @@ def plot_driver_combination_extent_damage(sfincs_models, fiat_models, filter_key
     ]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=16)
 
+    plt.savefig("../figures/extent_damage_diff_combined.png", dpi=300, bbox_inches="tight")
+    
     plt.tight_layout(pad=4.0)
     plt.show()
 
@@ -1628,11 +1629,11 @@ def plot_driver_decomposition_volume_damage_interaction(sfincs_models, fiat_mode
     plt.show()
 
 
-def plot_masked_hmax_factual_only(models, num_cols=1, figsize=(6, 8), dpi=300):
+def plot_masked_hmax_factual_only(models, num_cols=1, figsize=(6, 6), dpi=300):
     """
     Plots only the factual model's masked hmax flood map with coordinate labels.
     """
-
+    import matplotlib.ticker as mticker
     # Filter for factual model only
     factual_models = [m for m in models if all(v == 0 for v in m['CF_info'].values())]
 
@@ -1654,7 +1655,7 @@ def plot_masked_hmax_factual_only(models, num_cols=1, figsize=(6, 8), dpi=300):
     if num_models == 1:
         axes = [axes]  # Ensure iterable
 
-    fig.suptitle("Factual Scenario: Masked $h_{max}$", fontsize=20, y=1.02)
+    fig.suptitle("Factual Max Flood Depth", fontsize=11)
 
     for model, ax in zip(factual_models, axes):
         # Plot hmax masked
@@ -1669,23 +1670,27 @@ def plot_masked_hmax_factual_only(models, num_cols=1, figsize=(6, 8), dpi=300):
                         attribution=False)
 
         # Add gridlines and format tick labels
-        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
         gl.top_labels = False
         gl.right_labels = False
-        gl.xlabel_style = {'size': 12}
-        gl.ylabel_style = {'size': 12}
+        gl.xlabel_style = {'size': 8}
+        gl.ylabel_style = {'size': 8}
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
+        gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
+        gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
+
 
         # Titles
-        # ax.set_title(f"", fontsize=16)
+        ax.set_title(f"", fontsize=16)
 
         # Add shared colorbar with larger size and labels
         cbar = fig.colorbar(im, ax=axes, orientation="vertical", 
                             fraction=0.035, pad=0.05)
-        cbar.set_label('Flood depth (m)', rotation=270, labelpad=20, fontsize=14)
-        cbar.ax.tick_params(labelsize=12)
-        
+        cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
+        cbar.ax.tick_params(labelsize=8)
+    
+    fig.savefig("../figures/factual_hmax_masked.png", bbox_inches='tight', dpi=dpi)
     plt.show()
 
 
@@ -1949,6 +1954,7 @@ models = compute_hmax_diff(models)
 # Calculate flood characteristics 
 models = calculate_flood_extent(models)
 models = calculate_flood_volume(models)
+
 #%%
 models = calculate_flood_differences(models)
 
@@ -1963,7 +1969,7 @@ plot_hmax_diff(models)
 
 #%%
 plot_masked_hmax_factual_only(models)
-# plot_masked_hmax(models)
+plot_masked_hmax(models)
 
 
 #%%
@@ -1980,28 +1986,28 @@ plot_driver_combination_extent_damage(models, fiat_models)
 ########## PPT SLIDES FIGS EGU 2025 ############
 ################################################
 # plotting all driver(s) combinations for hazard and impact
-plot_driver_decomposition_volume_damage(models, fiat_models)
-plot_driver_decomposition_volume_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+# plot_driver_decomposition_volume_damage(models, fiat_models)
+# plot_driver_decomposition_volume_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
 
-plot_driver_decomposition_extent_damage(models, fiat_models)
+# plot_driver_decomposition_extent_damage(models, fiat_models)
 
-# Plotting potential interaction of drivers, compared to their individual sum
-plot_driver_decomposition_volume_damage_interaction(models, fiat_models)
+# # Plotting potential interaction of drivers, compared to their individual sum
+# plot_driver_decomposition_volume_damage_interaction(models, fiat_models)
 
-# plotting the change in flood extent and damage for specific driver(s) combinations
-plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN", "WIND", "SLR")])
-plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+# # plotting the change in flood extent and damage for specific driver(s) combinations
+# plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN", "WIND", "SLR")])
+# plot_driver_decomposition_extent_damage(models, fiat_models, filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
 
-#%%
-# Spatial plot of factual simulated compound flooding
-plot_masked_hmax_factual_only(models)
+# #%%
+# # Spatial plot of factual simulated compound flooding
+# plot_masked_hmax_factual_only(models)
 
-# Plot the difference in flooding due to changes in rain only - spatial map
-plot_hmax_diff_rain_only(models)
+# # Plot the difference in flooding due to changes in rain only - spatial map
+# plot_hmax_diff_rain_only(models)
 
-# Plot the difference in flooding for rain and SLR in one plot spatially
-plot_hmax_diff_slr_rain(models)
+# # Plot the difference in flooding for rain and SLR in one plot spatially
+# plot_hmax_diff_slr_rain(models)
 
-# Plot the change in flood extent for specific driver (combinations)
-plot_driver_decomposition_extent(models,  filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
+# # Plot the change in flood extent for specific driver (combinations)
+# plot_driver_decomposition_extent(models,  filter_keys=[("WIND","SLR"), ("RAIN",), ("RAIN", "WIND", "SLR")])
 
