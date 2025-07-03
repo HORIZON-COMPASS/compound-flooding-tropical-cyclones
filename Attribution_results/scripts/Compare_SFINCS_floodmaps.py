@@ -1851,14 +1851,14 @@ def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
 
     # Create figure
     fig, axes = plt.subplots(1, 3, figsize=(14, 6), dpi=300, constrained_layout=True,
-                             subplot_kw={"projection": ccrs.epsg(model_epsg)})
+                             subplot_kw={"projection": ccrs.epsg(model_epsg)}, sharey=True)
 
     cmap = LinearSegmentedColormap.from_list("white_red", ["red", "white"])
-    vmin, vmax = -0.4, 0
-    plots = [(rain_model, axes[0], "Rain"), (slr_model, axes[1], "SLR"), (wind_model, axes[1], "Wind")]
+    vmin, vmax = 0, 0.5
+    plots = [(rain_model, axes[0], "-8% Rain"), (slr_model, axes[1], "-0.14 cm SLR"), (wind_model, axes[2], "-10% Wind")]
 
     for model, ax, title in plots:
-        hmax_diff = model["sfincs_results"]["hmax_diff"]
+        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1  # Invert for better visualization
 
         im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
         ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9,
@@ -1869,7 +1869,9 @@ def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
         gl.top_labels = gl.right_labels = False
         gl.xlabel_style = gl.ylabel_style = {'size': 11}
 
-        ax.set_title(title, fontsize=16)  # You can increase to 16 or more
+        ax.set_title(title, fontsize=14)  # You can increase to 16 or more
+
+    fig.suptitle("Factual vs. Counterfactual", fontsize=18)
 
     # Shared colorbar
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
