@@ -8,7 +8,7 @@ runname_ids:
     Kenneth:   
         #Settings of the workflow                           # name of the model run
         tc_name: Kenneth                                # name of the storm. For tropical cyclones, this can be the name of the TC
-        region: test                                    # name of the region will be used in naming folders 
+        region: test_branch                                    # name of the region will be used in naming folders 
         
         #For all model setups
         start_time: 20190425 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           

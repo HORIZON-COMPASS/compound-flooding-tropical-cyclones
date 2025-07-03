@@ -5,10 +5,10 @@ dir_models:  02_Models            # Folder where the base models will be saved (
 dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
 
 runname_ids: 
-    Kenneth:   
+    Freddy:   
         #Settings of the workflow                           # name of the model run
-        tc_name: Kenneth                                # name of the storm. For tropical cyclones, this can be the name of the TC
-        region: test                                    # name of the region will be used in naming folders 
+        tc_name: Freddy                                # name of the storm. For tropical cyclones, this can be the name of the TC
+        region: test_branch                                    # name of the region will be used in naming folders 
         
         #For all model setups
         start_time: 20230310 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
