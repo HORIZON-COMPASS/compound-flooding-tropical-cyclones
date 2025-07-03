@@ -1839,7 +1839,7 @@ def plot_hmax_diff_slr_rain(models, zoom_region_latlon=None):
 def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
     # Filter first sginle driver only models
     rain_model = next((m for m in models if m["CF_info"].get("rain", 0) != 0 and m["CF_info"].get("SLR", 0) == 0 and m["CF_info"].get("wind", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
-    slr_model = next((m for m in models if m["CF_info"].get("SLR", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("wind", 0) == 0  "hmax_diff" in m["sfincs_results"]), None)
+    slr_model  = next((m for m in models if m["CF_info"].get("SLR", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("wind", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
     wind_model = next((m for m in models if m["CF_info"].get("wind", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("SLR", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
 
     if not rain_model or not slr_model or not wind_model:
