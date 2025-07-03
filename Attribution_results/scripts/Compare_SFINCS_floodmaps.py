@@ -247,6 +247,7 @@ def plot_masked_hmax(models, num_cols=2, figsize=(8, 10)):
 # Compute the differences between the Factual and Counterfactual masked hmax variables
 def compute_hmax_diff(models):
     factual_hmax = None
+    hmax_masked = None
     
     # Check if "Factual" category exists
     for model in models:
