@@ -1836,6 +1836,51 @@ def plot_hmax_diff_slr_rain(models, zoom_region_latlon=None):
     plt.show()
 
 
+def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
+    # Filter first sginle driver only models
+    rain_model = next((m for m in models if m["CF_info"].get("rain", 0) != 0 and m["CF_info"].get("SLR", 0) == 0 and m["CF_info"].get("wind", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
+    slr_model = next((m for m in models if m["CF_info"].get("SLR", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("wind", 0) == 0  "hmax_diff" in m["sfincs_results"]), None)
+    wind_model = next((m for m in models if m["CF_info"].get("wind", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("SLR", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
+
+    if not rain_model or not slr_model or not wind_model:
+        print("Either RAIN-only or SLR-only or WIND-only model with 'hmax_diff' not found.")
+        return
+
+    model_epsg = rain_model['sfincs_model'].crs.to_epsg()
+
+
+    # Create figure
+    fig, axes = plt.subplots(1, 3, figsize=(14, 6), dpi=300, constrained_layout=True,
+                             subplot_kw={"projection": ccrs.epsg(model_epsg)})
+
+    cmap = LinearSegmentedColormap.from_list("white_red", ["red", "white"])
+    vmin, vmax = -0.4, 0
+    plots = [(rain_model, axes[0], "Rain"), (slr_model, axes[1], "SLR"), (wind_model, axes[1], "Wind")]
+
+    for model, ax, title in plots:
+        hmax_diff = model["sfincs_results"]["hmax_diff"]
+
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
+        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9,
+                        crs=model['sfincs_model'].crs, attribution=False)
+
+        # Add gridlines with lat/lon
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = gl.right_labels = False
+        gl.xlabel_style = gl.ylabel_style = {'size': 11}
+
+        ax.set_title(title, fontsize=16)  # You can increase to 16 or more
+
+    # Shared colorbar
+    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
+    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=13)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_ticks(np.arange(-0.4, 0.1, 0.1))
+
+    fig.savefig("../figures/hmax_diff_slr_widn_rain.png", bbox_inches='tight', dpi=300)
+    plt.show()
+
+
 def plot_driver_decomposition_extent(sfincs_models, filter_keys=None):
     color_map = {
         'RAIN': '#56B4E9',       # turquoise
@@ -1970,21 +2015,21 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # SOME PLOTTING of spatial flood maps
-plot_hmax_diff(models)
+# plot_hmax_diff(models)
+
+# plot_masked_hmax_factual_only(models)
+# plot_masked_hmax(models)
+
+# # PLOTTING paper outline
+# plot_abs_flood_difference_by_driver(models)
+# plot_abs_flood_ext_difference_by_driver(models)
+# plot_abs_damage_difference_by_driver(fiat_models)
+
+# plot_driver_combination_volume_damage(models, fiat_models)
+# plot_driver_combination_extent_damage(models, fiat_models)
 
 #%%
-plot_masked_hmax_factual_only(models)
-plot_masked_hmax(models)
-
-
-#%%
-# PLOTTING paper outline
-plot_abs_flood_difference_by_driver(models)
-plot_abs_flood_ext_difference_by_driver(models)
-plot_abs_damage_difference_by_driver(fiat_models)
-
-plot_driver_combination_volume_damage(models, fiat_models)
-plot_driver_combination_extent_damage(models, fiat_models)
+plot_hmax_diff_slr_wind_rain(models)
 
 # %%
 ################################################
