@@ -19,22 +19,40 @@ from hydromt import DataCatalog
 from hydromt_sfincs import SfincsModel, utils
 from hydromt_wflow import WflowModel
 
+import platform
+from pathlib import Path
+
 #%%
-# Plotting options
-# select the gauges_grdc results (name in csv column of wflow results to plot)
-path = r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow"
+if platform.system() == "Windows":
+    P = Path("p:/")
+else:
+    # adjust this if your cluster mounts “P:” somewhere else, e.g. “/mnt/p”
+    P = Path("/p/")
 
-model_path = r"p:\11210471-001-compass\02_Models\sofala\Idai\wflow"
-mod_ini = WflowModel(root=os.path.join(model_path), mode="r+", config_fn=os.path.join(model_path, "wflow_sbm.toml"))
+# Now build your base directories
+BASE        = P / "11210471-001-compass"
+BASE_RUNS   = P / "11210471-001-compass" / "03_Runs"  / "sofala" / "Idai" / "wflow"
+BASE_SFINCS = P / "11210471-001-compass" / "03_Runs"  / "sofala" / "Idai" / "sfincs" 
+BASE_MODELS = P / "11210471-001-compass" / "02_Models" / "sofala" / "Idai" / "wflow"
+BASE_DATA   = P / "11210471-001-compass" / "01_Data"
 
-mod_base = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_oldsettings\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_oldsettings\events\wflow_sbm.toml")
-mod_fplns = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplains\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplains\events\wflow_sbm.toml")
-mod_fplns_f_ = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplains_f_\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplains_f_\events\wflow_sbm.toml")
-mod_f_soilthick = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_f_soilthick2\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_f_soilthick2\events\wflow_sbm.toml")
-mod_f_soilthick_cnst = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_f_soilthick\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_f_soilthick\events\wflow_sbm.toml")
-mod_fplns_f_soilthick = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplain_f_soilthick\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_floodplain_f_soilthick\events\wflow_sbm.toml")
-mod_fplns_f_soilthick_chirps = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_chirps_CF0\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_chirps_CF0\events\wflow_sbm.toml")
-mod_fplns_f_soilthick_era5_daily = WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_daily_CF0\events", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_daily_CF0\events\wflow_sbm.toml")
+def make_model(subfolder: str):
+    root = BASE_RUNS / subfolder / "events"
+    cfg  = root / "wflow_sbm.toml"
+    return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
+
+#%%
+#Load mdoels
+mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS / "wflow_sbm.toml"))
+
+mod_base = make_model("event_precip_era5_hourly_zarr_CF0_oldsettings")
+mod_fplns = make_model("event_precip_era5_hourly_zarr_CF0_floodplains")
+mod_fplns_f_ = make_model("event_precip_era5_hourly_zarr_CF0_floodplains_f_")
+mod_f_soilthick = make_model("event_precip_era5_hourly_zarr_CF0_f_soilthick2")
+mod_f_soilthick_cnst = make_model("event_precip_era5_hourly_zarr_CF0_f_soilthick")
+mod_fplns_f_soilthick = make_model("event_precip_era5_hourly_zarr_CF0_floodplain_f_soilthick")
+mod_fplns_f_soilthick_chirps = make_model("event_precip_chirps_CF0")
+mod_fplns_f_soilthick_era5_daily = make_model("event_precip_era5_daily_CF0")
 
 # %%
 # # Get station IDs
@@ -50,13 +68,14 @@ models = {
     "mod_fplns_f_soilthick_chirps": mod_fplns_f_soilthick_chirps
 }
 
-# Plot all models for all stations
-for model_name, model in models.items():
-    fig, ax = plt.subplots()
-    for st in station_ids:
-        model.results['netcdf']['Q'].sel(Q_gauges_locs=st).plot(ax=ax, label=f'Gauge {st}')
-    ax.legend(title='Discharge Gauges')
-    ax.set_title(model_name)
+#%%
+# # Plot all models for all stations
+# for model_name, model in models.items():
+#     fig, ax = plt.subplots()
+#     for st in station_ids:
+#         model.results['netcdf']['Q'].sel(Q_gauges_locs=st).plot(ax=ax, label=f'Gauge {st}')
+#     ax.legend(title='Discharge Gauges')
+#     ax.set_title(model_name)
 
 #%%
 # Plot comparison for each gauge individually
@@ -84,11 +103,11 @@ for gauge_id in ['1', '2']:
 ############################## GRDC DATA ##########################
 ## ################################################################
 # Read in GRDC data
-path = r"C:\Users\vertegaa\Downloads\2025-07-02_09-05\GRDC-Daily.nc"
+path = str(BASE_DATA / "GRDC" / "GRDC-Daily.nc")
 GRDC_data = xr.open_dataset(path)
 
 # Mod wflow 30 yr
-wflow_30yr_new =  WflowModel(root=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_30yr\warmup", mode="r", config_fn=r"p:\11210471-001-compass\03_Runs\sofala\Idai\wflow\event_precip_era5_hourly_zarr_CF0_30yr\warmup\wflow_sbm.toml")
+wflow_30yr_new =  make_model("event_precip_era5_hourly_zarr_CF0_30yr")
 # %%
 # Get the indices where river_name matches your selection
 names = GRDC_data['river_name'].values.astype(str)
@@ -122,8 +141,8 @@ gdf_stations = gpd.GeoDataFrame(
 )
 
 # Getting the model regions
-gdf_wflow = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\wflow\staticgeoms\basins.geojson")
-gdf_sfincs = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\sfincs\gis\region.geojson")
+gdf_wflow = gpd.read_file(str(BASE_MODELS / "staticgeoms" / "basins.geojson"))
+gdf_sfincs = gpd.read_file(str(BASE / "02_Models" / "sofala" / "Idai" / "sfincs" / "gis" / "region.geojson"))
 gdf_wflow = gdf_wflow.to_crs("EPSG:4326")
 gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
 
@@ -266,16 +285,16 @@ plt.show()
 # %%
 # From Albrecht
 # Read and drop the first row (header example)
-Q_Day_1494100 = pd.read_csv(
-    r"c:\Code\2025-07-01_12-51\1494100_Q_Day.Cmd.txt",
-    encoding="latin1",
-    delimiter=";",
-    skiprows=5,
-    names=["date", "time", "Q"],
-    na_values=["-999.000", "-999"],
-    comment="#"
-)
-Q_Day_1494100 = Q_Day_1494100.iloc[1:].reset_index(drop=True)
+# Q_Day_1494100 = pd.read_csv(
+#     r"c:\Code\2025-07-01_12-51\1494100_Q_Day.Cmd.txt",
+#     encoding="latin1",
+#     delimiter=";",
+#     skiprows=5,
+#     names=["date", "time", "Q"],
+#     na_values=["-999.000", "-999"],
+#     comment="#"
+# )
+# Q_Day_1494100 = Q_Day_1494100.iloc[1:].reset_index(drop=True)
 # %%
 
 
@@ -285,12 +304,9 @@ Q_Day_1494100 = Q_Day_1494100.iloc[1:].reset_index(drop=True)
 ############### PLOTTING SFINCS RESULTS ##################
 ##########################################################
 # %%
-# Define the file paths to the SFINCS models and data catalogs
-factual_model_dir = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base"
-wflow_all_model_dir = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_all"
-wflow_noFpln_model_dir = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_nofloodplains"
-wflow_all_daily_era5 = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_daily_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
-wflow_all_daily_chirps = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_chirps_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
+def make_sfincs_model(subfolder: str):
+    root = BASE_SFINCS / subfolder
+    return SfincsModel(root=str(root), mode="r", data_libs=datacat)
 
 datacat = [
         '../../Workflows/03_data_catalogs/datacatalog_general.yml',
@@ -303,29 +319,29 @@ data_catalog = DataCatalog(data_libs = datacat)
 
 #%%
 # Load in the SFINCS models
-mod_old   = SfincsModel(factual_model_dir, data_libs=datacat, mode="r")
-mod_wflow_all = SfincsModel(wflow_all_model_dir, data_libs=datacat, mode="r")
-mod_noFpln = SfincsModel(wflow_noFpln_model_dir, data_libs=datacat, mode="r")
-mod_ERA5_daily = SfincsModel(wflow_all_daily_era5, data_libs=datacat, mode="r")
-mod_chirps = SfincsModel(wflow_all_daily_chirps, data_libs=datacat, mode="r")
+mod_old        = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base")
+mod_wflow_all  = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_all")
+mod_noFpln     = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_nofloodplains")
+mod_ERA5_daily = make_sfincs_model("event_tp_era5_daily_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
+mod_chirps     = make_sfincs_model("event_tp_chirps_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 
 
 #%%
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
 
-for mod, model_name, model_dir in [
-    (mod_old, "old", factual_model_dir),
-    (mod_wflow_all, "wflow all", wflow_all_model_dir),
-    (mod_noFpln, "no floodplains", wflow_noFpln_model_dir),
-    (mod_ERA5_daily, "ERA5_daily", wflow_all_daily_era5),
-    (mod_chirps, "CHIRPS daily", wflow_all_daily_chirps),
+for mod, model_name in [
+    (mod_old, "old"),
+    (mod_wflow_all, "wflow all"),
+    (mod_noFpln, "no floodplains"),
+    (mod_ERA5_daily, "ERA5_daily"),
+    (mod_chirps, "CHIRPS daily"),
 ]:
     # compute the maximum over all time steps
     da_zsmax = mod.results["zsmax"].max(dim="timemax")
         
     # downscale the floodmap
-    depfile  = join(factual_model_dir, "subgrid", "dep_subgrid.tif")
+    depfile  = str(BASE_SFINCS / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base" / "subgrid" / "dep_subgrid.tif")
     da_dep   = mod.data_catalog.get_rasterdataset(depfile)
 
     da_hmax = utils.downscale_floodmap(
@@ -415,7 +431,7 @@ cbar = fig.colorbar(im, ax=ax, orientation="vertical",
 cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
 cbar.ax.tick_params(labelsize=8)
     
-# fig.savefig("../figures/factual_hmax_masked.png", bbox_inches='tight', dpi=dpi)
+fig.savefig("../figures/wflow_test_hmax_masked.png", bbox_inches='tight', dpi=300)
 plt.show()
 
 
@@ -480,6 +496,8 @@ for i, axis in enumerate(ax.flat):
 cbar = fig.colorbar(im3, ax=ax, orientation="vertical", fraction=0.04, pad=0.05)
 cbar.set_label('Difference in Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
 cbar.ax.tick_params(labelsize=8)
+
+fig.savefig("../figures/wflow_test_hmax_diff.png", bbox_inches='tight', dpi=300)
 
 plt.show()
 
