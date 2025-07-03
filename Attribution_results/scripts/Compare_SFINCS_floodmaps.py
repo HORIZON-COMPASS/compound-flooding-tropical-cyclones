@@ -24,6 +24,9 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.colors import LinearSegmentedColormap
 import gc
 import xarray as xr
+import platform, os
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -35,8 +38,7 @@ def load_config(config_path):
 def load_sfincs_models(config):
     """Generates model paths and categories for SFINCS runs based on CF values."""
     run = config['runname_ids']['Idai']
-    # base_path = "D:/Code/Paper_1/Model_runs/sfincs"
-    base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/sfincs/"
+    base_path = join(prefix, "11210471-001-compass", "03_Runs", run["region"], run["tc_name"], "sfincs")
     
 
     models = []
@@ -44,7 +46,7 @@ def load_sfincs_models(config):
     
     for rain, wind, slr in itertools.product(run['CF_value_rain'], run['CF_value_wind'], run['CF_value_SLR']):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
-        model_path = os.path.join(base_path, model_name)
+        model_path = join(base_path, model_name)
         utmzone    = run['utmzone']
         model_obj  = SfincsModel(model_path, mode="r")
 
@@ -83,8 +85,7 @@ def load_sfincs_models(config):
 
 def load_fiat_models(config):
     run = config['runname_ids']['Idai']
-    base_path = f"p:/11210471-001-compass/03_Runs/{run['region']}/{run['tc_name']}/fiat/"
-    # base_path = "D:/Code/Paper_1/Model_runs/fiat"
+    base_path = os.path.join(prefix, "11210471-001-compass", "03_Runs", run['region'], run['tc_name'], "fiat")
     
     models = []
     factual_model = None  # Initialize factual_model before the loop
