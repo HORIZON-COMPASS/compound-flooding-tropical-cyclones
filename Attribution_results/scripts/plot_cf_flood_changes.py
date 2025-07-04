@@ -26,7 +26,7 @@ OUTPUT_DIR = Path("p:/11210471-001-compass/04_Results/CF_figs/")
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
 file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+file_cfall = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -36,45 +36,45 @@ print(f"Processing event: {EVENT_NAME}")
 # ===== LOAD PREPROCESSED TIFF FILES =====
 print("Loading preprocessed flood depth files...")
 zsmax_cf0 = rxr.open_rasterio(file_cf0)
-zsmax_cf8 = rxr.open_rasterio(file_cf8)
+zsmax_cfall = rxr.open_rasterio(file_cfall)
 
 # Remove band dimension if present (common with TIFF files)
 if 'band' in zsmax_cf0.dims:
     zsmax_cf0 = zsmax_cf0.squeeze('band', drop=True)
-if 'band' in zsmax_cf8.dims:
-    zsmax_cf8 = zsmax_cf8.squeeze('band', drop=True)
+if 'band' in zsmax_cfall.dims:
+    zsmax_cfall = zsmax_cfall.squeeze('band', drop=True)
 
 print(f"CF0 shape: {zsmax_cf0.shape}")
-print(f"CF-8 shape: {zsmax_cf8.shape}")
+print(f"CF-8 shape: {zsmax_cfall.shape}")
 print(f"CF0 coordinates: {list(zsmax_cf0.coords)}")
-print(f"CF-8 coordinates: {list(zsmax_cf8.coords)}")
+print(f"CF-8 coordinates: {list(zsmax_cfall.coords)}")
 
 # ===== HANDLE NAN VALUES FOR DIFFERENCE CALCULATION =====
 print("Handling NaN values for difference calculation...")
 # Create masks for where each dataset has valid values
 mask_cf0_valid = ~np.isnan(zsmax_cf0)
-mask_cf8_valid = ~np.isnan(zsmax_cf8)
+mask_cfall_valid = ~np.isnan(zsmax_cfall)
 
 # For CF0: where CF0 is NaN but CF8 has a value, set CF0 to 0
-zsmax_cf0 = zsmax_cf0.where(mask_cf0_valid | ~mask_cf8_valid, 0)
+zsmax_cf0 = zsmax_cf0.where(mask_cf0_valid | ~mask_cfall_valid, 0)
 # For CF8: where CF8 is NaN but CF0 has a value, set CF8 to 0  
-zsmax_cf8 = zsmax_cf8.where(mask_cf8_valid | ~mask_cf0_valid, 0)
+zsmax_cfall = zsmax_cfall.where(mask_cfall_valid | ~mask_cf0_valid, 0)
 
 # ===== CALCULATE DIFFERENCE =====
 print("Calculating differences...")
-diff = zsmax_cf0 - zsmax_cf8  # Difference in maximum flood depth (CF0 - CF-8)
+diff = zsmax_cf0 - zsmax_cfall  # Difference in maximum flood depth (CF0 - CF-8)
 
 # Only show areas with positive water depth (above ground)
 zsmax_cf0_plot = zsmax_cf0.where(zsmax_cf0 > 0.05)
-zsmax_cf8_plot = zsmax_cf8.where(zsmax_cf8 > 0.05)
+zsmax_cfall_plot = zsmax_cfall.where(zsmax_cfall > 0.05)
 
 # Optional: only show differences where there's significant flooding
-# diff = diff.where((zsmax_cf0 > 0.01) | (zsmax_cf8 > 0.01))
+# diff = diff.where((zsmax_cf0 > 0.01) | (zsmax_cfall > 0.01))
 
 # ===== PRINT STATISTICS =====
 print(f"\nStatistics for {EVENT_NAME}:")
 print(f"CF0 max flood depth: {zsmax_cf0.max().values:.3f} m")
-print(f"CF-8 max flood depth: {zsmax_cf8.max().values:.3f} m")
+print(f"CF-8 max flood depth: {zsmax_cfall.max().values:.3f} m")
 print(f"Maximum increase (CF0 vs CF-8): {diff.max().values:.3f} m")
 print(f"Maximum decrease (CF0 vs CF-8): {diff.min().values:.3f} m")
 print(f"Mean difference: {diff.mean().values:.3f} m")
@@ -141,12 +141,12 @@ ax1.set_title('Factual', fontsize=12, fontweight='bold')
 # Plot CF-8
 ax2 = axes[1]
 if use_cartopy:
-    im2 = zsmax_cf8_plot.plot(ax=ax2, levels=flood_levels, cmap=flood_cmap, 
+    im2 = zsmax_cfall_plot.plot(ax=ax2, levels=flood_levels, cmap=flood_cmap, 
                               add_colorbar=False, transform=ccrs.UTM(zone=utm_zone, southern_hemisphere=southern),
                               x='x', y='y')
     ax2.coastlines(resolution='10m')
 else:
-    im2 = zsmax_cf8_plot.plot(ax=ax2, levels=flood_levels, cmap=flood_cmap, 
+    im2 = zsmax_cfall_plot.plot(ax=ax2, levels=flood_levels, cmap=flood_cmap, 
                               add_colorbar=False, x='x', y='y')
 ax2.set_title('Counterfactual', fontsize=12, fontweight='bold')
 
@@ -224,7 +224,7 @@ print(f"Grid cells with >0.5m decrease: {(diff < -0.5).sum().values}")
 
 # Close datasets
 zsmax_cf0.close()
-zsmax_cf8.close()
+zsmax_cfall.close()
 
 print(f"\nAnalysis complete for {EVENT_NAME}! Check the saved PNG files in: {OUTPUT_DIR}")
 print("Files created:")
