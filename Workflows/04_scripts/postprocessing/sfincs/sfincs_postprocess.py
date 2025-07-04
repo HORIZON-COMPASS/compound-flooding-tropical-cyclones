@@ -19,9 +19,9 @@ if "snakemake" in locals():
 else:
     region               = "sofala"
     tc_name              = "Idai"
-    wind_forcing         = 'spw_IBTrACS'
+    wind_forcing         = 'era5_hourly_spw_IBTrACS'
     precip_forcing       = 'era5_hourly_zarr'
-    tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     datacat              = [
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
@@ -29,7 +29,7 @@ else:
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml'
         ]
     CF_SLR_txt           = "0"
-    CF_wind_txt          = "-10"
+    CF_wind_txt          = "0"
     CF_rain_txt          = "0"
     model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     dir_run              = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
@@ -97,6 +97,7 @@ gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
 da_hmax_masked = da_hmax.where(gswo_mask <= 5)
 
 # save the masked floodmap
+da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_output_hmax_AllTime.tif'))
 da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)), floodmap))
 
 # basemap plot the masked hmax on top
@@ -172,3 +173,4 @@ if os.path.exists(join(dir_run,"sfincs_his.nc")):
         fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
     else:
         print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+# %%
