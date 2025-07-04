@@ -15,19 +15,19 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
+BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/sofala")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
+file_cfall = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "output_relative_damage.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -38,16 +38,16 @@ print(f"Using damage column: {DAMAGE_COLUMN}")
 # ===== LOAD DAMAGE DATA =====
 print("Loading damage data files...")
 print(f"Loading CF0: {file_cf0}")
-print(f"Loading CF-8: {file_cf8}")
+print(f"Loading CF-8: {file_cfall}")
 
 # Read the geodataframes
 gdf_cf0 = gpd.read_file(file_cf0)
-gdf_cf8 = gpd.read_file(file_cf8)
+gdf_cfall = gpd.read_file(file_cfall)
 
 print(f"CF0 data shape: {gdf_cf0.shape}")
-print(f"CF-8 data shape: {gdf_cf8.shape}")
+print(f"CF-8 data shape: {gdf_cfall.shape}")
 print(f"CF0 columns: {list(gdf_cf0.columns)}")
-print(f"CF-8 columns: {list(gdf_cf8.columns)}")
+print(f"CF-8 columns: {list(gdf_cfall.columns)}")
 
 # Check if the damage column exists
 if DAMAGE_COLUMN not in gdf_cf0.columns:
@@ -69,55 +69,55 @@ gdf_cf0['centroid'] = gdf_cf0.geometry.centroid
 gdf_cf0['x'] = gdf_cf0['centroid'].x
 gdf_cf0['y'] = gdf_cf0['centroid'].y
 
-gdf_cf8['centroid'] = gdf_cf8.geometry.centroid
-gdf_cf8['x'] = gdf_cf8['centroid'].x
-gdf_cf8['y'] = gdf_cf8['centroid'].y
+gdf_cfall['centroid'] = gdf_cfall.geometry.centroid
+gdf_cfall['x'] = gdf_cfall['centroid'].x
+gdf_cfall['y'] = gdf_cfall['centroid'].y
 
 print(f"Sample coordinates CF0: x={gdf_cf0['x'].iloc[0]:.2f}, y={gdf_cf0['y'].iloc[0]:.2f}")
-print(f"Sample coordinates CF-8: x={gdf_cf8['x'].iloc[0]:.2f}, y={gdf_cf8['y'].iloc[0]:.2f}")
+print(f"Sample coordinates CF-8: x={gdf_cfall['x'].iloc[0]:.2f}, y={gdf_cfall['y'].iloc[0]:.2f}")
 
 # ===== MERGE DATA FOR DIFFERENCE CALCULATION =====
 print("Merging data for difference calculation...")
 # Merge on object_id to compare same buildings
 # Use coordinates from CF0 data, but handle cases where buildings might only exist in one scenario
 merged = gdf_cf0[['object_id', 'x', 'y', DAMAGE_COLUMN]].merge(
-    gdf_cf8[['object_id', 'x', 'y', DAMAGE_COLUMN]], 
+    gdf_cfall[['object_id', 'x', 'y', DAMAGE_COLUMN]], 
     on='object_id', 
     how='outer', 
-    suffixes=('_cf0', '_cf8')
+    suffixes=('_cf0', '_cfall')
 )
 
 # Handle coordinates: use CF0 coordinates where available, otherwise CF8
-merged['x'] = merged['x_cf0'].fillna(merged['x_cf8'])
-merged['y'] = merged['y_cf0'].fillna(merged['y_cf8'])
+merged['x'] = merged['x_cf0'].fillna(merged['x_cfall'])
+merged['y'] = merged['y_cf0'].fillna(merged['y_cfall'])
 
 # Drop the temporary coordinate columns
-merged = merged.drop(['x_cf0', 'y_cf0', 'x_cf8', 'y_cf8'], axis=1)
+merged = merged.drop(['x_cf0', 'y_cf0', 'x_cfall', 'y_cfall'], axis=1)
 
 # Fill NaN values with 0 for buildings that don't exist in one scenario
 merged[f'{DAMAGE_COLUMN}_cf0'] = merged[f'{DAMAGE_COLUMN}_cf0'].fillna(0)
-merged[f'{DAMAGE_COLUMN}_cf8'] = merged[f'{DAMAGE_COLUMN}_cf8'].fillna(0)
+merged[f'{DAMAGE_COLUMN}_cfall'] = merged[f'{DAMAGE_COLUMN}_cfall'].fillna(0)
 
 # Convert relative damage from 0-1 scale to 0-100% scale if needed
 if DAMAGE_COLUMN == 'relative_damage':
     print("Converting relative damage from 0-1 scale to 0-100% scale...")
     merged[f'{DAMAGE_COLUMN}_cf0'] = merged[f'{DAMAGE_COLUMN}_cf0'] * 100
-    merged[f'{DAMAGE_COLUMN}_cf8'] = merged[f'{DAMAGE_COLUMN}_cf8'] * 100
+    merged[f'{DAMAGE_COLUMN}_cfall'] = merged[f'{DAMAGE_COLUMN}_cfall'] * 100
 
 # Calculate difference (CF0 - CF8)
-merged['damage_diff'] = merged[f'{DAMAGE_COLUMN}_cf0'] - merged[f'{DAMAGE_COLUMN}_cf8']
+merged['damage_diff'] = merged[f'{DAMAGE_COLUMN}_cf0'] - merged[f'{DAMAGE_COLUMN}_cfall']
 
 # Remove buildings with no coordinates
 merged = merged.dropna(subset=['x', 'y'])
 
 print(f"Merged data shape: {merged.shape}")
 print(f"Sample merged data (after scaling):")
-print(merged[['object_id', 'x', 'y', f'{DAMAGE_COLUMN}_cf0', f'{DAMAGE_COLUMN}_cf8', 'damage_diff']].head())
+print(merged[['object_id', 'x', 'y', f'{DAMAGE_COLUMN}_cf0', f'{DAMAGE_COLUMN}_cfall', 'damage_diff']].head())
 
 # ===== STATISTICS =====
 print(f"\nDamage Statistics for {EVENT_NAME} ({DAMAGE_COLUMN}):")
 cf0_damage = merged[f'{DAMAGE_COLUMN}_cf0']
-cf8_damage = merged[f'{DAMAGE_COLUMN}_cf8']
+cfall_damage = merged[f'{DAMAGE_COLUMN}_cfall']
 damage_diff = merged['damage_diff']
 
 if DAMAGE_COLUMN == 'relative_damage':
@@ -125,12 +125,12 @@ if DAMAGE_COLUMN == 'relative_damage':
     print(f"CF0 mean damage: {cf0_damage.mean():.1f}%")
     print(f"CF0 total damage: {cf0_damage.sum():.0f}%")
     print(f"CF0 buildings with >0% damage: {(cf0_damage > 0).sum()}")
-    print(f"CF-8 max damage: {cf8_damage.max():.1f}%")
-    print(f"CF-8 mean damage: {cf8_damage.mean():.1f}%")
-    print(f"CF-8 total damage: {cf8_damage.sum():.0f}%")
-    print(f"CF-8 buildings with >0% damage: {(cf8_damage > 0).sum()}")
-    print(f"Difference in total damage: {cf0_damage.sum() - cf8_damage.sum():.0f}%")
-    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
+    print(f"CF-8 max damage: {cfall_damage.max():.1f}%")
+    print(f"CF-8 mean damage: {cfall_damage.mean():.1f}%")
+    print(f"CF-8 total damage: {cfall_damage.sum():.0f}%")
+    print(f"CF-8 buildings with >0% damage: {(cfall_damage > 0).sum()}")
+    print(f"Difference in total damage: {cf0_damage.sum() - cfall_damage.sum():.0f}%")
+    print(f"Percentage change: {((cf0_damage.sum() - cfall_damage.sum()) / cfall_damage.sum() * 100):.1f}%")
     print(f"Max increase (CF0 vs CF-8): {damage_diff.max():.1f}%")
     print(f"Max decrease (CF0 vs CF-8): {damage_diff.min():.1f}%")
     print(f"Mean difference: {damage_diff.mean():.1f}%")
@@ -138,11 +138,11 @@ else:
     print(f"CF0 max damage: ${cf0_damage.max():.0f}")
     print(f"CF0 mean damage: ${cf0_damage.mean():.0f}")
     print(f"CF0 total damage: ${cf0_damage.sum():.0f}")
-    print(f"CF-8 max damage: ${cf8_damage.max():.0f}")
-    print(f"CF-8 mean damage: ${cf8_damage.mean():.0f}")
-    print(f"CF-8 total damage: ${cf8_damage.sum():.0f}")
-    print(f"Difference in total damage: ${cf0_damage.sum() - cf8_damage.sum():.0f}")
-    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
+    print(f"CF-8 max damage: ${cfall_damage.max():.0f}")
+    print(f"CF-8 mean damage: ${cfall_damage.mean():.0f}")
+    print(f"CF-8 total damage: ${cfall_damage.sum():.0f}")
+    print(f"Difference in total damage: ${cf0_damage.sum() - cfall_damage.sum():.0f}")
+    print(f"Percentage change: {((cf0_damage.sum() - cfall_damage.sum()) / cfall_damage.sum() * 100):.1f}%")
     print(f"Max increase (CF0 vs CF-8): ${damage_diff.max():.0f}")
     print(f"Max decrease (CF0 vs CF-8): ${damage_diff.min():.0f}")
     print(f"Mean difference: ${damage_diff.mean():.0f}")
@@ -186,7 +186,7 @@ if DAMAGE_COLUMN == 'relative_damage':
     vmin, vmax = 0, 100
 elif DAMAGE_COLUMN == 'total_damage':
     # For total damage (currency) with appropriate intervals
-    max_total = max(cf0_damage.quantile(0.9), cf8_damage.quantile(0.9))
+    max_total = max(cf0_damage.quantile(0.9), cfall_damage.quantile(0.9))
     # Create 10 intervals from 0 to max
     boundaries = np.linspace(0, max_total, 11)
     damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
@@ -195,7 +195,7 @@ elif DAMAGE_COLUMN == 'total_damage':
     vmin, vmax = 0, max_total
 else:
     # Generic fallback
-    max_val = max(cf0_damage.max(), cf8_damage.max())
+    max_val = max(cf0_damage.max(), cfall_damage.max())
     boundaries = np.linspace(0, max_val, 11)
     damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
     damage_cmap = plt.get_cmap('Reds')
@@ -244,13 +244,13 @@ axes[0].set_title('Factual', fontsize=12, fontweight='bold')
 
 # Plot CF-8 (Counterfactual)
 if use_cartopy:
-    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cfall'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, 
                           transform=crs)
     axes[1].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
     axes[1].set_facecolor('lightgray')
-    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf8'], 
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cfall'], 
                           cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha)
 axes[1].set_title('Counterfactual', fontsize=12, fontweight='bold')
 
@@ -291,7 +291,7 @@ if DAMAGE_COLUMN == 'total_damage':
     print("Creating separate total damage bar chart...")
     # Calculate total damage for bar chart
     total_cf0 = cf0_damage.sum()
-    total_cf8 = cf8_damage.sum()
+    total_cfall = cfall_damage.sum()
     bar_label = 'Total Damage [USD]'
 
     # Create separate bar chart figure
@@ -299,7 +299,7 @@ if DAMAGE_COLUMN == 'total_damage':
 
     # Create bar chart
     scenarios = ['Counterfactual', 'Factual']
-    totals = [total_cf8, total_cf0]
+    totals = [total_cfall, total_cf0]
     bars = ax_bar.bar(scenarios, totals, color=['lightcoral', 'lightcoral'],
                       alpha=1, width=0.4)
 
@@ -309,8 +309,8 @@ if DAMAGE_COLUMN == 'total_damage':
     ax_bar.set_axisbelow(True)
 
     # Calculate difference for annotation
-    difference = abs(total_cf0 - total_cf8)
-    percentage_diff = (difference / min(total_cf0, total_cf8)) * 100 if min(total_cf0, total_cf8) > 0 else 0
+    difference = abs(total_cf0 - total_cfall)
+    percentage_diff = (difference / min(total_cf0, total_cfall)) * 100 if min(total_cf0, total_cfall) > 0 else 0
 
     # Add annotation showing climate change attribution
     # Get bar positions
@@ -443,7 +443,7 @@ print(f"  - {output_file_diff}")
 print(f"\nTotal buildings analyzed: {len(merged)}")
 if DAMAGE_COLUMN == 'relative_damage':
     print(f"Buildings with damage in CF0: {(merged[f'{DAMAGE_COLUMN}_cf0'] > 0).sum()}")
-    print(f"Buildings with damage in CF-8: {(merged[f'{DAMAGE_COLUMN}_cf8'] > 0).sum()}")
+    print(f"Buildings with damage in CF-8: {(merged[f'{DAMAGE_COLUMN}_cfall'] > 0).sum()}")
 else:
     print(f"Buildings with damage in CF0: {(merged[f'{DAMAGE_COLUMN}_cf0'] > 0).sum()}")
-    print(f"Buildings with damage in CF-8: {(merged[f'{DAMAGE_COLUMN}_cf8'] > 0).sum()}")
+    print(f"Buildings with damage in CF-8: {(merged[f'{DAMAGE_COLUMN}_cfall'] > 0).sum()}")
