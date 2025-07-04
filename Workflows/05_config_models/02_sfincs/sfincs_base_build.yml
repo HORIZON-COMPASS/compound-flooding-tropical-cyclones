@@ -32,10 +32,18 @@ setup_mask_bounds:
   zmin: -10
   #zmax: -1
   #include_mask: osm_coastlines  # Make a decision - user-defined 
-  include_mask_buffer: 1000     # Changed to snap the mask boundary     ###
+  # include_mask_buffer: 1000     # Changed to snap the mask boundary     ###
   reset_bounds: True  
 
-setup_subgrid:
+setup_mask_bounds2:
+  btype: outflow            # Set waterlevel boundaries
+  # zmin: -10
+  zmax: 10
+  #include_mask: osm_coastlines  # Make a decision - user-defined 
+  # include_mask_buffer: 1000     # Changed to snap the mask boundary     ###
+  reset_bounds: False 
+  
+  setup_subgrid:
   datasets_dep:
   - elevtn: fabdem        # !TODO change to fabdem     
     zmin: 0.001              
