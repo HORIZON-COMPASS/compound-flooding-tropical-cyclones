@@ -1,6 +1,8 @@
 import geopandas as gpd
 import pandas as pd
 from pathlib import Path
+# by @dumontgoulart
+#TODO: this is a preliminary script that is still not fully embedded in the snakemake workflow. The user is required to change the events & input files for now.
 
 def main():
     """

@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Base paths - update these as needed
 BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
@@ -23,8 +23,8 @@ OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

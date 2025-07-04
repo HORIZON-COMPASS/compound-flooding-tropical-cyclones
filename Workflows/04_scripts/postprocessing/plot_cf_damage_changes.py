@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
@@ -26,8 +26,8 @@ OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -415,6 +415,37 @@ ax.set_title(f'Economic Damage Changes - {EVENT_NAME}: Factual vs Counterfactual
 # Save
 output_file_diff = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_difference_only.png'
 plt.savefig(output_file_diff, dpi=300, bbox_inches='tight')
+plt.show()
+
+print("Creating factual-only damage plot...")
+
+if use_cartopy:
+    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8), subplot_kw={'projection': crs})
+else:
+    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8))
+
+# Plot only the factual (CF0) data
+if use_cartopy:
+    scatter_factual = ax_factual.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
+                                       cmap=damage_cmap, norm=damage_norm, s=point_size*1.5, alpha=alpha, 
+                                       transform=crs)
+    ax_factual.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+else:
+    ax_factual.set_facecolor('lightgray')
+    scatter_factual = ax_factual.scatter(merged['x'], merged['y'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
+                                       cmap=damage_cmap, norm=damage_norm, s=point_size*1.5, alpha=alpha)
+
+# Colorbar
+cbar_factual = plt.colorbar(scatter_factual, ax=ax_factual, shrink=0.8, pad=0.1)
+cbar_factual.set_label(damage_label, fontsize=12)
+
+# Title
+ax_factual.set_title(f'Economic Damage - {EVENT_NAME}: Factual Scenario\n({DAMAGE_COLUMN})', 
+                    fontsize=14, fontweight='bold', pad=20)
+
+# Save the factual-only plot
+output_file_factual = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_factual_only.png'
+plt.savefig(output_file_factual, dpi=300, bbox_inches='tight')
 plt.show()
 
 # ===== SUMMARY STATISTICS =====
