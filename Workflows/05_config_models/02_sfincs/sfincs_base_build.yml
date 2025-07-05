@@ -43,7 +43,7 @@ setup_mask_bounds2:
   # include_mask_buffer: 1000     # Changed to snap the mask boundary     ###
   reset_bounds: False 
   
-  setup_subgrid:
+setup_subgrid:
   datasets_dep:
   - elevtn: fabdem        # !TODO change to fabdem     
     zmin: 0.001              
