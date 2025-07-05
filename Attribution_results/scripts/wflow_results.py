@@ -45,6 +45,7 @@ def make_model(subfolder: str):
 #Load mdoels
 mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS / "wflow_sbm.toml"))
 
+#%%
 mod_base = make_model("event_precip_era5_hourly_zarr_CF0_oldsettings")
 mod_fplns = make_model("event_precip_era5_hourly_zarr_CF0_floodplains")
 mod_fplns_f_ = make_model("event_precip_era5_hourly_zarr_CF0_floodplains_f_")
@@ -106,8 +107,13 @@ for gauge_id in ['1', '2']:
 path = str(BASE_DATA / "GRDC" / "GRDC-Daily.nc")
 GRDC_data = xr.open_dataset(path)
 
+def make_model_warmup(subfolder: str):
+    root = BASE_RUNS / subfolder / "warmup"
+    cfg  = root / "wflow_sbm.toml"
+    return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
+
 # Mod wflow 30 yr
-wflow_30yr_new =  make_model("event_precip_era5_hourly_zarr_CF0_30yr")
+wflow_30yr_new =  make_model_warmup("event_precip_era5_daily_CF0_30yr")
 # %%
 # Get the indices where river_name matches your selection
 names = GRDC_data['river_name'].values.astype(str)
@@ -146,6 +152,7 @@ gdf_sfincs = gpd.read_file(str(BASE / "02_Models" / "sofala" / "Idai" / "sfincs"
 gdf_wflow = gdf_wflow.to_crs("EPSG:4326")
 gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
 
+#%%
 # Get the SFINCS region geometry (assuming it's a single polygon)
 sfincs_geom = gdf_sfincs.unary_union
 
@@ -155,6 +162,80 @@ gdf_stations['distance'] = gdf_stations.geometry.apply(lambda x: x.distance(sfin
 # Select the two closest stations
 closest_stations = gdf_stations.nsmallest(2, 'distance')
 
+# Select the wflow output closest to those two locations
+# Get wflow result lat/lon and turn into GeoDataFrame
+# wflow_df = wflow_30yr_new.results['output'][['lat', 'lon']].copy()
+# wflow_df['geometry'] = gpd.points_from_xy(wflow_df['lon'], wflow_df['lat'])
+# wflow_gdf = gpd.GeoDataFrame(wflow_df, geometry='geometry', crs='EPSG:4326')
+
+# wflow_proj = wflow_gdf.to_crs(epsg=3857)
+# stations_proj = closest_stations.to_crs(epsg=3857)
+
+# closest_wflow_points = []
+# for station_geom in stations_proj.geometry:
+#     distances = wflow_proj.geometry.distance(station_geom)
+#     closest_idx = distances.idxmin()
+#     closest_wflow_points.append(wflow_gdf.loc[closest_idx])
+
+# closest_wflow_gdf = gpd.GeoDataFrame(closest_wflow_points, crs="EPSG:4326")
+
+# sel_wflow_output = wflow_30yr_new.results['output'].iloc[:, closest_idx]  # shape: (time, locations)
+
+# Assume `closest_stations` is already a GeoDataFrame in EPSG:4326
+# If it's just a DataFrame, convert it like this:
+# closest_stations['geometry'] = gpd.points_from_xy(closest_stations['lon'], closest_stations['lat'])
+# closest_stations = gpd.GeoDataFrame(closest_stations, geometry='geometry', crs='EPSG:4326')
+
+#%%
+import geopandas as gpd
+import pandas as pd
+from geopy.distance import geodesic
+
+# Your WFLOW result
+q_river = wflow_30yr_new.results['output']['q_river']  # xarray.DataArray with dims (time, lat, lon)
+
+# Extract station coordinates from GeoDataFrame
+station_coords = [(pt.y, pt.x) for pt in closest_stations.geometry]  # (lat, lon)
+
+# Prepare lists to store results
+matched_gridpoints = []
+station_series = []
+
+# Loop through each station and find the closest grid point
+for lat, lon in station_coords:
+    grid_point = q_river.sel(lat=lat, lon=lon, method='nearest')
+    matched_lat = float(grid_point['lat'].values)
+    matched_lon = float(grid_point['lon'].values)
+    matched_gridpoints.append((matched_lat, matched_lon))
+    station_series.append(grid_point)
+
+# Create DataFrame to show matches
+matches_df = pd.DataFrame({
+    'station_index': closest_stations.index,
+    'station_lat': [lat for lat, lon in station_coords],
+    'station_lon': [lon for lat, lon in station_coords],
+    'matched_grid_lat': [lat for lat, lon in matched_gridpoints],
+    'matched_grid_lon': [lon for lat, lon in matched_gridpoints],
+})
+
+# Calculate distance between station and matched grid point (in km)
+matches_df['distance_km'] = [
+    geodesic((row.station_lat, row.station_lon), (row.matched_grid_lat, row.matched_grid_lon)).km
+    for _, row in matches_df.iterrows()
+]
+
+# Optional: Combine time series into a DataFrame (time as index)
+station_timeseries_df = pd.concat(
+    [ts.to_series().rename(f'station_{i}') for i, ts in enumerate(station_series)],
+    axis=1
+)
+
+# Output:
+# - matches_df: shows station → grid cell match info + distances
+# - station_timeseries_df: time series at matched grid points
+
+
+#%%
 # Plot SFINCS region and set up legend entry
 gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
 sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
@@ -177,6 +258,7 @@ gauge2 = gdf_gauges[gdf_gauges['index'] == 2]
 # Plot gauge 1 and 2
 gauge1.plot(ax=ax, color='#1f77b4', markersize=30, label='wflow Gauge 1', zorder=10)
 gauge2.plot(ax=ax, color='#2ca02c', markersize=30, label='wflow Gauge 2', zorder=10)
+# closest_wflow_gdf.plot(ax=ax, ax=ax, marker='o', color='blue', zorder=15, label='Sel wflow points')
 mod_ini.geoms["rivers"].plot(ax=ax, color='white')
 
 # Add text labels at the gauge locations
