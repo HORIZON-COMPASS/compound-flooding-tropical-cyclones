@@ -1,0 +1,534 @@
+#%%
+import xarray as xr
+import matplotlib.pyplot as plt
+from hydromt_sfincs import SfincsModel, utils
+import matplotlib.ticker as mticker
+import cartopy.crs as ccrs
+import os
+from os.path import join
+import matplotlib.dates as mdates
+from hydromt import DataCatalog
+import contextily as ctx
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+import numpy as np
+import matplotlib.gridspec as gridspec
+from shapely.geometry import box
+import platform
+from pyproj import Transformer
+from pathlib import Path
+import geopandas as gpd
+import cartopy.feature as cfeature
+from matplotlib.colors import BoundaryNorm
+import warnings
+warnings.filterwarnings('ignore')
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
+
+def lat_formatter(x, pos):
+    direction = 'N' if x >= 0 else 'S'
+    return f"{abs(x):.1f}°{direction}"
+def lon_formatter(x, pos):
+    direction = 'E' if x >= 0 else 'W'
+    return f"{abs(x):.1f}°{direction}"
+
+#%%
+factual_model_dir = r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
+
+datacat = [
+        '../../Workflows/03_data_catalogs/datacatalog_general.yml',
+        '../../Workflows/03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../Workflows/03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../Workflows/03_data_catalogs/datacatalog_CF_forcing.yml'
+        ]
+
+data_catalog = DataCatalog(data_libs = datacat)
+
+#%%
+mod = SfincsModel(factual_model_dir, data_libs=datacat, mode="r")
+
+hisfile = os.path.join(factual_model_dir,"sfincs_his.nc")
+ds_his = xr.open_dataset(hisfile, engine='netcdf4')
+
+#%%
+# we set a threshold to mask minimum flood depth
+hmin = 0.05
+
+# compute the maximum over all time steps
+da_zsmax = mod.results["zsmax"].max(dim="timemax")
+     
+# downscale the floodmap
+depfile  = join(factual_model_dir, "subgrid", "dep_subgrid.tif")
+da_dep   = mod.data_catalog.get_rasterdataset(depfile)
+
+da_hmax = utils.downscale_floodmap(
+      zsmax=da_zsmax,
+      dep=da_dep,
+      hmin=hmin,
+      # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
+      )
+    
+# GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+sfincs_region = mod.region
+gwso_region   = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
+gswo_mask     = gwso_region.raster.reproject_like(da_hmax, method="max")
+# permanent water where water occurence > 5%
+da_hmax_masked = da_hmax.where(gswo_mask <= 5)
+
+# Add the name attribute for identification
+mod.results['hmax'] = da_hmax
+mod.results['hmax_masked'] = da_hmax_masked
+
+del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
+
+
+#%%
+projection = mod.crs.to_epsg()
+
+fig, ax = plt.subplots(nrows=1,
+                       ncols=1,
+                       figsize=(8,8),
+                       dpi=300,
+                       constrained_layout=True,
+                       subplot_kw={"projection": ccrs.epsg(projection)})
+
+fig.suptitle("Factual Max Flood Depth", fontsize=11)
+
+# Plot hmax masked
+im = mod.results['hmax_masked'].plot.pcolormesh(
+     ax=ax, cmap="Blues", vmin=0, vmax=5.0, add_colorbar=False
+)
+
+# Add basemap
+ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery,
+                zoom=10,
+                crs=mod.results['hmax_masked'].rio.crs,
+                attribution=False)
+
+# Add gridlines and format tick labels
+gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
+gl.top_labels = False
+gl.right_labels = False
+gl.xlabel_style = {'size': 8}
+gl.ylabel_style = {'size': 8}
+gl.xformatter = LONGITUDE_FORMATTER
+gl.yformatter = LATITUDE_FORMATTER
+gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
+gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
+
+# Titles
+ax.set_title(f"", fontsize=16)
+
+# Add shared colorbar with larger size and labels
+cbar = fig.colorbar(im, ax=ax, orientation="vertical", 
+                    fraction=0.035, pad=0.05)
+cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
+cbar.ax.tick_params(labelsize=8)
+    
+# fig.savefig("../figures/factual_hmax_masked.png", bbox_inches='tight', dpi=dpi)
+plt.show()
+
+#%%
+### PLOT TIMESERIES OUTPUT POINTS
+fig, ax = plt.subplots(3,1,figsize=(8,8), sharex=True, dpi=300)
+ax[0].plot(ds_his.time,ds_his['point_zs'].isel(stations=5),color='r', label=f'Station 5')
+ax[0].plot(mod.forcing['bzs'].time, mod.forcing['bzs'].sel(index=40), label=f'Station 40')
+
+ax[1].plot(mod.forcing['dis'].time, mod.forcing['dis'].sel(index=1), label=f'Gauge 1')
+ax[1].plot(mod.forcing['dis'].time, mod.forcing['dis'].sel(index=2), label=f'Gauge 2')
+
+ax[2].step(mod.forcing['precip_2d'].time, mod.forcing['precip_2d'].mean(dim=["x", "y"]), where='post')
+
+for a in ax:
+    a.set_xlim(ds_his.time.min(), ds_his.time.max())
+    a.legend(fontsize=9, loc="upper right") 
+    a.tick_params(axis='both', labelsize=10)
+    a.grid(True, which='major', linestyle='--', linewidth=0.5, alpha=0.7)
+
+# ax.set_title(f"Timeseries of water levels \n Location: {ds_his['station_id'].isel(stations=5).values}")
+ax[0].set_ylabel("Water level height \n [m]")
+ax[1].set_ylabel("Discharge \n [m3/s]")
+ax[2].set_ylabel("Mean precipitation \n [mm/h] [m]")
+ax[2].xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+ax[2].set_xlabel("Day in March 2019")
+# fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
+fig.show()
+
+
+#%%
+gauges_list   = [1,2]
+stations_list = [5, 40]
+
+fig = plt.figure(figsize=(15, 6), dpi=300, constrained_layout=True)
+
+projection = mod.crs.to_epsg()
+colors = plt.get_cmap('tab10').colors  # Tuple of 10 colors
+
+gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig,
+                       width_ratios=[2, 1],  # Left col 3x wider than right col
+                       height_ratios=[1, 1, 1],  # Three rows on right all equal height
+                       wspace=0.05, hspace=0.05)
+
+ax_map = fig.add_subplot(gs[:, 0], projection=ccrs.epsg(projection))
+
+# Plot hmax masked
+im = mod.results['hmax_masked'].plot.pcolormesh(
+    ax=ax_map, cmap="Blues", vmin=0, vmax=5.0, add_colorbar=False
+)
+
+ax_map.set_title("Factual Max Flood Depth", fontsize=14)
+
+# Add model region
+model_region_gdf = gpd.read_file(join(
+    prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs", 
+    "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0", "gis", "region.geojson"
+)).to_crs("EPSG:4326") 
+model_region_gdf.boundary.plot(ax=ax_map, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+
+# Add background and extent
+ax_map.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+
+# Set extent (based on actual lat/lon coordinates)
+minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
+ax_map.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
+
+# Gridlines
+gl = ax_map.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+gl.xformatter = mticker.FuncFormatter(lon_formatter)
+gl.yformatter = mticker.FuncFormatter(lat_formatter)
+gl.right_labels = False
+gl.top_labels = False
+gl.xlabel_style = {'size': 11}
+gl.ylabel_style = {'size': 11}
+
+# Colorbar for map
+cbar = fig.colorbar(im, ax=ax_map, orientation="vertical", fraction=0.035, pad=0.01)
+cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=10)
+cbar.ax.tick_params(labelsize=9)
+
+# RIGHT: three stacked time series subplots
+ax0 = fig.add_subplot(gs[0, 1])
+ax1 = fig.add_subplot(gs[1, 1], sharex=ax0)
+ax2 = fig.add_subplot(gs[2, 1], sharex=ax0)
+
+# Plotting timeseries
+ax0.plot(ds_his.time, ds_his['point_zs'].isel(stations=stations_list[0]), color=colors[4], label=f'S{stations_list[0]}')
+ax0.plot(mod.forcing['bzs'].time, mod.forcing['bzs'].sel(index=stations_list[1]), color=colors[1], label=f'S{stations_list[1]}')
+ax0.set_ylabel("Water level height \n [m]", fontsize=10)
+ax0.legend(fontsize=8, loc="upper right")
+ax0.grid(True, linestyle='--', alpha=0.6)
+ax0.tick_params(labelsize=9)
+ax0.set_xlim(ds_his.time.min(), ds_his.time.max())
+ax0.set_title("Factual Time Series", fontsize=14)
+
+
+ax1.plot(mod.forcing['dis'].time, mod.forcing['dis'].sel(index=gauges_list[0]), color=colors[2], label=f'G{gauges_list[0]}')
+ax1.plot(mod.forcing['dis'].time, mod.forcing['dis'].sel(index=gauges_list[1]), color=colors[3], label=f'G{gauges_list[1]}')
+ax1.set_ylabel("Discharge \n [m³/s]", fontsize=10)
+ax1.legend(fontsize=8, loc="upper right")
+ax1.grid(True, linestyle='--', alpha=0.6)
+ax1.tick_params(labelsize=9)
+ax1.set_xlim(ds_his.time.min(), ds_his.time.max())
+
+ax2.step(mod.forcing['precip_2d'].time, mod.forcing['precip_2d'].mean(dim=["x", "y"]), where='post', color=colors[0])
+ax2.set_ylabel("Mean precipitation \n [mm/h]", fontsize=10)
+ax2.set_xlabel("Day in March 2019")
+ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+ax2.grid(True, linestyle='--', alpha=0.6)
+ax2.tick_params(labelsize=9)
+ax2.set_xlim(ds_his.time.min(), ds_his.time.max())
+
+# Plot station and Gauge points on the flood map and annotate
+ax_map.scatter(ds_his['point_zs'].isel(stations=stations_list[0]).point_x.values, ds_his['point_zs'].isel(stations=stations_list[0]).point_y.values, color=colors[4], s=30, edgecolor='k', zorder=5, transform=ccrs.epsg(projection), label=f'Station {stations_list[0]}')
+ax_map.scatter(mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().x, mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().y, color=colors[1], s=30, edgecolor='k', zorder=5, transform=ccrs.epsg(projection), label=f'Station {stations_list[1]}')
+
+ax_map.scatter(mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().x, mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().y, color=colors[2], s=30, edgecolor='k', zorder=5, transform=ccrs.epsg(projection), label=f'Gauge {gauges_list[0]}')
+ax_map.scatter(mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().x, mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().y, color=colors[3], s=30, edgecolor='k', zorder=5, transform=ccrs.epsg(projection), label=f'Gauge {gauges_list[1]}')
+
+offset = 2000  # Adjust offset depending on map scale (in map projection units)
+ax_map.annotate(f'S{stations_list[0]}', xy=(ds_his['point_zs'].isel(stations=stations_list[0]).point_x.values, ds_his['point_zs'].isel(stations=stations_list[0]).point_y.values),
+                xytext=(ds_his['point_zs'].isel(stations=stations_list[0]).point_x.values + 2000, ds_his['point_zs'].isel(stations=stations_list[0]).point_y.values - 4000),
+                transform=ccrs.epsg(projection),
+                fontsize=9, color=colors[4], fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=0.5, alpha=0.8)
+)
+ax_map.annotate(f'S{stations_list[1]}', xy=(mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().x, mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().y),
+                xytext=(mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().x + 2000, mod.forcing['bzs'].sel(index=stations_list[1]).geometry.item().y - 4000),
+                transform=ccrs.epsg(projection),
+                fontsize=9, color=colors[1], fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=0.5, alpha=0.8)
+)
+ax_map.annotate(f'G{gauges_list[0]}', xy=(mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().x, mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().y),
+                xytext=(mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().x - 6000, mod.forcing['dis'].sel(index=gauges_list[0]).geometry.item().y - 4000),
+                transform=ccrs.epsg(projection),
+                fontsize=9, color=colors[2], fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=0.5, alpha=0.8)
+)
+ax_map.annotate(f'G{gauges_list[1]}', xy=(mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().x, mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().y),
+                xytext=(mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().x + 2000, mod.forcing['dis'].sel(index=gauges_list[1]).geometry.item().y),
+                transform=ccrs.epsg(projection),
+                fontsize=9, color=colors[3], fontweight='bold',
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=0.5, alpha=0.8)
+)
+
+plt.show()
+
+
+
+
+
+#%%
+# Factual damage
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
+DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
+
+# Base paths - update these as needed
+BASE_RUN_PATH = Path("p:/11210471-001-compass/03_Runs/sofala")
+OUTPUT_DIR = Path("../figures")
+
+# ===== DYNAMIC FILE PATHS =====
+# Construct file paths based on event name
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
+
+# Create output directory if it doesn't exist
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+print(f"Processing economic damage for event: {EVENT_NAME}")
+print(f"Using damage column: {DAMAGE_COLUMN}")
+
+# ===== LOAD DAMAGE DATA =====
+print("Loading damage data files...")
+print(f"Loading CF0: {file_cf0}")
+
+# Read the geodataframes
+gdf_cf0 = gpd.read_file(file_cf0)
+
+#%%
+# ===== EXTRACT COORDINATES =====
+print("Extracting coordinates from building centroids...")
+# Extract x, y coordinates from geometry centroids (for polygon buildings)
+gdf_cf0['centroid'] = gdf_cf0.geometry.centroid
+gdf_cf0['x'] = gdf_cf0['centroid'].x
+gdf_cf0['y'] = gdf_cf0['centroid'].y
+
+gdf_cf0 = gdf_cf0[['object_id', 'x', 'y', DAMAGE_COLUMN]]
+
+# Convert relative damage from 0-1 scale to 0-100% scale if needed
+if DAMAGE_COLUMN == 'relative_damage':
+    print("Converting relative damage from 0-1 scale to 0-100% scale...")
+    gdf_cf0[f'{DAMAGE_COLUMN}'] = gdf_cf0[f'{DAMAGE_COLUMN}'] * 100
+
+# Remove buildings with no coordinates
+gdf_cf0 = gdf_cf0.dropna(subset=['x', 'y'])
+
+print(f"Merged data shape: {gdf_cf0.shape}")
+print(f"Sample merged data (after scaling):")
+print(gdf_cf0[['object_id', 'x', 'y', f'{DAMAGE_COLUMN}']].head())
+
+#%%
+# ===== STATISTICS =====
+print(f"\nDamage Statistics for {EVENT_NAME} ({DAMAGE_COLUMN}):")
+cf0_damage = gdf_cf0[f'{DAMAGE_COLUMN}']
+
+if DAMAGE_COLUMN == 'relative_damage':
+    print(f"CF0 max damage: {cf0_damage.max():.1f}%")
+    print(f"CF0 mean damage: {cf0_damage.mean():.1f}%")
+    print(f"CF0 total damage: {cf0_damage.sum():.0f}%")
+    print(f"CF0 buildings with >0% damage: {(cf0_damage > 0).sum()}")
+else:
+    print(f"CF0 max damage: ${cf0_damage.max():.0f}")
+    print(f"CF0 mean damage: ${cf0_damage.mean():.0f}")
+    print(f"CF0 total damage: ${cf0_damage.sum():.0f}")
+
+#%%
+# ===== DETERMINE COORDINATE SYSTEM =====
+try:
+    # Get approximate center coordinates
+    center_x = gdf_cf0['x'].mean()
+    center_y = gdf_cf0['y'].mean()
+    
+    print(f"Center coordinates: {center_x:.0f}, {center_y:.0f}")
+    
+    # Determine UTM zone based on region (adjust for your area)
+    utm_zone = 36  # Adjust based on your region
+    southern = True  # Set to False if in northern hemisphere
+    
+    print(f"Using UTM zone {utm_zone}, Southern: {southern}")
+except Exception as e:
+    print(f"Could not determine coordinates: {e}")
+    utm_zone = 36
+    southern = True
+
+#%%
+# ===== PLOTTING SETUP =====
+print("Setting up plots...")
+
+# Create projection for cartopy
+try:
+    crs = ccrs.UTM(zone=utm_zone, southern_hemisphere=southern)
+    use_cartopy = True
+except Exception as e:
+    print(f"Cartopy projection failed: {e}")
+    use_cartopy = False
+
+# Define colormaps and levels with discrete intervals
+if DAMAGE_COLUMN == 'relative_damage':
+    # For relative damage (0-100%) with 10% intervals
+    boundaries = np.linspace(0, 100, 11)  # Creates 10 intervals from 0 to 100
+    damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
+    damage_cmap = plt.get_cmap('Reds')  # Darker red colormap
+    damage_label = 'Relative Damage [%]'
+    vmin, vmax = 0, 100
+elif DAMAGE_COLUMN == 'total_damage':
+    # For total damage (currency) with appropriate intervals
+    max_total = cf0_damage.quantile(0.9)
+    # Create 10 intervals from 0 to max
+    boundaries = np.linspace(0, max_total, 11)
+    damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
+    damage_cmap = plt.get_cmap('Reds')
+    damage_label = 'Total Damage [USD]'
+    vmin, vmax = 0, max_total
+else:
+    # Generic fallback
+    max_val = cf0_damage.max()
+    boundaries = np.linspace(0, max_val, 11)
+    damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
+    damage_cmap = plt.get_cmap('Reds')
+    damage_label = f'{DAMAGE_COLUMN}'
+    vmin, vmax = 0, max_val
+
+print(f"Damage boundaries: {boundaries}")
+
+#%%
+# ===== CREATE FACTUAL PLOT =====
+print("Creating factual damage plot...")
+crs = ccrs.PlateCarree()
+
+fig, axes = plt.subplots(1, 1, figsize=(8, 8), 
+                         subplot_kw={'projection': crs})
+
+# Plot settings
+point_size = 10  # Point size for visibility
+alpha = 0.8      # Transparency for better colors
+
+# Plot CF0 (Factual)
+scatter1 = axes.scatter(gdf_cf0['x'], gdf_cf0['y'], c=gdf_cf0[f'{DAMAGE_COLUMN}'], 
+                          cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, 
+                          transform=crs)
+
+# Add colorbars
+cbar1 = plt.colorbar(scatter1, ax=axes, shrink=0.8, pad=0.1)
+cbar1.set_label(damage_label, fontsize=10)
+
+# Transformer to lat/lon (WGS84)
+bbox_latlon = (box(gdf_cf0['x'].min(), gdf_cf0['y'].min(), gdf_cf0['x'].max(), gdf_cf0['y'].max()))
+
+model_region_gdf = gpd.read_file(join(prefix, "11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0","gis","region.geojson"))
+
+# Extract lat/lon bounds
+lon_start, lat_start, lon_end, lat_end = bbox_latlon.bounds
+
+axes.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+model_region_gdf.boundary.plot(ax=axes, edgecolor='black', linewidth=0.5, crs=crs)
+
+# Set extent in UTM (meters)
+# Create transformer from UTM to lat/lon
+transformer = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
+
+# UTM bounds
+minx, miny, maxx, maxy = bbox_latlon.bounds
+
+# Transform to lat/lon
+lon_start, lat_start = transformer.transform(minx, miny)
+lon_end, lat_end = transformer.transform(maxx, maxy)
+
+axes.set_extent([minx, maxx, miny, maxy], crs)
+
+gl = axes.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    
+gl.xlocator = mticker.FixedLocator(np.arange(lon_start, lon_end + 0.1, 0.2))
+gl.ylocator = mticker.FixedLocator(np.arange(lat_start, lat_end + 0.1, 0.2))
+    
+ # Use custom formatters for degree + direction
+gl.xformatter = mticker.FuncFormatter(lon_formatter)
+gl.yformatter = mticker.FuncFormatter(lat_formatter)
+gl.right_labels = False
+gl.top_labels = False
+gl.xlabel_style = {'size': 11}
+gl.ylabel_style = {'size': 11}
+
+# Adjust layout and add main title
+plt.tight_layout()
+plt.suptitle(f'Factual Total Damage', fontsize=16, y=1.02)
+
+# Save the figure
+output_file_main = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_comparison.png'
+plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
+plt.show()
+# %%
+from cartopy import crs as ccrs, feature as cfeature
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+from shapely.geometry import box
+import numpy as np
+
+# === PLOTTING ===
+print("Creating factual damage plot...")
+
+# Coordinate system: PlateCarree = lat/lon
+crs = ccrs.PlateCarree()
+
+fig, axes = plt.subplots(1, 1, figsize=(8, 8), subplot_kw={'projection': crs})
+
+# Plot settings
+point_size = 10
+alpha = 0.8
+
+# Plot damage points
+scatter1 = axes.scatter(
+    gdf_cf0['x'], gdf_cf0['y'],
+    c=gdf_cf0[f'{DAMAGE_COLUMN}'],
+    cmap=damage_cmap, norm=damage_norm,
+    s=point_size, alpha=alpha,
+    transform=crs
+)
+
+# Add model region
+model_region_gdf = gpd.read_file(join(
+    prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs", 
+    "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0", "gis", "region.geojson"
+)).to_crs("EPSG:4326") 
+model_region_gdf.boundary.plot(ax=axes, edgecolor='black', linewidth=0.5, transform=crs)
+
+# Add background and extent
+axes.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+
+# Set extent (based on actual lat/lon coordinates)
+minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
+axes.set_extent([minx, maxx, miny, maxy], crs)
+
+# Gridlines
+gl = axes.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+gl.xformatter = mticker.FuncFormatter(lon_formatter)
+gl.yformatter = mticker.FuncFormatter(lat_formatter)
+gl.right_labels = False
+gl.top_labels = False
+gl.xlabel_style = {'size': 11}
+gl.ylabel_style = {'size': 11}
+
+# Add colorbar
+cbar1 = plt.colorbar(scatter1, ax=axes, shrink=0.8, pad=0.06)
+cbar1.set_label(damage_label, fontsize=10)
+
+# Titles and save
+plt.tight_layout()
+plt.suptitle(f'Factual Total Damage', fontsize=16, y=0.96)
+
+output_file_main = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}.png'
+plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
+plt.show()
+
+# %%
