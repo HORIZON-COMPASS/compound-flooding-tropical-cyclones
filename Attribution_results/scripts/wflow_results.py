@@ -10,6 +10,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
+from shapely.geometry import Point
 
 import contextily as ctx
 import cartopy.crs as ccrs
@@ -21,6 +22,7 @@ from hydromt_wflow import WflowModel
 
 import platform
 from pathlib import Path
+
 
 #%%
 if platform.system() == "Windows":
@@ -187,52 +189,137 @@ closest_stations = gdf_stations.nsmallest(2, 'distance')
 # closest_stations = gpd.GeoDataFrame(closest_stations, geometry='geometry', crs='EPSG:4326')
 
 #%%
-import geopandas as gpd
-import pandas as pd
 from geopy.distance import geodesic
 
 # Your WFLOW result
-q_river = wflow_30yr_new.results['output']['q_river']  # xarray.DataArray with dims (time, lat, lon)
+q_river = wflow_30yr_new.results['output']['q_river']  # xarray.DataArray (time, lat, lon)
 
-# Extract station coordinates from GeoDataFrame
+# Extract station coordinates
 station_coords = [(pt.y, pt.x) for pt in closest_stations.geometry]  # (lat, lon)
 
-# Prepare lists to store results
+# Get WFLOW lat/lon arrays
+lat_vals = q_river['lat'].values
+lon_vals = q_river['lon'].values
+
+# Prepare containers
 matched_gridpoints = []
 station_series = []
+matched_indices = []
 
-# Loop through each station and find the closest grid point
+# Loop through each station and find the closest WFLOW grid point by index
 for lat, lon in station_coords:
-    grid_point = q_river.sel(lat=lat, lon=lon, method='nearest')
-    matched_lat = float(grid_point['lat'].values)
-    matched_lon = float(grid_point['lon'].values)
-    matched_gridpoints.append((matched_lat, matched_lon))
-    station_series.append(grid_point)
+    lat_idx = (abs(lat_vals - lat)).argmin()
+    lon_idx = (abs(lon_vals - lon)).argmin()
+    matched_lat = float(lat_vals[lat_idx])
+    matched_lon = float(lon_vals[lon_idx])
 
-# Create DataFrame to show matches
+    matched_gridpoints.append((matched_lat, matched_lon))
+    matched_indices.append((lat_idx, lon_idx))
+    
+    # Extract time series at matched grid point
+    ts = q_river[:, lat_idx, lon_idx]
+    station_series.append(ts)
+
+# Create DataFrame with station–grid matches
 matches_df = pd.DataFrame({
     'station_index': closest_stations.index,
-    'station_lat': [lat for lat, lon in station_coords],
-    'station_lon': [lon for lat, lon in station_coords],
-    'matched_grid_lat': [lat for lat, lon in matched_gridpoints],
-    'matched_grid_lon': [lon for lat, lon in matched_gridpoints],
+    'GRDC_station_lat': [lat for lat, lon in station_coords],
+    'GRDC_station_lon': [lon for lat, lon in station_coords],
+    'wflow_matched_grid_lat': [lat for lat, lon in matched_gridpoints],
+    'wflow_matched_grid_lon': [lon for lat, lon in matched_gridpoints],
+    'lat_idx': [i for i, j in matched_indices],
+    'lon_idx': [j for i, j in matched_indices],
 })
 
-# Calculate distance between station and matched grid point (in km)
+# Calculate distance between station and grid cell
 matches_df['distance_km'] = [
-    geodesic((row.station_lat, row.station_lon), (row.matched_grid_lat, row.matched_grid_lon)).km
+    geodesic(
+        (row['GRDC_station_lat'], row['GRDC_station_lon']),
+        (row['wflow_matched_grid_lat'], row['wflow_matched_grid_lon'])
+    ).km
     for _, row in matches_df.iterrows()
 ]
+#%%
+# === Plot WFLOW time series at matched grid points ===
+fig, axes = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 
-# Optional: Combine time series into a DataFrame (time as index)
-station_timeseries_df = pd.concat(
-    [ts.to_series().rename(f'station_{i}') for i, ts in enumerate(station_series)],
-    axis=1
+for i, (ts, ax) in enumerate(zip(station_series, axes)):
+    ts.plot(ax=ax, label=f"Station {matches_df.loc[i, 'station_index']}", color='blue')
+    ax.set_ylabel('Discharge [m³/s]')
+    ax.set_title(f"WFLOW Time Series at Matched Grid Point\n"
+                 f"Station {matches_df.loc[i, 'station_index']} — Distance: {matches_df.loc[i, 'distance_km']:.2f} km")
+    ax.legend()
+    ax.grid(True)
+
+axes[1].set_xlabel('Time')
+
+fig.savefig('../figures/wflow_timeseries_at_GRDC_points.png', dpi=300, bbox_inches='tight')
+plt.tight_layout()
+plt.show()
+
+#%%
+print("plot station_series[0].plot()")
+fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+station_series[0].plot(ax=ax)
+fig.savefig('../figures/stationseries[0].png')
+
+
+#%%
+# Build GeoDataFrame of matched WFLOW points
+matched_wflow_gdf = gpd.GeoDataFrame(
+    geometry=[Point(lon, lat) for lat, lon in matches_df[['wflow_matched_grid_lat', 'wflow_matched_grid_lon']].values],
+    crs='EPSG:4326'
 )
 
-# Output:
-# - matches_df: shows station → grid cell match info + distances
-# - station_timeseries_df: time series at matched grid points
+# Start plot
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot SFINCS region
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
+sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
+
+# Plot wflow basins
+gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=2)
+wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
+
+# Plot all GRDC stations and the two closest ones
+gdf_stations.plot(ax=ax, marker='o', color='red', zorder=2, label='All GRDC Stations')
+closest_stations.plot(ax=ax, marker='o', color='blue', zorder=5, label='Closest to SFINCS')
+
+# Plot matched WFLOW points (from index matching)
+matched_wflow_gdf.plot(ax=ax, marker='x', color='black', markersize=50, zorder=15, label='Matched WFLOW Points')
+
+# Plot WFLOW gauges
+gdf_gauges = mod_ini.geoms["gauges_locs"]
+gauge1 = gdf_gauges[gdf_gauges['index'] == 1]
+gauge2 = gdf_gauges[gdf_gauges['index'] == 2]
+gauge1.plot(ax=ax, color='#1f77b4', markersize=30, label='wflow Gauge 1', zorder=10)
+gauge2.plot(ax=ax, color='#2ca02c', markersize=30, label='wflow Gauge 2', zorder=10)
+
+# Add labels to gauges
+ax.text(gauge1.geometry.x.iloc[0]+0.1, gauge1.geometry.y.iloc[0],
+        str(gauge1['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
+ax.text(gauge2.geometry.x.iloc[0]+0.1, gauge2.geometry.y.iloc[0],
+        str(gauge2['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
+# ax.text(gauge1.geometry.x.iloc[0]+0.1, gauge1.geometry.y.iloc[0],
+#         str(gauge1['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
+# ax.text(gauge2.geometry.x.iloc[0]+0.1, gauge2.geometry.y.iloc[0],
+#         str(gauge2['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
+
+# Plot rivers
+mod_ini.geoms["rivers"].plot(ax=ax, color='white')
+
+# Set extent and basemap
+ax.set_xlim(gdf_stations.geometry.x.min()-0.2, gdf_stations.geometry.x.max()+1)
+ax.set_ylim(gdf_stations.geometry.y.min()-0.5, gdf_stations.geometry.y.max()+0.5)
+ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
+
+# Add legend
+ax.legend(handles=[sfincs_patch, wflow_patch], loc='lower left')
+plt.tight_layout()
+plt.show()
+
+plt.savefig('../figures/GRDC_stations_wflow_comparison.png', dpi=300, bbox_inches='tight')
 
 
 #%%
@@ -276,43 +363,44 @@ ax.set_xlim(gdf_stations.geometry.x.min()-0.2, gdf_stations.geometry.x.max()+1)
 ax.set_ylim(gdf_stations.geometry.y.min()-0.5, gdf_stations.geometry.y.max()+0.5)
 ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
 
+fig.savefig('../figures/wflow_timeseries_at_GRDC_points.png', dpi=300, bbox_inches='tight')
 plt.show()
 # %%
 # Get the indices of the two closest stations in the original dataset
 # Get coordinates from closest_stations
-closest_coords = set(zip(closest_stations.geometry.x, closest_stations.geometry.y))
+# closest_coords = set(zip(closest_stations.geometry.x, closest_stations.geometry.y))
 
-# Get coordinates from selected and their indices
-selected_coords = list(zip(GRDC_data['geo_x'].values, GRDC_data['geo_y'].values))
+# # Get coordinates from selected and their indices
+# selected_coords = list(zip(GRDC_data['geo_x'].values, GRDC_data['geo_y'].values))
 
-# Find indices in 'selected' that match closest_stations
-matching_indices = [i for i, coord in enumerate(selected_coords) if coord in closest_coords]
+# # Find indices in 'selected' that match closest_stations
+# matching_indices = [i for i, coord in enumerate(selected_coords) if coord in closest_coords]
 
-plt.figure(figsize=(10, 5))
+# plt.figure(figsize=(10, 5))
 
-# Plot GRDC stations
-for idx in matching_indices:
-    station_name = GRDC_data['river_name'].values[idx]
-    plt.plot(GRDC_data['time'].values, GRDC_data['runoff_mean'].isel(id=idx), label=f"GRDC {station_name}")
+# # Plot GRDC stations
+# for idx in matching_indices:
+#     station_name = GRDC_data['river_name'].values[idx]
+#     plt.plot(GRDC_data['time'].values, GRDC_data['runoff_mean'].isel(id=idx), label=f"GRDC {station_name}")
 
-# Plot wflow results (add labels and plot only once)
-plt.plot(
-    wflow_30yr_new.results['netcdf']['Q'].time,
-    wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1'),
-    label='Q1', color = '#1f77b4'
-)
-plt.plot(
-    wflow_30yr_new.results['netcdf']['Q'].time,
-    wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='2'),
-    label='Q2', color = '#2ca02c'
-)
+# # Plot wflow results (add labels and plot only once)
+# plt.plot(
+#     wflow_30yr_new.results['netcdf']['Q'].time,
+#     wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1'),
+#     label='Q1', color = '#1f77b4'
+# )
+# plt.plot(
+#     wflow_30yr_new.results['netcdf']['Q'].time,
+#     wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='2'),
+#     label='Q2', color = '#2ca02c'
+# )
 
-plt.xlabel('Time')
-plt.ylabel('Discharge')
-plt.title('Timeseries for Two Closest GRDC Stations and wflow')
-plt.legend()
-plt.tight_layout()
-plt.show()
+# plt.xlabel('Time')
+# plt.ylabel('Discharge')
+# plt.title('Timeseries for Two Closest GRDC Stations and wflow')
+# plt.legend()
+# plt.tight_layout()
+# plt.show()
 
 #%%
 fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
@@ -324,8 +412,8 @@ idx_riopungoe = [i for i, n in enumerate(names) if n == 'RIOPUNGOE']
 
 # Plot BUDZI and Q1
 axs[0].plot(
-    wflow_30yr_new.results['netcdf']['Q'].time,
-    wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1'),
+    station_series[0].time,
+    station_series[0].values,
     label='wflow Q1', color='#1f77b4'
 )
 station_name = GRDC_data['river_name'].values[45]
@@ -342,8 +430,8 @@ axs[0].legend()
 
 # Plot RIOPUNGOE and Q2
 axs[1].plot(
-    wflow_30yr_new.results['netcdf']['Q'].time,
-    wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='2'),
+    station_series[1].time,
+    station_series[1].values,
     label='wflow Q2', color='#2ca02c'
 )
 
@@ -361,23 +449,12 @@ axs[1].set_ylabel('Discharge')
 axs[1].set_title('RIOPUNGOE and wflow Q2')
 axs[1].legend()
 
+plt.savefig('../figures/GRDC_stations_wflow_comparison_2.png', dpi=300, bbox_inches='tight')
+
 plt.tight_layout()
 plt.show()
 
-# %%
-# From Albrecht
-# Read and drop the first row (header example)
-# Q_Day_1494100 = pd.read_csv(
-#     r"c:\Code\2025-07-01_12-51\1494100_Q_Day.Cmd.txt",
-#     encoding="latin1",
-#     delimiter=";",
-#     skiprows=5,
-#     names=["date", "time", "Q"],
-#     na_values=["-999.000", "-999"],
-#     comment="#"
-# )
-# Q_Day_1494100 = Q_Day_1494100.iloc[1:].reset_index(drop=True)
-# %%
+#%%
 
 
 
@@ -386,201 +463,201 @@ plt.show()
 ############### PLOTTING SFINCS RESULTS ##################
 ##########################################################
 # %%
-def make_sfincs_model(subfolder: str):
-    root = BASE_SFINCS / subfolder
-    return SfincsModel(root=str(root), mode="r", data_libs=datacat)
+# def make_sfincs_model(subfolder: str):
+#     root = BASE_SFINCS / subfolder
+#     return SfincsModel(root=str(root), mode="r", data_libs=datacat)
 
-datacat = [
-        '../../Workflows/03_data_catalogs/datacatalog_general.yml',
-        '../../Workflows/03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
-        '../../Workflows/03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
-        '../../Workflows/03_data_catalogs/datacatalog_CF_forcing.yml'
-        ]
+# datacat = [
+#         '../../Workflows/03_data_catalogs/datacatalog_general.yml',
+#         '../../Workflows/03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+#         '../../Workflows/03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+#         '../../Workflows/03_data_catalogs/datacatalog_CF_forcing.yml'
+#         ]
 
-data_catalog = DataCatalog(data_libs = datacat)
+# data_catalog = DataCatalog(data_libs = datacat)
 
-#%%
-# Load in the SFINCS models
-mod_old        = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base")
-mod_wflow_all  = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_all")
-mod_noFpln     = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_nofloodplains")
-mod_ERA5_daily = make_sfincs_model("event_tp_era5_daily_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
-mod_chirps     = make_sfincs_model("event_tp_chirps_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
+# #%%
+# # Load in the SFINCS models
+# mod_old        = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base")
+# mod_wflow_all  = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_all")
+# mod_noFpln     = make_sfincs_model("event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_updatedwflow_nofloodplains")
+# mod_ERA5_daily = make_sfincs_model("event_tp_era5_daily_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
+# mod_chirps     = make_sfincs_model("event_tp_chirps_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 
 
-#%%
-# we set a threshold to mask minimum flood depth
-hmin = 0.05
+# #%%
+# # we set a threshold to mask minimum flood depth
+# hmin = 0.05
 
-for mod, model_name in [
-    (mod_old, "old"),
-    (mod_wflow_all, "wflow all"),
-    (mod_noFpln, "no floodplains"),
-    (mod_ERA5_daily, "ERA5_daily"),
-    (mod_chirps, "CHIRPS daily"),
-]:
-    # compute the maximum over all time steps
-    da_zsmax = mod.results["zsmax"].max(dim="timemax")
+# for mod, model_name in [
+#     (mod_old, "old"),
+#     (mod_wflow_all, "wflow all"),
+#     (mod_noFpln, "no floodplains"),
+#     (mod_ERA5_daily, "ERA5_daily"),
+#     (mod_chirps, "CHIRPS daily"),
+# ]:
+#     # compute the maximum over all time steps
+#     da_zsmax = mod.results["zsmax"].max(dim="timemax")
         
-    # downscale the floodmap
-    depfile  = str(BASE_SFINCS / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base" / "subgrid" / "dep_subgrid.tif")
-    da_dep   = mod.data_catalog.get_rasterdataset(depfile)
+#     # downscale the floodmap
+#     depfile  = str(BASE_SFINCS / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base" / "subgrid" / "dep_subgrid.tif")
+#     da_dep   = mod.data_catalog.get_rasterdataset(depfile)
 
-    da_hmax = utils.downscale_floodmap(
-        zsmax=da_zsmax,
-        dep=da_dep,
-        hmin=hmin,
-        # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
-        )
+#     da_hmax = utils.downscale_floodmap(
+#         zsmax=da_zsmax,
+#         dep=da_dep,
+#         hmin=hmin,
+#         # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
+#         )
         
-    # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
-    sfincs_region = mod.region
-    gwso_region   = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
-    gswo_mask     = gwso_region.raster.reproject_like(da_hmax, method="max")
-    # permanent water where water occurence > 5%
-    da_hmax_masked = da_hmax.where(gswo_mask <= 5)
+#     # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+#     sfincs_region = mod.region
+#     gwso_region   = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
+#     gswo_mask     = gwso_region.raster.reproject_like(da_hmax, method="max")
+#     # permanent water where water occurence > 5%
+#     da_hmax_masked = da_hmax.where(gswo_mask <= 5)
 
-    # Add the name attribute for identification
-    mod.results['hmax'] = da_hmax
-    mod.results['hmax_masked'] = da_hmax_masked
+#     # Add the name attribute for identification
+#     mod.results['hmax'] = da_hmax
+#     mod.results['hmax_masked'] = da_hmax_masked
 
-    del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
+#     del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
 
 
-#%%
-# Plot the actual flood maps
-projection = mod.crs.to_epsg()
+# #%%
+# # Plot the actual flood maps
+# projection = mod.crs.to_epsg()
 
-fig, ax = plt.subplots(nrows=3,
-                       ncols=2,
-                       figsize=(8,8),
-                       dpi=300,
-                       constrained_layout=True,
-                       subplot_kw={"projection": ccrs.epsg(projection)})
+# fig, ax = plt.subplots(nrows=3,
+#                        ncols=2,
+#                        figsize=(8,8),
+#                        dpi=300,
+#                        constrained_layout=True,
+#                        subplot_kw={"projection": ccrs.epsg(projection)})
 
-fig.suptitle("Factual Max Flood Depth", fontsize=11)
+# fig.suptitle("Factual Max Flood Depth", fontsize=11)
 
-# Plot hmax masked
-im = mod_old.results['hmax_masked'].plot.pcolormesh(
-     ax=ax[0,0], cmap="Blues", vmin=0, vmax=5.0, 
-     add_colorbar=False)
+# # Plot hmax masked
+# im = mod_old.results['hmax_masked'].plot.pcolormesh(
+#      ax=ax[0,0], cmap="Blues", vmin=0, vmax=5.0, 
+#      add_colorbar=False)
 
-im = mod_wflow_all.results['hmax_masked'].plot.pcolormesh(
-     ax=ax[0,1], cmap="Blues", vmin=0, vmax=5.0, 
-     add_colorbar=False)
+# im = mod_wflow_all.results['hmax_masked'].plot.pcolormesh(
+#      ax=ax[0,1], cmap="Blues", vmin=0, vmax=5.0, 
+#      add_colorbar=False)
 
-im = mod_noFpln.results['hmax_masked'].plot.pcolormesh(
-     ax=ax[1,0], cmap="Blues", vmin=0, vmax=5.0, 
-     add_colorbar=False)
+# im = mod_noFpln.results['hmax_masked'].plot.pcolormesh(
+#      ax=ax[1,0], cmap="Blues", vmin=0, vmax=5.0, 
+#      add_colorbar=False)
 
-im = mod_ERA5_daily.results['hmax_masked'].plot.pcolormesh(
-     ax=ax[1,1], cmap="Blues", vmin=0, vmax=5.0, 
-     add_colorbar=False)
+# im = mod_ERA5_daily.results['hmax_masked'].plot.pcolormesh(
+#      ax=ax[1,1], cmap="Blues", vmin=0, vmax=5.0, 
+#      add_colorbar=False)
 
-im = mod_chirps.results['hmax_masked'].plot.pcolormesh(
-     ax=ax[2,0], cmap="Blues", vmin=0, vmax=5.0, 
-     add_colorbar=False)
+# im = mod_chirps.results['hmax_masked'].plot.pcolormesh(
+#      ax=ax[2,0], cmap="Blues", vmin=0, vmax=5.0, 
+#      add_colorbar=False)
 
-# Add basemap and gridlines for each subplot
-for i, axis in enumerate(ax.flat):
-    ctx.add_basemap(
-        axis,
-        source=ctx.providers.Esri.WorldImagery,
-        zoom=10,
-        crs=mod_old.results['hmax_masked'].rio.crs,
-        attribution=False
-    )
-    gl = axis.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
-    gl.top_labels = False
-    gl.right_labels = False
-    gl.xlabel_style = {'size': 8}
-    gl.ylabel_style = {'size': 8}
-    gl.xformatter = LONGITUDE_FORMATTER
-    gl.yformatter = LATITUDE_FORMATTER
-    gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
-    gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
+# # Add basemap and gridlines for each subplot
+# for i, axis in enumerate(ax.flat):
+#     ctx.add_basemap(
+#         axis,
+#         source=ctx.providers.Esri.WorldImagery,
+#         zoom=10,
+#         crs=mod_old.results['hmax_masked'].rio.crs,
+#         attribution=False
+#     )
+#     gl = axis.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
+#     gl.top_labels = False
+#     gl.right_labels = False
+#     gl.xlabel_style = {'size': 8}
+#     gl.ylabel_style = {'size': 8}
+#     gl.xformatter = LONGITUDE_FORMATTER
+#     gl.yformatter = LATITUDE_FORMATTER
+#     gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
+#     gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
 
-# Titles
-ax[0,0].set_title(f"Old wflow settings", fontsize=12)
-ax[0,1].set_title(f"New wflow settings", fontsize=12)
-ax[1,0].set_title(f"No 1D floodplain", fontsize=12)
-ax[1,1].set_title(f"ERA5 daily", fontsize=12)
-ax[2,0].set_title(f"CHIRPS daily", fontsize=12)
+# # Titles
+# ax[0,0].set_title(f"Old wflow settings", fontsize=12)
+# ax[0,1].set_title(f"New wflow settings", fontsize=12)
+# ax[1,0].set_title(f"No 1D floodplain", fontsize=12)
+# ax[1,1].set_title(f"ERA5 daily", fontsize=12)
+# ax[2,0].set_title(f"CHIRPS daily", fontsize=12)
 
-# Add shared colorbar with larger size and labels
-cbar = fig.colorbar(im, ax=ax, orientation="vertical", 
-                    fraction=0.035, pad=0.05)
-cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
-cbar.ax.tick_params(labelsize=8)
+# # Add shared colorbar with larger size and labels
+# cbar = fig.colorbar(im, ax=ax, orientation="vertical", 
+#                     fraction=0.035, pad=0.05)
+# cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
+# cbar.ax.tick_params(labelsize=8)
     
-fig.savefig("../figures/wflow_test_hmax_masked.png", bbox_inches='tight', dpi=300)
-plt.show()
+# fig.savefig("../figures/wflow_test_hmax_masked.png", bbox_inches='tight', dpi=300)
+# plt.show()
 
 
 
-# %%
-# Calculate the difference between the two hmax_masked maps (mod_new - mod_old)
-hmax_diff_all = mod_wflow_all.results['hmax_masked'] - mod_old.results['hmax_masked']
-hmax_diff_noFpln = mod_noFpln.results['hmax_masked'] - mod_old.results['hmax_masked']
-hmax_diff_ERA5_daily = mod_ERA5_daily.results['hmax_masked'] - mod_old.results['hmax_masked']
-hmax_diff_chirps = mod_chirps.results['hmax_masked'] - mod_old.results['hmax_masked']
+# # %%
+# # Calculate the difference between the two hmax_masked maps (mod_new - mod_old)
+# hmax_diff_all = mod_wflow_all.results['hmax_masked'] - mod_old.results['hmax_masked']
+# hmax_diff_noFpln = mod_noFpln.results['hmax_masked'] - mod_old.results['hmax_masked']
+# hmax_diff_ERA5_daily = mod_ERA5_daily.results['hmax_masked'] - mod_old.results['hmax_masked']
+# hmax_diff_chirps = mod_chirps.results['hmax_masked'] - mod_old.results['hmax_masked']
 
-# Plot the difference map as a new subplot
-fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 8), dpi=300,
-                       constrained_layout=True,
-                       subplot_kw={"projection": ccrs.epsg(projection)})
+# # Plot the difference map as a new subplot
+# fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 8), dpi=300,
+#                        constrained_layout=True,
+#                        subplot_kw={"projection": ccrs.epsg(projection)})
 
-fig.suptitle("Difference in Flood Depth", fontsize=11)
+# fig.suptitle("Difference in Flood Depth", fontsize=11)
 
-# Plot the difference
-im0 = hmax_diff_all.plot.pcolormesh(
-    ax=ax[0,0], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
-    transform=ccrs.PlateCarree())
+# # Plot the difference
+# im0 = hmax_diff_all.plot.pcolormesh(
+#     ax=ax[0,0], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
+#     transform=ccrs.PlateCarree())
 
-im1 = hmax_diff_noFpln.plot.pcolormesh(
-    ax=ax[0,1], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
-    transform=ccrs.PlateCarree())
+# im1 = hmax_diff_noFpln.plot.pcolormesh(
+#     ax=ax[0,1], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
+#     transform=ccrs.PlateCarree())
 
-im2 = hmax_diff_ERA5_daily.plot.pcolormesh(
-    ax=ax[1,0], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
-    transform=ccrs.PlateCarree())
+# im2 = hmax_diff_ERA5_daily.plot.pcolormesh(
+#     ax=ax[1,0], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
+#     transform=ccrs.PlateCarree())
 
-im3 = hmax_diff_chirps.plot.pcolormesh(
-    ax=ax[1,1], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
-    transform=ccrs.PlateCarree())
+# im3 = hmax_diff_chirps.plot.pcolormesh(
+#     ax=ax[1,1], cmap="RdBu", vmin=-2, vmax=2, add_colorbar=False,
+#     transform=ccrs.PlateCarree())
 
-ax[0,0].set_title("Difference (All settings - Old)", fontsize=12)
-ax[0,1].set_title("Difference (No floodplains - Old)", fontsize=12)
-ax[1,0].set_title("Difference (ERA5 daily - Old)", fontsize=12)
-ax[1,1].set_title("Difference (CHIRPS - Old)", fontsize=12)
+# ax[0,0].set_title("Difference (All settings - Old)", fontsize=12)
+# ax[0,1].set_title("Difference (No floodplains - Old)", fontsize=12)
+# ax[1,0].set_title("Difference (ERA5 daily - Old)", fontsize=12)
+# ax[1,1].set_title("Difference (CHIRPS - Old)", fontsize=12)
 
 
-# Add basemap and gridlines for each subplot
-for i, axis in enumerate(ax.flat):
-    ctx.add_basemap(
-        axis,
-        source=ctx.providers.Esri.WorldImagery,
-        zoom=10,
-        crs=mod_old.results['hmax_masked'].rio.crs,
-        attribution=False
-    )
-    gl = axis.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
-    gl.top_labels = False
-    gl.right_labels = False
-    gl.xlabel_style = {'size': 8}
-    gl.ylabel_style = {'size': 8}
-    gl.xformatter = LONGITUDE_FORMATTER
-    gl.yformatter = LATITUDE_FORMATTER
-    gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
-    gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
+# # Add basemap and gridlines for each subplot
+# for i, axis in enumerate(ax.flat):
+#     ctx.add_basemap(
+#         axis,
+#         source=ctx.providers.Esri.WorldImagery,
+#         zoom=10,
+#         crs=mod_old.results['hmax_masked'].rio.crs,
+#         attribution=False
+#     )
+#     gl = axis.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
+#     gl.top_labels = False
+#     gl.right_labels = False
+#     gl.xlabel_style = {'size': 8}
+#     gl.ylabel_style = {'size': 8}
+#     gl.xformatter = LONGITUDE_FORMATTER
+#     gl.yformatter = LATITUDE_FORMATTER
+#     gl.xlocator = mticker.FixedLocator(np.arange(-180, 180, .2))
+#     gl.ylocator = mticker.FixedLocator(np.arange(-90, 90, .2))
 
-# Add shared colorbar
-cbar = fig.colorbar(im3, ax=ax, orientation="vertical", fraction=0.04, pad=0.05)
-cbar.set_label('Difference in Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
-cbar.ax.tick_params(labelsize=8)
+# # Add shared colorbar
+# cbar = fig.colorbar(im3, ax=ax, orientation="vertical", fraction=0.04, pad=0.05)
+# cbar.set_label('Difference in Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
+# cbar.ax.tick_params(labelsize=8)
 
-fig.savefig("../figures/wflow_test_hmax_diff.png", bbox_inches='tight', dpi=300)
+# fig.savefig("../figures/wflow_test_hmax_diff.png", bbox_inches='tight', dpi=300)
 
-plt.show()
+# plt.show()
 
-# %%
+# # %%
