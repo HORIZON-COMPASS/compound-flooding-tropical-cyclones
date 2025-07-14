@@ -146,6 +146,8 @@ rule run_sfincs_model:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
                                                                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
         exe                  = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
+        sif                  = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
+        sif_dir              = join(root_dir, dir_models, "00_executables"),
     output:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs_map.nc"),
     run:
@@ -157,10 +159,12 @@ rule run_sfincs_model:
                 subprocess.run([str(params.exe)], stdout=f, cwd=params.dir_run_with_forcing)
                 print("Finished running")
         if os.name == 'posix':
-            shell("docker image ls")
-            shell("docker run --rm --cpus={threads} --env OMP_NUM_THREADS={threads} --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs")
-
-
+            # shell("docker image ls")
+            # shell("docker run --rm --cpus={threads} --env OMP_NUM_THREADS={threads} --mount src={params.dir_run_with_forcing},target=/data,type=bind -w /data deltares/sfincs-cpu:sfincs-v2.1.1-Dollerup-Release sfincs")
+            shell("[ -f {params.sif} ] || apptainer pull --dir {params.sif_dir} docker://deltares/sfincs-cpu:latest")
+            # shell("cd {params.dir_run_with_forcing}")
+            # shell("apptainer exec --env OMP_NUM_THREADS={threads} -B ${PWD}:/mnt/data {params.sif} sfincs")
+            shell("apptainer exec --env OMP_NUM_THREADS={threads} -B {params.dir_run_with_forcing}:/mnt/data {params.sif} sh -c 'cd /mnt/data && sfincs' 2>&1 | tee {params.dir_run_with_forcing}/sfincs.log")
 
 rule sfincs_plot_floodmap:
     input:
