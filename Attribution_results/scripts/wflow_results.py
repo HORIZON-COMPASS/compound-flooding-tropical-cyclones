@@ -1,4 +1,5 @@
 # %%
+print("Loading packages...")
 import os
 from os.path import join
 import pandas as pd
@@ -22,7 +23,11 @@ from hydromt_wflow import WflowModel
 
 import platform
 from pathlib import Path
+from geopy.distance import geodesic
 
+from sklearn.metrics import mean_squared_error
+from scipy.stats import pearsonr
+from hydromt.stats import skills as skillstats  # NSE, KGE, etc.
 
 #%%
 if platform.system() == "Windows":
@@ -41,6 +46,7 @@ BASE_DATA   = P / "11210471-001-compass" / "01_Data"
 def make_model(subfolder: str):
     root = BASE_RUNS / subfolder / "events"
     cfg  = root / "wflow_sbm.toml"
+    print(f"Loading model: {subfolder} from {BASE_RUNS}")
     return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
 
 #%%
@@ -105,358 +111,418 @@ for gauge_id in ['1', '2']:
 # %% ##############################################################
 ############################## GRDC DATA ##########################
 ## ################################################################
-# Read in GRDC data
-path = str(BASE_DATA / "GRDC" / "GRDC-Daily.nc")
-GRDC_data = xr.open_dataset(path)
+print("Loading GRDC dataset...")
+grdc_path = BASE_DATA / "GRDC" / "GRDC-Daily.nc"
+GRDC_data = xr.open_dataset(str(grdc_path))
 
+print("Initializing 30-year WFLOW model...")
 def make_model_warmup(subfolder: str):
     root = BASE_RUNS / subfolder / "warmup"
-    cfg  = root / "wflow_sbm.toml"
+    cfg = root / "wflow_sbm.toml"
     return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
 
-# Mod wflow 30 yr
-wflow_30yr_new =  make_model_warmup("event_precip_era5_daily_CF0_30yr")
-# %%
-# Get the indices where river_name matches your selection
-names = GRDC_data['river_name'].values.astype(str)
-wanted = ['BUDZI', 'RIOPUNGOE']
-idx = [i for i, n in enumerate(names) if n in wanted]
+wflow_30yr_new = make_model_warmup("event_precip_era5_daily_CF0_30yr_1954")
+wflow_30yr_1989 = make_model_warmup("event_precip_era5_hourly_zarr_CF0_30yr")
+wflow_30yr_maxL06 = make_model_warmup("event_precip_era5_daily_CF0_30yr")
 
-# Select by index along the 'id' dimension
+# %% ##############################################################
+######################### SELECT GRDC STATIONS ####################
+###################################################################
+
+print("Selecting GRDC stations...")
+wanted_rivers = ['BUDZI', 'RIOPUNGOE']
+names = GRDC_data['river_name'].values.astype(str)
+idx = [i for i, n in enumerate(names) if n in wanted_rivers]
 selected = GRDC_data.isel(id=idx)
 
-# Now plot
-lats = selected['geo_y'].values
-lons = selected['geo_x'].values
+print(f"Found {len(selected.id)} matching GRDC stations.")
 
-plt.figure(figsize=(6, 6))
-ax = plt.gca()
-# Plot points (note: contextily expects lon=x, lat=y in Web Mercator)
-plt.scatter(lons, lats, marker='o', color='red', s=10)
-for i, name in enumerate(selected['river_name'].values):
-    plt.text(lons[i] - 0.07, lats[i], name, fontsize=8, fontweight='bold', ha='right')
+lats, lons = selected['geo_y'].values, selected['geo_x'].values
+gdf_stations = gpd.GeoDataFrame({'name': selected['river_name'].values},
+                                 geometry=gpd.points_from_xy(lons, lats),
+                                 crs="EPSG:4326")
 
-# Set axis labels and title
-plt.xlabel('Longitude')
-plt.ylabel('Latitude')
-plt.title('Selected GRDC Rivers in Blue')
 
-# Convert to Web Mercator for contextily
-gdf_stations = gpd.GeoDataFrame(
-    {'name': selected['river_name'].values},
-    geometry=gpd.points_from_xy(lons, lats),
-    crs="EPSG:4326"
-)
+# %% ##############################################################
+######################## LOAD REGIONS & MATCH #####################
+###################################################################
 
-# Getting the model regions
-gdf_wflow = gpd.read_file(str(BASE_MODELS / "staticgeoms" / "basins.geojson"))
-gdf_sfincs = gpd.read_file(str(BASE / "02_Models" / "sofala" / "Idai" / "sfincs" / "gis" / "region.geojson"))
-gdf_wflow = gdf_wflow.to_crs("EPSG:4326")
-gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
+print("Loading WFLOW and SFINCS regions...")
+gdf_wflow = gpd.read_file(BASE_MODELS / "staticgeoms" / "basins.geojson").to_crs("EPSG:4326")
+gdf_sfincs = gpd.read_file(BASE / "02_Models" / "sofala" / "Idai" / "sfincs" / "gis" / "region.geojson").to_crs("EPSG:4326")
 
-#%%
-# Get the SFINCS region geometry (assuming it's a single polygon)
+print("Finding closest GRDC stations to SFINCS domain...")
 sfincs_geom = gdf_sfincs.unary_union
-
-# Calculate distance from each station to the SFINCS region (in degrees, since EPSG:4326)
-gdf_stations['distance'] = gdf_stations.geometry.apply(lambda x: x.distance(sfincs_geom))
-
-# Select the two closest stations
+gdf_stations['distance'] = gdf_stations.geometry.distance(sfincs_geom)
 closest_stations = gdf_stations.nsmallest(2, 'distance')
+print(f"Closest stations: {list(closest_stations['name'])}")
 
-# Select the wflow output closest to those two locations
-# Get wflow result lat/lon and turn into GeoDataFrame
-# wflow_df = wflow_30yr_new.results['output'][['lat', 'lon']].copy()
-# wflow_df['geometry'] = gpd.points_from_xy(wflow_df['lon'], wflow_df['lat'])
-# wflow_gdf = gpd.GeoDataFrame(wflow_df, geometry='geometry', crs='EPSG:4326')
-
-# wflow_proj = wflow_gdf.to_crs(epsg=3857)
-# stations_proj = closest_stations.to_crs(epsg=3857)
-
-# closest_wflow_points = []
-# for station_geom in stations_proj.geometry:
-#     distances = wflow_proj.geometry.distance(station_geom)
-#     closest_idx = distances.idxmin()
-#     closest_wflow_points.append(wflow_gdf.loc[closest_idx])
-
-# closest_wflow_gdf = gpd.GeoDataFrame(closest_wflow_points, crs="EPSG:4326")
-
-# sel_wflow_output = wflow_30yr_new.results['output'].iloc[:, closest_idx]  # shape: (time, locations)
-
-# Assume `closest_stations` is already a GeoDataFrame in EPSG:4326
-# If it's just a DataFrame, convert it like this:
-# closest_stations['geometry'] = gpd.points_from_xy(closest_stations['lon'], closest_stations['lat'])
-# closest_stations = gpd.GeoDataFrame(closest_stations, geometry='geometry', crs='EPSG:4326')
 
 #%%
-from geopy.distance import geodesic
+# %% ##############################################################
+############# MATCH WFLOW GRID POINTS TO CLOSEST STATIONS #########
+###################################################################
 
-# Your WFLOW result
-q_river = wflow_30yr_new.results['output']['q_river']  # xarray.DataArray (time, lat, lon)
+print("Matching GRDC stations to WFLOW river grid points...")
+q_river = wflow_30yr_new.results['output']['q_river']
+lat_vals, lon_vals = q_river['lat'].values, q_river['lon'].values
 
-# Extract station coordinates
-station_coords = [(pt.y, pt.x) for pt in closest_stations.geometry]  # (lat, lon)
+station_coords = [(pt.y, pt.x) for pt in closest_stations.geometry]
+station_series, matched_indices, matched_gridpoints = [], [], []
 
-# Get WFLOW lat/lon arrays
-lat_vals = q_river['lat'].values
-lon_vals = q_river['lon'].values
-
-# Prepare containers
-matched_gridpoints = []
-station_series = []
-matched_indices = []
-
-# Loop through each station and find the closest WFLOW grid point by index
 for lat, lon in station_coords:
-    lat_idx = (abs(lat_vals - lat)).argmin()
-    lon_idx = (abs(lon_vals - lon)).argmin()
-    matched_lat = float(lat_vals[lat_idx])
-    matched_lon = float(lon_vals[lon_idx])
-
+    lat_idx, lon_idx = (abs(lat_vals - lat)).argmin(), (abs(lon_vals - lon)).argmin()
+    matched_lat, matched_lon = float(lat_vals[lat_idx]), float(lon_vals[lon_idx])
     matched_gridpoints.append((matched_lat, matched_lon))
     matched_indices.append((lat_idx, lon_idx))
-    
-    # Extract time series at matched grid point
-    ts = q_river[:, lat_idx, lon_idx]
-    station_series.append(ts)
+    station_series.append(q_river[:, lat_idx, lon_idx])
 
-# Create DataFrame with station–grid matches
+print("Matched WFLOW grid points to GRDC stations.")
+
 matches_df = pd.DataFrame({
     'station_index': closest_stations.index,
-    'GRDC_station_lat': [lat for lat, lon in station_coords],
-    'GRDC_station_lon': [lon for lat, lon in station_coords],
-    'wflow_matched_grid_lat': [lat for lat, lon in matched_gridpoints],
-    'wflow_matched_grid_lon': [lon for lat, lon in matched_gridpoints],
-    'lat_idx': [i for i, j in matched_indices],
-    'lon_idx': [j for i, j in matched_indices],
+    'GRDC_station_lat': [lat for lat, _ in station_coords],
+    'GRDC_station_lon': [lon for _, lon in station_coords],
+    'wflow_matched_grid_lat': [lat for lat, _ in matched_gridpoints],
+    'wflow_matched_grid_lon': [lon for _, lon in matched_gridpoints],
+    'lat_idx': [i for i, _ in matched_indices],
+    'lon_idx': [j for _, j in matched_indices],
+    'distance_km': [
+        geodesic((a, b), (c, d)).km for (a, b), (c, d) in zip(station_coords, matched_gridpoints)
+    ]
+})
+print(matches_df)
+
+
+print("Matching GRDC stations to WFLOW river grid points (wflow_30yr_1989)...")
+
+
+#%%
+# Extract river discharge and grid coordinates
+q_river_1989 = wflow_30yr_1989.results['output']['q_river']
+lat_vals_1989, lon_vals_1989 = q_river_1989['lat'].values, q_river_1989['lon'].values
+
+# Match GRDC stations to closest WFLOW grid cells
+station_coords_1989 = [(pt.y, pt.x) for pt in closest_stations.geometry]
+station_series_1989, matched_indices_1989, matched_gridpoints_1989 = [], [], []
+
+for lat, lon in station_coords_1989:
+    lat_idx = abs(lat_vals_1989 - lat).argmin()
+    lon_idx = abs(lon_vals_1989 - lon).argmin()
+    matched_lat, matched_lon = float(lat_vals_1989[lat_idx]), float(lon_vals_1989[lon_idx])
+    matched_gridpoints_1989.append((matched_lat, matched_lon))
+    matched_indices_1989.append((lat_idx, lon_idx))
+    station_series_1989.append(q_river_1989[:, lat_idx, lon_idx])
+
+print("Matched WFLOW grid points to GRDC stations for wflow_30yr_1989.")
+
+matches_df_1989 = pd.DataFrame({
+    'station_index': closest_stations.index,
+    'GRDC_station_lat': [lat for lat, _ in station_coords_1989],
+    'GRDC_station_lon': [lon for _, lon in station_coords_1989],
+    'wflow_matched_grid_lat': [lat for lat, _ in matched_gridpoints_1989],
+    'wflow_matched_grid_lon': [lon for _, lon in matched_gridpoints_1989],
+    'lat_idx': [i for i, _ in matched_indices_1989],
+    'lon_idx': [j for _, j in matched_indices_1989],
+    'distance_km': [
+        geodesic((a, b), (c, d)).km for (a, b), (c, d) in zip(station_coords_1989, matched_gridpoints_1989)
+    ]
 })
 
-# Calculate distance between station and grid cell
-matches_df['distance_km'] = [
-    geodesic(
-        (row['GRDC_station_lat'], row['GRDC_station_lon']),
-        (row['wflow_matched_grid_lat'], row['wflow_matched_grid_lon'])
-    ).km
-    for _, row in matches_df.iterrows()
-]
-#%%
-# === Plot WFLOW time series at matched grid points ===
-fig, axes = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
-
-for i, (ts, ax) in enumerate(zip(station_series, axes)):
-    ts.plot(ax=ax, label=f"Station {matches_df.loc[i, 'station_index']}", color='blue')
-    ax.set_ylabel('Discharge [m³/s]')
-    ax.set_title(f"WFLOW Time Series at Matched Grid Point\n"
-                 f"Station {matches_df.loc[i, 'station_index']} — Distance: {matches_df.loc[i, 'distance_km']:.2f} km")
-    ax.legend()
-    ax.grid(True)
-
-axes[1].set_xlabel('Time')
-
-fig.savefig('../figures/wflow_timeseries_at_GRDC_points.png', dpi=300, bbox_inches='tight')
-plt.tight_layout()
-plt.show()
-
-#%%
-print("plot station_series[0].plot()")
-fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-station_series[0].plot(ax=ax)
-fig.savefig('../figures/stationseries[0].png')
+print(matches_df_1989)
 
 
 #%%
-# Build GeoDataFrame of matched WFLOW points
-matched_wflow_gdf = gpd.GeoDataFrame(
-    geometry=[Point(lon, lat) for lat, lon in matches_df[['wflow_matched_grid_lat', 'wflow_matched_grid_lon']].values],
-    crs='EPSG:4326'
-)
+# Extract river discharge and grid coordinates
+q_river_max = wflow_30yr_maxL06.results['output']['q_river']
+lat_vals_max, lon_vals_max = q_river_max['lat'].values, q_river_max['lon'].values
 
-# Start plot
-fig, ax = plt.subplots(figsize=(10, 10))
+# Match GRDC stations to closest WFLOW grid cells
+station_coords_max = [(pt.y, pt.x) for pt in closest_stations.geometry]
+station_series_max, matched_indices_max, matched_gridpoints_max = [], [], []
 
-# Plot SFINCS region
-gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
-sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
+for lat, lon in station_coords_max:
+    lat_idx = abs(lat_vals_max - lat).argmin()
+    lon_idx = abs(lon_vals_max - lon).argmin()
+    matched_lat, matched_lon = float(lat_vals_max[lat_idx]), float(lon_vals_max[lon_idx])
+    matched_gridpoints_max.append((matched_lat, matched_lon))
+    matched_indices_max.append((lat_idx, lon_idx))
+    station_series_max.append(q_river_max[:, lat_idx, lon_idx])
 
-# Plot wflow basins
-gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=2)
-wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
+print("Matched WFLOW grid points to GRDC stations for wflow_30yr_maxL06.")
 
-# Plot all GRDC stations and the two closest ones
-gdf_stations.plot(ax=ax, marker='o', color='red', zorder=2, label='All GRDC Stations')
-closest_stations.plot(ax=ax, marker='o', color='blue', zorder=5, label='Closest to SFINCS')
-
-# Plot matched WFLOW points (from index matching)
-matched_wflow_gdf.plot(ax=ax, marker='x', color='black', markersize=50, zorder=15, label='Matched WFLOW Points')
-
-# Plot WFLOW gauges
-gdf_gauges = mod_ini.geoms["gauges_locs"]
-gauge1 = gdf_gauges[gdf_gauges['index'] == 1]
-gauge2 = gdf_gauges[gdf_gauges['index'] == 2]
-gauge1.plot(ax=ax, color='#1f77b4', markersize=30, label='wflow Gauge 1', zorder=10)
-gauge2.plot(ax=ax, color='#2ca02c', markersize=30, label='wflow Gauge 2', zorder=10)
-
-# Add labels to gauges
-ax.text(gauge1.geometry.x.iloc[0]+0.1, gauge1.geometry.y.iloc[0],
-        str(gauge1['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
-ax.text(gauge2.geometry.x.iloc[0]+0.1, gauge2.geometry.y.iloc[0],
-        str(gauge2['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
-# ax.text(gauge1.geometry.x.iloc[0]+0.1, gauge1.geometry.y.iloc[0],
-#         str(gauge1['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
-# ax.text(gauge2.geometry.x.iloc[0]+0.1, gauge2.geometry.y.iloc[0],
-#         str(gauge2['index'].iloc[0]), fontsize=9, ha='right', zorder=10, fontweight='bold')
-
-# Plot rivers
-mod_ini.geoms["rivers"].plot(ax=ax, color='white')
-
-# Set extent and basemap
-ax.set_xlim(gdf_stations.geometry.x.min()-0.2, gdf_stations.geometry.x.max()+1)
-ax.set_ylim(gdf_stations.geometry.y.min()-0.5, gdf_stations.geometry.y.max()+0.5)
-ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
-
-# Add legend
-ax.legend(handles=[sfincs_patch, wflow_patch], loc='lower left')
-plt.tight_layout()
-plt.show()
-
-plt.savefig('../figures/GRDC_stations_wflow_comparison.png', dpi=300, bbox_inches='tight')
+# matches_df_max = pd.DataFrame({
+#     'station_index': closest_stations.index,
+#     'GRDC_station_lat': [lat for lat, _ in station_coords_max],
+#     'GRDC_station_lon': [lon for _, lon in station_coords_max],
+#     'wflow_matched_grid_lat': [lat for lat, _ in matched_gridpoints_max],
+#     'wflow_matched_grid_lon': [lon for _, lon in matched_gridpoints_max],
+#     'lat_idx': [i for i, _ in matched_indices_max],
+#     'lon_idx': [j for _, j in matched_indices_max],
+#     'distance_km': [
+#         geodesic((a, b), (c, d)).km for (a, b), (c, d) in zip(station_coords_max, matched_gridpoints_max)
+#     ]
+# })
 
 
-#%%
-# Plot SFINCS region and set up legend entry
-gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
-sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
+# %% ##############################################################
+################### PLOT SPATIAL MATCHING OVERVIEW ################
+###################################################################
 
-# Plot wflow basins region and set up legend entry
-gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=2)
-wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
-
-# Plot all and the two closest stations
-closest_stations.plot(ax=ax, marker='o', color='blue', zorder=5, label='Closest to SFINCS')
-gdf_stations.plot(ax=ax, marker='o', color='red', zorder=2)
-# wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1').plot
-
-#The folder is the location of the wflow model in 02_Models
-gdf_gauges = mod_ini.geoms["gauges_locs"]
-
-gauge1 = gdf_gauges[gdf_gauges['index'] == 1]
-gauge2 = gdf_gauges[gdf_gauges['index'] == 2]
-
-# Plot gauge 1 and 2
-gauge1.plot(ax=ax, color='#1f77b4', markersize=30, label='wflow Gauge 1', zorder=10)
-gauge2.plot(ax=ax, color='#2ca02c', markersize=30, label='wflow Gauge 2', zorder=10)
-# closest_wflow_gdf.plot(ax=ax, ax=ax, marker='o', color='blue', zorder=15, label='Sel wflow points')
-mod_ini.geoms["rivers"].plot(ax=ax, color='white')
-
-# Add text labels at the gauge locations
-ax.text(
-    gauge1.geometry.x.iloc[0]+0.1, gauge1.geometry.y.iloc[0],
-    str(gauge1['index'].iloc[0]), fontsize=9, ha='right', zorder=10,
-    fontweight='bold')
-ax.text(
-    gauge2.geometry.x.iloc[0]+0.1, gauge2.geometry.y.iloc[0],
-    str(gauge2['index'].iloc[0]), fontsize=9, ha='right', zorder=10,
-    fontweight='bold')
-
-# Set the extent and add OSM basemap
-ax.set_xlim(gdf_stations.geometry.x.min()-0.2, gdf_stations.geometry.x.max()+1)
-ax.set_ylim(gdf_stations.geometry.y.min()-0.5, gdf_stations.geometry.y.max()+0.5)
-ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
-
-fig.savefig('../figures/wflow_timeseries_at_GRDC_points.png', dpi=300, bbox_inches='tight')
-plt.show()
-# %%
-# Get the indices of the two closest stations in the original dataset
-# Get coordinates from closest_stations
-# closest_coords = set(zip(closest_stations.geometry.x, closest_stations.geometry.y))
-
-# # Get coordinates from selected and their indices
-# selected_coords = list(zip(GRDC_data['geo_x'].values, GRDC_data['geo_y'].values))
-
-# # Find indices in 'selected' that match closest_stations
-# matching_indices = [i for i, coord in enumerate(selected_coords) if coord in closest_coords]
-
-# plt.figure(figsize=(10, 5))
-
-# # Plot GRDC stations
-# for idx in matching_indices:
-#     station_name = GRDC_data['river_name'].values[idx]
-#     plt.plot(GRDC_data['time'].values, GRDC_data['runoff_mean'].isel(id=idx), label=f"GRDC {station_name}")
-
-# # Plot wflow results (add labels and plot only once)
-# plt.plot(
-#     wflow_30yr_new.results['netcdf']['Q'].time,
-#     wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1'),
-#     label='Q1', color = '#1f77b4'
-# )
-# plt.plot(
-#     wflow_30yr_new.results['netcdf']['Q'].time,
-#     wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='2'),
-#     label='Q2', color = '#2ca02c'
+# print("Plotting spatial match of GRDC and WFLOW points...")
+# matched_wflow_gdf = gpd.GeoDataFrame(
+#     geometry=[Point(lon, lat) for lat, lon in matches_df[['wflow_matched_grid_lat', 'wflow_matched_grid_lon']].values],
+#     crs='EPSG:4326'
 # )
 
-# plt.xlabel('Time')
-# plt.ylabel('Discharge')
-# plt.title('Timeseries for Two Closest GRDC Stations and wflow')
-# plt.legend()
+# fig, ax = plt.subplots(figsize=(10, 10))
+# gdf_wflow.plot(ax=ax, edgecolor='skyblue', facecolor='skyblue', alpha=0.5, label="Wflow Basins")
+# gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', alpha=0.5, label="SFINCS Region")
+# mod_ini.geoms["rivers"].plot(ax=ax, color='white', zorder=1)
+# gdf_stations.plot(ax=ax, color='red', label='All GRDC Stations', zorder=10)
+# closest_stations.plot(ax=ax, color='blue', label='Closest GRDC Stations', zorder=10)
+# matched_wflow_gdf.plot(ax=ax, marker='x', color='green', markersize=50, label='Matched WFLOW Grid', zorder=10)
+
+# # Add text labels to matched WFLOW grid points
+# for i, point in enumerate(matched_wflow_gdf.geometry):
+#     ax.text(point.x + 0.02, point.y + 0.02, f"Q{i}", fontsize=9, fontweight='bold', color='green', ha='left', zorder=10)
+
+# for i, point in enumerate(closest_stations.geometry):
+#     ax.text(point.x + 0.02, point.y - 0.02, f"G{i}", fontsize=9, fontweight='bold', color='blue', ha='left', zorder=10)
+
+# gdf_gauges = mod_ini.geoms["gauges_locs"]
+# # for i in [1, 2]:
+# #     gauge = gdf_gauges[gdf_gauges['index'] == i]
+# #     gauge.plot(ax=ax, markersize=30, label=f'wflow-sfincs Gauge {i}', zorder=10)
+# #     ax.text(gauge.geometry.x.iloc[0] + 0.1, gauge.geometry.y.iloc[0],
+# #             str(i), fontsize=9, fontweight='bold', ha='right')
+
+
+# ax.set_xlim(gdf_stations.geometry.x.min() - 0.2, gdf_stations.geometry.x.max() + 1)
+# ax.set_ylim(gdf_stations.geometry.y.min() - 0.5, gdf_stations.geometry.y.max() + 0.5)
+# ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
+# ax.legend(loc='lower left')
 # plt.tight_layout()
+# plt.savefig('../figures/GRDC_stations_wflow_gridpoints.png', dpi=300)
 # plt.show()
 
+
+# %% ##############################################################
+############## COMPARE WFLOW VS. GRDC TIME SERIES DIRECTLY ########
+###################################################################
+
+# print("Comparing WFLOW time series to GRDC records...")
+# fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+
+# for i, river in enumerate(wanted_rivers):
+#     idx_grdc = [i for i, n in enumerate(names) if n == river][0]
+#     color = ["#0C75C0", "#4DA54E"]
+#     ts = station_series[i]
+
+#     axs[i].plot(ts.time, ts.values, label=f'wflow Q{i}', color=color[i])
+#     axs[i].plot(GRDC_data['time'], GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]]), label=f'GRDC {river} (G{i})', color='orange')
+    
+#     axs[i].axhline(GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]]).max(), linestyle='--', color='orange', label='GRDC max')
+#     axs[i].axhline(ts.values.max(), linestyle='--', color=color[i], label='wflow max')
+
+#     axs[i].set_ylabel('Discharge [m3/s]')
+#     axs[i].set_title(f"{river} and wflow Q{i+1}")
+#     axs[i].legend()
+
+# axs[1].set_xlabel('Time')
+# plt.tight_layout()
+# plt.savefig('../figures/GRDC_stations_wflow_timeseries_comparison.png', dpi=300)
+# plt.show()
+
+
+# %% ##############################################################
+############## COMPARE WFLOW VS. GRDC STATISTICALLY ###############
+###################################################################
+# print("Comparing WFLOW time series to GRDC records with skill statistics...")
+
+# fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+# color = ["#0C75C0", "#4DA54E"]  # Blue for BUDZI, Green for RIOPUNGOE
+
+# for i, river in enumerate(wanted_rivers):
+#     print(f"Processing {river}...")
+
+#     idx_grdc = [i for i, n in enumerate(names) if n == river][0]
+#     grdc_ts = GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]])
+#     wflow_ts = station_series[i]
+
+#     # Stats
+#     print(grdc_ts)
+#     print(wflow_ts)
+#     common_time = np.intersect1d(wflow_ts.time.values, grdc_ts.time.values)
+#     wflow_aligned = wflow_ts.sel(time=common_time)
+#     grdc_aligned = grdc_ts.sel(time=common_time)
+
+#     wflow_stat = grdc_aligned.chunk(dict(time=-1))
+#     grdc_stat = wflow_aligned.chunk(dict(time=-1))
+
+#     kge = skillstats.kge(wflow_stat, grdc_stat, dim='time')["kge"].values.round(2)
+#     # nse = skillstats.nashsutcliffe(wflow_stat, grdc_stat, dim='month').values.round(2)
+
+#     # Plot time series
+#     axs[i].plot(wflow_ts.time, wflow_ts.values, label=f'WFLOW Q{i},  KGE: {kge}', color=color[i])
+#     axs[i].plot(grdc_ts.time, grdc_ts.values, label=f'GRDC {river} (G{i})', color='orange')
+
+#     # Add max lines
+#     axs[i].axhline(grdc_ts.max().values, linestyle='--', color='orange', label='GRDC max')
+#     axs[i].axhline(wflow_ts.values.max(), linestyle='--', color=color[i], label='WFLOW max')
+
+#     axs[i].set_ylabel('Discharge [m³/s]')
+#     axs[i].set_title(f"{river} and WFLOW Q{i}")
+#     axs[i].legend()
+#     axs[i].grid(True)
+
+# axs[1].set_xlabel('Time')
+# plt.tight_layout()
+# plt.savefig('../figures/GRDC_stations_wflow_timeseries_comparison_with_stats.png', dpi=300)
+# plt.show()
+
+# print("Daily time series comparison with statistics saved.")
+
+
 #%%
+# plot for 1974 & 1975
+# print("Comparing WFLOW time series to GRDC records with skill statistics...")
+
+# fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+# color = ["#0C75C0", "#4DA54E"]  # Blue for BUDZI, Green for RIOPUNGOE
+
+# # Define time range
+# time_range = slice("1974-01-01", "1975-12-31")
+
+# for i, river in enumerate(wanted_rivers):
+#     print(f"Processing {river}...")
+
+#     idx_grdc = [i for i, n in enumerate(names) if n == river][0]
+#     grdc_ts = GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]])
+#     wflow_ts = station_series[i]
+
+#     # Filter both time series to 1974–1975
+#     grdc_ts = grdc_ts.sel(time=time_range)
+#     wflow_ts = wflow_ts.sel(time=time_range)
+
+#     # Align times for fair comparison
+#     common_time = np.intersect1d(wflow_ts.time.values, grdc_ts.time.values)
+#     wflow_aligned = wflow_ts.sel(time=common_time)
+#     grdc_aligned = grdc_ts.sel(time=common_time)
+
+#     # Stats
+#     wflow_stat = grdc_aligned.chunk(dict(time=-1))
+#     grdc_stat = wflow_aligned.chunk(dict(time=-1))
+
+#     kge = skillstats.kge(wflow_stat, grdc_stat, dim='time')["kge"].values.round(2)
+#     # nse = skillstats.nashsutcliffe(wflow_stat, grdc_stat, dim='time').values.round(2)
+
+#     # Plot time series
+#     axs[i].plot(wflow_ts.time, wflow_ts.values, label=f'WFLOW Q{i},  KGE: {kge}', color=color[i])
+#     axs[i].plot(grdc_ts.time, grdc_ts.values, label=f'GRDC {river} (G{i})', color='orange')
+
+#     # Add max lines
+#     axs[i].axhline(grdc_ts.max().values, linestyle='--', color='orange', label='GRDC max')
+#     axs[i].axhline(wflow_ts.values.max(), linestyle='--', color=color[i], label='WFLOW max')
+
+#     axs[i].set_ylabel('Discharge [m³/s]')
+#     axs[i].set_title(f"{river} and WFLOW Q{i} (1974–1975)")
+#     axs[i].legend()
+#     axs[i].grid(True)
+
+# axs[1].set_xlabel('Time')
+# plt.tight_layout()
+# plt.savefig('../figures/GRDC_stations_wflow_timeseries_comparison_1974_1975.png', dpi=300)
+# plt.show()
+
+# print("Daily time series comparison with statistics saved.")
+
+
+
+#%%
+print("Creating monthly climatology comparison between WFLOW and GRDC with uncertainty bands and statistics...")
+
 fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+color = ["#0C75C0", "#4DA54E"]  # Blue for BUDZI, Green for RIOPUNGOE
 
-# Find indices for BUDZI and RIOPUNGOE
-names = GRDC_data['river_name'].values.astype(str)
-idx_budzi = [i for i, n in enumerate(names) if n == 'BUDZI']
-idx_riopungoe = [i for i, n in enumerate(names) if n == 'RIOPUNGOE']
+for i, river in enumerate(wanted_rivers):
+    print(f"Processing {river}...")
 
-# Plot BUDZI and Q1
-axs[0].plot(
-    station_series[0].time,
-    station_series[0].values,
-    label='wflow Q1', color='#1f77b4'
-)
-station_name = GRDC_data['river_name'].values[45]
-axs[0].plot(GRDC_data['time'].values, GRDC_data['runoff_mean'].isel(id=45),
-            color='#ff7f0e', label=f"GRDC {station_name}")
+    # Extract time series
+    grdc_ts = GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]])
+    wflow_ts = station_series[i]
+    wflow_ts_1989 = station_series_1989[i]
+    wfow_maxL06 = station_series_max[i]
 
-# Add horizontal lines for max values
-axs[0].axhline(GRDC_data['runoff_mean'].isel(id=45).max(), color='#ff7f0e', linestyle='--', linewidth=1, label='GRDC max')
-axs[0].axhline(wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='1').max(), color='#1f77b4', linestyle='--', linewidth=1, label='wflow Q1 max')
+    # Group by month
+    grdc_monthly_mean = grdc_ts.groupby(grdc_ts['time.month']).mean()
+    grdc_monthly_std = grdc_ts.groupby(grdc_ts['time.month']).std()
 
-axs[0].set_ylabel('Discharge')
-axs[0].set_title('BUDZI and wflow Q1')
-axs[0].legend()
+    wflow_monthly_mean = wflow_ts.groupby(wflow_ts['time.month']).mean()
+    wflow_monthly_std = wflow_ts.groupby(wflow_ts['time.month']).std()
 
-# Plot RIOPUNGOE and Q2
-axs[1].plot(
-    station_series[1].time,
-    station_series[1].values,
-    label='wflow Q2', color='#2ca02c'
-)
+    wflow_1989_monthly_mean = wflow_ts_1989.groupby(wflow_ts_1989['time.month']).mean()
+    wflow_1989_monthly_std = wflow_ts_1989.groupby(wflow_ts_1989['time.month']).std()
 
-station_name = GRDC_data['river_name'].values[38]
-axs[1].plot(GRDC_data['time'].values, GRDC_data['runoff_mean'].isel(id=38), 
-            color='#9467bd',label=f"GRDC {station_name}")
+    wfow_maxL06_monthly_mean = wfow_maxL06.groupby(wfow_maxL06['time.month']).mean()
+    wfow_maxL06_monthly_std = wfow_maxL06.groupby(wfow_maxL06['time.month']).std()
 
-# Add horizontal lines for max values
-axs[1].axhline(GRDC_data['runoff_mean'].isel(id=38).max(), color='#9467bd', linestyle='--', linewidth=1, label='GRDC max')
-axs[1].axhline(wflow_30yr_new.results['netcdf']['Q'].sel(Q_gauges_locs='2').max(), color='#2ca02c', linestyle='--', linewidth=1, label='wflow Q2 max')
+    months = np.arange(1, 13)
 
+    # Stats
+    wflow_kge = wflow_monthly_mean.drop_vars(['lat', 'lon'], errors='ignore').reset_coords(drop=True).chunk(dict(month=-1))
+    wflow_1989_kge = wflow_1989_monthly_mean.drop_vars(['lat', 'lon'], errors='ignore').reset_coords(drop=True).chunk(dict(month=-1))
+    wflow_max_kge = wfow_maxL06_monthly_mean.drop_vars(['lat', 'lon'], errors='ignore').reset_coords(drop=True).chunk(dict(month=-1))
+    grdc_kge = grdc_monthly_mean.drop_vars(['id'], errors='ignore').reset_coords(drop=True).chunk(dict(month=-1))
 
-axs[1].set_xlabel('Time')
-axs[1].set_ylabel('Discharge')
-axs[1].set_title('RIOPUNGOE and wflow Q2')
-axs[1].legend()
+    print(wflow_kge)
+    print(grdc_kge)
+    kge = skillstats.kge(wflow_kge, grdc_kge, dim='month')["kge"].values.round(2)
+    kge_1989 = skillstats.kge(wflow_1989_kge, grdc_kge, dim='month')["kge"].values.round(2)
+    kge_max = skillstats.kge(wflow_max_kge, grdc_kge, dim='month')["kge"].values.round(2)
+    # nse = skillstats.nashsutcliffe(wflow_kge, grdc_kge, dim='month').values.round(2)
 
-plt.savefig('../figures/GRDC_stations_wflow_comparison_2.png', dpi=300, bbox_inches='tight')
+    # Plot monthly means
+    axs[i].plot(months, grdc_monthly_mean.values, label=f"GRDC {river} 1954-1984 (G{i})", color='orange')
+    axs[i].plot(months, wflow_monthly_mean.values, label=f"WFLOW Q{i} 1954-1984, KGE: {kge}", color=color[i])
+    axs[i].plot(months, wflow_1989_monthly_mean.values, label=f"WFLOW Q{i} 1989-2019, KGE: {kge_1989}", color='#9E4DA5')
+    axs[i].plot(months, wfow_maxL06_monthly_mean.values, label=f"WFLOW Q{i} 1989-2019 ML 0.6, KGE: {kge_max}", color='#9E4DA5')
+
+    # Uncertainty bands (mean ± std)
+    axs[i].fill_between(months,
+                        (grdc_monthly_mean - grdc_monthly_std).clip(min=0),
+                        grdc_monthly_mean + grdc_monthly_std,
+                        color='orange', alpha=0.3)
+
+    axs[i].fill_between(months,
+                        (wflow_monthly_mean - wflow_monthly_std).clip(min=0),
+                        wflow_monthly_mean + wflow_monthly_std,
+                        color=color[i], alpha=0.3)
+    
+    axs[i].fill_between(months,
+                        (wflow_1989_monthly_mean - wflow_1989_monthly_std).clip(min=0),
+                        wflow_1989_monthly_mean + wflow_1989_monthly_std,
+                        color="#9E4DA5", alpha=0.3)
+
+    axs[i].set_ylabel('Monthly Mean Discharge [m³/s]')
+    axs[i].set_title(f"Monthly Climatology: {river}")
+    axs[i].set_xticks(months)
+    axs[i].set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    axs[i].legend()
+    axs[i].grid(True)
+
+axs[1].set_xlabel('Month')
 
 plt.tight_layout()
+plt.savefig('../figures/monthly_climatology_GRDC_vs_WFLOW_with_uncertainty_stats_upd.png', dpi=300)
 plt.show()
 
+print("Monthly climatology with uncertainty bands and Hydromt stats saved.")
+
+
+
 #%%
-
-
 
 
 ##########################################################
