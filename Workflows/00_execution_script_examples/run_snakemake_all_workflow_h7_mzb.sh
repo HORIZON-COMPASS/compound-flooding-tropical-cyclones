@@ -1,38 +1,54 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs                                                      # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_wflow_sfincs_%j.log     # Standard output and error log
-#SBATCH --time=0-2:00:00                                                               # Job duration (hh:mm:ss)
+#SBATCH --time=0-12:00:00                                                               # Job duration (hh:mm:ss)
 #SBATCH --partition 16vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                                                                     # Number of tasks (analyses) to run
 
+echo "=== Job started on $(date) ==="
+
+# ────────────────────────────────────────────────
+# Set temp directories for Pixi to avoid slow I/O
+# ────────────────────────────────────────────────
+export PIXI_CACHE_DIR=/tmp/$USER/pixi-cache
+mkdir -p "$PIXI_CACHE_DIR"
+
+echo "Loading modules..."
 module load pixi
 module load julia
+module load apptainer
 
-#Going to the folder where git checkout is
-#ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
-#ROOT="/u/bovensch/git_repos/COMPASS"
+# Navigate to the repo directory
 ROOT="/u/vertegaa/git_repos/COMPASS"
-# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
-cd "${ROOT}"
+echo "Changing to ROOT directory: $ROOT"
+cd "${ROOT}" || { echo "Failed to cd to ROOT directory!"; exit 1; }
 
-# Installing pixi environment
+# Install pixi environment if not already installed
+echo "Installing pixi environment..."
 pixi install --environment compass-wflow
-pixi shell-hook --environment compass-wflow > hook.sh
-source hook.sh
 
-# Install Julia environment
+# Activate pixi environment
+echo "Activating pixi shell environment..."
+eval "$(pixi shell-hook --environment compass-wflow)"
+
+# Install Julia packages
+echo "Setting up Julia environment..."
 julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 
+# Navigate to Snakemake workflow directory
+echo "Changing to workflows directory..."
+cd Workflows/02_workflow_rules || { echo "Failed to cd to workflow directory!"; exit 1; }
 
-# Navigate to directory where the scripts are
-cd Workflows/02_workflow_rules
-
-#Unlocking the directory for snakemake
+# Unlock Snakemake directory
+echo "Unlocking Snakemake directory..."
 snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
-# # running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_all.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files
+# Dry-run of the workflow
+echo "Running Snakemake dry-run..."
+snakemake -s snakefile_all_wflow_sfincs.smk \
+  --configfile ../01_config_snakemake/config_general_MZB.yml \
+  --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete
 
+echo "=== Job finished on $(date) ==="
 exit
