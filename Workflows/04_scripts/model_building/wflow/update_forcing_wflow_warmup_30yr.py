@@ -39,7 +39,7 @@ mod = WflowModel(
     logger=logger,
 )
 mod.read()
-start_time = "19840101 000000"
+
 start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S") - timedelta(days=2) #Start wflow 2 days before sfincs
 start_time_warmup = datetime.strftime(
     start_time_object - timedelta(days=365*30), "%Y-%m-%dT%H:%M:%S"
