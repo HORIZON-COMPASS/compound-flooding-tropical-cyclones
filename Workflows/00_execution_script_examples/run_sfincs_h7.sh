@@ -1,10 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs
-#SBATCH --output=output_log_%j.log
-#SBATCH --time=0-1:00:00
-#SBATCH --partition=4vcpu
+#SBATCH --output=00_execution_script_examples/logs/slurm/output_sfincs_%j.log
+#SBATCH --time=0-0:30:00
+#SBATCH --partition=test
 #SBATCH --nodes=1                    # Adjust as needed
-#SBATCH --ntasks-per-node=4          # Match Snakemake's `taskspernode`
 #SBATCH --exclusive
 
 # Run SFINCS using Docker
