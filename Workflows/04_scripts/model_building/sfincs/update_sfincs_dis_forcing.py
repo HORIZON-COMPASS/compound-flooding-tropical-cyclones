@@ -43,6 +43,22 @@ config = inp.to_dict()
 # Write dis file to sfincs event model folder
 reftime_object = config["tref"]
 
+#%%
+# mod = WflowModel(
+#     root=join(wflow_root, 'events'),
+#     data_libs=data_cats,
+#     mode="r",
+#     logger=logger,
+# )
+# mod.read()
+#%%
+# df = mod.results['netcdf']['Q'].to_pandas()
+# df.index = (df.index - reftime_object).total_seconds()
+# df.to_csv(
+#     join(sfincs_model_folder, "sfincs.dis"),
+#     sep=" ",
+#     header=False,
+# )
 # Read wflow qbankfull corrected discharge
 df = pd.read_csv(wflow_dis_no_bankfull)
 df.set_index('time', inplace=True)
