@@ -3,28 +3,30 @@
 import os
 from os.path import join
 import yaml
-import matplotlib.pyplot as plt
 import itertools
 import math
-from hydromt_sfincs import SfincsModel, utils
-from hydromt import DataCatalog
-import contextily as ctx
-import cartopy.crs as ccrs
-import pandas as pd
-import seaborn as sns
-from pyproj import Transformer
-import numpy as np
-import matplotlib.patches as mpatches
-from matplotlib.patches import Wedge
-import xarray as xr
-import geopandas as gpd
-from pyproj import Transformer
-from matplotlib.patches import Patch
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-from matplotlib.colors import LinearSegmentedColormap
 import gc
 import xarray as xr
-import platform, os
+import pandas as pd
+import numpy as np
+import platform
+
+from hydromt_sfincs import SfincsModel, utils
+from hydromt import DataCatalog
+
+import matplotlib.pyplot as plt
+from pyproj import Transformer
+import geopandas as gpd
+import contextily as ctx
+import cartopy.crs as ccrs
+from matplotlib.patches import Patch
+import matplotlib.ticker as mticker
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from matplotlib.colors import LinearSegmentedColormap
+import cartopy.feature as cfeature
+import pyproj
+from shapely.geometry import box
+from shapely.ops import transform
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -49,6 +51,8 @@ def load_sfincs_models(config):
         model_path = join(base_path, model_name)
         utmzone    = run['utmzone']
         model_obj  = SfincsModel(model_path, mode="r")
+        his_path   = os.path.join(model_path,"sfincs_his.nc")
+        ds_his     = xr.open_dataset(his_path, engine="netcdf4")
 
         num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
         categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
@@ -64,6 +68,7 @@ def load_sfincs_models(config):
             "utmzone": utmzone,
             "sfincs_model": model_obj,
             "sfincs_results": model_obj.results,
+            "sfincs_his": ds_his,
             "category": categories[num_CF_diff],
             "cat_short": short_cats[num_CF_diff],
             "CF_info": CF_info,
@@ -494,6 +499,7 @@ def calculate_flood_volume(models):
         flood_volume_km3 = flood_volume / 1e9
         # Store in the model dictionary
         model['sfincs_results']['flood_volume_km3'] = flood_volume_km3
+        model['sfincs_results']['flood_volume_m3'] = flood_volume
         print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
         
     del hmax_masked, flooded_cells, flood_volume, flood_volume_km3  # Clean up to free memory
@@ -735,61 +741,191 @@ def plot_abs_flood_ext_difference_by_driver(sfincs_models):
     plt.show()
 
 
+def plot_abs_flood_vol_ext_diff_by_driver(sfincs_models):
+    def format_label(drivers):
+        if drivers == ("RAIN", "SLR", "WIND"):
+            return "All"
+        parts = [w.lower() for w in " & ".join(drivers).split(" & ")]
+        parts[0] = parts[0].capitalize()
+        if len(parts) > 1:
+            parts[1] = parts[1].capitalize()
+        label = " &\n".join(parts)
+        label = label.replace("Slr", "SLR")
+        return label
+
+    # Get absolute values and percentual change
+    model_dict_vol = {}
+    model_dict_ext = {}
+    model_dict_vol_diff = {}
+    model_dict_ext_diff = {}
+
+    for sf in sfincs_models:
+        vol = sf['sfincs_results'].get("flood_volume_m3", None)
+        ext = sf['sfincs_results'].get("flood_extent_km2", None)
+        vol_diff = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        ext_diff = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+
+        if vol is None or ext is None:
+            continue
+        try:
+            vol = float(vol)
+            ext = float(ext)
+        except Exception:
+            continue
+
+        #  Convert to float if possible
+        try:
+            vol_diff = float(vol_diff) if vol_diff is not None else None
+            ext_diff = float(ext_diff) if ext_diff is not None else None
+        except Exception:
+            vol_diff = None
+            ext_diff = None
+
+        CF_info = sf["CF_info"]
+        drivers = tuple(sorted(k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0))
+        if not drivers:
+            drivers = ("FACTUAL",)
+
+        model_dict_vol[drivers] = vol
+        model_dict_ext[drivers] = ext
+        model_dict_vol_diff[drivers] = vol_diff
+        model_dict_ext_diff[drivers] = ext_diff
+
+    sorted_keys = sorted(model_dict_ext.keys(), key=lambda k: model_dict_ext[k])
+    labels = [format_label(k) for k in sorted_keys]
+
+    # Setup subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5), sharey=False)
+
+    x = np.arange(len(sorted_keys))
+    width = 0.6
+
+    # Plot 1: Volume
+    for i, key in enumerate(sorted_keys):
+        vol = model_dict_vol[key]
+        vol_diff = model_dict_vol_diff.get(key, None)
+        color = "#b0b0b0" if key == ("FACTUAL",) else "#97a6c4"
+        ax1.bar(x[i], vol, color=color, width=width, edgecolor='black')
+        if vol_diff is not None and vol_diff != 0:
+            sign = "-" if vol_diff > 0 else ""
+            abs_val = abs(vol_diff)
+            if abs_val < 1:
+                label = f"<-1%"
+            else:
+                label = f"{sign}{int(round(abs_val))}%"
+            ax1.text(x[i], vol + 0.1, label, ha='center', va='bottom', fontsize=10)
+
+
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(labels, fontsize=11, rotation=0)
+    ax1.set_ylabel("Flood volume (m³)", fontsize=13)
+    ax1.set_title("Flood Volume", fontsize=14)
+    ax1.tick_params(axis='y', labelsize=11)
+    ax1.set_xlim(left=-0.5)
+    ax1.grid(True, axis='y', linestyle='--', alpha=0.7)
+
+    # Plot 2: Extent
+    for i, key in enumerate(sorted_keys):
+        ext = model_dict_ext[key]
+        ext_diff = model_dict_ext_diff.get(key, None)
+        color = "#b0b0b0" if key == ("FACTUAL",) else "#97a6c4"
+        ax2.bar(x[i], ext, color=color, width=width, edgecolor='black')
+        if ext_diff is not None and ext_diff != 0:
+            sign = "-" if ext_diff > 0 else ""
+            abs_val = abs(ext_diff)
+            if abs_val < 1:
+                label = f"<-1%"
+            else:
+                label = f"{sign}{int(round(abs_val))}%"
+            ax2.text(x[i], ext + 10, label, ha='center', va='bottom', fontsize=10)
+
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(labels, fontsize=11, rotation=0)
+    ax2.set_ylabel("Flood extent (km²)", fontsize=13)
+    ax2.set_title("Flood Extent", fontsize=14)
+    ax2.tick_params(axis='y', labelsize=11)
+    ax2.set_xlim(left=-0.5)
+    ax2.grid(True, axis='y', linestyle='--', alpha=0.7)
+
+    # Layout and save
+    plt.tight_layout()
+    plt.savefig("../figures/abs_flood_volume_extent_by_driver.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    gc.collect()
+
+
 def plot_abs_damage_difference_by_driver(fiat_models):
+    def format_label(drivers):
+        if drivers == ("RAIN", "SLR", "WIND"):
+            return "All"
+        parts = [w.lower() for w in " & ".join(drivers).split(" & ")]
+        parts[0] = parts[0].capitalize()
+        if len(parts) > 1:
+            parts[1] = parts[1].capitalize()
+        label = " &\n".join(parts)
+        label = label.replace("Slr", "SLR")
+        return label
+
     # Collect data by driver combination
     model_dict = {}
+    model_dict_diff = {}
     for fiat in (fiat_models):
        
         # Flood damage
         dam = fiat['fiat_results']['total_damage'].sum()
+        dam_pct = fiat.get('Damage_diff_from_F(%)', None)
 
         # Drivers active
         CF_info = fiat["CF_info"]
         drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
         key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
         model_dict[key] = {'damage': dam}
+        model_dict_diff[key] = dam_pct
 
     # Build data for plotting
     all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
     data_plot = []
 
     for key in all_keys:
-        vol_total = model_dict[key]['damage']
-
-        label = " & ".join(key)
-        if label == "RAIN & SLR & WIND":
-            label = "ALL"
-
+        dam_total = model_dict[key]['damage']
+        label = format_label(key)
         data_plot.append({
             'label': label,
-            'damage': vol_total,
+            'damage': dam_total,
+            'key': key
         })
 
     # Sort data by the total magnitude of impact (damage)
     data_plot.sort(key=lambda d: abs(d['damage']))
 
-    fig, ax = plt.subplots(figsize=(14, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     x = np.arange(len(data_plot))
     
     ax.yaxis.grid(True, linestyle='--', alpha=0.7)
     ax.set_axisbelow(True)  # This makes grid lines render below plot elements
-    width = 0.4
+    width = 0.6
 
     # Iterate over each model and plot the bars
     for i, d in enumerate(data_plot):
-        if d['label'] == "FACTUAL":
+        if d['label'] == "Factual":
             color = "#b0b0b0"  # grey for factual
         else:
-            color = "#384860"  # consistent pastel blue for all others
+            color = "#c34a36"  # consistent pastel blue for all others
         ax.bar(x[i], d['damage'], color=color, width=width, edgecolor='black')
-
-        ax.text(x[i], d['damage'] + 0.1, f"{d['damage']:.1f}", ha='center', va='bottom', fontsize=13)
-
+        dam_diff = model_dict_diff.get(d['key'], None)
+        if dam_diff is not None and dam_diff != 0:
+            sign = "+" if dam_diff > 0 else ""
+            abs_val = abs(dam_diff)
+            if abs_val < 1:
+                label = f"{sign}<1%"
+            else:
+                label = f"{sign}{int(round(abs_val))}%"
+            ax.text(x[i], d['damage'] + 0.03 * d['damage'], label, ha='center', va='bottom', fontsize=13)
 
     # Axis setup
     ax.set_xticks(x)
     ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
-    ax.set_ylabel("Flood damage ($)", fontsize=16)
+    ax.set_ylabel("Flood damage (USD)", fontsize=16)
     ax.set_title("Factual and Counterfactual Flood Damage", fontsize=16)
     ax.tick_params(axis='y', labelsize=13)
     ax.xaxis.grid(False)
@@ -799,12 +935,6 @@ def plot_abs_damage_difference_by_driver(fiat_models):
     # Set x-axis to start from zero
     ax.set_xlim(left=-0.5)
 
-    legend_elements = [
-        Patch(facecolor='#b0b0b0', edgecolor='black', label='Factual'),
-        Patch(facecolor='#384860', edgecolor='black', label='Counterfactual'),
-    ]
-    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1),  fontsize=16)
-    
     plt.savefig("../figures/abs_damage_diff_by_driver.png", dpi=300, bbox_inches="tight")
     
     plt.tight_layout()
@@ -976,6 +1106,108 @@ def plot_driver_combination_extent_damage(sfincs_models, fiat_models, filter_key
     plt.savefig("../figures/extent_damage_diff_combined.png", dpi=300, bbox_inches="tight")
     
     plt.tight_layout(pad=4.0)
+    plt.show()
+
+
+def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):
+    model_dict = {}
+    for sf, fiat in zip(sfincs_models, fiat_models):
+        # Percent changes
+        vol = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
+        ext = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
+        dam = fiat.get('Damage_diff_from_F(%)', None)
+        
+        if vol is None or ext is None or dam is None:
+            continue
+        vol = float(vol)
+        ext = float(ext)
+        dam = float(dam)
+
+        CF_info = sf["CF_info"]
+        drivers = [k.upper() for k in ["rain", "wind", "SLR"] if CF_info.get(k, 0) != 0]
+        key = tuple(sorted(drivers)) if drivers else ("FACTUAL",)
+        
+        model_dict[key] = {
+            'extent_pct': ext,
+            'volume_pct': vol,
+            'damage_pct': dam
+        }
+
+    # Build and sort data
+    all_keys = sorted(model_dict.keys(), key=lambda k: (len(k), k))
+    data_plot = []
+    for key in all_keys:
+        vals = model_dict[key]
+        # Skip if all changes are below tolerance
+        if all(abs(vals[v]) < tolerance for v in ['volume_pct', 'extent_pct', 'damage_pct']):
+            continue
+        label = " & ".join(key)
+        if label == "RAIN & SLR & WIND":
+            label = "All"
+        data_plot.append({'label': label, 'key': key, **vals})
+
+    data_plot.sort(key=lambda d: d['damage_pct'])
+
+    # Apply filtering
+    if filter_keys is not None:
+        filter_keys_normalized = [tuple(sorted(fk.split(" & "))) if isinstance(fk, str) else tuple(sorted(fk)) for fk in filter_keys]
+        data_plot = [d for d in data_plot if tuple(sorted(d['key'])) in filter_keys_normalized]
+
+    if not data_plot:
+        print("No data available for the selected driver combinations.")
+        return
+
+    fig, ax = plt.subplots(figsize=(16, 9), dpi=300)
+    x = np.arange(len(data_plot))
+    width = 0.25
+
+    def format_pct_label(val):
+        if val == 0 or val is None:
+            return ""
+        abs_val = abs(val)
+        if abs_val < 1:
+            return f"<1%"
+        else:
+            return f"{int(round(abs_val))}%"
+
+    max_pct = 0
+    # max_abs_damage = 0
+    for i, d in enumerate(data_plot):
+        # Bars for % changes
+        b_ext = ax.bar(x[i] - width, d['extent_pct'], width=width, color="#384860", edgecolor='black')
+        b_vol = ax.bar(x[i], d['volume_pct'], width=width, color="#5a7d9a", edgecolor='black')
+        b_dam_pct = ax.bar(x[i] + width, d['damage_pct'], width=width, color="#c34a36", edgecolor='black')
+
+        # Annotate % change bars
+        if d['extent_pct'] != 0:
+            ax.text(x[i] - width, d['extent_pct'] + 0.35, format_pct_label(d['extent_pct']), ha='center', va='bottom', fontsize=14)
+        if d['volume_pct'] != 0:
+            ax.text(x[i], d['volume_pct'] + 0.35, format_pct_label(d['volume_pct']), ha='center', va='bottom', fontsize=14)
+        if d['damage_pct'] != 0:
+            ax.text(x[i] + width, d['damage_pct'] + 0.35, format_pct_label(d['damage_pct']), ha='center', va='bottom', fontsize=14)
+
+        max_pct = max(max_pct, abs(d['volume_pct']), abs(d['extent_pct']), abs(d['damage_pct']))
+
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
+    ax.set_ylabel("Relative change (F-CF) (%)", fontsize=16)
+    ax.set_ylim(0, max_pct*1.15)
+    ax.set_xlim(-0.5, len(data_plot) - 0.5)
+    ax.tick_params(axis='y', labelsize=13)
+    ax.xaxis.grid(False)
+    ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)
+
+    legend_elements = [
+        Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood Volume % Change'),
+        Patch(facecolor='#384860', edgecolor='black', label='Flood Extent % Change'),
+        Patch(facecolor='#c34a36', edgecolor='black', label='Damage % Change')
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
+
+    plt.tight_layout()
+    plt.savefig("../figures/volume_extent_damage_diff_combined.png", dpi=300, bbox_inches="tight")
     plt.show()
 
 
@@ -1837,49 +2069,101 @@ def plot_hmax_diff_slr_rain(models, zoom_region_latlon=None):
 
 
 def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
-    # Filter first sginle driver only models
-    rain_model = next((m for m in models if m["CF_info"].get("rain", 0) != 0 and m["CF_info"].get("SLR", 0) == 0 and m["CF_info"].get("wind", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
-    slr_model  = next((m for m in models if m["CF_info"].get("SLR", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("wind", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
-    wind_model = next((m for m in models if m["CF_info"].get("wind", 0) != 0 and m["CF_info"].get("rain", 0) == 0 and m["CF_info"].get("SLR", 0) == 0 and "hmax_diff" in m["sfincs_results"]), None)
+    # Helper to filter single-driver model by CF key
+    def get_single_driver_model(driver):
+        return next(
+            (m for m in models
+             if m["CF_info"].get(driver, 0) != 0
+             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
+             and "hmax_diff" in m["sfincs_results"]),
+            None
+        )
 
-    if not rain_model or not slr_model or not wind_model:
-        print("Either RAIN-only or SLR-only or WIND-only model with 'hmax_diff' not found.")
+    # Get models
+    rain_model = get_single_driver_model("rain")
+    slr_model = get_single_driver_model("SLR")
+    wind_model = get_single_driver_model("wind")
+
+    if not all([rain_model, slr_model, wind_model]):
+        print("Missing single-driver model (rain, SLR, or wind) with 'hmax_diff'.")
         return
 
     model_epsg = rain_model['sfincs_model'].crs.to_epsg()
+    minx, maxx = rain_model['sfincs_results']['hmax_diff'].x.min().item(), rain_model['sfincs_results']['hmax_diff'].x.max().item()
+    miny, maxy = rain_model['sfincs_results']['hmax_diff'].y.min().item(), rain_model['sfincs_results']['hmax_diff'].y.max().item()
+    
+    # Transformer to lat/lon (WGS84)
+    project_to_latlon = pyproj.Transformer.from_crs(model_epsg, "EPSG:4326", always_xy=True).transform
+    bbox_latlon = transform(project_to_latlon, box(minx, miny, maxx, maxy))
 
+    model_region_gdf = gpd.read_file(join(prefix, "11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0","gis","region.geojson"))
 
-    # Create figure
+    # Extract lat/lon bounds
+    lon_start, lat_start, lon_end, lat_end = bbox_latlon.bounds
+
+    # Set up figure and colormap
     fig, axes = plt.subplots(1, 3, figsize=(14, 6), dpi=300, constrained_layout=True,
                              subplot_kw={"projection": ccrs.epsg(model_epsg)}, sharey=True)
-
-    cmap = LinearSegmentedColormap.from_list("white_red", ["red", "white"])
+    
+    cmap = LinearSegmentedColormap.from_list("white_blue", ["white", "blue"])
     vmin, vmax = 0, 0.5
-    plots = [(rain_model, axes[0], "-8% Rain"), (slr_model, axes[1], "-0.14 cm SLR"), (wind_model, axes[2], "-10% Wind")]
 
-    for model, ax, title in plots:
-        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1  # Invert for better visualization
+    # Loop through models for plotting
+    for model, ax, title in zip(
+        [rain_model, slr_model, wind_model],
+        axes,
+        ["-8% Rain", "-0.14 cm SLR", "-10% Wind"]
+    ):
+        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
 
         im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False)
-        ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9,
-                        crs=model['sfincs_model'].crs, attribution=False)
 
-        # Add gridlines with lat/lon
-        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-        gl.top_labels = gl.right_labels = False
-        gl.xlabel_style = gl.ylabel_style = {'size': 11}
+        # ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery,
+        #                 zoom=8,
+        #                 crs=model['sfincs_results']['hmax_masked'].rio.crs,
+        #                 attribution=False)
+        # ax.add_feature(cfeature.COASTLINE.with_scale('10m'), linewidth=0.5)
+        # ax.add_feature(cfeature.BORDERS.with_scale('10m'), linewidth=0.3)
+        ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+        model_region_gdf.to_crs(epsg=model_epsg).boundary.plot(ax=ax, edgecolor='black', linewidth=0.5)
 
-        ax.set_title(title, fontsize=14)  # You can increase to 16 or more
+        ax.set_title(title, fontsize=14)
 
-    fig.suptitle("Factual vs. Counterfactual", fontsize=18)
+        def lat_formatter(x, pos):
+            direction = 'N' if x >= 0 else 'S'
+            return f"{abs(x):.1f}°{direction}"
+
+        def lon_formatter(x, pos):
+            direction = 'E' if x >= 0 else 'W'
+            return f"{abs(x):.1f}°{direction}"
+
+        for i, ax in enumerate(axes):
+            gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--', crs=ccrs.PlateCarree())
+            
+            gl.xlocator = mticker.FixedLocator(np.arange(lon_start, lon_end + 0.1, 0.2))
+            gl.ylocator = mticker.FixedLocator(np.arange(lat_start, lat_end + 0.1, 0.2))
+            
+            # Use custom formatters for degree + direction
+            gl.xformatter = mticker.FuncFormatter(lon_formatter)
+            gl.yformatter = mticker.FuncFormatter(lat_formatter)
+            
+            gl.right_labels = False
+            gl.top_labels = False
+            gl.left_labels = (i == 0)  # only first subplot shows latitude labels
+            
+            gl.xlabel_style = {'size': 11}
+            gl.ylabel_style = {'size': 11}
+
+
+    fig.suptitle("Factual vs. Counterfactual", fontsize=18, y=0.985)
 
     # Shared colorbar
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02)
     cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=13)
     cbar.ax.tick_params(labelsize=12)
-    cbar.set_ticks(np.arange(-0.4, 0.1, 0.1))
+    cbar.set_ticks(np.arange(0, 0.6, 0.1))
 
-    fig.savefig("../figures/hmax_diff_slr_widn_rain.png", bbox_inches='tight', dpi=300)
+    fig.savefig("../figures/hmax_diff_slr_wind_rain.png", bbox_inches='tight', dpi=300)
     plt.show()
 
 
@@ -1984,6 +2268,101 @@ def plot_driver_decomposition_extent(sfincs_models, filter_keys=None):
     plt.tight_layout(pad=4.0)
     plt.show()
 
+
+def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1,2]):
+    def get_single_driver_model(driver):
+        return next(
+            (m for m in models
+             if m["CF_info"].get(driver, 0) != 0
+             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
+             and "hmax_diff" in m["sfincs_results"]),
+            None
+        )
+
+    import matplotlib.dates as mdates
+    colors = plt.get_cmap('tab10').colors  # Ensure consistent coloring
+
+    # Helper to filter single-driver model by CF key
+    def get_single_driver_model(driver):
+        return next(
+            (m for m in models
+             if m["CF_info"].get(driver, 0) != 0
+             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
+             and "hmax_diff" in m["sfincs_results"]),
+            None
+        )
+
+    # Extract single-driver models
+    rain_model = get_single_driver_model("rain")
+    slr_model = get_single_driver_model("SLR")
+    wind_model = get_single_driver_model("wind")
+
+    if not all([rain_model, slr_model, wind_model]):
+        print("Missing single-driver model (rain, SLR, or wind) with 'hmax_diff'.")
+        return
+
+    counterfactuals = {
+        "Rain": rain_model,
+        "SLR": slr_model,
+        "Wind": wind_model
+    }
+
+    for scenario_name, cf_mod in counterfactuals.items():
+        fig, (ax0, ax1, ax2) = plt.subplots(3, 1, figsize=(8, 6), dpi=300, sharex=True, constrained_layout=True)
+        fig.suptitle(f"Factual vs CF {scenario_name}", fontsize=14)
+
+        # --- Water level subplot ---
+        # ax0.plot(models[0]["sfincs_his"].time, models["sfincs_his"]['point_zs'].isel(stations=stations_list[0]),
+        #          color=colors[4], label=f'S{stations_list[0]} Factual')
+        ax0.plot(models[0]['sfincs_model'].forcing['bzs'].time, models[0]['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]),
+                 color=colors[1], label=f'S{stations_list[1]} Factual')
+        ax0.plot(slr_model['sfincs_model'].forcing['bzs'].time, slr_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]),
+                     color='#1F4E79', linestyle='--', label=f'S{stations_list[1]} CF -0.14 cm SLR')
+        ax0.plot(wind_model['sfincs_model'].forcing['bzs'].time, wind_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]),
+                     color='#3AA17E', linestyle='--', label=f'S{stations_list[1]} CF -10% Wind')
+
+        ax0.set_ylabel("Water level [m]")
+        ax0.grid(True, linestyle='--', alpha=0.6)
+        ax0.legend(fontsize=8, loc="upper right")
+        ax0.tick_params(labelsize=9)
+
+        # --- Discharge subplot ---
+        ax1.plot(models[0]['sfincs_model'].forcing['dis'].time, models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[0]),
+                 color=colors[2], label=f'G{gauges_list[0]} Factual')
+        ax1.plot(models[0]['sfincs_model'].forcing['dis'].time, models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[1]),
+                 color=colors[3], label=f'G{gauges_list[1]} Factual')
+
+        ax1.plot(rain_model["sfincs_model"].forcing['dis'].time, rain_model["sfincs_model"].forcing['dis'].sel(index=gauges_list[0]),
+                 color=colors[2], linestyle='--', label=f'G{gauges_list[0]} CF -8 % Rain')
+        ax1.plot(rain_model["sfincs_model"].forcing['dis'].time, rain_model["sfincs_model"].forcing['dis'].sel(index=gauges_list[1]),
+                 color=colors[3], linestyle='--', label=f'G{gauges_list[1]} CF -8 % Rain')
+
+        ax1.set_ylabel("Discharge [m³/s]")
+        ax1.grid(True, linestyle='--', alpha=0.6)
+        ax1.legend(fontsize=8, loc="upper right")
+        ax1.tick_params(labelsize=9)
+
+        # --- Precipitation subplot ---
+        ax2.step(models[0]['sfincs_model'].forcing['precip_2d'].time,
+                 models[0]['sfincs_model'].forcing['precip_2d'].mean(dim=["x", "y"]),
+                 where='post', color=colors[0], label='Factual')
+
+        ax2.step(rain_model["sfincs_model"].forcing['precip_2d'].time,
+                 rain_model["sfincs_model"].forcing['precip_2d'].mean(dim=["x", "y"]),
+                 where='post', color=colors[0], linestyle='--', label='CF -8 % Rain')
+
+        ax2.set_ylabel("Precipitation [mm/h]")
+        ax2.set_xlabel("Day in March 2019")
+        ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+        ax2.grid(True, linestyle='--', alpha=0.6)
+        ax2.tick_params(labelsize=9)
+        ax2.legend(fontsize=8, loc="upper right")
+        ax2.set_xlim(models[0]['sfincs_model'].forcing['precip_2d'].time.min(), models[0]['sfincs_model'].forcing['precip_2d'].time.max())
+
+        fig.savefig(f"../figures/cf_separate_timeseries.png", bbox_inches='tight', dpi=300)
+        plt.show()
+
+
 ##############################################################
 # Use of functions
 #%%
@@ -2029,9 +2408,12 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 # plot_driver_combination_volume_damage(models, fiat_models)
 # plot_driver_combination_extent_damage(models, fiat_models)
+plot_driver_combination_volume_extent_damage(models, fiat_models)
 
 #%%
-plot_hmax_diff_slr_wind_rain(models)
+# plot_hmax_diff_slr_wind_rain(models)
+# plot_cf_timeseries_from_models(models)
+# plot_abs_flood_vol_ext_diff_by_driver(models)
 
 # %%
 ################################################
