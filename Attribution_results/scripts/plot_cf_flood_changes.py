@@ -20,13 +20,16 @@ from pathlib import Path
 EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/sofala/Idai")
+BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/sofala/")
+# BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test/")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs/")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
 file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
 file_cfall = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+# file_cfall = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -105,16 +108,16 @@ try:
             utm_zone = 37  # Adjust based on your region
             southern = True
         else:
-            utm_zone = 37  # Adjust based on your region  
-            southern = False
+            utm_zone = 36  # Adjust based on your region  
+            southern = True
     else:
-        utm_zone = 37  # Default for your region
+        utm_zone = 36  # Adjust based on your region  
         southern = True
         
     print(f"Using UTM zone {utm_zone}, Southern: {southern}")
 except Exception as e:
     print(f"Could not determine UTM zone: {e}")
-    utm_zone = 37
+    utm_zone = 36
     southern = True
 
 # ===== CREATE MAIN COMPARISON PLOT =====
@@ -188,7 +191,7 @@ cbar3.set_label('Depth Difference [m]', fontsize=10)
 # Adjust layout and add main title
 plt.tight_layout()
 plt.suptitle(f'Flood Depth Analysis - {EVENT_NAME}: Factual vs Counterfactual', 
-             fontsize=16, fontweight='bold', y=1.02)
+             fontsize=16, fontweight='bold', y=1.04)
 
 # Save the figure
 output_file_main = OUTPUT_DIR / f'sfincs_{EVENT_NAME.lower()}_flood_depth_comparison.png'
