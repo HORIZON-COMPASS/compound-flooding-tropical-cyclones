@@ -142,6 +142,7 @@ era5_hourly_zarr_CF-8_Idai:
   driver: zarr
   driver_kwargs:
     chunks: auto
+    consolidated: false
   meta:
     notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
   crs: 4326
