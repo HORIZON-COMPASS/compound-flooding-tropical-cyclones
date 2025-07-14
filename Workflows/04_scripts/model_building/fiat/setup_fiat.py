@@ -77,7 +77,7 @@ fiat_model.build(region={"geom": region}, opt=config, write=True)
 # Debugging to allow running the model from a different location than python environment is stored
 # Load the buildings.gpkg file
 gdf = gpd.read_file(f"{model_folder}/exposure/buildings.gpkg")
-
+gdf = gdf.to_crs(crs_flood) #TODO test
 # Save as .fgb
 gdf.to_file(f"{model_folder}/exposure/buildings.fgb", driver="FlatGeobuf")
 
