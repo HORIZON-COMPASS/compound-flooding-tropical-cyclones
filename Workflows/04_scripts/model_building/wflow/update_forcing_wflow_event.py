@@ -51,7 +51,7 @@ opt = {
     "setup_config": {
         "starttime": start_time,
         "endtime": end_time,
-        "timestepsecs": 86400,
+        "timestepsecs": 3600,
         "model.reinit": False,
         "input.path_static": join("..","staticmaps.nc"),
         "input.path_forcing":"inmaps.nc",
