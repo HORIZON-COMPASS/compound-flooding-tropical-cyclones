@@ -26,7 +26,7 @@ OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs/")
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
 file_cf0 = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
-file_cfall = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
+file_cfall = BASE_RUN_PATH / EVENT_NAME / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "plot_output" / "sfincs_output_hmax_AllTime.tif"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -68,6 +68,17 @@ diff = zsmax_cf0 - zsmax_cfall  # Difference in maximum flood depth (CF0 - CF-8)
 zsmax_cf0_plot = zsmax_cf0.where(zsmax_cf0 > 0.05)
 zsmax_cfall_plot = zsmax_cfall.where(zsmax_cfall > 0.05)
 
+# Calculate the cell area
+dx = abs(zsmax_cf0_plot.x[1] - zsmax_cf0_plot.x[0])  # Grid resolution in x-direction (meters)
+dy = abs(zsmax_cf0_plot.y[1] - zsmax_cf0_plot.y[0])  # Grid resolution in y-direction (meters)
+area = dx * dy  # Area of one grid cell (m²)
+
+flood_extent_cf0 = (zsmax_cf0_plot * area).sum().compute()
+flood_extent_cfall = (zsmax_cfall_plot * area).sum().compute()
+# Convert to square kilometers
+flood_extent_km2_cf0 = flood_extent_cf0 / 1e6
+flood_extent_km2_cfall = flood_extent_cfall / 1e6
+
 # Optional: only show differences where there's significant flooding
 # diff = diff.where((zsmax_cf0 > 0.01) | (zsmax_cfall > 0.01))
 
@@ -75,6 +86,8 @@ zsmax_cfall_plot = zsmax_cfall.where(zsmax_cfall > 0.05)
 print(f"\nStatistics for {EVENT_NAME}:")
 print(f"CF0 max flood depth: {zsmax_cf0.max().values:.3f} m")
 print(f"CF-8 max flood depth: {zsmax_cfall.max().values:.3f} m")
+print(f"CF0 Max flood extent: {flood_extent_km2_cf0:.0f} km2")
+print(f"CF-8 Max flood extent: {flood_extent_km2_cfall:.0f} km2")
 print(f"Maximum increase (CF0 vs CF-8): {diff.max().values:.3f} m")
 print(f"Maximum decrease (CF0 vs CF-8): {diff.min().values:.3f} m")
 print(f"Mean difference: {diff.mean().values:.3f} m")
