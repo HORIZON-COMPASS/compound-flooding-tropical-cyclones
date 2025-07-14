@@ -215,7 +215,7 @@ rule add_waves_and_output_to_catalog:
     output:
         done_file    = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     resources:
-        partition = '4vcpu',
+        partition = 'test',
         time = '0-0:30:00',
         jobname = 'dfm_out',
         taskspernode = 4,
