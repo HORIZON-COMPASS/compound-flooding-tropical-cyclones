@@ -19,11 +19,11 @@ if "snakemake" in locals():
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
 else:
-    precip_forcing = "era5_hourly"
+    precip_forcing = "era5_hourly_zarr"
     CF_rain = 0
     CF_rain_txt = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
-    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
+    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_30yr"
     start_time = "20190309 000000"
     end_time = "20190325 060000"
     data_cat = [
@@ -39,6 +39,7 @@ mod = WflowModel(
     logger=logger,
 )
 mod.read()
+start_time = "19840101 000000"
 start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S") - timedelta(days=2) #Start wflow 2 days before sfincs
 start_time_warmup = datetime.strftime(
     start_time_object - timedelta(days=365*30), "%Y-%m-%dT%H:%M:%S"
@@ -77,6 +78,7 @@ mod.setup_config(**opt["setup_config"])
 mod.setup_precip_forcing(**opt["setup_precip_forcing"])
 mod.setup_temp_pet_forcing(**opt["setup_temp_pet_forcing"])
 mod.write_forcing(chunksize=10)
+mod.set_config("input.vertical.f", "f_")
 mod.write_grid()
 mod.write_config()
 
