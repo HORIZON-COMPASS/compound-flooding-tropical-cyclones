@@ -74,6 +74,21 @@ TAMSAT_Idai:
     source_license: https://creativecommons.org/licenses/by/4.0/
     source_url: https://research.reading.ac.uk/tamsat/data-access/
   crs: 4326
+TAMSAT_MZ:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/TAMSAT/Idai/Whole_MZ/01-tamsatDaily.v3.1-20190314-20190323-20240821_29.0_46.0_-27.0_-9.0.nc
+  driver: netcdf
+  rename:
+    rfe_filled: precip
+  meta:
+    category: meteo
+    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled
+      as 'rfe'
+    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
+    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
+    source_license: https://creativecommons.org/licenses/by/4.0/
+    source_url: https://research.reading.ac.uk/tamsat/data-access/
+  crs: 4326
 basin_atlas_level12_v10:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/hydrography/hydro_atlas/basin_atlas_v10.gpkg
