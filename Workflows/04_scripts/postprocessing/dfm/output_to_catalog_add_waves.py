@@ -16,6 +16,7 @@ from datetime import datetime
 import xarray as xr
 import cartopy.crs as ccrs
 from pathlib import Path
+from scipy.interpolate import PchipInterpolator
 
 #%%
 if "snakemake" in locals():
@@ -102,6 +103,145 @@ datacatalog.to_yml(path_data_cat, root=root_dir)
 # Add simulated SNAPWAVE waves to the DFM output
 # Using model output and code developed by Fernaldi Gradiyanto
 # --------------------------------------------- #
+
+def extract_and_interpolate_maxima(
+    da: xr.DataArray,
+    start_date: str,
+    end_date: str,
+    bin_freq: str = "745min", # 12h25min tidal cycle
+    interp_freq: str = "10min",
+    buffer_hours: int = 12,
+    var_name: str = "wave_induced_wl",
+    plot_station: int = None
+) -> xr.Dataset:
+    """
+    Extracts time-binned maxima per station from a DataArray and interpolates
+    them over a regular time axis using PCHIP interpolation.
+
+    Parameters:
+    -----------
+    da : xr.DataArray
+        Input DataArray with dimensions (time, station).
+    start_date : str
+        Start date for interpolation (format: '%Y%m%d %H%M%S').
+    end_date : str
+        End date for interpolation (format: '%Y%m%d %H%M%S').
+    bin_freq : str, optional
+        Frequency of the time bins (default: "720min").
+    interp_freq : str, optional
+        Frequency of the interpolated time axis (default: "10min").
+    buffer_hours : int, optional
+        Extra time added to end to capture trailing maxima (default: 12).
+    var_name : str, optional
+        Name for the original data in the output dataset (default: "wave_induced_wl").
+
+    Returns:
+    --------
+    xr.Dataset
+        Dataset with the original data and interpolated maxima as variables.
+    """
+
+    # 1. Create time bins
+    bins = pd.date_range(
+        da.time.min().values,
+        da.time.max().values + np.timedelta64(buffer_hours, "h"),
+        freq=bin_freq
+    )
+    da_grouped = da.groupby_bins("time", bins)
+
+    # 2. Loop over bins to extract max values and their times
+    max_vals_list = []
+    max_times_list = []
+
+    for _, group in da_grouped:
+        if group.time.size > 0:
+            max_val = group.max(dim="time")
+            argmax = group.argmax(dim="time")
+            time_of_max = group.time[argmax]
+
+            max_vals_list.append(max_val)
+            max_times_list.append(time_of_max)
+
+    # 3. Combine into DataArrays
+    max_vals = xr.concat(max_vals_list, dim="time_bins")
+    max_times = xr.concat(max_times_list, dim="time_bins")
+
+    # Assign time bin coordinate
+    max_vals = max_vals.assign_coords(time_bins=bins[:len(max_vals)])
+    max_times = max_times.assign_coords(time_bins=bins[:len(max_times)])
+
+    # 4. Interpolate to regular time
+    regular_time = pd.date_range(
+        pd.to_datetime(start_date, format='%Y%m%d %H%M%S'),
+        pd.to_datetime(end_date, format='%Y%m%d %H%M%S'),
+        freq=interp_freq
+    )
+    stations = max_vals.station.values
+    interp_data = []
+
+    for station_idx, _ in enumerate(stations):
+        t_irregular = pd.to_datetime(max_times[:, station_idx].values)
+        v_irregular = max_vals[:, station_idx].values
+
+        valid = ~np.isnan(v_irregular) & ~pd.isnull(t_irregular)
+
+        if valid.sum() < 2:
+            interp_vals = np.full(len(regular_time), np.nan)
+        else:
+            pchip = PchipInterpolator(
+                t_irregular[valid].astype(np.int64),
+                v_irregular[valid],
+                extrapolate=True
+            )
+            interp_vals = pchip(regular_time.astype(np.int64))
+
+        interp_data.append(interp_vals)
+
+    # 5. Stack interpolated results into DataArray
+    interp_array = xr.DataArray(
+        data=np.column_stack(interp_data),
+        coords={"time": regular_time, "station": stations},
+        dims=["time", "station"]
+    )
+
+    # 6. Package into Dataset
+    ds = da.to_dataset(name=var_name)
+    ds["interpolated_max"] = interp_array
+
+    # 7. Optional plotting
+    if plot_station is not None:
+        station_idx = plot_station
+
+        plt.figure(figsize=(12, 4))
+        plt.plot(
+            da.sel(station=station_idx).time,
+            da.sel(station=station_idx).values,
+            label='Original Data',
+            alpha=0.5
+        )
+        plt.plot(
+            interp_array.sel(station=station_idx).time,
+            interp_array.sel(station=station_idx).values,
+            label='Interpolated Maxima Curve',
+            color='red'
+        )
+        plt.scatter(
+            max_times.sel(station=station_idx),
+            max_vals.sel(station=station_idx).values,
+            color='black',
+            label='Max Points',
+            zorder=3
+        )
+        plt.legend()
+        plt.title(f'Interpolated Maxima Every {bin_freq} (Station {station_idx})')
+        plt.tight_layout()
+        plt.show()
+
+    return ds
+
+
+#%%
+# Add wave component to DFM derived waterlevel
 if use_wave:
     # Convert to datetime objects
     start_dt = datetime.strptime(start_date, "%Y%m%d %H%M%S")
@@ -124,6 +264,12 @@ if use_wave:
         station=~ds_dfm['station_name'].astype(str).str.match(r'^[A-Za-z]')
     )
 
+    ds_wave_intp = extract_and_interpolate_maxima(
+    da=ds_wave,
+    start_date=start_date,
+    end_date=end_date,
+    plot_station=79
+)
     # --- Convert DFM to GeoDataFrame ---
     print("Convert DFM to GeoDataFrame")
     df_dfm = pd.DataFrame({
@@ -140,14 +286,15 @@ if use_wave:
 
     # --- Convert Wave DataArray to GeoDataFrame ---
     print("Convert Wave DataArray to GeoDataFrame")
-    df_wave = pd.DataFrame({
-        "lon": ds_wave.lon.values,
-        "lat": ds_wave.lat.values,
-        "max_component": ds_wave.max(dim="time").values
+    df_wave_intp = pd.DataFrame({
+        "lon": ds_wave_intp.lon.values,
+        "lat": ds_wave_intp.lat.values,
+        "max_component": ds_wave_intp["interpolated_max"].max(dim="time").values
     })
+
     gdf_wave = gpd.GeoDataFrame(
-        df_wave,
-        geometry=gpd.points_from_xy(df_wave.lon, df_wave.lat),
+        df_wave_intp,
+        geometry=gpd.points_from_xy(df_wave_intp.lon, df_wave_intp.lat),
         crs="EPSG:4326"
     ).to_crs(epsg=3857)
 
@@ -172,15 +319,15 @@ if use_wave:
 
     # Subset the xarray DataArrays using the index pairs
     ds_dfm_matched = ds_filtered.isel(station=xr.DataArray(gdf_dfm_matched.index.values, dims="match"))
-    ds_wave_matched = ds_wave.isel(station=xr.DataArray(gdf_dfm_matched["wave_index"].values, dims="match"))
+    ds_wave_matched = ds_wave_intp.isel(station=xr.DataArray(gdf_dfm_matched["wave_index"].values, dims="match"))
 
     # Add wave_induced_wl from ds_wave_matched to ds_dfm_matched
     print("Combining the matched wave and DFM data in one dataset")
     ds_combined = xr.merge([ds_dfm_matched, ds_wave_matched], compat="override")
 
     # rename variables and sum them to get the waterlevel incl. waves
-    ds_combined = ds_combined.rename({"waterlevel": "tide_surge", "wave_induced_wl": "wave_setup"})
-    ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"].where(~ds_combined["wave_setup"].isnull(), 0)
+    ds_combined = ds_combined.rename({"waterlevel": "tide_surge", "interpolated_max": "wave_setup"})
+    ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"]
     ds_combined["waterlevel"].attrs = ds_dfm["waterlevel"].attrs.copy()
 
     # Add the station names as a coordinate to align with the original dataset
@@ -266,114 +413,135 @@ def plot_station_wave_components(station_idx=79):
     plt.show()
 
 # Plot the selected staions and their tide+surge, waves only and combined
-# def plot_wave_impact():
-#     # Plot the selected staions and their tide+surge, waves only and combined
-#     # ------------------------------------------------------------------
-#     # MAP: max(wave_setup)
-#     # ------------------------------------------------------------------
-#     fig = plt.figure(figsize=(14, 6), dpi=150)
-#     gs = gridspec.GridSpec(1, 3, width_ratios=[1.2, 1, 1], wspace=0.3)
-#     ax_map = fig.add_subplot(gs[0, 0], projection = ccrs.PlateCarree())
+def plot_wave_impact():
+    # Plot the selected staions and their tide+surge, waves only and combined
+    # ------------------------------------------------------------------
+    # MAP: max(wave_setup)
+    # ------------------------------------------------------------------
+    fig = plt.figure(figsize=(14, 6), dpi=150)
+    gs = gridspec.GridSpec(1, 3, width_ratios=[1.2, 1, 1], wspace=0.3)
+    ax_map = fig.add_subplot(gs[0, 0], projection = ccrs.PlateCarree())
 
-#     transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
 
-#     vmin = 0.0
-#     vmax = df_dfm["max_component"].max()
-#     vcenter = (vmin + vmax) / 2.0
-#     norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+    vmin = 0.0
+    vmax = df_dfm["max_component"].max()
+    vcenter = (vmin + vmax) / 2.0
+    norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
 
-#     sc1 = ax_map.scatter(
-#         df_dfm.lon,
-#         df_dfm.lat,
-#         c=df_dfm["max_component"],
-#         cmap="viridis",
-#         norm=norm,
-#         s=40,
-#         edgecolor="k",
-#         linewidth=0.2,
-#         label="DFM"
-#     )
+    sc1 = ax_map.scatter(
+        df_dfm.lon,
+        df_dfm.lat,
+        c=df_dfm["max_component"],
+        cmap="viridis",
+        norm=norm,
+        s=40,
+        edgecolor="k",
+        linewidth=0.2,
+        label="DFM"
+    )
 
-#     df_wave_cut = df_wave[
-#         (df_wave.lon >= df_dfm.lon.min()) & (df_wave.lon <= df_dfm.lon.max()) &
-#         (df_wave.lat >= df_dfm.lat.min()) & (df_wave.lat <= df_dfm.lat.min())
-#     ]
+    df_wave_cut = df_wave[
+        (df_wave.lon >= df_dfm.lon.min()) & (df_wave.lon <= df_dfm.lon.max()) &
+        (df_wave.lat >= df_dfm.lat.min()) & (df_wave.lat <= df_dfm.lat.min())
+    ]
 
-#     ctx.add_basemap(ax_map, source=ctx.providers.OpenStreetMap.Mapnik, crs="EPSG:4326", attribution=False)
+    ctx.add_basemap(ax_map, source=ctx.providers.OpenStreetMap.Mapnik, crs="EPSG:4326", attribution=False)
 
-#     lon_ticks = np.linspace(*ax_map.get_xlim(), 5)
-#     lat_ticks = np.linspace(*ax_map.get_ylim(), 5)
-#     ax_map.set_xticks(lon_ticks)
-#     ax_map.set_yticks(lat_ticks)
-#     ax_map.set_xticklabels([f"{transformer.transform(x, df_dfm.lat.min())[0]:.1f}°E" for x in lon_ticks], fontsize=11)
-#     ax_map.set_yticklabels([f"{transformer.transform(df_dfm.lon.min(), y)[1]:.1f}°S" for y in lat_ticks], fontsize=11)
-#     ax_map.set_xlabel("Longitude", fontsize=11)
-#     ax_map.set_ylabel("Latitude", fontsize=11)
-#     ax_map.set_title("DFM output points", fontsize=12)
+    lon_ticks = np.linspace(*ax_map.get_xlim(), 5)
+    lat_ticks = np.linspace(*ax_map.get_ylim(), 5)
+    ax_map.set_xticks(lon_ticks)
+    ax_map.set_yticks(lat_ticks)
+    ax_map.set_xticklabels([f"{transformer.transform(x, df_dfm.lat.min())[0]:.1f}°E" for x in lon_ticks], fontsize=11)
+    ax_map.set_yticklabels([f"{transformer.transform(df_dfm.lon.min(), y)[1]:.1f}°S" for y in lat_ticks], fontsize=11)
+    ax_map.set_xlabel("Longitude", fontsize=11)
+    ax_map.set_ylabel("Latitude", fontsize=11)
+    ax_map.set_title("DFM output points", fontsize=12)
 
-#     sm = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
-#     sm.set_array([])
-#     cbar = fig.colorbar(sm, ax=ax_map, orientation="vertical", fraction=0.04, pad=0.02)
-#     cbar.set_label("Max Water Level Component (m)")
+    sm = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax_map, orientation="vertical", fraction=0.04, pad=0.02)
+    cbar.set_label("Max Water Level Component (m)")
 
-#     ax_map.legend(loc="upper left", fontsize=11)
+    ax_map.legend(loc="upper left", fontsize=11)
 
-#     # ------------------------------------------------------------------
-#     # BAR CHART 1: Original datasets
-#     # ------------------------------------------------------------------
-#     ax_abs = fig.add_subplot(gs[0, 1])
-#     lat = ds_filtered.lat.values
-#     y_min, y_max = lat.min() - 0.01, lat.max() + 0.01
-#     bar_h = (y_max - y_min) / len(lat) * 0.6
+    # ------------------------------------------------------------------
+    # BAR CHART 1: Original datasets
+    # ------------------------------------------------------------------
+    ax_abs = fig.add_subplot(gs[0, 1])
+    lat = ds_filtered.lat.values
+    y_min, y_max = lat.min() - 0.01, lat.max() + 0.01
+    bar_h = (y_max - y_min) / len(lat) * 0.6
 
-#     ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wl_max_component"],
-#                 height=0.005, color="steelblue", label="Tide + Surge")
+    ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wl_max_component"],
+                height=0.005, color="steelblue", label="Tide + Surge")
 
-#     ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wave_max_component"],
-#                 left=gdf_dfm_matched["wl_max_component"],
-#                 height=0.005, color="orange", label="Wave Setup")
+    ax_abs.barh(gdf_dfm_matched['lat'], gdf_dfm_matched["wave_max_component"],
+                left=gdf_dfm_matched["wl_max_component"],
+                height=0.005, color="orange", label="Wave Setup")
 
-#     ax_abs.set_ylim(y_min, y_max)
-#     ax_abs.set_xlabel("Max Water Level Component (m)")
-#     ax_abs.set_title("Max of Tide & Surge + Wave")
-#     ax_abs.grid(axis="x", alpha=0.3)
-#     ax_abs.legend(fontsize=8, loc="lower left")
-#     ax_abs.set_yticklabels([])
+    ax_abs.set_ylim(y_min, y_max)
+    ax_abs.set_xlabel("Max Water Level Component (m)")
+    ax_abs.set_title("Max of Tide & Surge + Wave")
+    ax_abs.grid(axis="x", alpha=0.3)
+    ax_abs.legend(fontsize=8, loc="lower left")
+    ax_abs.set_yticklabels([])
 
-#     # ------------------------------------------------------------------
-#     # BAR CHART 2: Combined dataset
-#     # ------------------------------------------------------------------
-#     ax_abs = fig.add_subplot(gs[0, 2])
-#     df_combined = pd.DataFrame({
-#         'lon': ds_combined.lon.values,
-#         'lat': ds_combined.lat.values,
-#         'wl_max_component': ds_combined["waterlevel"].max(dim='time').values,
-#         'wave_max_component': ds_combined["wave_setup"].max(dim='time').values,
-#         'tide_surge_max_component': ds_combined["tide_surge"].max(dim='time').values
-#     })
+    # ------------------------------------------------------------------
+    # BAR CHART 2: Combined dataset
+    # ------------------------------------------------------------------
+    ax_abs = fig.add_subplot(gs[0, 2])
+    df_combined = pd.DataFrame({
+        'lon': ds_combined.lon.values,
+        'lat': ds_combined.lat.values,
+        'wl_max_component': ds_combined["waterlevel"].max(dim='time').values,
+        'wave_max_component': ds_combined["wave_setup"].max(dim='time').values,
+        'tide_surge_max_component': ds_combined["tide_surge"].max(dim='time').values
+    })
 
-#     ax_abs.barh(df_combined['lat'], df_combined["wave_max_component"],
-#                 left=df_combined["tide_surge_max_component"],
-#                 height=0.005, color="orange", label="Wave Setup (on top of T+S)")
+    ax_abs.barh(df_combined['lat'], df_combined["wave_max_component"],
+                left=df_combined["tide_surge_max_component"],
+                height=0.005, color="orange", label="Wave Setup (on top of T+S)")
 
-#     ax_abs.barh(df_combined['lat'], df_combined["tide_surge_max_component"],
-#                 height=0.005, color="steelblue", label="Tide + Surge")
+    ax_abs.barh(df_combined['lat'], df_combined["tide_surge_max_component"],
+                height=0.005, color="steelblue", label="Tide + Surge")
 
-#     ax_abs.barh(df_combined['lat'], df_combined["wl_max_component"],
-#                 height=0.005, color="green", label="Total waterlevel")
+    ax_abs.barh(df_combined['lat'], df_combined["wl_max_component"],
+                height=0.005, color="green", label="Total waterlevel")
 
-#     ax_abs.set_ylim(y_min, y_max)
-#     ax_abs.set_xlabel("Max Water Level Component (m)")
-#     ax_abs.set_title("Max of Tide & Surge + Wave, and Combined")
-#     ax_abs.grid(axis="x", alpha=0.3)
-#     ax_abs.legend(fontsize=8, loc="lower left")
-#     ax_abs.set_yticklabels([])
+    ax_abs.set_ylim(y_min, y_max)
+    ax_abs.set_xlabel("Max Water Level Component (m)")
+    ax_abs.set_title("Max of Tide & Surge + Wave, and Combined")
+    ax_abs.grid(axis="x", alpha=0.3)
+    ax_abs.legend(fontsize=8, loc="lower left")
+    ax_abs.set_yticklabels([])
 
-#     plt.show()
-
+    plt.show()
 
 if use_wave:
 #     plot_wave_impact()
     plot_station_wave_components()
+
+
+# %%
+#### wave interpolation test #########
+# Plot wave setup interpolation
+# datacatalog_coast = hydromt.DataCatalog(data_libs=[path_data_cat_coast])
+# print("Loading wave data")
+# ds_wave_setup = datacatalog_coast.get_geodataset(dfm_run_waves)
+# start_dt = datetime.strptime(start_date, "%Y%m%d %H%M%S").strftime("%Y-%m-%d")
+# end_dt = datetime.strptime(end_date, "%Y%m%d %H%M%S").strftime("%Y-%m-%d")
+# date_range = pd.date_range(start=start_dt, end=end_dt, freq='10min')
+
+# #%%
+# # Compare modified DFM data to original
+# plt.figure(figsize=(12, 4))
+# plt.plot(ds_wave_setup.waterlevel.sel(station=80).time, ds_wave_setup.waterlevel.sel(station=80).values, label='DFM + wave setup', alpha=0.5)
+# plt.plot(ds_wave_setup.tide_surge.sel(station=80).time, ds_wave_setup.tide_surge.sel(station=80).values, label='DFM: tide+surge', alpha=0.5)
+# plt.plot(ds_wave_setup.wave_setup.sel(station=80).time, ds_wave_setup.wave_setup.sel(station=80).values, label='Snapwave: wave setup', alpha=0.5)
+# plt.legend()
+# plt.title('Interpolated Maxima Every 12h25min')
+# plt.tight_layout()
+# plt.show()
 
 # %%
