@@ -2419,14 +2419,14 @@ simard_v2011:
   crs: 4326
 sofala_incl_polygon:
   data_type: GeoDataFrame
-  path: 11210471-001-compass/01_Data/sofala_region_incl_polygon/Incl_polygon_sofala_region.shp
+  path: 11210471-001-compass/01_Data/sofala_geoms/Incl_polygon_sofala_region.shp
   driver: vector
   meta:
     category: hydrography
   crs: 4326
 sofala_incl_polygon_2:
   data_type: GeoDataFrame
-  path: 11210471-001-compass/01_Data/sofala_region_incl_polygon/Incl_polygon_sofala_region_2.shp
+  path: 11210471-001-compass/01_Data/sofala_geoms/Incl_polygon_sofala_region_2.shp
   driver: vector
   meta:
     category: hydrography
