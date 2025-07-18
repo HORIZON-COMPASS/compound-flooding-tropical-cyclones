@@ -60,6 +60,7 @@ mod_fplns_f_ = make_model("event_precip_era5_hourly_zarr_CF0_floodplains_f_")
 mod_f_soilthick = make_model("event_precip_era5_hourly_zarr_CF0_f_soilthick2")
 mod_f_soilthick_cnst = make_model("event_precip_era5_hourly_zarr_CF0_f_soilthick")
 mod_fplns_f_soilthick = make_model("event_precip_era5_hourly_zarr_CF0_floodplain_f_soilthick")
+mod_fplns_f_soilthick_maxlk = make_model("event_precip_era5_hourly_zarr_CF0")
 mod_fplns_f_soilthick_chirps = make_model("event_precip_chirps_CF0")
 mod_fplns_f_soilthick_era5_daily = make_model("event_precip_era5_daily_CF0")
 
@@ -72,8 +73,9 @@ models = {
     "mod_base": mod_base,
     "mod_fplns": mod_fplns,
     "mod_fplns_f_": mod_fplns_f_,
-    "mod_fplns_f_soilthick": mod_fplns_f_soilthick,
     "mod_f_soilthick": mod_f_soilthick,
+    "mod_fplns_f_soilthick": mod_fplns_f_soilthick,
+    "mod_fplns_f_soilthick_maxlk": mod_fplns_f_soilthick_maxlk,
     "mod_fplns_f_soilthick_chirps": mod_fplns_f_soilthick_chirps
 }
 
@@ -94,6 +96,7 @@ compare_models = {
     "Floodplains with f_": mod_fplns_f_,
     "f_ and soilthickness": mod_f_soilthick,
     "Floodplains, f_ and soilthickness": mod_fplns_f_soilthick,
+    # "Floodplains, f_, soilthickness and maxleakage": mod_fplns_f_soilthick_maxlk,
     "Floodplains, f_ and soilthickness and CHIRPS": mod_fplns_f_soilthick_chirps,
     "Floodplains, f_ and soilthickness and ERA5 daily": mod_fplns_f_soilthick_era5_daily
     # Uncomment to include constant variant:
