@@ -82,30 +82,6 @@ with tempfile.TemporaryDirectory() as tmpdir:
     fiat_model = FiatModel(root=tmp_model_folder, mode="w+", data_libs=[data_catalog], logger=logger)
     fiat_model.build(region={"geom": region}, opt=config, write=True)
 
-    # # Correct exposure for "sofala" model
-    # if "sofala" in str(model_folder).lower():
-    #     print("Correct exposure for the sofala model")
-    #     exposure_target = tmp_model_folder / "exposure"
-    #     exposure_source = Path(os.path.join(prefix,"11210471-001-compass","01_Data","fiat","sofala","exposure"))
-
-    #     # Delete existing exposure folder if it exists
-    #     if exposure_target.exists():
-    #         shutil.rmtree(exposure_target)
-
-    #     # Create the exposure folder anew (empty)
-    #     exposure_target.mkdir(parents=True, exist_ok=True)
-
-    #     # Copy all contents from exposure_source into exposure_target (not the folder itself)
-    #     for item in exposure_source.iterdir():
-    #         target_path = exposure_target / item.name
-    #         if item.is_dir():
-    #             shutil.copytree(item, target_path)
-    #         else:
-    #             shutil.copy2(item, target_path)
-
-    # gdf = gpd.read_file(f"{model_folder}/exposure/buildings.gpkg")
-    # gdf.to_file(f"{model_folder}/exposure/buildings.fgb", driver="FlatGeobuf")
-
     # Try .fgb first, fallback to .gpkg
     fgb_path = tmp_model_folder / "exposure" / "buildings.fgb"
     gpkg_path = tmp_model_folder / "exposure" / "buildings.gpkg"
@@ -142,8 +118,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
         df_exposure = pd.read_csv(tmp_model_folder / "exposure" / "exposure.csv")
 
         # ---- Identify the "unrealistic" building ----
-        # You can adjust the threshold (e.g., 10,000 m²)
-        gdf_utm = gdf.to_crs(epsg=32736)  # 32736 = UTM zone 36S; use 32737 if further east
+        gdf_utm = gdf.to_crs(epsg=32736)
 
         # Add area column in square meters
         gdf_utm["area_m2"] = gdf_utm.geometry.area
