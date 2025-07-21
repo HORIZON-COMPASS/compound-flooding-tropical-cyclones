@@ -2431,6 +2431,13 @@ sofala_incl_polygon_2:
   meta:
     category: hydrography
   crs: 4326
+sofala_excl_northern_basin:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sofala_geoms/basins_to_remove.gpkg
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 soilgrids:
   data_type: RasterDataset
   path: wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
