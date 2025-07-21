@@ -73,7 +73,7 @@ config["setup_hazard"]["crs"]                 = crs_flood
 with tempfile.TemporaryDirectory() as tmpdir:
     print("temporary directory for building the model")
     tmp_model_base = Path(tmpdir)
-    tmp_model_folder = tmp_model_base / model_name
+    tmp_model_folder = tmp_model_base / "fiat_model_temp"
 
     # Set up the model in temp directory
     print("Build the model")
