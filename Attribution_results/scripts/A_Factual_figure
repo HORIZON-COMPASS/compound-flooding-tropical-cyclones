@@ -46,7 +46,7 @@ def custom_formatter(value, pos=None):
 #%%
 # define model and data catalog file paths
 factual_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
-
+# factual_model_dir = r"c:\Code\Paper_1\Tests\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
 datacat = [
         '../../Workflows/03_data_catalogs/datacatalog_general.yml',
         '../../Workflows/03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
@@ -75,6 +75,14 @@ buffered_region_gdf = gpd.read_file(join(
 buffered_region_gdf_wsg = gpd.read_file(join(
     prefix, "11210471-001-compass", "01_Data", "sofala_geoms", 
     "sfincs_region_buffered_5km_exclNorthernBasin.shp")).to_crs("EPSG:4326") 
+
+region_excl_northern = gpd.read_file(join(
+    prefix, "11210471-001-compass", "01_Data", "sofala_geoms", 
+    "sfincs_region_exclNorthernBasin.shp")).to_crs("EPSG:32736") 
+
+region_excl_northern_wsg = gpd.read_file(join(
+    prefix, "11210471-001-compass", "01_Data", "sofala_geoms", 
+    "sfincs_region_exclNorthernBasin.shp")).to_crs("EPSG:4326") 
 
 #%%
 # we set a threshold to mask minimum flood depth
@@ -105,8 +113,11 @@ da_hmax_masked = da_hmax.where(gswo_mask <= 5)
 mod.results['hmax'] = da_hmax
 mod.results['hmax_masked'] = da_hmax_masked
 
-da_hmax_masked_buffered = da_hmax_masked.rio.clip(buffered_region_gdf.geometry)
-mod.results['hmax_masked_buffered'] = da_hmax_masked_buffered
+# da_hmax_masked_buffered = da_hmax_masked.rio.clip(buffered_region_gdf.geometry)
+# mod.results['hmax_masked_buffered'] = da_hmax_masked_buffered
+
+# da_hmax_masked_excl_northern = da_hmax_masked.rio.clip(region_excl_northern.geometry)
+# mod.results['hmax_masked_exclN'] = da_hmax_masked_excl_northern
 
 # Make own background shape
 # 1 = valid (non-permanent water), 0 = permanent water
@@ -124,7 +135,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 #%%
 fig, ax = plt.subplots(nrows=1,
                        ncols=1,
-                       figsize=(8,8),
+                       figsize=(4,6),
                        dpi=300,
                        constrained_layout=True,
                        subplot_kw={"projection": ccrs.epsg(projection)})
@@ -132,28 +143,22 @@ fig, ax = plt.subplots(nrows=1,
 fig.suptitle("Factual Max Flood Depth", fontsize=11)
 
 # Plot hmax masked
-hmax = mod.results['hmax_masked_buffered']
+hmax = mod.results['hmax_masked']
 
 vmin = float(hmax.min())
 vmax = float(hmax.max())
 
 im = hmax.plot.pcolormesh(
-    ax=ax, cmap="Blues", vmin=vmin, vmax=3, add_colorbar=False
+    ax=ax, cmap="viridis", vmin=vmin, vmax=3.5, add_colorbar=False
 )
 
-# Add basemap
-# ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery,
-#                 zoom=10,
-#                 crs=mod.results['hmax_masked'].rio.crs,
-#                 attribution=False)
-# ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
-gdf_valid.plot(ax=ax, color='lightgrey', transform=ccrs.PlateCarree(), zorder=0)
+gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
 
 # Add model region
-buffered_region_gdf_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
 # Set extent (based on actual lat/lon coordinates)
-minx, miny, maxx, maxy = buffered_region_gdf_wsg.bounds.minx.item(), buffered_region_gdf_wsg.bounds.miny.item(), buffered_region_gdf_wsg.bounds.maxx.item(), buffered_region_gdf_wsg.bounds.maxy.item()
+minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
 ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
 # Add gridlines and format tick labels
@@ -164,8 +169,8 @@ gl.xformatter = mticker.FuncFormatter(lon_formatter)
 gl.yformatter = mticker.FuncFormatter(lat_formatter)
 gl.right_labels = False
 gl.top_labels = False
-gl.xlabel_style = {'size': 11}
-gl.ylabel_style = {'size': 11}
+gl.xlabel_style = {'size': 9}
+gl.ylabel_style = {'size': 9}
 
 
 # Titles
@@ -182,8 +187,8 @@ plt.show()
 
 #%%
 ### PLOT TIMESERIES OUTPUT POINTS
-fig, ax = plt.subplots(3,1,figsize=(8,8), sharex=True, dpi=300)
-ax[0].plot(ds_his.time,ds_his['point_zs'].isel(stations=8),color='r', label=f'Station 5')
+fig, ax = plt.subplots(3,1,figsize=(4,6), sharex=True, dpi=300)
+ax[0].plot(ds_his.time,ds_his['point_zs'].isel(stations=5),color='r', label=f'Station 5')
 ax[0].plot(mod.forcing['bzs'].time, mod.forcing['bzs'].sel(index=40), label=f'Station 40')
 
 ax[1].plot(mod.forcing['dis'].time, mod.forcing['dis'].sel(index=1), label=f'Gauge 1')
@@ -197,6 +202,7 @@ for a in ax:
     a.tick_params(axis='both', labelsize=10)
     a.grid(True, which='major', linestyle='--', linewidth=0.5, alpha=0.7)
 
+ax[0].set_title(f"Timeseries of water levels _base run")
 # ax.set_title(f"Timeseries of water levels \n Location: {ds_his['station_id'].isel(stations=5).values}")
 ax[0].set_ylabel("Water level height \n [m]")
 ax[1].set_ylabel("Discharge \n [m3/s]")
@@ -224,32 +230,31 @@ gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig,
 ax_map = fig.add_subplot(gs[:, 0], projection=ccrs.epsg(projection))
 
 # Plot hmax masked
-im = mod.results['hmax_masked'].plot.pcolormesh(
-    ax=ax_map, cmap="Blues", vmin=0, vmax=5.0, add_colorbar=False
+im = mod.results['hmax_masked_buffered'].plot.pcolormesh(
+    ax=ax_map, cmap="viridis", vmin=0, vmax=3.5, add_colorbar=False
 )
 
 ax_map.set_title("Factual Max Flood Depth", fontsize=14)
 
-# Add model region
-model_region_gdf.boundary.plot(ax=ax_map, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
 
-# Add background and extent
-ax_map.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+# Add model region
+model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
 # Set extent (based on actual lat/lon coordinates)
 minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
-ax_map.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
+ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
-# Gridlines
-gl = ax_map.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+# Add gridlines and format tick labels
+gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
 gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
 gl.xformatter = mticker.FuncFormatter(lon_formatter)
 gl.yformatter = mticker.FuncFormatter(lat_formatter)
 gl.right_labels = False
 gl.top_labels = False
-gl.xlabel_style = {'size': 11}
-gl.ylabel_style = {'size': 11}
+gl.xlabel_style = {'size': 9}
+gl.ylabel_style = {'size': 9}
 
 # Colorbar for map
 cbar = fig.colorbar(im, ax=ax_map, orientation="vertical", fraction=0.035, pad=0.01)
@@ -321,6 +326,7 @@ ax_map.annotate(f'G{gauges_list[1]}', xy=(mod.forcing['dis'].sel(index=gauges_li
                 bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=0.5, alpha=0.8)
 )
 
+fig.savefig("../figures/factual_hmax_timeseries.png", bbox_inches='tight', dpi=300)
 plt.show()
 
 
@@ -406,35 +412,29 @@ gdf_cf0_crs = gpd.GeoDataFrame(gdf_cf0,
 # Ensure same CRS
 gdf_damage = gdf_cf0_crs.to_crs(crs)
 
-# Add model region
-model_region_gdf.boundary.plot(ax=axes, edgecolor='black', linewidth=0.5, transform=crs)
-
-# Add background and extent
-axes.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
-
 # Plot damage points
-scatter1 = axes.scatter(
-    gdf_damage.geometry.x, gdf_damage.geometry.y,
-    c=gdf_damage['total_damage'],
-    cmap=damage_cmap, norm=damage_norm,
-    s=point_size, alpha=alpha,
-    transform=crs
-)
+scatter1 = axes.scatter(gdf_damage.geometry.x, gdf_damage.geometry.y, c=gdf_damage['total_damage'], 
+                        cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, transform=crs)
 
-# Set extent (based on actual lat/lon coordinates)
+# Add model region
+model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
+
+# # Add background and set extent (based on actual lat/lon coordinates)
+gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
 minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
-axes.set_extent([minx, maxx, miny, maxy], crs)
+ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
-# Gridlines
-gl = axes.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+# Add gridlines and format tick labels
+gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
 gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
 gl.xformatter = mticker.FuncFormatter(lon_formatter)
 gl.yformatter = mticker.FuncFormatter(lat_formatter)
 gl.right_labels = False
 gl.top_labels = False
-gl.xlabel_style = {'size': 11}
-gl.ylabel_style = {'size': 11}
+gl.xlabel_style = {'size': 9}
+gl.ylabel_style = {'size': 9}
+
 
 # Add colorbar
 cbar1 = plt.colorbar(scatter1, ax=axes, shrink=0.8, pad=0.06)
@@ -444,8 +444,8 @@ cbar1.set_label(damage_label, fontsize=10)
 plt.tight_layout()
 plt.suptitle(f'Factual Total Damage', fontsize=16, y=0.96)
 
-output_file_main = OUTPUT_DIR / f'damage_idai_total_damage.png'
-# plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
+output_file_main = OUTPUT_DIR / f'damage_idai_total_damage_scatter.png'
+plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
 plt.show()
 
 
@@ -496,7 +496,7 @@ gdf_grid_masked["relative_aggr_damage"] = gdf_grid_masked["relative_aggr_damage"
 # ======= Plot the factual aggregated damage and flooding =========
 ###################################################################
 # plot the total_damage, emphazizing lower values
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6,6), dpi=300,
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4,6), dpi=300,
                        subplot_kw={"projection": ccrs.PlateCarree()})
 
 # Create colormap normalization
@@ -511,15 +511,15 @@ sm = ScalarMappable(norm=norm, cmap="Reds")
 cbar = fig.colorbar(sm, ax=ax, shrink=0.8, pad=0.06)
 cbar.set_label(damage_label, fontsize=10) 
 
+# Add model region
+model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
-# Add background and extent
-ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
-
-# Set extent (based on actual lat/lon coordinates)
+# # Add background and set extent (based on actual lat/lon coordinates)
+gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
 minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
 ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
-# Gridlines
+# Add gridlines and format tick labels
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
 gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
@@ -527,8 +527,8 @@ gl.xformatter = mticker.FuncFormatter(lon_formatter)
 gl.yformatter = mticker.FuncFormatter(lat_formatter)
 gl.right_labels = False
 gl.top_labels = False
-gl.xlabel_style = {'size': 11}
-gl.ylabel_style = {'size': 11}
+gl.xlabel_style = {'size': 9}
+gl.ylabel_style = {'size': 9}
 
 ax.set_title("Total Aggregated Flood Damage", fontsize=12)
 fig.savefig("../figures/total_aggregated_damage.png", bbox_inches='tight', dpi=300)
@@ -539,7 +539,7 @@ plt.show()
 
 # %%
 # plot the total_damage, emphazizing lower values
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6,6), dpi=300,
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4,6), dpi=300,
                        subplot_kw={"projection": ccrs.PlateCarree()})
 
 # Plot using GeoPandas, but draw to custom ax and return colorbar mappable
@@ -552,14 +552,15 @@ sm.set_array([])  # doesn't need real data; just placeholder for colorbar
 cbar = fig.colorbar(sm, ax=ax, shrink=0.8, pad=0.06)
 cbar.set_label("Relative Damage [%]", fontsize=10) 
 
-# Add background and extent
-ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor='lightgrey', zorder=0)
+# Add model region
+model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
-# Set extent (based on actual lat/lon coordinates)
+# # Add background and set extent (based on actual lat/lon coordinates)
+gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
 minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
 ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
-# Gridlines
+# Add gridlines and format tick labels
 gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
 gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
@@ -567,8 +568,8 @@ gl.xformatter = mticker.FuncFormatter(lon_formatter)
 gl.yformatter = mticker.FuncFormatter(lat_formatter)
 gl.right_labels = False
 gl.top_labels = False
-gl.xlabel_style = {'size': 11}
-gl.ylabel_style = {'size': 11}
+gl.xlabel_style = {'size': 9}
+gl.ylabel_style = {'size': 9}
 
 ax.set_title("Relative damage Map", fontsize=12)
 fig.savefig("../figures/relative_aggregated_damage.png", bbox_inches='tight', dpi=300)
@@ -576,15 +577,13 @@ fig.savefig("../figures/relative_aggregated_damage.png", bbox_inches='tight', dp
 plt.show()
 
 
-
-
 # %%
 # Plot the damage and flooding as sub panels
-fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 6), dpi=300, constrained_layout=True, 
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 6), dpi=300, constrained_layout=True, 
                          subplot_kw={"projection": ccrs.PlateCarree()})
 
 # Plot the flooding
-hmax = mod.results['hmax_masked_buffered']
+hmax = mod.results['hmax_masked']
 vmin = float(hmax.min())
 vmax = float(hmax.max())
 im = hmax.plot.pcolormesh(ax=axes[0], cmap="Blues", vmin=vmin, vmax=3, add_colorbar=False)
@@ -595,11 +594,12 @@ plot = gdf_grid_masked.plot(column="total_damage", cmap="Reds", norm=norm, edgec
                             linewidth=0.2, ax=axes[1], legend=False)
 
 for ax in axes:
-    gdf_valid.plot(ax=ax, color='lightgrey', transform=ccrs.PlateCarree(), zorder=0)
-    buffered_region_gdf_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+    # Add model region
+    model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
-    # Set extent (based on actual lat/lon coordinates)
-    minx, miny, maxx, maxy = buffered_region_gdf_wsg.bounds.minx.item(), buffered_region_gdf_wsg.bounds.miny.item(), buffered_region_gdf_wsg.bounds.maxx.item(), buffered_region_gdf_wsg.bounds.maxy.item()
+    # # Add background and set extent (based on actual lat/lon coordinates)
+    gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+    minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
     ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
     # Add gridlines and format tick labels
@@ -610,8 +610,8 @@ for ax in axes:
     gl.yformatter = mticker.FuncFormatter(lat_formatter)
     gl.right_labels = False
     gl.top_labels = False
-    gl.xlabel_style = {'size': 11}
-    gl.ylabel_style = {'size': 11}
+    gl.xlabel_style = {'size': 9}
+    gl.ylabel_style = {'size': 9}
 
 # Titles
 axes[0].set_title("(a) Flood depth", fontsize=16)
