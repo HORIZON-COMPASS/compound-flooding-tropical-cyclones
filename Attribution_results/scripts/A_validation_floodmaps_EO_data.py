@@ -23,15 +23,29 @@ from shapely.geometry import box
 from rasterio.features import shapes
 from shapely.geometry import shape
 import cartopy.crs as ccrs
+import matplotlib.ticker as mticker
+
+import platform
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
+
+def lat_formatter(x, pos):
+    direction = 'N' if x >= 0 else 'S'
+    return f"{abs(x):.1f}°{direction}"
+def lon_formatter(x, pos):
+    direction = 'E' if x >= 0 else 'W'
+    return f"{abs(x):.1f}°{direction}"
+
+def custom_formatter(value, pos=None):
+    return f"{value:.1f}°"
 
 # %% [markdown]
 event = 'idai'
 
 # %%
-dir_obs_unosat = r'p:\11210471-001-compass\01_Data\Validation_UNOSAT'
-dir_obs_cems = r'p:\11210471-001-compass\01_Data\Validation_GFM'
+dir_obs_unosat = join(prefix,'11210471-001-compass','01_Data','Validation_UNOSAT')
+dir_obs_cems = join(prefix,'11210471-001-compass', '01_Data','Validation_GFM')
 
-rundirs = r'p:\11210471-001-compass\03_Runs'
+rundirs = join(prefix,'11210471-001-compass','03_Runs')
 
 # %%
 if event == 'idai':
@@ -62,7 +76,9 @@ dataCat = hydromt.data_catalog.DataCatalog(join('Workflows', "03_data_catalogs",
 
 # %%
 # Read model output data 
-da_model = rxr.open_rasterio(r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0\plot_output\floodmap.tif")
+da_model = rxr.open_rasterio(join(prefix,'11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs', 
+                                  'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0',
+                                  'plot_output','floodmap.tif'))
 
 # %%
 # add crs information and convert to rioxarray dataset
@@ -72,7 +88,8 @@ ds = da_model.to_dataset(name='model')
 
 # %%
 # read region mask
-region = gpd.read_file(r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0\gis\region.geojson")
+region = gpd.read_file(join(prefix,'11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs',
+                            'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0', 'gis', 'region.geojson'))
 region_wsg = region.to_crs("EPSG:4326")
 # %%
 # read permanent water mask
@@ -88,7 +105,8 @@ gdf_valid = gdf_valid.to_crs(region_wsg.crs)
 
 # %%
 # Load raster flood map with rasterio as a basis for rasterization of the region and EO flood map vectors
-raster = rio.open(r"p:\11210471-001-compass\03_Runs\sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0\plot_output\floodmap.tif", 'r+')
+raster = rio.open(join(prefix, '11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs', 
+                       'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0', 'plot_output', 'floodmap.tif'), 'r+')
 raster.crs = CRS.from_epsg(sfincs_crs)
 
 # %%
@@ -282,7 +300,7 @@ for ii, source in enumerate(source_list):
     hr, csi, fr = np.round(da_skill['H'].item(),2), np.round(da_skill['C'].item(),2), np.round(da_skill['F'].item(),2)
     cs = da_cm.where(da_cm>0).plot(ax=ax, cmap=cmap, norm=norm, transform=utm_crs, add_colorbar=False)
     ax.set_title(f'{source.upper()}')
-    ax.text(0.8, 0.88, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props)
+    ax.text(0.8, 0.85, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props)
 
     if ii==0:
         ax.yaxis.set_visible(True)
@@ -290,6 +308,25 @@ for ii, source in enumerate(source_list):
 
     ax.xaxis.set_visible(True)
     ax.set_xlabel(f"x coordinate UTM zone {sfincs_utm} [m]")  
+
+    # Add model region
+    gdf_valid.plot(ax=ax, color='lightgrey', transform=ccrs.PlateCarree(), zorder=0)
+    region_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+    
+    # Set extent (based on actual lat/lon coordinates)
+    minx, miny, maxx, maxy = region_wsg.bounds.minx.item(), region_wsg.bounds.miny.item(), region_wsg.bounds.maxx.item(), region_wsg.bounds.maxy.item()
+    ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
+
+    # Add gridlines and format tick labels
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+    gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+    gl.xformatter = mticker.FuncFormatter(lon_formatter)
+    gl.yformatter = mticker.FuncFormatter(lat_formatter)
+    gl.right_labels = False
+    gl.top_labels = False
+    gl.xlabel_style = {'size': 11}
+    gl.ylabel_style = {'size': 11}
 
 fig.subplots_adjust(wspace=0.04, hspace=0.06)
 # fig.suptitle('Model flood map comparison to EO flood extent')
@@ -301,5 +338,5 @@ cbar_ax = fig.add_axes([0.93, 0.2, 0.015, 0.5])
 cbar=fig.colorbar(cs, cax=cbar_ax, orientation='vertical', ticks=ticks)
 cbar_ax.set_yticklabels(ticklabs, va='center', rotation=90)
 
-fig.savefig("../figures/satellite_comparison_crs.png",dpi=300, bbox_inches='tight')
+fig.savefig("Attribution_results/figures/satellite_comparison_crs.png",dpi=300, bbox_inches='tight')
 # %%
