@@ -9,6 +9,7 @@ __pycache__/
 # Pixi
 .pixi
 pixi.lock
+../hook.sh
 
 #Workflow output files
 Workflows/dag*.png
@@ -21,8 +22,10 @@ Workflows/.nfs*
 Workflows/*/.nfs*
 Workflows/test_*
 Workflows/.snakemake
+Workflows/*.svg
 Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
+Workflows/02_workflow_rules/*.pdf
 Attribution_results/figures
 
 # Model data
@@ -78,6 +81,7 @@ cover/
 Workflows/02_workflow_rules/slurm*.out
 Workflows/02_workflow_rules/dag*
 Workflows/00_execution_script_examples/logs
+core.*
 
 # Translations
 *.mo
