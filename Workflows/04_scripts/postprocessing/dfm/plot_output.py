@@ -308,12 +308,43 @@ def plot_waterlevel_difference(ds1, ds2, var='mesh2d_s1', title='Water level dif
     return ax
 
 #%% Plot the timeserie for the specified variable and staion (default is BEIRA IHO)
-# model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0'
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0'
 ds_his = open_ds_his(dir_runs, model_name)
-plot_timeserie(ds_his, variable='waterlevel')
+plot_timeserie(ds_his, variable='waterlevel', station_name='1821')
 plot_timeserie(ds_his, variable='windmag')
 
+
 #%%
+import hydromt
+path_data_cat       = os.path.abspath("../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
+datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
+dfm_run = 'dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0_waves'
+ds_dfm = datacatalog.get_geodataframe(dfm_run)
+
+#%%
+    # tide_surge = ds_combined["tide_surge"].sel(match=station_to_plot).compute()
+    # wave_wl = ds_combined["wave_setup"].sel(match=station_to_plot).compute()
+waterlevel = ds_dfm["waterlevel"].sel(station_name='1821').compute()
+
+plt.figure(figsize=(12,6))
+plt.plot(waterlevel["time"], waterlevel, label="Waterlevel")
+    # plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
+    # plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
+
+    # wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
+
+plt.xlabel("Time")
+plt.ylabel("Water Level (m)")
+# plt.title(f"Water levels for station {station_to_plot} with max wave setup of {wave_max:.2f} m")
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+#%%
+
+test = xr.open_dataset(datacatalog[dfm_run].path)
+
+ #%%
 # Compare the timeseries of different models
 # model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_trad'
 # ds_his_ERA5_spw_chnk_noOperand = open_ds_his(dir_runs, model_name)
@@ -321,20 +352,11 @@ plot_timeserie(ds_his, variable='windmag')
 model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0'
 ds_his_ERA5_spw = open_ds_his(dir_runs, model_name)
 
-model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0_constChnk'
-ds_his_ERA5_constChnk = open_ds_his(dir_runs, model_name)
-
-model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0_nochnk'
-ds_his_ERA5_nochnk = open_ds_his(dir_runs, model_name)
-
 model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_CF0'
-ds_his_ERA5_nochnk_lindrag = open_ds_his(dir_runs, model_name)
+ds_his_ERA5 = open_ds_his(dir_runs, model_name)
 
 model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0'
 ds_his_spw = open_ds_his(dir_runs, model_name)
-
-model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_mergefrac'
-ds_his_ERA5_spw_mergefrac = open_ds_his(dir_runs, model_name)
 
 model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_plusoperand_500km'
 ds_his_ERA5_spw_plusoperand_500km = open_ds_his(dir_runs, model_name)
@@ -343,8 +365,32 @@ model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_pl
 ds_his_ERA5_spw_plusoperand = open_ds_his(dir_runs, model_name)
 
 #%%
-ds_his_list = [ds_his_ERA5_spw, ds_his_ERA5_spw_plusoperand_500km, ds_his_ERA5_spw_plusoperand, ds_his_spw]
-annot = ['ERA5_spw','ERA5_spw_merged0.75_rad500km', 'ERA5_spw_merged0.75_rad900km', 'his_spw']
+ds_his_list = [ds_his_ERA5_spw_plusoperand, ds_his_ERA5_spw_plusoperand_500km, ds_his_spw, ds_his_ERA5]
+annot = ['ERA5_spw_merged0.75_rad900km', 'ERA5_spw_merged0.75_rad500km', 'spw_only', 'ERA5_only_dynChnk']
+
+plot_timeseries_multi(ds_his_list, variable='waterlevel', labels=annot)
+plot_timeseries_multi(ds_his_list, variable='windmag', labels=annot)
+
+ #%%
+# Compare the timeseries of different CFs
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0'
+Fact = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10'
+CF_wind10 = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0'
+CF_SLR14cm = open_ds_his(dir_runs, model_name)
+
+model_name = 'event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10'
+CF_wind10_SLR14cm = open_ds_his(dir_runs, model_name)
+
+#%%
+ds_his_list = [Fact, CF_wind10, CF_SLR14cm, CF_wind10_SLR14cm]
+annot = ['Fact', 'CF_wind10', 'CF_SLR14cm', 'CF_wind10_SLR14cm']
+
+ds_his_list = [CF_SLR14cm, CF_wind10_SLR14cm]
+annot = ['CF_SLR14cm', 'CF_wind10_SLR14cm']
 
 plot_timeseries_multi(ds_his_list, variable='waterlevel', labels=annot)
 plot_timeseries_multi(ds_his_list, variable='windmag', labels=annot)
