@@ -27,8 +27,36 @@ import cartopy.feature as cfeature
 import pyproj
 from shapely.geometry import box
 from shapely.ops import transform
+from rasterio.features import shapes
+from shapely.geometry import shape
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
+
+
+# General functions
+def get_driver_group_model(group, models):
+    return next(
+        (m for m in models
+         if all(m["CF_info"].get(d, 0) != 0 for d in group)
+         and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - set(group))
+         and "hmax_diff" in m["sfincs_results"]), None)
+
+def get_single_driver_model(driver):
+        return next(
+            (m for m in models
+             if m["CF_info"].get(driver, 0) != 0
+             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
+             and "hmax_diff" in m["sfincs_results"]), None)
+
+def lat_formatter(x, pos):
+    direction = 'N' if x >= 0 else 'S'
+    return f"{abs(x):.1f}°{direction}"
+
+def lon_formatter(x, pos):
+    direction = 'E' if x >= 0 else 'W'
+    return f"{abs(x):.1f}°{direction}"
+
+
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -2165,6 +2193,68 @@ def plot_hmax_diff_slr_wind_rain(models, zoom_region_latlon=None):
 
     fig.savefig("../figures/hmax_diff_slr_wind_rain.png", bbox_inches='tight', dpi=300)
     plt.show()
+
+
+
+def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
+    # Get models
+    driver_groups = {
+    "Rain": ["rain"],
+    "SLR & Wind": ["SLR", "wind"],
+    "All": ["rain", "SLR", "wind"]
+    }
+
+    # === Create figure ===
+    fig, axes = plt.subplots(1, 3, figsize=(12, 6), dpi=300, constrained_layout=True,
+                            subplot_kw={"projection": ccrs.PlateCarree()}, sharey=True)
+
+    cmap = LinearSegmentedColormap.from_list("white_blue", ["white", "blue"])
+    vmin, vmax = 0, 0.5
+    utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
+
+    # === Loop through plots ===
+    for i, (ax, (title, group)) in enumerate(zip(axes, driver_groups.items())):
+        model = get_driver_group_model(group, models)
+        if model is None:
+            print(f"Missing model for group {group}")
+            continue
+
+        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False, transform=utm_crs)
+
+        background.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+        model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
+
+        # Set extent (based on actual lat/lon coordinates)
+        minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
+        ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
+
+        ax.set_title(title, fontsize=14)
+
+        # Add gridlines and format tick labels
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+        gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+        gl.xformatter = mticker.FuncFormatter(lon_formatter)
+        gl.yformatter = mticker.FuncFormatter(lat_formatter)
+        gl.right_labels = False
+        gl.top_labels = False
+        gl.xlabel_style = {'size': 9}
+        gl.ylabel_style = {'size': 9}
+        if i == 1:  
+            gl.left_labels = False  # disable y-axis labels 
+
+    # === Final touches ===
+    fig.suptitle("Factual vs. Counterfactual", fontsize=18, y=0.985)
+
+    cbar = fig.colorbar(im, ax=axes, orientation="vertical", fraction=0.02, pad=0.02, shrink=0.6)
+    cbar.set_label('Difference in Maximum Water Level (m)', rotation=270, labelpad=20, fontsize=13)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_ticks(np.arange(0, 0.6, 0.1))
+
+    fig.savefig("../figures/hmax_diff_rain_slr&wind_all.png", bbox_inches='tight', dpi=300)
+    plt.show()
+
 
 
 def plot_driver_decomposition_extent(sfincs_models, filter_keys=None):
