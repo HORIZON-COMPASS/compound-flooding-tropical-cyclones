@@ -160,12 +160,12 @@ rule run_sfincs_model:
                 subprocess.run([str(params.exe)], stdout=f, cwd=params.dir_run_with_forcing)
                 print("Finished running")
         if os.name == 'posix':
-            # shell("docker image ls")
-            # shell("docker run --rm --cpus={threads} --env OMP_NUM_THREADS={threads} --mount src={params.dir_run_with_forcing},target=/data,type=bind -w /data deltares/sfincs-cpu:sfincs-v2.1.1-Dollerup-Release sfincs")
-            shell("[ -f {params.sif} ] || apptainer pull --dir {params.sif_dir} docker://deltares/sfincs-cpu:latest")
+            shell("docker image ls")
+            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs")
+            # shell("[ -f {params.sif} ] || apptainer pull --dir {params.sif_dir} docker://deltares/sfincs-cpu:latest")
             # shell("cd {params.dir_run_with_forcing}")
             # shell("apptainer exec --env OMP_NUM_THREADS={threads} -B ${PWD}:/mnt/data {params.sif} sfincs")
-            shell("apptainer exec --env OMP_NUM_THREADS={threads} -B {params.dir_run_with_forcing}:/mnt/data {params.sif} sh -c 'cd /mnt/data && sfincs' 2>&1 | tee {params.dir_run_with_forcing}/sfincs.log")
+            # shell("apptainer exec --env OMP_NUM_THREADS={threads} -B {params.dir_run_with_forcing}:/mnt/data {params.sif} sh -c 'cd /mnt/data && sfincs' 2>&1 | tee {params.dir_run_with_forcing}/sfincs.log")
 
 rule sfincs_plot_floodmap:
     input:
