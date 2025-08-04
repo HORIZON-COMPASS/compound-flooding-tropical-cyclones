@@ -29,6 +29,12 @@ from shapely.geometry import box
 from shapely.ops import transform
 from rasterio.features import shapes
 from shapely.geometry import shape
+from matplotlib.cm import ScalarMappable
+import matplotlib.patheffects as path_effects
+from matplotlib.colors import Normalize
+from matplotlib.colors import PowerNorm
+from matplotlib.colors import TwoSlopeNorm
+
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -148,6 +154,7 @@ def load_fiat_models(config):
         model_path = os.path.join(base_path, model_name)
         # fiat_results = pd.read_csv(join(f"{model_path}", "output/output.csv"))
         fiat_results =  gpd.read_file(join(f"{model_path}", "output/spatial.fgb"))
+        relative_damage =  gpd.read_file(join(f"{model_path}", "output/output_relative_damage.fgb"))
 
         num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
         categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
@@ -160,6 +167,7 @@ def load_fiat_models(config):
             "model_name":             model_name,
             "model_path":             model_path,
             "fiat_results":           fiat_results,
+            "relative_results":       relative_damage,
             "category":               categories[num_CF_diff],
             "cat_short":              short_cats[num_CF_diff],
             "CF_info":                CF_info,
@@ -356,9 +364,9 @@ def calculate_flood_extent(models):
             continue  # Skip this model if 'hmax_masked' is missing
 
         # Create a boolean mask for flooded cells (hmax_masked > 0)
-        flooded_cells = hmax_masked > 0
+        flooded_cells = hmax_masked > 0.1
         # Compute the total flooded area (in square meters)
-        flood_extent = (flooded_cells * calculate_cell_area(model)).sum().compute()
+        flood_extent = (flooded_cells * calculate_cell_area(model)).sum(dim=['x', 'y']).compute()
         # Convert to square kilometers
         flood_extent_km2 = flood_extent / 1e6
         # Store in the model dictionary
@@ -452,7 +460,7 @@ def calculate_damage_differences(fiat_models):
         # Store factual total damage for comparison
         if model["category"] == "Factual":
             factual_total_damage = model['fiat_results'].get("total_damage", None).sum()
-            # factual_total_damage_spatial = model['fiat_results_spatial'].get("total_damage", None).sum()
+            # factual_total_damage_spatial = model['fiat_results_spatial'].get("relative_damage", None).sum()
 
             if factual_total_damage is None:
                 print(f"Error: 'total_damage' not found for factual model: {model['model_name']}")
@@ -489,19 +497,25 @@ def calculate_damage_differences(fiat_models):
 ################# PLOTTING ###################
 # For paper
 def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
+    from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
     # Get models
     driver_groups = {
     "Rain": ["rain"],
     "SLR & Wind": ["SLR", "wind"],
     "All": ["rain", "SLR", "wind"]
     }
+    subplot_labels = ['(a)', '(b)', '(c)']
 
     # === Create figure ===
     fig, axes = plt.subplots(1, 3, figsize=(10, 5), dpi=300, constrained_layout=True,
                             subplot_kw={"projection": ccrs.PlateCarree()}, sharey=True)
 
-    cmap = LinearSegmentedColormap.from_list("white_blue", ["white", "blue"])
-    vmin, vmax = 0, 0.6
+    # cmap = LinearSegmentedColormap.from_list("blue_white_red", ["blue", "white", "red"])
+    vmin, vmax = -0.3, 0.6
+    zero_position = abs(vmin) / (vmax - vmin) 
+    cmap = LinearSegmentedColormap.from_list("custom_bwr", [(0.0, "blue"), (zero_position, "white"), (1.0, "red")])
+    norm = Normalize(vmin=vmin, vmax=vmax)
+    # norm = TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.6)
     utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
     model_region_gdf = model_region_gdf.to_crs("EPSG:4326")
     background = background.to_crs("EPSG:4326")
@@ -514,14 +528,21 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
             continue
 
         hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
-        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False, transform=utm_crs)
+        
+        # Compute the difference in flooded area (in square meters)
+        flooded_cells = hmax_diff > 0.05
+        flood_extent = (flooded_cells * calculate_cell_area(model)).sum().compute()
+        flood_extent_km2 = flood_extent / 1e6
+        print(f"for model {model['model_name']}, the additional flooded area: {flood_extent_km2}")
 
-        background.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
-        # Plot specific boundaries
-        mask_box = box(34.7, -20.3, 35.25, -19.9)  # minx, miny, maxx, maxy
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, norm=norm, add_colorbar=False, transform=utm_crs)
+
+        # Plot background
+        mask_box = box(34.7, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
         background_outside_box = background[~background.intersects(mask_box)]
-        background_outside_box.boundary.plot(ax=ax, edgecolor='lightgray', linewidth=0.5,
-                                              transform=ccrs.PlateCarree(), zorder=0.5)
+        background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+        # background_outside_box.boundary.plot(ax=ax, edgecolor='lightgray', linewidth=0.2,
+                                            #   transform=ccrs.PlateCarree(), zorder=0.5)
         
         model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
@@ -530,6 +551,8 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
         ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
         ax.set_title(title, fontsize=10)
+        ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
 
         # Add gridlines and format tick labels
         gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
@@ -550,10 +573,45 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
     cbar.set_label('Difference in Maximum Water Level (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
-    cbar.set_ticks(np.arange(0, 0.7, 0.1))
+    cbar.set_ticks(np.arange(-0.3, 0.7, 0.2))
 
-    fig.savefig("../figures/hmax_diff_rain_slr&wind_all.png", bbox_inches='tight', dpi=300)
+    fig.savefig("../figures/hmax_diff_rain_slr&wind_all_reds.png", bbox_inches='tight', dpi=300)
     plt.show()
+
+    # === Plot hmax_diff distributions ===
+    # fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
+    # titles = list(driver_groups.keys())
+
+    # for i, (ax, (title, group)) in enumerate(zip(axes2, driver_groups.items())):
+    #     model = get_driver_group_model(group, models)
+    #     if model is None:
+    #         continue
+
+    #     hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
+
+    #     # Mask values > 2 m
+    #     hmax_diff_masked = hmax_diff.where(hmax_diff <= 1)
+    #     hmax_diff_np = hmax_diff_masked.compute().values
+    #     hmax_diff_clean = hmax_diff_np[~np.isnan(hmax_diff_np)]
+
+    #     # Histogram
+    #     ax.hist(hmax_diff_clean, bins=100, color='steelblue', edgecolor='black')
+    #     ax.set_title(title, fontsize=10)
+    #     ax.set_xlabel("hmax_diff (m)")
+    #     if i == 0:
+    #         ax.set_ylabel("Frequency")
+    #     ax.set_xlim(0, 1)
+    #     ax.set_xticks(np.arange(0, 1.1, 0.1))
+    #     ax.grid(True, linestyle='--', alpha=0.6)
+
+    # fig2.suptitle("Distribution of hmax_diff (<= 1 m)", fontsize=12, y=1.02)
+    # fig2.savefig("../figures/hmax_diff_distribution_subplots.png", bbox_inches='tight', dpi=300)
+    # plt.show()
+
+    # print(model['model_name'])
+    # hmax_diff = model['sfincs_results']['hmax_diff'] * -1
+    # hmax_diff_999 = hmax_diff.quantile(0.999).compute()
+    # print(f"99.9th percentile value: {hmax_diff_999.values}") # .max() gives too high values that are not included in permanent water mask
 
 
 def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):
@@ -647,8 +705,8 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     ax.set_axisbelow(True)
 
     legend_elements = [
-        Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood Volume'),
         Patch(facecolor='#384860', edgecolor='black', label='Flood Extent'),
+        Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood Volume'),
         Patch(facecolor='#c34a36', edgecolor='black', label='Damage')
     ]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
@@ -659,6 +717,9 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
 
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
+    eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
+    usd_2010_to_2019 = 1.152 # Convert US-Dollars (2010) to US-Dollars (2019)
+    
     data_dict = {}
     factual_data = None
 
@@ -670,14 +731,14 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
             factual_data = {
                 "vol_abs": float(sf['sfincs_results'].get("flood_volume_m3", None)),
                 "ext_abs": float(sf['sfincs_results'].get("flood_extent_km2", None)),
-                "dam_abs": float(fiat['fiat_results'].get("total_damage", None).sum())
+                "dam_abs": float(fiat['fiat_results'].get("total_damage", None).sum()) * eur_to_usd * usd_2010_to_2019
             }
             continue  # skip adding factual to data_dict
 
         # Extract metrics
         vol_abs = sf['sfincs_results'].get("flood_volume_m3", None)
         ext_abs = sf['sfincs_results'].get("flood_extent_km2", None)
-        dam_abs = fiat['fiat_results'].get("total_damage", None).sum()
+        dam_abs = fiat['fiat_results'].get("total_damage", None).sum() * eur_to_usd * usd_2010_to_2019
 
         vol_pct = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
         ext_pct = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)
@@ -897,6 +958,426 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
         plt.show()
 
 
+def aggregate_damage_to_grid(fiat_models, model_region_gdf, background, cell_size=0.025):
+    """
+    Spatially aggregate damage from point data to a regular grid for only the factual and 
+    counterfactual models with all drivers changed.
+
+    Parameters:
+    - fiat_models: list of dicts, each containing a 'relative_results' GeoDataFrame.
+    - model_region_gdf: GeoDataFrame, polygon for model domain.
+    - background: GeoDataFrame, polygon for valid region mask.
+    - cell_size: float, resolution of the grid (default=0.025 degrees).
+
+    Returns:
+    - filtered_fiat_models: List of fiat models with aggregated damage added.
+    """
+    print("Spatially aggregating damage for factual and all-driver counterfactuals...")
+
+    # === Filter models ===
+    filtered_fiat_models = []
+    # factual_rel_damage = []
+    for fiat in fiat_models:
+        drivers = fiat.get("drivers", [])
+        if drivers == [] or set(drivers) == {"rain", "SLR", "wind"}:
+            filtered_fiat_models.append(fiat)
+    
+        # if fiat["category"] == "Factual":
+        #     factual = fiat['relative_results'].get("relative_damage", None)
+        #     factual_rel_damage.append(factual)
+
+    # for fiat in filtered_fiat_models:
+    #     if fiat["category"] != "Factual":
+    #         counterfactual = fiat['relative_results'].get("relative_damage", None)
+    #         factual = factual_rel_damage['relative_results'].get("relative_damage", None)
+    #         fiat['relative_damage_diff'] = counterfactual - factual
+    #         fiat['relative_damage_diff'] = fiat['relative_damage_diff'].fillna(0)
+
+    for fiat in filtered_fiat_models:
+        gdf_cf0 = fiat['relative_results']
+
+        gdf_cf0['centroid'] = gdf_cf0.geometry.centroid
+        gdf_cf0['x'] = gdf_cf0['centroid'].x
+        gdf_cf0['y'] = gdf_cf0['centroid'].y
+        gdf_cf0 = gdf_cf0[['object_id', 'x', 'y', 'total_damage', 'max_damage_total']].dropna(subset=['x', 'y'])
+
+        gdf_cf0_crs = gpd.GeoDataFrame(gdf_cf0,
+                                        geometry=gpd.points_from_xy(gdf_cf0["x"], gdf_cf0["y"]), 
+                                        crs="EPSG:32736")
+
+        # Convert to target CRS for aggregation
+        gdf_damage = gdf_cf0_crs.to_crs(ccrs.PlateCarree())
+        print("gdf_damage created")
+
+        # Ensure same crs
+        model_region_gdf = model_region_gdf.to_crs("EPSG:4326") 
+        background       = background.to_crs("EPSG:4326") 
+        clipped_region   = gpd.overlay(model_region_gdf, background, how="intersection")
+        print("succesfully clipped region")
+
+        minx, miny, maxx, maxy = clipped_region.total_bounds
+        cols = np.arange(minx, maxx, cell_size)
+        rows = np.arange(miny, maxy, cell_size)
+        grid_cells = [box(x, y, x + cell_size, y + cell_size) for x in cols for y in rows]
+        gdf_grid = gpd.GeoDataFrame(geometry=grid_cells, crs=clipped_region.crs)
+
+        gdf_grid_masked = gpd.overlay(gdf_grid, clipped_region, how='intersection')
+        print("gridded the clipped region")
+
+        joined = gpd.sjoin(gdf_damage, gdf_grid_masked, how="left", predicate="within")
+
+        agg_tot_damage = joined.groupby(joined.index_right)["total_damage"].sum()
+        print("Aggregated total damage")
+        agg_max_damage = joined.groupby(joined.index_right)["max_damage_total"].sum()
+        print("Aggregated max potential damage")
+
+        fiat['aggregated_damage'] = gdf_grid_masked.copy()
+        fiat['aggregated_damage']["total_damage"] = agg_tot_damage
+        fiat['aggregated_damage']["max_damage_total"] = agg_max_damage
+        fiat['aggregated_damage']["total_damage"] = fiat['aggregated_damage']["total_damage"].fillna(0)
+        fiat['aggregated_damage']["max_damage_total"] = fiat['aggregated_damage']["max_damage_total"].fillna(0)
+        fiat['aggregated_damage']["total_damage_M"] = fiat['aggregated_damage']["total_damage"] / 1e6
+        fiat['aggregated_damage']["relative_aggr_damage"] = (
+            fiat['aggregated_damage']["total_damage"] / fiat['aggregated_damage']["max_damage_total"]
+        ) * 100
+        fiat['aggregated_damage']["relative_aggr_damage"] = fiat['aggregated_damage']["relative_aggr_damage"].fillna(0)
+        print(f"Created filtered dataset for Fiat model {fiat['model_name']} \nwith spatially aggregated total and relative damage")
+
+    return filtered_fiat_models
+
+
+def plot_f_and_cf_relative_damage_diff(
+    filtered_fiat_models,
+    model_region_gdf,
+    background,
+    output_path = "../figures/fact_and_diff_relative_aggr_damage.png",
+    title_a="Factual",
+    title_b="Diff. for All Counterfactual Flood Drivers \nCompared to Factual (F-CF)",
+    city_coords={"Beira": (34.848, -19.832, 34.84, -19.89), "Buzi River": (34.43, -19.89, 34.44, -19.87), "Pungwe River": (34.543, -19.545, 34.554, -19.52)}):
+    
+    print("Generating subplot figure with flood depth and relative damage...")
+
+    factual_model = next(m for m in filtered_fiat_models if m.get("category") == "Factual")
+    cf_all_model  = next(m for m in filtered_fiat_models if m.get("category") == "Counterfactual Compound Driver")
+    
+    # Compute difference: Factual - CF
+    factual_df = factual_model['aggregated_damage'][["geometry", "relative_aggr_damage"]].reset_index(drop=True).copy()
+    cf_df = cf_all_model['aggregated_damage'][["geometry", "relative_aggr_damage"]].reset_index(drop=True).copy()
+
+    # Rename for clarity
+    cf_df = cf_df.rename(columns={"relative_aggr_damage": "cf_rel_damage"})
+    cf_df["fact_rel_damage"] = factual_df["relative_aggr_damage"]
+    cf_df["rel_diff"] = cf_df["fact_rel_damage"] - cf_df["cf_rel_damage"]
+
+    # Optional: mask zeros
+    cf_df["rel_diff"] = cf_df["rel_diff"].replace(0, np.nan)
+    cf_df = gpd.GeoDataFrame(cf_df, geometry="geometry", crs="EPSG:4326")
+
+    # Prepare plotting
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 5), dpi=300, constrained_layout=True,
+                            subplot_kw={"projection": ccrs.PlateCarree()})
+    subplot_labels = ['(a)', '(b)']
+
+    # Common basemap elements
+    background = background.to_crs("EPSG:4326") 
+    region_boundary = model_region_gdf.to_crs("EPSG:4326")
+    minx, miny, maxx, maxy = region_boundary.total_bounds
+
+    # --- Plot 1: Factual Relative Damage ---
+    factual_model['aggregated_damage']["relative_aggr_damage"] = \
+        factual_model['aggregated_damage']["relative_aggr_damage"].replace(0, np.nan)
+
+    factual_model['aggregated_damage'].plot(
+        column="relative_aggr_damage", cmap='Reds', edgecolor="grey", linewidth=0.2,
+        ax=axes[0], legend=False, vmin=0, vmax=100, missing_kwds={"color": "white"})
+
+    # --- Plot 2: F - CF Relative Damage Difference ---
+    from matplotlib.colors import TwoSlopeNorm
+    absmax = np.nanmax(np.abs(cf_df["rel_diff"]))
+    vmin, vmax = -absmax, absmax
+    norm = TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
+
+    cf_df.plot(
+        column="rel_diff", cmap="bwr", norm=norm, edgecolor="grey", linewidth=0.2,
+        ax=axes[1], legend=False, missing_kwds={"color": "white"})
+    cf_df.plot(
+        column="rel_diff", cmap="bwr", edgecolor="grey", linewidth=0.2,
+        ax=axes[1], legend=False, vmin=vmin, vmax=vmax, missing_kwds={"color": "white"})
+
+    # Shared map features
+    for i, ax in enumerate(axes):
+        region_boundary.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+        background.plot(ax=ax, color='#E0E0E0', zorder=0)
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+        gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+        gl.right_labels = False
+        gl.top_labels = False
+        gl.xlabel_style = {'size': 9}
+        gl.ylabel_style = {'size': 9}
+        gl.xformatter = mticker.FuncFormatter(lambda x, _: f"{x:.1f}°E")
+        gl.yformatter = mticker.FuncFormatter(lambda y, _: f"{y:.1f}°S")
+        if i == 1:
+            gl.left_labels = False
+
+        # Add city/river names for the first plot only
+        if i == 0:
+            for name, (lon, lat, lon_txt, lat_txt) in city_coords.items():
+                ax.plot(lon, lat, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+                text = ax.text(lon_txt, lat_txt, name, transform=ccrs.PlateCarree(),
+                            fontsize=8, color='black', zorder=5)
+                text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+
+        ax.set_extent([minx, maxx, miny, maxy], crs=ccrs.PlateCarree())
+        ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
+        
+    # Titles
+    axes[0].set_title(title_a, fontsize=10)
+    axes[1].set_title(title_b, fontsize=10)
+
+    # --- Colorbars ---
+    # Factual
+    sm1 = ScalarMappable(cmap="Reds", norm=Normalize(vmin=0, vmax=100))
+    sm1.set_array([])
+    cbar1 = fig.colorbar(sm1, ax=axes[0], orientation="vertical", fraction=0.035, aspect=20, pad=0.04)
+    cbar1.set_label("Aggregated Relative Damage [%]", labelpad=6, fontsize=9)
+    cbar1.ax.tick_params(labelsize=8)
+
+    # Difference
+    from matplotlib.colors import TwoSlopeNorm
+
+    norm = TwoSlopeNorm(vcenter=0, vmin=vmin, vmax=vmax)
+    sm2 = ScalarMappable(cmap="bwr", norm=norm)
+    sm2.set_array([])
+
+    cbar2 = fig.colorbar(sm2, ax=axes[1], orientation="vertical", fraction=0.035, aspect=20, pad=0.04)
+    cbar2.set_label("Diff. (F-CF) Aggregated Relative Damage [%]", labelpad=6, fontsize=9)
+    cbar2.ax.tick_params(labelsize=8)
+
+    fig.savefig(output_path, bbox_inches='tight', dpi=300)
+    plt.show()
+
+
+def plot_f_and_cf_diff_relative_damage_diff(
+    filtered_fiat_models,
+    model_region_gdf,
+    background,
+    output_path="../figures/fact_cf_diff_relative_aggr_damage.png",
+    title_a="Factual",
+    title_b="Counterfactual (All Drivers)",
+    title_c="Difference: Factual - CF",
+    city_coords={"Beira": (34.848, -19.832, 34.84, -19.89),
+                 "Buzi River": (34.43, -19.89, 34.44, -19.87),
+                 "Pungwe River": (34.543, -19.545, 34.554, -19.52)}
+):
+    print("Generating 3-panel figure with factual, counterfactual, and diff damage maps...")
+
+    factual_model = next(m for m in filtered_fiat_models if m.get("category") == "Factual")
+    cf_all_model = next(m for m in filtered_fiat_models if m.get("category") == "Counterfactual Compound Driver")
+
+    # Prepare data
+    factual_gdf = factual_model['aggregated_damage'][["geometry", "relative_aggr_damage"]].reset_index(drop=True).copy()
+    cf_gdf = cf_all_model['aggregated_damage'][["geometry", "relative_aggr_damage"]].reset_index(drop=True).copy()
+    cf_gdf = cf_gdf.rename(columns={"relative_aggr_damage": "cf_rel_damage"})
+
+    # Difference
+    cf_gdf["fact_rel_damage"] = factual_gdf["relative_aggr_damage"]
+    cf_gdf["rel_diff"] = cf_gdf["fact_rel_damage"] - cf_gdf["cf_rel_damage"]
+    cf_gdf["rel_diff"] = cf_gdf["rel_diff"].replace(0, np.nan)
+    cf_gdf = gpd.GeoDataFrame(cf_gdf, geometry="geometry", crs="EPSG:4326")
+
+    # Plotting setup
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(13, 5), dpi=300,
+                             subplot_kw={"projection": ccrs.PlateCarree()},
+                             constrained_layout=True)
+
+    subplot_labels = ['(a)', '(b)', '(c)']
+    titles = [title_a, title_b, title_c]
+
+    # Common basemap
+    background = background.to_crs("EPSG:4326")
+    region_boundary = model_region_gdf.to_crs("EPSG:4326")
+    minx, miny, maxx, maxy = region_boundary.total_bounds
+
+    # Color scales
+    vmax_damage = 100
+    norm_diff = TwoSlopeNorm(vcenter=0, vmin=cf_gdf["rel_diff"].min(), vmax=cf_gdf["rel_diff"].max())
+
+    # Panel 0: Factual
+    factual_model['aggregated_damage']["relative_aggr_damage"].replace(0, np.nan, inplace=True)
+    factual_model['aggregated_damage'].plot(
+        column="relative_aggr_damage", cmap="Reds", edgecolor="grey", linewidth=0.2,
+        ax=axes[0], legend=False, vmin=0, vmax=vmax_damage, missing_kwds={"color": "white"})
+
+    # Panel 1: Counterfactual
+    cf_gdf["cf_rel_damage"] = cf_gdf["cf_rel_damage"].replace(0, np.nan)
+    cf_gdf.plot(
+        column="cf_rel_damage", cmap="Reds", edgecolor="grey", linewidth=0.2,
+        ax=axes[1], legend=False, vmin=0, vmax=vmax_damage, missing_kwds={"color": "white"})
+
+    # Panel 2: Difference
+    cf_gdf.plot(
+        column="rel_diff", cmap="bwr", norm=norm_diff, edgecolor="grey", linewidth=0.2,
+        ax=axes[2], legend=False, missing_kwds={"color": "white"})
+
+    # Shared map features
+    for i, ax in enumerate(axes):
+        region_boundary.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+        background.plot(ax=ax, color='#E0E0E0', zorder=0)
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+        gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+        gl.right_labels = False
+        gl.top_labels = False
+        gl.xlabel_style = {'size': 9}
+        gl.ylabel_style = {'size': 9}
+        gl.xformatter = mticker.FuncFormatter(lambda x, _: f"{x:.1f}°E")
+        gl.yformatter = mticker.FuncFormatter(lambda y, _: f"{y:.1f}°S")
+        if i > 0:
+            gl.left_labels = False
+
+        ax.set_extent([minx, maxx, miny, maxy], crs=ccrs.PlateCarree())
+        ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+                fontsize=10, fontweight='bold', va='bottom', ha='left')
+        ax.set_title(titles[i], fontsize=10)
+
+        if i == 0:
+            for name, (lon, lat, lon_txt, lat_txt) in city_coords.items():
+                ax.plot(lon, lat, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+                text = ax.text(lon_txt, lat_txt, name, transform=ccrs.PlateCarree(),
+                               fontsize=8, color='black', zorder=5)
+                text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+
+    # Colorbars
+    sm1 = ScalarMappable(cmap="Reds", norm=Normalize(vmin=0, vmax=vmax_damage))
+    sm1.set_array([])
+    fig.colorbar(sm1, ax=axes[0:2], orientation="vertical", shrink=0.55, pad=0,
+                 label="Aggregated Relative Damage [%]").ax.tick_params(labelsize=8)
+
+    sm2 = ScalarMappable(cmap="bwr", norm=norm_diff)
+    sm2.set_array([])
+    fig.colorbar(sm2, ax=axes[2], orientation="vertical", fraction=0.035, aspect=20, pad=0.04,
+                 label="Difference (F - CF) [%]").ax.tick_params(labelsize=8)
+
+    # Save and show
+    fig.savefig(output_path, bbox_inches='tight', dpi=300)
+    plt.show()
+
+
+def plot_f_and_cf_diff_total_damage_diff(
+    filtered_fiat_models,
+    model_region_gdf,
+    background,
+    output_path="../figures/fact_cf_diff_total_aggr_damage.png",
+    title_a="Factual",
+    title_b="Counterfactual (All Drivers)",
+    title_c="Difference: Factual - CF",
+    city_coords={"Beira": (34.848, -19.832, 34.84, -19.89),
+                 "Buzi River": (34.43, -19.89, 34.44, -19.87),
+                 "Pungwe River": (34.543, -19.545, 34.554, -19.52)}
+):
+    print("Generating 3-panel figure with factual, counterfactual, and diff damage maps...")
+
+    factual_model = next(m for m in filtered_fiat_models if m.get("category") == "Factual")
+    cf_all_model = next(m for m in filtered_fiat_models if m.get("category") == "Counterfactual Compound Driver")
+
+    # Prepare data
+    factual_gdf = factual_model['aggregated_damage'][["geometry", "total_damage_M"]].reset_index(drop=True).copy()
+    cf_gdf = cf_all_model['aggregated_damage'][["geometry", "total_damage_M"]].reset_index(drop=True).copy()
+    cf_gdf = cf_gdf.rename(columns={"total_damage_M": "cf_tot_damage"})
+
+    # Difference
+    cf_gdf["fact_tot_damage"] = factual_gdf["total_damage_M"]
+    cf_gdf["tot_diff"] = cf_gdf["fact_tot_damage"] - cf_gdf["cf_tot_damage"]
+    cf_gdf["tot_diff"] = cf_gdf["tot_diff"].replace(0, np.nan)
+    cf_gdf = gpd.GeoDataFrame(cf_gdf, geometry="geometry", crs="EPSG:4326")
+
+    # Plotting setup
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(13, 5), dpi=300,
+                             subplot_kw={"projection": ccrs.PlateCarree()},
+                             constrained_layout=True)
+
+    subplot_labels = ['(a)', '(b)', '(c)']
+    titles = [title_a, title_b, title_c]
+
+    # Common basemap
+    background = background.to_crs("EPSG:4326")
+    region_boundary = model_region_gdf.to_crs("EPSG:4326")
+    minx, miny, maxx, maxy = region_boundary.total_bounds
+
+    # Color scales
+    vmax_damage = 100
+    norm_diff = TwoSlopeNorm(vcenter=0, vmin=cf_gdf["tot_diff"].min(), vmax=cf_gdf["tot_diff"].max())
+
+    # Panel 0: Factual
+    factual_model['aggregated_damage']["total_damage_M"].replace(0, np.nan, inplace=True)
+    factual_model['aggregated_damage'].plot(
+        column="total_damage_M", cmap="Reds", edgecolor="grey", linewidth=0.2,
+        ax=axes[0], legend=False, vmin=0, vmax=vmax_damage, missing_kwds={"color": "white"})
+    
+    norm = PowerNorm(gamma=0.5, vmin=0, vmax=factual_model['aggregated_damage']["total_damage_M"].max())
+
+    # Panel 1: Counterfactual
+    cf_gdf["cf_tot_damage"] = cf_gdf["cf_tot_damage"].replace(0, np.nan)
+    cf_gdf.plot(
+        column="cf_tot_damage", cmap="Reds", edgecolor="grey", linewidth=0.2,
+        ax=axes[1], legend=False, vmin=0, vmax=vmax_damage, missing_kwds={"color": "white"})
+
+    # Panel 2: Difference
+    cf_gdf.plot(
+        column="tot_diff", cmap="bwr", norm=norm_diff, edgecolor="grey", linewidth=0.2,
+        ax=axes[2], legend=False, missing_kwds={"color": "white"})
+
+    # Shared map features
+    for i, ax in enumerate(axes):
+        region_boundary.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+        background.plot(ax=ax, color='#E0E0E0', zorder=0)
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+        gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+        gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+        gl.right_labels = False
+        gl.top_labels = False
+        gl.xlabel_style = {'size': 9}
+        gl.ylabel_style = {'size': 9}
+        gl.xformatter = mticker.FuncFormatter(lambda x, _: f"{x:.1f}°E")
+        gl.yformatter = mticker.FuncFormatter(lambda y, _: f"{y:.1f}°S")
+        if i > 0:
+            gl.left_labels = False
+
+        ax.set_extent([minx, maxx, miny, maxy], crs=ccrs.PlateCarree())
+        ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+                fontsize=10, fontweight='bold', va='bottom', ha='left')
+        ax.set_title(titles[i], fontsize=10)
+
+        if i == 0:
+            for name, (lon, lat, lon_txt, lat_txt) in city_coords.items():
+                ax.plot(lon, lat, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+                text = ax.text(lon_txt, lat_txt, name, transform=ccrs.PlateCarree(),
+                               fontsize=8, color='black', zorder=5)
+                text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+
+    # Colorbars
+    sm1 = ScalarMappable(norm=norm, cmap="Reds")
+    sm1.set_array([])
+    cbar = fig.colorbar(sm1, ax=axes[0:2], orientation="vertical", shrink=0.55, pad=0)
+    cbar.set_label("Aggregated Total Damage [M USD]")
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.yaxis.offsetText.set_fontsize(7)
+
+    sm2 = ScalarMappable(cmap="bwr", norm=norm_diff)
+    sm2.set_array([])
+    fig.colorbar(sm2, ax=axes[2], orientation="vertical", fraction=0.035, aspect=20, pad=0.04,
+                 label="Difference (F - CF) [%]").ax.tick_params(labelsize=8)
+
+    # Save and show
+    fig.savefig(output_path, bbox_inches='tight', dpi=300)
+    plt.show()
+
+
 ##############################################################
 # Use of functions
 #%%
@@ -936,9 +1417,15 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # PLOTTING for paper
-plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
-plot_cf_timeseries_from_models(models)
-plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
-table_abs_and_rel_vol_ext_dam(models, fiat_models)
+# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+# plot_cf_timeseries_from_models(models)
+# plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
+# table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # %%
+# # Aggregated damage maps
+filtered_fiat_models = aggregate_damage_to_grid(fiat_models, model_region, gdf_valid)
+# plot_f_and_cf_relative_damage_diff(filtered_fiat_models, model_region, gdf_valid)
+
+plot_f_and_cf_diff_relative_damage_diff(filtered_fiat_models, model_region, gdf_valid)
+plot_f_and_cf_diff_total_damage_diff(filtered_fiat_models, model_region, gdf_valid)
