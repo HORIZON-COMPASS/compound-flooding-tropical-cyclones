@@ -487,9 +487,9 @@ for i, river in enumerate(wanted_rivers):
 
     # Plot monthly means
     axs[i].plot(months, grdc_monthly_mean.values, label=f"GRDC {river} 1954-1984 (G{i})", color='orange')
-    axs[i].plot(months, wflow_monthly_mean.values, label=f"WFLOW Q{i} 1954-1984, KGE: {kge}", color=color[i])
+    axs[i].plot(months, wflow_monthly_mean.values, label=f"WFLOW Q{i} 1954-1984, KGE: {kge}", color="#3672E2")
     axs[i].plot(months, wflow_1989_monthly_mean.values, label=f"WFLOW Q{i} 1989-2019, KGE: {kge_1989}", color='#9E4DA5')
-    axs[i].plot(months, wfow_maxL06_monthly_mean.values, label=f"WFLOW Q{i} 1989-2019 ML 0.6, KGE: {kge_max}", color='#9E4DA5')
+    axs[i].plot(months, wfow_maxL06_monthly_mean.values, label=f"WFLOW Q{i} 1954-1984 ML 0.6, KGE: {kge_max}", color = "#37A56E")
 
     # Uncertainty bands (mean ± std)
     axs[i].fill_between(months,
@@ -500,12 +500,17 @@ for i, river in enumerate(wanted_rivers):
     axs[i].fill_between(months,
                         (wflow_monthly_mean - wflow_monthly_std).clip(min=0),
                         wflow_monthly_mean + wflow_monthly_std,
-                        color=color[i], alpha=0.3)
+                        color="#3672E2", alpha=0.3)
     
     axs[i].fill_between(months,
                         (wflow_1989_monthly_mean - wflow_1989_monthly_std).clip(min=0),
                         wflow_1989_monthly_mean + wflow_1989_monthly_std,
                         color="#9E4DA5", alpha=0.3)
+
+    axs[i].fill_between(months,
+                        (wflow_1989_monthly_mean - wflow_1989_monthly_std).clip(min=0),
+                        wflow_1989_monthly_mean + wflow_1989_monthly_std,
+                        color="#37A56E", alpha=0.3)
 
     axs[i].set_ylabel('Monthly Mean Discharge [m³/s]')
     axs[i].set_title(f"Monthly Climatology: {river}")
@@ -518,11 +523,83 @@ for i, river in enumerate(wanted_rivers):
 axs[1].set_xlabel('Month')
 
 plt.tight_layout()
-plt.savefig('../figures/monthly_climatology_GRDC_vs_WFLOW_with_uncertainty_stats_upd.png', dpi=300)
+plt.savefig('../figures/monthly_climatology_GRDC_vs_WFLOW_with_uncertainty_stats_all.png', dpi=300)
 plt.show()
 
 print("Monthly climatology with uncertainty bands and Hydromt stats saved.")
 
+
+#%%
+
+print("Creating monthly moving avergae comparison between WFLOW and GRDC with uncertainty bands and statistics...")
+
+fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+color = ["#0C75C0", "#4DA54E"]  # Blue for BUDZI, Green for RIOPUNGOE
+
+for i, river in enumerate(wanted_rivers):
+    print(f"Processing {river}...")
+
+    # Extract time series
+    grdc_ts = GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]])
+    wflow_ts = station_series[i]
+    wflow_ts_1989 = station_series_1989[i]
+    wfow_maxL06 = station_series_max[i]
+
+    # Group by month
+    # Use a rolling window of 30 days (or approx. 1 month)
+    grdc_monthly_moving_avg         = grdc_ts.rolling(time=30, center=True).mean()
+    wflow_monthly_moving_avg        = wflow_ts.rolling(time=30, center=True).mean()
+    wflow_monthly_moving_1989_avg   = wflow_ts_1989.rolling(time=30, center=True).mean()
+    wflow_monthly_moving_maxL06_avg = wfow_maxL06.rolling(time=30, center=True).mean()
+
+    # For standard deviation if needed:
+    grdc_monthly_moving_std         = grdc_ts.rolling(time=30, center=True).std()
+    wflow_monthly_moving_std        = wflow_ts.rolling(time=30, center=True).std()
+    wflow_monthly_moving_1989_std   = wflow_ts_1989.rolling(time=30, center=True).std()
+    wflow_monthly_moving_maxL06_std = wfow_maxL06.rolling(time=30, center=True).std()
+
+    # Plot monthly means
+    axs[i].plot(grdc_monthly_moving_avg.time.values, grdc_monthly_moving_avg.values, label=f"GRDC {river} 1954-1984 (G{i})", color='orange')
+    axs[i].plot(wflow_monthly_moving_avg.time.values, wflow_monthly_moving_avg.values, label=f"WFLOW Q{i} 1954-1984", color="#3672E2")
+    axs[i].plot(wflow_monthly_moving_1989_avg.time.values, wflow_monthly_moving_1989_avg.values, label=f"WFLOW Q{i} 1989-2019", color='#9E4DA5')
+    axs[i].plot(wflow_monthly_moving_maxL06_avg.time.values, wflow_monthly_moving_maxL06_avg.values, label=f"WFLOW Q{i} 1954-1984 ML 0.6", color = "#37A56E")
+
+    # Uncertainty bands (mean ± std)
+    axs[i].fill_between(grdc_monthly_moving_avg.time.values,
+                        (grdc_monthly_moving_avg.values - grdc_monthly_moving_std.values).clip(min=0),
+                        grdc_monthly_moving_avg.values + grdc_monthly_moving_std.values,
+                        color='orange', alpha=0.3)
+
+    axs[i].fill_between(wflow_monthly_moving_avg.time.values,
+                        (wflow_monthly_moving_avg.values - wflow_monthly_moving_std.values).clip(min=0),
+                        wflow_monthly_moving_avg.values + wflow_monthly_moving_std.values,
+                        color="#3672E2", alpha=0.3)
+    
+    axs[i].fill_between(wflow_monthly_moving_1989_avg.time.values,
+                        (wflow_monthly_moving_1989_avg.values - wflow_monthly_moving_1989_std.values).clip(min=0),
+                        wflow_monthly_moving_1989_avg.values + wflow_monthly_moving_1989_std.values,
+                        color="#9E4DA5", alpha=0.3)
+
+    axs[i].fill_between(wflow_monthly_moving_maxL06_avg.time.values,
+                        (wflow_monthly_moving_maxL06_avg.values - wflow_monthly_moving_maxL06_std.values).clip(min=0),
+                        wflow_monthly_moving_maxL06_avg.values + wflow_monthly_moving_maxL06_std.values,
+                        color="#37A56E", alpha=0.3)
+
+    axs[i].set_ylabel('Monthly Mean Discharge [m³/s]')
+    axs[i].set_title(f"Monthly Climatology: {river}")
+    axs[i].set_xticks(months)
+    axs[i].set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    axs[i].legend()
+    axs[i].grid(True)
+
+axs[1].set_xlabel('Month')
+
+plt.tight_layout()
+plt.savefig('../figures/monthly_moving_avg_GRDC_vs_WFLOW_with_uncertainty_stats_all.png', dpi=300)
+plt.show()
+
+print("Monthly moving average with uncertainty bands and Hydromt stats saved.")
 
 
 #%%
