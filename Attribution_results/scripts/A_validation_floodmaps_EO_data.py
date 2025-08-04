@@ -24,6 +24,7 @@ from rasterio.features import shapes
 from shapely.geometry import shape
 import cartopy.crs as ccrs
 import matplotlib.ticker as mticker
+import os
 
 import platform
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
@@ -49,10 +50,10 @@ rundirs = join(prefix,'11210471-001-compass','03_Runs')
 
 # %%
 if event == 'idai':
-    mdir = join(rundirs, 'sofala\Idai\sfincs\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_spw_IBTrACS_CF0')
+    mdir = join(rundirs, 'sofala','Idai','sfincs','event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_spw_IBTrACS_CF0')
     #file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP\ST1_20190319_WaterExtent_SofalaProvince.shp')
-    file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP\ST1_20190319_WaterExtent_ManicaSofalaProvinces.shp')
-    file_floodmap_cems = join(dir_obs_cems, 'Idai_2019\maximum_2019_03\maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_06_26T11_41_09_531327.geojson')
+    file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP', 'ST1_20190319_WaterExtent_ManicaSofalaProvinces.shp')
+    file_floodmap_cems = join(dir_obs_cems, 'Idai_2019','maximum_2019_03','maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_06_26T11_41_09_531327.geojson')
     sfincs_crs = '32736'
     sfincs_utm = '36S'
 elif event == 'freddy':
@@ -72,7 +73,8 @@ elif event == 'Iota':
 hmin=0.05
 
 # %%
-dataCat = hydromt.data_catalog.DataCatalog(join('Workflows', "03_data_catalogs", "datacatalog_general.yml"))
+print(os.getcwd())
+dataCat = hydromt.data_catalog.DataCatalog(join('..','..','Workflows', "03_data_catalogs", "datacatalog_general___linux.yml"))
 
 # %%
 # Read model output data 
@@ -221,57 +223,6 @@ for source in source_list:
 
 # %%
 # Plot with validation metrics
-# source_list = [x.replace('obs_','') for x in list(ds.keys()) if 'obs' in x]
-
-# import cartopy.crs as ccrs
-# utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)  # or False if in north
-
-# fig, axs = plt.subplots(
-#     figsize=(len(source_list)*4,6),
-#     nrows=1, ncols=len(source_list),
-#     subplot_kw={'projection': utm_crs},
-#     sharex = True, sharey=True
-# )
-# if len(source_list) > 1: axs = axs.flatten()
-
-# for ii, source in enumerate(source_list):
-#     if len(source_list) > 1:
-#         ax=axs[ii]
-#     else: 
-#         ax=axs
-
-#     # Calculate skill
-#     da_skill, da_cm = skill(ds['model_clean'], ds[f'obs_{source}'], ds['sfincs_mask'], hmin=0.3)
-#     df_skill = da_skill.reset_coords(drop=True).to_dataframe()
-
-#     da_cm = da_cm.load()
-#     da_skill = da_skill.load()
-#     hr, csi, fr = np.round(da_skill['H'].item(),2), np.round(da_skill['C'].item(),2), np.round(da_skill['F'].item(),2)
-#     cs = da_cm.where(da_cm>0).plot(ax=ax, cmap=cmap, norm=norm, transform=utm_crs, add_colorbar=False)
-#     ax.set_title(f'{source.upper()}')
-#     ax.text(0.8, 0.88, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props)
-
-#     if ii==0:
-#         ax.yaxis.set_visible(True)
-#         ax.set_ylabel(f"y coordinate UTM zone {sfincs_utm} [m]")
-
-#     ax.xaxis.set_visible(True)
-#     ax.set_xlabel(f"x coordinate UTM zone {sfincs_utm} [m]")  
-
-# fig.subplots_adjust(wspace=0.04, hspace=0.06)
-# fig.suptitle('Model flood map comparison to EO flood extent')
-
-# # # Add a colorbar axis 
-# cbar_ax = fig.add_axes([0.93, 0.2, 0.015, 0.5])
-
-# # # Draw the colorbar
-# cbar=fig.colorbar(cs, cax=cbar_ax, orientation='vertical', ticks=ticks)
-# cbar_ax.set_yticklabels(ticklabs, va='center', rotation=90)
-
-# fig.savefig("../figures/satellite_comparison_utm.png",dpi=300, bbox_inches='tight')
-
-# %%
-# Plot with validation metrics
 source_list = [x.replace('obs_','') for x in list(ds.keys()) if 'obs' in x]
 
 utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)  # or False if in north
@@ -299,19 +250,11 @@ for ii, source in enumerate(source_list):
     da_skill = da_skill.load()
     hr, csi, fr = np.round(da_skill['H'].item(),2), np.round(da_skill['C'].item(),2), np.round(da_skill['F'].item(),2)
     cs = da_cm.where(da_cm>0).plot(ax=ax, cmap=cmap, norm=norm, transform=utm_crs, add_colorbar=False)
-    ax.set_title(f'{source.upper()}')
-    ax.text(0.8, 0.85, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props)
-
-    if ii==0:
-        ax.yaxis.set_visible(True)
-        ax.set_ylabel(f"y coordinate UTM zone {sfincs_utm} [m]")
-
-    ax.xaxis.set_visible(True)
-    ax.set_xlabel(f"x coordinate UTM zone {sfincs_utm} [m]")  
+    ax.text(0.8, 0.85, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props, fontsize=10)
 
     # Add model region
-    gdf_valid.plot(ax=ax, color='lightgrey', transform=ccrs.PlateCarree(), zorder=0)
-    region_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5, transform=ccrs.PlateCarree())
+    gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+    region_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
     
     # Set extent (based on actual lat/lon coordinates)
     minx, miny, maxx, maxy = region_wsg.bounds.minx.item(), region_wsg.bounds.miny.item(), region_wsg.bounds.maxx.item(), region_wsg.bounds.maxy.item()
@@ -325,11 +268,14 @@ for ii, source in enumerate(source_list):
     gl.yformatter = mticker.FuncFormatter(lat_formatter)
     gl.right_labels = False
     gl.top_labels = False
-    gl.xlabel_style = {'size': 11}
-    gl.ylabel_style = {'size': 11}
+    gl.xlabel_style = {'size': 9}
+    gl.ylabel_style = {'size': 9}
+    if ii == 1:  
+        gl.left_labels = False  # disable y-axis labels
 
 fig.subplots_adjust(wspace=0.04, hspace=0.06)
-# fig.suptitle('Model flood map comparison to EO flood extent')
+axs[0].set_title(f'(a) {source_list[0].upper()}')
+axs[1].set_title(f'(b) {source_list[1].upper()}')
 
 # # Add a colorbar axis 
 cbar_ax = fig.add_axes([0.93, 0.2, 0.015, 0.5])
@@ -338,5 +284,5 @@ cbar_ax = fig.add_axes([0.93, 0.2, 0.015, 0.5])
 cbar=fig.colorbar(cs, cax=cbar_ax, orientation='vertical', ticks=ticks)
 cbar_ax.set_yticklabels(ticklabs, va='center', rotation=90)
 
-fig.savefig("Attribution_results/figures/satellite_comparison_crs.png",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/satellite_comparison_crs.png",dpi=300, bbox_inches='tight')
 # %%
