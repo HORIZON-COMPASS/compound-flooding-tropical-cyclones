@@ -40,6 +40,10 @@ gdal = "*"
 delft_fiat = "*"
 matplotlib = "*"
 toml = "*"
+libnetcdf = "*"
+hydromt = ">=0.10.0, <1.0.0"
+snakemake = "*"
+snakemake-executor-plugin-cluster-generic = "*"
 
 [feature.sfincs.dependencies]
 hydromt = ">=0.10.0, <0.10.1"
@@ -96,7 +100,7 @@ default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
 compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
-compass-fiat = { features = ["py311", "fiat", "snake"]}
+compass-fiat = { features = ["py311", "fiat"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
