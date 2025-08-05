@@ -350,6 +350,9 @@ def calculate_cell_area(model):
     dx = abs(hmax_masked.x[1] - hmax_masked.x[0])  # Grid resolution in x-direction (meters)
     dy = abs(hmax_masked.y[1] - hmax_masked.y[0])  # Grid resolution in y-direction (meters)
     
+    area = dx*dy
+    print(f"Cell area: {area}")
+    
     del hmax_masked
     return dx * dy  # Area of one grid cell (m²)
 
@@ -363,8 +366,8 @@ def calculate_flood_extent(models):
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
             continue  # Skip this model if 'hmax_masked' is missing
 
-        # Create a boolean mask for flooded cells (hmax_masked > 0)
-        flooded_cells = hmax_masked > 0.1
+        # Create a boolean mask for flooded cells (hmax_masked > 0) hmin = 0.05
+        flooded_cells = hmax_masked
         # Compute the total flooded area (in square meters)
         flood_extent = (flooded_cells * calculate_cell_area(model)).sum(dim=['x', 'y']).compute()
         # Convert to square kilometers
@@ -1405,7 +1408,7 @@ models = compute_hmax_diff(models)
 #%%
 # Calculate flood characteristics 
 models = calculate_flood_extent(models)
-models = calculate_flood_volume(models)
+# models = calculate_flood_volume(models)
 
 #%%
 models = calculate_flood_differences(models)
@@ -1420,12 +1423,12 @@ fiat_models = calculate_damage_differences(fiat_models)
 # plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
 # plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
-# table_abs_and_rel_vol_ext_dam(models, fiat_models)
+table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # %%
 # # Aggregated damage maps
-filtered_fiat_models = aggregate_damage_to_grid(fiat_models, model_region, gdf_valid)
+# filtered_fiat_models = aggregate_damage_to_grid(fiat_models, model_region, gdf_valid)
 # plot_f_and_cf_relative_damage_diff(filtered_fiat_models, model_region, gdf_valid)
 
-plot_f_and_cf_diff_relative_damage_diff(filtered_fiat_models, model_region, gdf_valid)
-plot_f_and_cf_diff_total_damage_diff(filtered_fiat_models, model_region, gdf_valid)
+# plot_f_and_cf_diff_relative_damage_diff(filtered_fiat_models, model_region, gdf_valid)
+# plot_f_and_cf_diff_total_damage_diff(filtered_fiat_models, model_region, gdf_valid)
