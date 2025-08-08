@@ -1,14 +1,16 @@
+#%%
 import geopandas as gpd
 import pandas as pd
 from pathlib import Path
 
+#%%
 def main():
     """
     Main function to calculate and save relative damage.
     """
     event_name = "Idai"  # Change this to your event name
     print(f"Processing event: {event_name}")
-    directory = Path(f"/p/11210471-001-compass/03_Runs/sofala/{event_name}/fiat/event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10")
+    directory = Path(f"p:/11210471-001-compass/03_Runs/sofala/{event_name}/fiat/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
     spatial_path = directory / "output" / "spatial.fgb"
     exposure_path = directory / "exposure" / "exposure.csv"
     output_dir = directory / "output"
@@ -58,3 +60,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# %%

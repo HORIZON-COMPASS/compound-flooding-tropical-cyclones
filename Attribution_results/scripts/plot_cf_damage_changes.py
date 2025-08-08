@@ -1,3 +1,4 @@
+#%%
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -66,6 +67,7 @@ if DAMAGE_COLUMN not in gdf_cf0.columns:
 
 print(f"Final damage column used: {DAMAGE_COLUMN}")
 
+#%%
 # ===== EXTRACT COORDINATES =====
 print("Extracting coordinates from building centroids...")
 # Extract x, y coordinates from geometry centroids (for polygon buildings)
