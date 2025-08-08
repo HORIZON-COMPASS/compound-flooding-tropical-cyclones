@@ -10,6 +10,7 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import platform
+import gc
 
 from hydromt_sfincs import SfincsModel, utils
 from hydromt import DataCatalog
@@ -205,7 +206,6 @@ def gwso_sfincs_region(model):
 
 # Compute the maximum water level (hmax) and mask out permanent water
 def compute_hmax_masked(models, gwso_region, model_region_gdf):
-    import gc
     # we set a threshold to mask minimum flood depth
     hmin = 0.05
 
@@ -223,6 +223,7 @@ def compute_hmax_masked(models, gwso_region, model_region_gdf):
             zsmax=da_zsmax,
             dep=da_dep,
             hmin=hmin,
+            reproj_method = "bilinear",
             # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
             )
     
@@ -352,7 +353,7 @@ def calculate_cell_area(model):
     
     area = dx*dy
     print(f"Cell area: {area}")
-    
+
     del hmax_masked
     return dx * dy  # Area of one grid cell (m²)
 

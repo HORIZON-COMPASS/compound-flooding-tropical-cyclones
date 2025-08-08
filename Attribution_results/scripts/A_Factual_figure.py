@@ -52,7 +52,12 @@ print("Loading Factual model")
 factual_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 cf_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10")
 # factual_model_dir = r"c:\Code\Paper_1\Tests\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
-datacat = [
+if platform.system() == "Windows":
+    datacat = [
+        '../../Workflows/03_data_catalogs/datacatalog_general.yml'
+        ]
+else:
+    datacat = [
         '../../Workflows/03_data_catalogs/datacatalog_general___linux.yml'
         ]
 
@@ -433,11 +438,11 @@ cf0_damage = gdf_cf0['total_damage_USD']
 cfall_damage = gdf_cfall['total_damage_USD']
 
 # Select rows where total_damage == max_damage_total
-mask_equal = np.isclose(gdf_cf0["total_damage"], gdf_cf0["max_damage_total"], rtol=1e-5)
+mask_equal = np.isclose(gdf_cf0["total_damage_USD"], gdf_cf0["max_total_damage_USD"], rtol=1e-5)
 gdf_equal = gdf_cf0[mask_equal]
 
 # Select rows where total_damage is at least 10% of max_damage_total
-df_10pct_or_more = gdf_cf0[gdf_cf0["total_damage"] >= 0.1 * gdf_cf0["max_damage_total"]]
+df_10pct_or_more = gdf_cf0[gdf_cf0["total_damage_USD"] >= 0.1 * gdf_cf0["max_total_damage_USD"]]
 
 
 print(f"CF0 max damage: ${cf0_damage.max():.0f}")
@@ -452,9 +457,9 @@ print(f"CFall mean damage: ${cfall_damage.mean():.0f}")
 print(f"CFall total damage: ${cfall_damage.sum():.0f}")
 
 
+
 #%%
 # === PLOTTING ===
-
 # Create damage plotting settings
 max_total = cf0_damage.quantile(0.9)
 boundaries = np.linspace(0, max_total, 11)
@@ -466,45 +471,45 @@ point_size = 10
 alpha = 0.8
 
 #%%
-print("Creating scattered factual damage plot...")
-fig, axes = plt.subplots(1, 1, figsize=(4, 6), subplot_kw={'projection': crs})
+# print("Creating scattered factual damage plot...")
+# fig, axes = plt.subplots(1, 1, figsize=(4, 6), subplot_kw={'projection': crs})
 
 
-# Plot damage points
-scatter1 = axes.scatter(gdf_damage.geometry.x, gdf_damage.geometry.y, c=gdf_damage['total_damage'], 
-                        cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, transform=crs)
+# # Plot damage points
+# scatter1 = axes.scatter(gdf_damage.geometry.x, gdf_damage.geometry.y, c=gdf_damage['total_damage_USD'], 
+#                         cmap=damage_cmap, norm=damage_norm, s=point_size, alpha=alpha, transform=crs)
 
-# Add model region
-model_region_gdf.boundary.plot(ax=axes, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
+# # Add model region
+# model_region_gdf.boundary.plot(ax=axes, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
-# # Add background and set extent (based on actual lat/lon coordinates)
-gdf_valid.plot(ax=axes, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
-minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
-axes.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
+# # # Add background and set extent (based on actual lat/lon coordinates)
+# gdf_valid.plot(ax=axes, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+# minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
+# axes.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
-# Add gridlines and format tick labels
-gl = axes.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
-gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
-gl.xformatter = mticker.FuncFormatter(lon_formatter)
-gl.yformatter = mticker.FuncFormatter(lat_formatter)
-gl.right_labels = False
-gl.top_labels = False
-gl.xlabel_style = {'size': 9}
-gl.ylabel_style = {'size': 9}
+# # Add gridlines and format tick labels
+# gl = axes.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+# gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+# gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+# gl.xformatter = mticker.FuncFormatter(lon_formatter)
+# gl.yformatter = mticker.FuncFormatter(lat_formatter)
+# gl.right_labels = False
+# gl.top_labels = False
+# gl.xlabel_style = {'size': 9}
+# gl.ylabel_style = {'size': 9}
 
 
-# Add colorbar
-cbar1 = plt.colorbar(scatter1, ax=axes, shrink=0.8, pad=0.06)
-cbar1.set_label(damage_label, fontsize=10)
+# # Add colorbar
+# cbar1 = plt.colorbar(scatter1, ax=axes, shrink=0.8, pad=0.06)
+# cbar1.set_label(damage_label, fontsize=10)
 
-# Titles and save
-plt.tight_layout()
-plt.suptitle(f'Factual Total Damage', fontsize=16, y=0.96)
+# # Titles and save
+# plt.tight_layout()
+# plt.suptitle(f'Factual Total Damage', fontsize=16, y=0.96)
 
-output_file_main = OUTPUT_DIR / f'damage_idai_total_damage_scatter.png'
-plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
-plt.show()
+# output_file_main = OUTPUT_DIR / f'damage_idai_total_damage_scatter.png'
+# plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
+# plt.show()
 
 
 
@@ -722,7 +727,7 @@ for i, ax in enumerate(axes):
                     fontsize=8, color='black', zorder=5)
     text3.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
 
-    ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
             fontsize=10, fontweight='bold', va='bottom', ha='left')
 
 minx, miny, maxx, maxy = region_boundary.bounds.minx.item(), region_boundary.bounds.miny.item(), region_boundary.bounds.maxx.item(), region_boundary.bounds.maxy.item()
@@ -735,7 +740,7 @@ axes[1].set_title("", fontsize=10)
 
 # ==== Colorbar for Flood Depth ====
 cbar1 = fig.colorbar(im, ax=axes[0], orientation="vertical", 
-                     fraction=0.035, aspect=20, pad=0.0)
+                     fraction=0.035, aspect=20, pad=0.01)
 cbar1.set_label("Maximum Flood Depth (m)", labelpad=6, fontsize=9)
 cbar1.ax.tick_params(labelsize=8)
 
@@ -743,14 +748,15 @@ cbar1.ax.tick_params(labelsize=8)
 sm = ScalarMappable(norm=norm, cmap="Reds")
 sm.set_array([])  # Required to avoid warning, even if dummy
 cbar2 = fig.colorbar(sm, ax=axes[1], orientation="vertical", 
-                     fraction=0.035, aspect=20, pad=0.0)
+                     fraction=0.035, aspect=20, pad=0.01)
 cbar2.set_label('Aggregated Total Damage [M USD]', labelpad=6, fontsize=9)
 cbar2.ax.tick_params(labelsize=8)
 # Make the 1e7 offset text smaller
 cbar2.ax.yaxis.offsetText.set_fontsize(7)
 
 
-fig.savefig("../figures/factual_flooding_and_aggregated_total_damage_M.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f03.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f03.pdf", bbox_inches='tight', dpi=300)
 plt.show()
 
 # %%
