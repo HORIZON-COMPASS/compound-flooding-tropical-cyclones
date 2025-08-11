@@ -9,6 +9,9 @@
 export PIXI_CACHE_DIR=/tmp/$USER/pixi-cache
 mkdir -p "$PIXI_CACHE_DIR"
 
+# point to _all_ .so in the env's lib directory
+export LD_LIBRARY_PATH="${ROOT}/.pixi/envs/compass-fiat/lib:${LD_LIBRARY_PATH:-}"
+
 module load pixi
 
 #Going to the folder where git checkout is
@@ -20,17 +23,15 @@ cd "${ROOT}"
 
 # Installing pixi environment
 # pixi install --environment compass-fiat
-# pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
+eval "$(pixi shell-hook --environment compass-fiat)"
+pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
 # # Add required packages dynamically
 # pixi add libstdcxx-ng=12
 # pixi add gcc
 # pixi reinstall pandas xarray
 
-eval "$(pixi shell-hook --environment compass-fiat)"
-
-
 # Explicitly set LD_LIBRARY_PATH so it prefers env libs over system libs
-export LD_PRELOAD=/u/vertegaa/git_repos/COMPASS/.pixi/envs/compass-fiat/lib/gcc/x86_64-conda-linux-gnu/15.1.0/libstdc++.so.6
+export LD_LIBRARY_PATH="$ROOT/.pixi/envs/compass-fiat/lib:$LD_LIBRARY_PATH"
 
 # Navigate to directory where the scripts are
 cd Workflows/02_workflow_rules
