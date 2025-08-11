@@ -51,7 +51,7 @@ print("Loading Factual model")
 # define model and data catalog file paths
 factual_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 cf_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10")
-# factual_model_dir = r"c:\Code\Paper_1\Tests\event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
+
 if platform.system() == "Windows":
     datacat = [
         '../../Workflows/03_data_catalogs/datacatalog_general.yml'
@@ -76,7 +76,7 @@ model_region_gdf = gpd.read_file(join(
 )).to_crs("EPSG:4326") 
 
 #%%
-print("Masking pernanent water")
+print("Masking permanent water")
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
 
@@ -117,7 +117,7 @@ gdf_valid = gdf_valid.to_crs(model_region_gdf.crs)
 del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 
 
-#%%
+# #%%
 # print("Plotting factual hmax masked")
 # fig, ax = plt.subplots(nrows=1,
 #                        ncols=1,
@@ -170,7 +170,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 # fig.savefig("../figures/factual_hmax_masked.png", bbox_inches='tight', dpi=300)
 # plt.show()
 
-#%%
+# #%%
 # ### PLOT TIMESERIES OUTPUT POINTS
 # print("Plotting timeseries")
 # fig, ax = plt.subplots(3,1,figsize=(4,6), sharex=True, dpi=300)
@@ -365,6 +365,9 @@ model_region_gdf = gpd.read_file(join(prefix, "11210471-001-compass", "03_Runs",
                                       "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0", 
                                       "gis", "region.geojson")).to_crs("EPSG:4326") 
 
+beira_region = gpd.read_file(join(prefix, "11210471-001-compass", "01_Data", "sofala_geoms", "Beira_region.shp")
+                             ).to_crs("EPSG:4326")
+
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -444,11 +447,18 @@ gdf_equal = gdf_cf0[mask_equal]
 # Select rows where total_damage is at least 10% of max_damage_total
 df_10pct_or_more = gdf_cf0[gdf_cf0["total_damage_USD"] >= 0.1 * gdf_cf0["max_total_damage_USD"]]
 
+# Calculate total damage within Beira region
+damage_in_beira = gpd.sjoin(gdf_damage, beira_region, how="inner", predicate="intersects")
+total_damage_beira = damage_in_beira['total_damage_USD'].sum()
+total_damage = cf0_damage.sum()
+perct_dam_beira = (total_damage_beira / total_damage) * 100
+print(f"Total damage in Beira region: ${total_damage_beira:.0f}, {perct_dam_beira:.0f}% of total")
 
 print(f"CF0 max damage: ${cf0_damage.max():.0f}")
 print(f"CF0 mean damage: ${cf0_damage.mean():.0f}")
 print(f"CF0 total damage: ${cf0_damage.sum():.0f}")
 
+print(f"# buildings damaged: {len(cf0_damage[cf0_damage>0])}")
 print(f"# buildings totally destroyed: {len(gdf_equal)}")
 print(f"# buildings >10% destroyed: {len(df_10pct_or_more)}")
 
@@ -554,8 +564,6 @@ gdf_grid_masked["max_total_damage_USD"] = gdf_grid_masked["max_total_damage_USD"
 # Relative percentual damage per grid
 gdf_grid_masked['relative_aggr_damage'] = (agg_tot_damage / agg_max_damage) * 100 # %
 gdf_grid_masked["relative_aggr_damage"] = gdf_grid_masked["relative_aggr_damage"].fillna(0)
-
-
 
 # Same for CF data
 # Spatial join: assign grid cell index to each point
@@ -797,7 +805,7 @@ plt.show()
 #     if i == 1:  
 #         gl.left_labels = False  # disable y-axis labels
     
-#     ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+#     ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
 #             fontsize=10, fontweight='bold', va='bottom', ha='left')
 
 #     # ==== Plot city and river names ====
