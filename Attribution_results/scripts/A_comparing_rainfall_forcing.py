@@ -63,6 +63,18 @@ era5_tp_MZ = data_catalog.get_rasterdataset(
     buffer=2
 )
 
+# ERA5 rainfall statistics
+min = era5_tp.sum(dim='time').min().values
+max = era5_tp.sum(dim='time').max().values
+print(f"The accumulated rainfall ranged from {min:.1f} and {max:.1f} mm (min and max).")
+
+mean = era5_tp.sum(dim='time').mean().values
+print(f"The mean accumulated rainfall over the region is {mean:.1f} mm")
+
+lower = era5_tp.sum(dim='time').quantile(0.05).values
+upper = era5_tp.sum(dim='time').quantile(0.95).values
+print(f"Rainfall ranged between {lower:.1f} and {upper:.1f} mm (5th–95th percentile).")
+
 
 # In[4]:
 # Load raster data for specified region and time range for CHIRPS
