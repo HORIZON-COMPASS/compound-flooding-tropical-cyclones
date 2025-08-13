@@ -35,7 +35,7 @@ import matplotlib.patheffects as path_effects
 from matplotlib.colors import Normalize
 from matplotlib.colors import PowerNorm
 from matplotlib.colors import TwoSlopeNorm
-
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -501,7 +501,6 @@ def calculate_damage_differences(fiat_models):
 ################# PLOTTING ###################
 # For paper
 def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
-    from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
     # Get models
     driver_groups = {
     "Rain": ["rain"],
@@ -514,11 +513,11 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     fig, axes = plt.subplots(1, 3, figsize=(10, 5), dpi=300, constrained_layout=True,
                             subplot_kw={"projection": ccrs.PlateCarree()}, sharey=True)
 
-    # cmap = LinearSegmentedColormap.from_list("blue_white_red", ["blue", "white", "red"])
-    vmin, vmax = -0.3, 0.6
-    zero_position = abs(vmin) / (vmax - vmin) 
-    cmap = LinearSegmentedColormap.from_list("custom_bwr", [(0.0, "blue"), (zero_position, "white"), (1.0, "red")])
-    norm = Normalize(vmin=vmin, vmax=vmax)
+    cmap = LinearSegmentedColormap.from_list("white_red", ["white", "red"])
+    vmin, vmax = 0, 0.6
+    # zero_position = abs(vmin) / (vmax - vmin) 
+    # cmap = LinearSegmentedColormap.from_list("custom_bwr", [(0.0, "blue"), (zero_position, "white"), (1.0, "red")])
+    # norm = Normalize(vmin=vmin, vmax=vmax)
     # norm = TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.6)
     utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
     model_region_gdf = model_region_gdf.to_crs("EPSG:4326")
@@ -534,15 +533,15 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
         hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
         
         # Compute the difference in flooded area (in square meters)
-        flooded_cells = hmax_diff > 0.05
+        flooded_cells = hmax_diff > 0
         flood_extent = (flooded_cells * calculate_cell_area(model)).sum().compute()
         flood_extent_km2 = flood_extent / 1e6
         print(f"for model {model['model_name']}, the additional flooded area: {flood_extent_km2}")
 
-        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, norm=norm, add_colorbar=False, transform=utm_crs)
+        im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False, transform=utm_crs, rasterized=True)
 
         # Plot background
-        mask_box = box(34.7, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
+        mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
         background_outside_box = background[~background.intersects(mask_box)]
         background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
         # background_outside_box.boundary.plot(ax=ax, edgecolor='lightgray', linewidth=0.2,
@@ -555,7 +554,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
         ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
         ax.set_title(title, fontsize=10)
-        ax.text(0, 1.05, subplot_labels[i], transform=ax.transAxes,
+        ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
             fontsize=10, fontweight='bold', va='bottom', ha='left')
 
         # Add gridlines and format tick labels
@@ -572,16 +571,16 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
             gl.left_labels = False
 
     # === Final touches ===
-    fig.suptitle("Factual vs. Counterfactual", fontsize=12, y=0.92)
+    # fig.suptitle("Factual vs. Counterfactual", fontsize=12, y=0.92)
 
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
-    cbar.set_label('Difference in Maximum Water Level (m)', labelpad=10, fontsize=9)
+    cbar.set_label('Attributable Flood Depth (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
-    cbar.set_ticks(np.arange(-0.3, 0.7, 0.2))
+    cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
-    fig.savefig("../figures/hmax_diff_rain_slr&wind_all_reds.png", bbox_inches='tight', dpi=300)
-    plt.show()
-
+    fig.savefig("../figures/f04.png", bbox_inches='tight', dpi=300)
+    # fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
+    
     # === Plot hmax_diff distributions ===
     # fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
     # titles = list(driver_groups.keys())
@@ -700,7 +699,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
 
     ax.set_xticks(x)
     ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
-    ax.set_ylabel("Relative change (F-CF) (%)", fontsize=16)
+    ax.set_ylabel("Attributable Relative Change (%)", fontsize=16)
     ax.set_ylim(0, max_pct*1.15)
     ax.set_xlim(-0.5, len(data_plot) - 0.5)
     ax.tick_params(axis='y', labelsize=14)
@@ -716,9 +715,9 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
 
     plt.tight_layout()
-    plt.savefig("../figures/volume_extent_damage_diff_combined.png", dpi=300, bbox_inches="tight")
-    plt.show()
-
+    plt.savefig("../figures/f05.png", dpi=300, bbox_inches="tight")
+    plt.savefig("../figures/f05.png", dpi=300, bbox_inches="tight")
+    
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
     eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
@@ -1168,7 +1167,7 @@ def plot_f_and_cf_diff_relative_damage_diff(
     filtered_fiat_models,
     model_region_gdf,
     background,
-    output_path="../figures/fact_cf_diff_relative_aggr_damage.png",
+    output_path="../figures/fact_cf_diff_relative_aggr_damage_ylabel.png",
     title_a="Factual",
     title_b="Counterfactual (All Drivers)",
     title_c="Difference: Factual - CF",
@@ -1409,7 +1408,7 @@ models = compute_hmax_diff(models)
 #%%
 # Calculate flood characteristics 
 models = calculate_flood_extent(models)
-# models = calculate_flood_volume(models)
+models = calculate_flood_volume(models)
 
 #%%
 models = calculate_flood_differences(models)
@@ -1421,10 +1420,10 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # PLOTTING for paper
-# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
 # plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
-table_abs_and_rel_vol_ext_dam(models, fiat_models)
+# table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # %%
 # # Aggregated damage maps
