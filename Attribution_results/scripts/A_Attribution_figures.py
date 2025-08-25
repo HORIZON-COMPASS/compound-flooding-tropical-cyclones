@@ -73,18 +73,6 @@ def format_label(drivers):
         label = label.replace("Slr", "SLR")
         return label
 
-def format_label(drivers):
-        if drivers == ("RAIN", "SLR", "WIND"):
-            return "All"
-        parts = [w.lower() for w in " & ".join(drivers).split(" & ")]
-        parts[0] = parts[0].capitalize()
-        if len(parts) > 1:
-            parts[1] = parts[1].capitalize()
-        label = " &\n".join(parts)
-        label = label.replace("Slr", "SLR")
-        return label
-
-
 # Function to load YAML configuration file
 def load_config(config_path):
     with open(config_path, 'r') as file:
@@ -223,7 +211,7 @@ def compute_hmax_masked(models, gwso_region, model_region_gdf):
             zsmax=da_zsmax,
             dep=da_dep,
             hmin=hmin,
-            reproj_method = "bilinear",
+            # reproj_method = "bilinear",
             # floodmap_fn=join(sfincs_root, "gis/floodmap.tif") # uncomment to save floodmap to <mod.root>/floodmap.tif
             )
     
@@ -292,7 +280,7 @@ def compute_hmax_diff(models):
         if model["category"] != "Factual":
             hmax_masked = model['sfincs_results'].get("hmax_masked", None)
             if hmax_masked is not None:
-                hmax_diff = hmax_masked - factual_hmax
+                hmax_diff = factual_hmax - hmax_masked 
                 model['sfincs_results']["hmax_diff"] = hmax_diff
                 print(f"hmax_diff calculated for {model['model_name']}")
             else:
@@ -451,6 +439,18 @@ def calculate_flood_differences(models):
             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
             print(f"flood_extent_diff calculated for {model['model_name']}")
         
+        # Calculate the area affected by the counterfactual flooding, 
+        if model["category"] != "Factual":
+            hmax_diff = model['sfincs_results']["hmax_diff"]
+            dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
+            dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
+            cell_area = dx * dy  # in map units (e.g., m² if projected)
+            total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
+            total_flooded_area = round(float(total_flooded_area), -1)
+
+            
+            print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
+
     del factual_flood_volume, factual_flood_extent  # Clean up to free memory
     gc.collect()
 
@@ -522,6 +522,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
     model_region_gdf = model_region_gdf.to_crs("EPSG:4326")
     background = background.to_crs("EPSG:4326")
+    background.plot()
 
     # === Loop through plots ===
     for i, (ax, (title, group)) in enumerate(zip(axes, driver_groups.items())):
@@ -530,7 +531,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
             print(f"Missing model for group {group}")
             continue
 
-        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
+        hmax_diff = model["sfincs_results"]["hmax_diff"]
         
         # Compute the difference in flooded area (in square meters)
         flooded_cells = hmax_diff > 0
