@@ -717,7 +717,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
 
     plt.tight_layout()
     plt.savefig("../figures/f05.png", dpi=300, bbox_inches="tight")
-    plt.savefig("../figures/f05.png", dpi=300, bbox_inches="tight")
+    plt.savefig("../figures/f05.pdf", dpi=300, bbox_inches="tight")
     
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
@@ -1421,9 +1421,9 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # PLOTTING for paper
-plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
-# plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
+plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 # table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # %%
