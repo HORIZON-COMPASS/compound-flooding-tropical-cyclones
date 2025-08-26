@@ -271,6 +271,7 @@ def compute_hmax_diff(models):
     for model in models:
         if model["category"] == "Factual":
             factual_hmax = model['sfincs_results'].get("hmax_masked", None)
+            mask_F_valid = ~np.isnan(factual_hmax)
             if factual_hmax is None:
                 print(f"Error: 'hmax_masked' not found for factual model: {model['model_name']}")
                 return models  # Exit early if 'hmax_masked' is missing
@@ -279,8 +280,14 @@ def compute_hmax_diff(models):
     for model in models:
         if model["category"] != "Factual":
             hmax_masked = model['sfincs_results'].get("hmax_masked", None)
+            mask_CF_valid = ~np.isnan(hmax_masked)
+
+            # For F: where F is NaN but CF has a value, set F to 0
+            hmax_F = factual_hmax.where(mask_F_valid | ~mask_CF_valid, 0)
+            # For CF: where CF is NaN but F has a value, set CF to 0
+            hmax_CF = hmax_masked.where(mask_CF_valid | ~mask_F_valid, 0)
             if hmax_masked is not None:
-                hmax_diff = factual_hmax - hmax_masked 
+                hmax_diff = hmax_F - hmax_CF 
                 model['sfincs_results']["hmax_diff"] = hmax_diff
                 print(f"hmax_diff calculated for {model['model_name']}")
             else:
@@ -351,12 +358,14 @@ def calculate_flood_extent(models):
     for model in models:
         # Error handling for missing 'hmax_masked'
         hmax_masked = model['sfincs_results'].get('hmax_masked', None)
+        hmax_masked = ~np.isnan(hmax_masked)
+
         if hmax_masked is None:
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
             continue  # Skip this model if 'hmax_masked' is missing
 
         # Create a boolean mask for flooded cells (hmax_masked > 0) hmin = 0.05
-        flooded_cells = hmax_masked
+        flooded_cells = hmax_masked > 0 # Necessary for boolean mask!!
         # Compute the total flooded area (in square meters)
         flood_extent = (flooded_cells * calculate_cell_area(model)).sum(dim=['x', 'y']).compute()
         # Convert to square kilometers
@@ -375,14 +384,14 @@ def calculate_flood_volume(models):
     for model in models:
         # Error handling for missing 'hmax_masked'
         hmax_masked = model['sfincs_results'].get('hmax_masked', None)
+        hmax_masked = ~np.isnan(hmax_masked)
+
         if hmax_masked is None:
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
             continue  # Skip this model if 'hmax_masked' is missing
 
-        # Create a boolean mask for flooded cells (hmax_masked > 0)
-        flooded_cells = hmax_masked > 0
         # Compute the flooded volume (sum of depth * area for each flooded cell)
-        flood_volume = (hmax_masked * flooded_cells * calculate_cell_area(model)).sum().compute()
+        flood_volume = (hmax_masked.where(hmax_masked > 0, 0) * calculate_cell_area(model)).sum().compute()
         # Convert to cubic kilometers
         flood_volume_km3 = flood_volume / 1e9
         # Store in the model dictionary
@@ -390,13 +399,52 @@ def calculate_flood_volume(models):
         model['sfincs_results']['flood_volume_m3'] = flood_volume
         print(f"for model {model['model_name']}, the flood volume is {flood_volume_km3}")
         
-    del hmax_masked, flooded_cells, flood_volume, flood_volume_km3  # Clean up to free memory
+    del hmax_masked, flood_volume, flood_volume_km3  # Clean up to free memory
     gc.collect()
+    return models
+
+def calculate_flood_differences(models):
+    factual_flood_volume = None
+    factual_flood_extent = None
+    
+    for model in models:
+        if model["category"] == "Factual":
+            factual_flood_volume = model['sfincs_results']['flood_volume_km3']
+            factual_flood_extent = model['sfincs_results']['flood_extent_km2']
+
+        # Compute flood volume difference for counterfactual models
+        if model["category"] != "Factual":
+            # Counterfactual
+            hmax_diff = model['sfincs_results'].get('hmax_diff', None)
+            if hmax_diff is None:
+                print(f"hmax_diff missing for {model['model_name']}")
+                continue
+
+            # Flood volume (only positive differences)
+            flood_volume_diff = (hmax_diff.where(hmax_diff > 0) * calculate_cell_area(model)).sum().compute()
+            flood_volume_diff_km3 = flood_volume_diff / 1e9
+            flood_volume_diff_perct = flood_volume_diff_km3 / factual_flood_volume * 100
+            model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff_perct
+            print(f"flood_volume_diff calculated for {model['model_name']}")
+
+            # Flooded area 
+            flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
+            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
+            model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
+            print(f"flood_extent_diff calculated for {model['model_name']}")
+
+            positive_mask = (hmax_diff > 0.01)
+            affected_area = (positive_mask * calculate_cell_area(model)).sum().compute() / 1e6  # km²
+            print(f"The MOST affected area by climate-change-induced flooding: {round(float(affected_area), -1)} km²")
+
+    del factual_flood_volume, factual_flood_extent  # Clean up to free memory
+    gc.collect()
+
     return models
 
 
 # Function to calculate the flood volume and extent differences between factual and counterfactual datasets
-def calculate_flood_differences(models):
+# def calculate_flood_differences(models):
     factual_flood_volume = None
     factual_flood_extent = None
     
@@ -513,16 +561,12 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     fig, axes = plt.subplots(1, 3, figsize=(10, 5), dpi=300, constrained_layout=True,
                             subplot_kw={"projection": ccrs.PlateCarree()}, sharey=True)
 
+    # Plot settings
     cmap = LinearSegmentedColormap.from_list("white_red", ["white", "red"])
     vmin, vmax = 0, 0.6
-    # zero_position = abs(vmin) / (vmax - vmin) 
-    # cmap = LinearSegmentedColormap.from_list("custom_bwr", [(0.0, "blue"), (zero_position, "white"), (1.0, "red")])
-    # norm = Normalize(vmin=vmin, vmax=vmax)
-    # norm = TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.6)
     utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
     model_region_gdf = model_region_gdf.to_crs("EPSG:4326")
     background = background.to_crs("EPSG:4326")
-    background.plot()
 
     # === Loop through plots ===
     for i, (ax, (title, group)) in enumerate(zip(axes, driver_groups.items())):
@@ -531,29 +575,23 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
             print(f"Missing model for group {group}")
             continue
 
+        # Plotting hmax_diff
         hmax_diff = model["sfincs_results"]["hmax_diff"]
-        
-        # Compute the difference in flooded area (in square meters)
-        flooded_cells = hmax_diff > 0
-        flood_extent = (flooded_cells * calculate_cell_area(model)).sum().compute()
-        flood_extent_km2 = flood_extent / 1e6
-        print(f"for model {model['model_name']}, the additional flooded area: {flood_extent_km2}")
-
         im = hmax_diff.plot.pcolormesh(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, add_colorbar=False, transform=utm_crs, rasterized=True)
 
         # Plot background
         mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
         background_outside_box = background[~background.intersects(mask_box)]
         background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
-        # background_outside_box.boundary.plot(ax=ax, edgecolor='lightgray', linewidth=0.2,
-                                            #   transform=ccrs.PlateCarree(), zorder=0.5)
         
+        # Plot model region
         model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
         # Set extent (based on actual lat/lon coordinates)
         minx, miny, maxx, maxy = model_region_gdf.bounds.minx.item(), model_region_gdf.bounds.miny.item(), model_region_gdf.bounds.maxx.item(), model_region_gdf.bounds.maxy.item()
         ax.set_extent([minx, maxx, miny, maxy], ccrs.PlateCarree())
 
+        # Set title and figure annotations
         ax.set_title(title, fontsize=10)
         ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
             fontsize=10, fontweight='bold', va='bottom', ha='left')
@@ -580,7 +618,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
     fig.savefig("../figures/f04.png", bbox_inches='tight', dpi=300)
-    # fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
+    fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
     
     # === Plot hmax_diff distributions ===
     # fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
@@ -788,18 +826,18 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
     # Factual row
     table_data.append([
-        f"{factual_data['vol_abs']/1e6:.0f}", "-",  # no percent change for factual
-        f"{factual_data['ext_abs']:.0f}", "-",
-        f"{factual_data['dam_abs']/1e6:.0f}", "-"
+        f"{factual_data['vol_abs']/1e6:.3f}", "-",  # no percent change for factual
+        f"{factual_data['ext_abs']:.3f}", "-",
+        f"{factual_data['dam_abs']/1e6:.3f}", "-"
     ])
 
     # Counterfactual rows
     for key in sorted_keys[1:]:
         d = data_dict[key]
         row = [
-            f"{d['vol_abs']/1e6:.0f}", format_pct(d['vol_pct']),
-            f"{d['ext_abs']:.0f}", format_pct(d['ext_pct']),
-            f"{d['dam_abs']/1e6:.0f}", format_pct(d['dam_pct'])
+            f"{d['vol_abs']/1e6:.3f}", f"{d['vol_pct']:.3f}",
+            f"{d['ext_abs']:.3f}", f"{d['ext_pct']:.3f}",
+            f"{d['dam_abs']/1e6:.3f}", f"{d['dam_pct']:.3f}"
         ]
         table_data.append(row)
 
@@ -1424,7 +1462,7 @@ fiat_models = calculate_damage_differences(fiat_models)
 # plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
-# table_abs_and_rel_vol_ext_dam(models, fiat_models)
+table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # %%
 # # Aggregated damage maps
