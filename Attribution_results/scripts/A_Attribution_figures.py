@@ -403,6 +403,7 @@ def calculate_flood_volume(models):
     gc.collect()
     return models
 
+
 def calculate_flood_differences(models):
     factual_flood_volume = None
     factual_flood_extent = None
@@ -713,9 +714,9 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
             return ""
         abs_val = abs(val)
         if abs_val < 1:
-            return f"<1%"
+            return f"<1 %"
         else:
-            return f"{int(round(abs_val))}%"
+            return f"{int(round(abs_val))} %"
 
     max_pct = 0
     # max_abs_damage = 0
@@ -813,11 +814,11 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
     def format_pct(val):
         if val == 0:
-            return "0%"
+            return "0 %"
         elif 0 < abs(val) < 1:
-            return "<1%"
+            return "<1 %"
         else:
-            return f"{val:+.0f}%"
+            return f"{val:+.0f} %"
 
     labels = [format_label(k) for k in sorted_keys]
 
@@ -863,7 +864,6 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
     table.scale(1.15, 1.4)
 
     plt.tight_layout()
-    plt.show()
 
     columns = [
         "Flood Volume [10^6 m³]", "Volume Δ [%]",
@@ -996,8 +996,8 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
                      models[0]['sfincs_model'].forcing['precip_2d'].time.sel(time=slice(start, end)).max())
         ax3.set_title("CF Rain", fontsize=10)
 
-        fig.savefig(f"../figures/cf_separate_timeseries.png", bbox_inches='tight', dpi=300)
-        plt.show()
+        fig.savefig(f"../figures/fS10.png", bbox_inches='tight', dpi=300)
+        fig.savefig(f"../figures/fS10.pdf", bbox_inches='tight', dpi=300)
 
 
 def aggregate_damage_to_grid(fiat_models, model_region_gdf, background, cell_size=0.025):
@@ -1199,7 +1199,7 @@ def plot_f_and_cf_relative_damage_diff(
     cbar2.ax.tick_params(labelsize=8)
 
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
-    plt.show()
+    
 
 
 def plot_f_and_cf_diff_relative_damage_diff(
@@ -1306,7 +1306,7 @@ def plot_f_and_cf_diff_relative_damage_diff(
 
     # Save and show
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
-    plt.show()
+    
 
 
 def plot_f_and_cf_diff_total_damage_diff(
@@ -1417,7 +1417,7 @@ def plot_f_and_cf_diff_total_damage_diff(
 
     # Save and show
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
-    plt.show()
+    
 
 
 ##############################################################
@@ -1459,7 +1459,7 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # PLOTTING for paper
-# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 table_abs_and_rel_vol_ext_dam(models, fiat_models)
