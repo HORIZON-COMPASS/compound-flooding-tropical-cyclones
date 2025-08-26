@@ -358,7 +358,6 @@ def calculate_flood_extent(models):
     for model in models:
         # Error handling for missing 'hmax_masked'
         hmax_masked = model['sfincs_results'].get('hmax_masked', None)
-        hmax_masked = ~np.isnan(hmax_masked)
 
         if hmax_masked is None:
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
@@ -384,7 +383,6 @@ def calculate_flood_volume(models):
     for model in models:
         # Error handling for missing 'hmax_masked'
         hmax_masked = model['sfincs_results'].get('hmax_masked', None)
-        hmax_masked = ~np.isnan(hmax_masked)
 
         if hmax_masked is None:
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
@@ -422,7 +420,7 @@ def calculate_flood_differences(models):
                 continue
 
             # Flood volume (only positive differences)
-            flood_volume_diff = (hmax_diff.where(hmax_diff > 0) * calculate_cell_area(model)).sum().compute()
+            flood_volume_diff = (hmax_diff.where(hmax_diff > 0, 0) * calculate_cell_area(model)).sum().compute()
             flood_volume_diff_km3 = flood_volume_diff / 1e9
             flood_volume_diff_perct = flood_volume_diff_km3 / factual_flood_volume * 100
             model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff_perct
@@ -444,66 +442,66 @@ def calculate_flood_differences(models):
     return models
 
 
-# Function to calculate the flood volume and extent differences between factual and counterfactual datasets
+# # Function to calculate the flood volume and extent differences between factual and counterfactual datasets
 # def calculate_flood_differences(models):
-    factual_flood_volume = None
-    factual_flood_extent = None
+#     factual_flood_volume = None
+#     factual_flood_extent = None
     
-    for model in models:
-        # Store factual flood volume and extent for comparison
-        if model["category"] == "Factual":
-            factual_flood_volume = model['sfincs_results']['flood_volume_km3']
-            factual_flood_extent = model['sfincs_results']['flood_extent_km2']
+#     for model in models:
+#         # Store factual flood volume and extent for comparison
+#         if model["category"] == "Factual":
+#             factual_flood_volume = model['sfincs_results']['flood_volume_km3']
+#             factual_flood_extent = model['sfincs_results']['flood_extent_km2']
 
-            if factual_flood_volume is None:
-                print(f"Error: 'flood_volume_km3' not found for factual model: {model['model_name']}")
-                continue  # Skip this model if factual flood volume is missing
+#             if factual_flood_volume is None:
+#                 print(f"Error: 'flood_volume_km3' not found for factual model: {model['model_name']}")
+#                 continue  # Skip this model if factual flood volume is missing
             
-            if factual_flood_extent is None:
-                print(f"Error: 'flood_extent_km2' not found for factual model: {model['model_name']}")
-                continue  # Skip this model if factual flood extent is missing
+#             if factual_flood_extent is None:
+#                 print(f"Error: 'flood_extent_km2' not found for factual model: {model['model_name']}")
+#                 continue  # Skip this model if factual flood extent is missing
 
-        # Compute flood volume difference for counterfactual models
-        if factual_flood_volume is not None and model["category"] != "Factual":
-            # Error handling for missing flood extent in counterfactual models
-            flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
+#         # Compute flood volume difference for counterfactual models
+#         if factual_flood_volume is not None and model["category"] != "Factual":
+#             # Error handling for missing flood extent in counterfactual models
+#             flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
 
-            if flood_volume is None:
-                print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
-                continue  # Skip this model if flood volume is missing
+#             if flood_volume is None:
+#                 print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
+#                 continue  # Skip this model if flood volume is missing
             
-            flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
-            model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
-            print(f"flood_volume_diff calculated for {model['model_name']}")
+#             flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
+#             model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
+#             print(f"flood_volume_diff calculated for {model['model_name']}")
 
-        # Compute flood extent difference for counterfactual models
-        if factual_flood_extent is not None and model["category"] != "Factual":
-            # Error handling for missing flood extent in counterfactual models
-            flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
-            if flood_extent is None:
-                print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
-                continue  # Skip this model if flood extent is missing
+#         # Compute flood extent difference for counterfactual models
+#         if factual_flood_extent is not None and model["category"] != "Factual":
+#             # Error handling for missing flood extent in counterfactual models
+#             flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
+#             if flood_extent is None:
+#                 print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
+#                 continue  # Skip this model if flood extent is missing
 
-            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
-            model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
-            print(f"flood_extent_diff calculated for {model['model_name']}")
+#             flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
+#             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
+#             print(f"flood_extent_diff calculated for {model['model_name']}")
         
-        # Calculate the area affected by the counterfactual flooding, 
-        if model["category"] != "Factual":
-            hmax_diff = model['sfincs_results']["hmax_diff"]
-            dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
-            dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
-            cell_area = dx * dy  # in map units (e.g., m² if projected)
-            total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
-            total_flooded_area = round(float(total_flooded_area), -1)
+#         # Calculate the area affected by the counterfactual flooding, 
+#         if model["category"] != "Factual":
+#             hmax_diff = model['sfincs_results']["hmax_diff"]
+#             dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
+#             dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
+#             cell_area = dx * dy  # in map units (e.g., m² if projected)
+#             total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
+#             total_flooded_area = round(float(total_flooded_area), -1)
 
             
-            print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
+#             print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
 
-    del factual_flood_volume, factual_flood_extent  # Clean up to free memory
-    gc.collect()
+#     del factual_flood_volume, factual_flood_extent  # Clean up to free memory
+#     gc.collect()
 
-    return models
+#     return models
 
 
 def calculate_damage_differences(fiat_models):
@@ -1459,7 +1457,7 @@ fiat_models = calculate_damage_differences(fiat_models)
 
 #%%
 # PLOTTING for paper
-plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # plot_cf_timeseries_from_models(models)
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 table_abs_and_rel_vol_ext_dam(models, fiat_models)
