@@ -2,7 +2,7 @@
 #SBATCH --job-name=compass-wflow         # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_wflow_%j.log     # Standard output and error log
 #SBATCH --time=0-4:00:00           # Job duration (hh:mm:ss)
-#SBATCH --partition 16vcpu
+#SBATCH --partition 4vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
 
@@ -40,6 +40,6 @@ snakemake --unlock -s snakefile_wflow_30yr.smk --configfile ../01_config_snakema
 
 # running workflow with snakemake
 # snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpdf > wflow_30yr.pdf
-snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete # --cores 4
+snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --forceall  --printshellcmds --verbose | tee -a snakemake_live.log
 
 exit
