@@ -726,11 +726,11 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
 
         # Annotate % change bars
         if d['extent_pct'] != 0:
-            ax.text(x[i] - width, d['extent_pct'] + 0.35, format_pct_label(d['extent_pct']), ha='center', va='bottom', fontsize=14)
+            ax.text(x[i] - width, d['extent_pct'] + 0.35, format_pct_label(d['extent_pct']), ha='center', va='bottom', fontsize=13)
         if d['volume_pct'] != 0:
-            ax.text(x[i], d['volume_pct'] + 0.35, format_pct_label(d['volume_pct']), ha='center', va='bottom', fontsize=14)
+            ax.text(x[i], d['volume_pct'] + 0.35, format_pct_label(d['volume_pct']), ha='center', va='bottom', fontsize=13)
         if d['damage_pct'] != 0:
-            ax.text(x[i] + width, d['damage_pct'] + 0.35, format_pct_label(d['damage_pct']), ha='center', va='bottom', fontsize=14)
+            ax.text(x[i] + width, d['damage_pct'] + 0.35, format_pct_label(d['damage_pct']), ha='center', va='bottom', fontsize=13)
 
         max_pct = max(max_pct, abs(d['volume_pct']), abs(d['extent_pct']), abs(d['damage_pct']))
 
@@ -759,7 +759,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
     eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
-    usd_2010_to_2019 = 1.152 # Convert US-Dollars (2010) to US-Dollars (2019)
+    usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056
     
     data_dict = {}
     factual_data = None
