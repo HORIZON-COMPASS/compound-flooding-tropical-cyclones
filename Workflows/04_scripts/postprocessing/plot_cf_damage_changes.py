@@ -253,11 +253,16 @@ print(f"Difference boundaries: {diff_boundaries}")
 
 # ===== CREATE MAIN COMPARISON PLOT (3-PANEL) =====
 # print("Creating damage comparison plots...")
+if EVENT_NAME == "Idai":
+    utm_crs="EPSG:32736"
+else:
+    utm_crs="EPSG:32737"
+
 # Convert merged DataFrame to GeoDataFrame
 gdf = gpd.GeoDataFrame(
     merged,
     geometry=gpd.points_from_xy(merged['x'], merged['y']),
-    crs=f"EPSG:32736"  # UTM Zone 36S (adjust if needed)
+    crs=utm_crs  # UTM Zone 36S (adjust if needed)
 )
 
 # Convert to lat/lon
@@ -485,6 +490,8 @@ ax.set_title(f'Economic Damage Changes - {EVENT_NAME}: Factual vs Counterfactual
 output_file_diff = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_difference_only.png'
 plt.savefig(output_file_diff, dpi=300, bbox_inches='tight')
 
+#%%
+# ===== FACTUAL-ONLY PLOT =====
 print("Creating factual-only damage plot...")
 
 if use_cartopy:
@@ -495,7 +502,7 @@ else:
 # Plot only the factual (CF0) data
 if use_cartopy:
     scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
-                                       cmap=damage_cmap, norm=damage_norm, s=point_size*1.5, alpha=alpha, transform=ccrs.PlateCarree())
+                                       cmap=damage_cmap, vmin=0, vmax=merged[f'{DAMAGE_COLUMN}_cf0'].quantile(0.9), s=point_size*1.5, alpha=alpha, transform=ccrs.PlateCarree())
     ax_factual.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
     ax_factual.set_facecolor('lightgray')
@@ -514,6 +521,8 @@ ax_factual.set_title(f'Economic Damage - {EVENT_NAME}: Factual Scenario\n({DAMAG
 output_file_factual = OUTPUT_DIR / f'damage_{EVENT_NAME.lower()}_{DAMAGE_COLUMN}_factual_only.png'
 plt.savefig(output_file_factual, dpi=200, bbox_inches='tight')
 
+
+#%%
 # ===== SUMMARY STATISTICS =====
 print(f"\nBuildings with significant damage changes:")
 if DAMAGE_COLUMN == 'relative_damage':
