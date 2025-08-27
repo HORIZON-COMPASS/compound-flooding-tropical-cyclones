@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose population column to analyze
 POPULATION_COLUMN = "population"  # Main population column to analyze
@@ -24,17 +24,17 @@ POPULATION_COLUMN = "population"  # Main population column to analyze
 INUNDATION_THRESHOLD = 0.2  # Only consider areas with >0.2m flooding
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
-# BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/sofala")
+# BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
+BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/sofala")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
 
-# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
-# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "spatial_with_pop_and_flood.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "spatial_with_pop_and_flood.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -254,271 +254,271 @@ diff_cmap = plt.get_cmap('RdBu_r')  # Red for increases, Blue for decreases
 print(f"Population boundaries: {boundaries}")
 print(f"Difference boundaries: {diff_boundaries}")
 
-# # ===== CREATE MAIN COMPARISON PLOT (3-PANEL) =====
-# print("Creating population exposure comparison plots...")
-# print(f"Using cartopy: {use_cartopy}")
+# ===== CREATE MAIN COMPARISON PLOT (3-PANEL) =====
+print("Creating population exposure comparison plots...")
+print(f"Using cartopy: {use_cartopy}")
 
-# if use_cartopy:
-#     fig, axes = plt.subplots(1, 3, figsize=(20, 6), 
-#                             subplot_kw={'projection': crs})
-# else:
-#     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+if use_cartopy:
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6), 
+                            subplot_kw={'projection': crs})
+else:
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
 
 # Plot settings
 point_size = 20  # Point size for visibility
 alpha = 0.8      # Transparency for better colors
 
-# # Plot CF0 (Factual)
-# if use_cartopy:
-#     scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
-#                           cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha, 
-#                           transform=crs)
-#     # Add multiple cartopy features for better visualization
-#     try:
-#         axes[0].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
-#         axes[0].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
-#         axes[0].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
-#     except:
-#         print("Some cartopy features failed to load")
-# else:
-#     scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
-#                           cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha)
-# axes[0].set_title('Factual', fontsize=12, fontweight='bold')
+# Plot CF0 (Factual)
+if use_cartopy:
+    scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
+                          cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha, 
+                          transform=crs)
+    # Add multiple cartopy features for better visualization
+    try:
+        axes[0].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+        axes[0].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
+        axes[0].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
+    except:
+        print("Some cartopy features failed to load")
+else:
+    scatter1 = axes[0].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
+                          cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha)
+axes[0].set_title('Factual', fontsize=12, fontweight='bold')
 
-# # Plot CF-8 (Counterfactual)
-# if use_cartopy:
-#     scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf8'], 
-#                           cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha, 
-#                           transform=crs)
-#     try:
-#         axes[1].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
-#         axes[1].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
-#         axes[1].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
-#     except:
-#         print("Some cartopy features failed to load")
-# else:
-#     scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf8'], 
-#                           cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha)
-# axes[1].set_title('Counterfactual', fontsize=12, fontweight='bold')
+# Plot CF-8 (Counterfactual)
+if use_cartopy:
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf8'], 
+                          cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha, 
+                          transform=crs)
+    try:
+        axes[1].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+        axes[1].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
+        axes[1].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
+    except:
+        print("Some cartopy features failed to load")
+else:
+    scatter2 = axes[1].scatter(merged['x'], merged['y'], c=merged[f'{POPULATION_COLUMN}_cf8'], 
+                          cmap=pop_cmap, norm=pop_norm, s=point_size, alpha=alpha)
+axes[1].set_title('Counterfactual', fontsize=12, fontweight='bold')
 
-# # Plot Difference
-# if use_cartopy:
-#     scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
-#                           cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha, 
-#                           transform=crs)
-#     try:
-#         axes[2].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
-#         axes[2].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
-#         axes[2].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
-#     except:
-#         print("Some cartopy features failed to load")
-# else:
-#     scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
-#                           cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha)
-# axes[2].set_title('Population Exposure Changes: Factual vs Counterfactual', fontsize=12, fontweight='bold')
+# Plot Difference
+if use_cartopy:
+    scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
+                          cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha, 
+                          transform=crs)
+    try:
+        axes[2].add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+        axes[2].add_feature(cfeature.OCEAN, color='white', alpha=0.5)
+        axes[2].add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
+    except:
+        print("Some cartopy features failed to load")
+else:
+    scatter3 = axes[2].scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
+                          cmap=diff_cmap, norm=diff_norm, s=point_size, alpha=alpha)
+axes[2].set_title('Population Exposure Changes: Factual vs Counterfactual', fontsize=12, fontweight='bold')
 
-# # Add colorbars
-# from mpl_toolkits.axes_grid1 import make_axes_locatable
+# Add colorbars
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-# # === Colorbar for scatter1
-# cbar1 = fig.colorbar(scatter1, ax=axes[0], orientation='vertical', shrink=0.7, pad=0.02)
-# cbar1.set_label(pop_label, fontsize=10)
+# === Colorbar for scatter1
+cbar1 = fig.colorbar(scatter1, ax=axes[0], orientation='vertical', shrink=0.7, pad=0.02)
+cbar1.set_label(pop_label, fontsize=10)
 
-# # === Colorbar for scatter2
-# cbar2 = fig.colorbar(scatter2, ax=axes[1], orientation='vertical', shrink=0.7, pad=0.02)
-# cbar2.set_label(pop_label, fontsize=10)
+# === Colorbar for scatter2
+cbar2 = fig.colorbar(scatter2, ax=axes[1], orientation='vertical', shrink=0.7, pad=0.02)
+cbar2.set_label(pop_label, fontsize=10)
 
-# # === Colorbar for scatter3 (difference)
-# cbar3 = fig.colorbar(scatter3, ax=axes[2], orientation='vertical', shrink=0.7, pad=0.02)
-# cbar3.set_label(f'{pop_label} Difference', fontsize=10)
+# === Colorbar for scatter3 (difference)
+cbar3 = fig.colorbar(scatter3, ax=axes[2], orientation='vertical', shrink=0.7, pad=0.02)
+cbar3.set_label(f'{pop_label} Difference', fontsize=10)
 
-# # Adjust layout and add main title
-# plt.tight_layout()
-# plt.suptitle(f'Population Exposure Analysis - {EVENT_NAME}: Factual vs Counterfactual (depth > {INUNDATION_THRESHOLD}m)', 
-#              fontsize=16, fontweight='bold', y=1.02)
+# Adjust layout and add main title
+plt.tight_layout()
+plt.suptitle(f'Population Exposure Analysis - {EVENT_NAME}: Factual vs Counterfactual (depth > {INUNDATION_THRESHOLD}m)', 
+             fontsize=16, fontweight='bold', y=1.02)
 
-# # Save the figure
-# output_file_main = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_comparison.png'
-# plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
-# plt.show()
+# Save the figure
+output_file_main = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_comparison.png'
+plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
+plt.show()
 
 # ===== CREATE SEPARATE BAR CHART FOR TOTAL EXPOSED POPULATION =====
-# print("Creating separate total exposed population bar chart...")
-# # Calculate total exposed population for bar chart
-# total_cf0 = cf0_pop.sum()
-# total_cf8 = cf8_pop.sum()
-# bar_label = 'Total Exposed Population [people]'
+print("Creating separate total exposed population bar chart...")
+# Calculate total exposed population for bar chart
+total_cf0 = cf0_pop.sum()
+total_cf8 = cf8_pop.sum()
+bar_label = 'Total Exposed Population [people]'
 
-# # Create separate bar chart figure
-# fig_bar, ax_bar = plt.subplots(1, 1, figsize=(6, 6))
+# Create separate bar chart figure
+fig_bar, ax_bar = plt.subplots(1, 1, figsize=(6, 6))
 
-# # Create bar chart
-# scenarios = ['Counterfactual', 'Factual']
-# totals = [total_cf8, total_cf0]
-# bars = ax_bar.bar(scenarios, totals, color=['lightblue', 'lightblue'],
-#                   alpha=1, width=0.4)
+# Create bar chart
+scenarios = ['Counterfactual', 'Factual']
+totals = [total_cf8, total_cf0]
+bars = ax_bar.bar(scenarios, totals, color=['lightblue', 'lightblue'],
+                  alpha=1, width=0.4)
 
-# # Style the bar chart
-# ax_bar.set_ylabel(bar_label, fontsize=12, fontweight='bold')
-# ax_bar.set_title(f'Total Exposed Population - {EVENT_NAME}', fontsize=14, fontweight='bold')
-# ax_bar.set_axisbelow(True)
+# Style the bar chart
+ax_bar.set_ylabel(bar_label, fontsize=12, fontweight='bold')
+ax_bar.set_title(f'Total Exposed Population - {EVENT_NAME}', fontsize=14, fontweight='bold')
+ax_bar.set_axisbelow(True)
 
-# # Calculate difference for annotation
-# difference = abs(total_cf0 - total_cf8)
-# percentage_diff = (difference / min(total_cf0, total_cf8)) * 100 if min(total_cf0, total_cf8) > 0 else 0
+# Calculate difference for annotation
+difference = abs(total_cf0 - total_cf8)
+percentage_diff = (difference / min(total_cf0, total_cf8)) * 100 if min(total_cf0, total_cf8) > 0 else 0
 
-# # Add annotation showing climate change attribution
-# # Get bar positions
-# bar_positions = [bar.get_x() + bar.get_width()/2 for bar in bars]
-# bar_heights = [bar.get_height() for bar in bars]
+# Add annotation showing climate change attribution
+# Get bar positions
+bar_positions = [bar.get_x() + bar.get_width()/2 for bar in bars]
+bar_heights = [bar.get_height() for bar in bars]
 
-# # Determine which bar is higher
-# higher_bar_idx = 0 if totals[0] > totals[1] else 1
-# lower_bar_idx = 1 - higher_bar_idx
+# Determine which bar is higher
+higher_bar_idx = 0 if totals[0] > totals[1] else 1
+lower_bar_idx = 1 - higher_bar_idx
 
-# # Annotation parameters for vertical difference line
-# line_x_position = bar_positions[1] + (bar_positions[1] - bar_positions[0]) * 0.3
-# line_extension = (bar_positions[1] - bar_positions[0]) * 0.04
+# Annotation parameters for vertical difference line
+line_x_position = bar_positions[1] + (bar_positions[1] - bar_positions[0]) * 0.3
+line_extension = (bar_positions[1] - bar_positions[0]) * 0.04
 
-# # Draw the vertical difference line
-# ax_bar.plot([line_x_position, line_x_position], 
-#            [bar_heights[lower_bar_idx], bar_heights[higher_bar_idx]], 
-#            'k-', linewidth=2)
+# Draw the vertical difference line
+ax_bar.plot([line_x_position, line_x_position], 
+           [bar_heights[lower_bar_idx], bar_heights[higher_bar_idx]], 
+           'k-', linewidth=2)
 
-# # Add extended dashed horizontal lines from y-axis to the vertical difference line
-# left_edge = ax_bar.get_xlim()[0]
-# for total in totals:
-#     ax_bar.plot([left_edge, line_x_position], [total, total], 
-#                linestyle='--', color='gray', alpha=0.7, linewidth=1)
+# Add extended dashed horizontal lines from y-axis to the vertical difference line
+left_edge = ax_bar.get_xlim()[0]
+for total in totals:
+    ax_bar.plot([left_edge, line_x_position], [total, total], 
+               linestyle='--', color='gray', alpha=0.7, linewidth=1)
 
-# # Small horizontal ticks at both ends
-# ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
-#            [bar_heights[lower_bar_idx], bar_heights[lower_bar_idx]], 
-#            'k-', linewidth=1.5)
-# ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
-#            [bar_heights[higher_bar_idx], bar_heights[higher_bar_idx]], 
-#            'k-', linewidth=1.5)
+# Small horizontal ticks at both ends
+ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
+           [bar_heights[lower_bar_idx], bar_heights[lower_bar_idx]], 
+           'k-', linewidth=1.5)
+ax_bar.plot([line_x_position - line_extension, line_x_position + line_extension], 
+           [bar_heights[higher_bar_idx], bar_heights[higher_bar_idx]], 
+           'k-', linewidth=1.5)
 
-# # Add text annotation positioned at the center between bars
-# text_x = line_x_position + (bar_positions[1] - bar_positions[0]) * 0.1
-# text_y = ((bar_heights[lower_bar_idx] + bar_heights[higher_bar_idx]) / 2) * 0.97
+# Add text annotation positioned at the center between bars
+text_x = line_x_position + (bar_positions[1] - bar_positions[0]) * 0.1
+text_y = ((bar_heights[lower_bar_idx] + bar_heights[higher_bar_idx]) / 2) * 0.97
 
-# # Format the difference text for population
-# if difference >= 1e6:
-#     diff_text = f'{difference/1e6:.1f}M people ({percentage_diff:.0f}%)'
-# elif difference >= 1e3:
-#     diff_text = f'{difference/1e3:.1f}K people ({percentage_diff:.0f}%)'
-# else:
-#     diff_text = f'{difference:.0f} people ({percentage_diff:.0f}%)'
+# Format the difference text for population
+if difference >= 1e6:
+    diff_text = f'{difference/1e6:.1f}M people ({percentage_diff:.0f}%)'
+elif difference >= 1e3:
+    diff_text = f'{difference/1e3:.1f}K people ({percentage_diff:.0f}%)'
+else:
+    diff_text = f'{difference:.0f} people ({percentage_diff:.0f}%)'
 
-# # Add the annotation text
-# ax_bar.text(text_x, text_y, diff_text, 
-#            ha='left', va='center', fontsize=10, rotation=0)
-# text_offset = (bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]) * 0.8
-# ax_bar.text(text_x, text_y + text_offset, 'Climate change \n attribution:', 
-#            ha='left', va='center', fontsize=9, style='italic', rotation=0)
+# Add the annotation text
+ax_bar.text(text_x, text_y, diff_text, 
+           ha='left', va='center', fontsize=10, rotation=0)
+text_offset = (bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]) * 0.8
+ax_bar.text(text_x, text_y + text_offset, 'Climate change \n attribution:', 
+           ha='left', va='center', fontsize=9, style='italic', rotation=0)
 
-# # Set y-axis to start from 0 with appropriate margin
-# ax_bar.set_ylim(0, max(totals) * 1.1)
+# Set y-axis to start from 0 with appropriate margin
+ax_bar.set_ylim(0, max(totals) * 1.1)
 
-# # Remove top and right spines for cleaner look
-# ax_bar.spines['top'].set_visible(False)
-# ax_bar.spines['right'].set_visible(False)
+# Remove top and right spines for cleaner look
+ax_bar.spines['top'].set_visible(False)
+ax_bar.spines['right'].set_visible(False)
 
-# plt.tight_layout()
+plt.tight_layout()
 
-# # Save the bar chart
-# output_file_bar = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_totals_barchart.png'
-# plt.savefig(output_file_bar, dpi=300, bbox_inches='tight')
-# plt.show()
+# Save the bar chart
+output_file_bar = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_totals_barchart.png'
+plt.savefig(output_file_bar, dpi=300, bbox_inches='tight')
+plt.show()
 
-# # ===== DETAILED DIFFERENCE PLOT =====
-# print("Creating detailed population exposure difference plot...")
+# ===== DETAILED DIFFERENCE PLOT =====
+print("Creating detailed population exposure difference plot...")
 
-# if use_cartopy:
-#     fig2, ax = plt.subplots(1, 1, figsize=(12, 8), subplot_kw={'projection': crs})
-# else:
-#     fig2, ax = plt.subplots(1, 1, figsize=(12, 8))
+if use_cartopy:
+    fig2, ax = plt.subplots(1, 1, figsize=(12, 8), subplot_kw={'projection': crs})
+else:
+    fig2, ax = plt.subplots(1, 1, figsize=(12, 8))
 
-# # Plot only the difference with larger points
-# if use_cartopy:
-#     scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
-#                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha, 
-#                              transform=crs)
-#     ax.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
-# else:
-#     scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
-#                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha)
+# Plot only the difference with larger points
+if use_cartopy:
+    scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
+                             cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha, 
+                             transform=crs)
+    ax.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+else:
+    scatter_diff = ax.scatter(merged['x'], merged['y'], c=merged['pop_exposure_diff'], 
+                             cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha)
 
-# # Colorbar
-# cbar = plt.colorbar(scatter_diff, ax=ax, shrink=0.8, pad=0.1)
-# cbar.set_label(f'{pop_label} Difference', fontsize=12)
+# Colorbar
+cbar = plt.colorbar(scatter_diff, ax=ax, shrink=0.8, pad=0.1)
+cbar.set_label(f'{pop_label} Difference', fontsize=12)
 
-# # Title
-# ax.set_title(f'Population Exposure Changes - {EVENT_NAME}: Factual vs Counterfactual\n(Red = More exposed people, Blue = Fewer exposed people)', 
-#              fontsize=14, fontweight='bold', pad=20)
+# Title
+ax.set_title(f'Population Exposure Changes - {EVENT_NAME}: Factual vs Counterfactual\n(Red = More exposed people, Blue = Fewer exposed people)', 
+             fontsize=14, fontweight='bold', pad=20)
 
-# # Save
-# output_file_diff = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_difference_only.png'
-# plt.savefig(output_file_diff, dpi=300, bbox_inches='tight')
-# plt.show()
+# Save
+output_file_diff = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_difference_only.png'
+plt.savefig(output_file_diff, dpi=300, bbox_inches='tight')
+plt.show()
 
 # ===== CREATE FACTUAL-ONLY PLOT =====
-# print("Creating factual-only population exposure plot...")
-# print(merged[['x', 'y']].head())
-# use_cartopy = True
+print("Creating factual-only population exposure plot...")
+print(merged[['x', 'y']].head())
+use_cartopy = True
 
-# # print(f"merged.crs: {merged.crs}")
+# print(f"merged.crs: {merged.crs}")
 
-# gdf = gpd.GeoDataFrame(
-#     merged,
-#     geometry=gpd.points_from_xy(merged['x'], merged['y']),
-#     crs=f"EPSG:4326"  # UTM Zone 36S (adjust if needed)
-# )
+gdf = gpd.GeoDataFrame(
+    merged,
+    geometry=gpd.points_from_xy(merged['x'], merged['y']),
+    crs=f"EPSG:4326"  # UTM Zone 36S (adjust if needed)
+)
 
-# # Convert to lat/lon
-# gdf = gdf.to_crs("EPSG:4326")
+# Convert to lat/lon
+gdf = gdf.to_crs("EPSG:4326")
 
-# print(f"gdf.crs: {gdf.crs}")
+print(f"gdf.crs: {gdf.crs}")
 
-# # Use these for plotting
-# merged['lon'] = gdf.geometry.x
-# merged['lat'] = gdf.geometry.y
+# Use these for plotting
+merged['lon'] = gdf.geometry.x
+merged['lat'] = gdf.geometry.y
 
-# crs = ccrs.PlateCarree()
+crs = ccrs.PlateCarree()
 
-# if use_cartopy:
-#     fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8), subplot_kw={'projection': crs})
-# else:
-#     fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8))
+if use_cartopy:
+    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8), subplot_kw={'projection': crs})
+else:
+    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8))
 
-# # Plot only the factual (CF0) data
-# if use_cartopy:
-#     scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
-#                                         cmap=pop_cmap, norm=pop_norm, s=point_size*1.5, alpha=alpha, 
-#                                         transform=ccrs.PlateCarree())
-#     try:
-#         ax_factual.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
-#         ax_factual.add_feature(cfeature.OCEAN, color='white', alpha=0.5)
-#         ax_factual.add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
-#     except:
-#         print("Some cartopy features failed to load")
-# else:
-#     scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
-#                                        cmap=pop_cmap, norm=pop_norm, s=point_size*1.5, alpha=alpha)
+# Plot only the factual (CF0) data
+if use_cartopy:
+    scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
+                                        cmap=pop_cmap, norm=pop_norm, s=point_size*1.5, alpha=alpha, 
+                                        transform=ccrs.PlateCarree())
+    try:
+        ax_factual.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
+        ax_factual.add_feature(cfeature.OCEAN, color='white', alpha=0.5)
+        ax_factual.add_feature(cfeature.COASTLINE, color='black', alpha=0.3, linewidth=0.5)
+    except:
+        print("Some cartopy features failed to load")
+else:
+    scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{POPULATION_COLUMN}_cf0'], 
+                                       cmap=pop_cmap, norm=pop_norm, s=point_size*1.5, alpha=alpha)
 
-# # Colorbar
-# cbar_factual = plt.colorbar(scatter_factual, ax=ax_factual, shrink=0.8, pad=0.1)
-# cbar_factual.set_label(pop_label, fontsize=12)
+# Colorbar
+cbar_factual = plt.colorbar(scatter_factual, ax=ax_factual, shrink=0.8, pad=0.1)
+cbar_factual.set_label(pop_label, fontsize=12)
 
-# # Title
-# ax_factual.set_title(f'Population Exposure - {EVENT_NAME}: Factual Scenario\n(depth > {INUNDATION_THRESHOLD}m)', 
-#                     fontsize=14, fontweight='bold', pad=20)
+# Title
+ax_factual.set_title(f'Population Exposure - {EVENT_NAME}: Factual Scenario\n(depth > {INUNDATION_THRESHOLD}m)', 
+                    fontsize=14, fontweight='bold', pad=20)
 
-# # Save the factual-only plot
-# output_file_factual = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_factual_only.png'
-# plt.savefig(output_file_factual, dpi=300, bbox_inches='tight')
-# plt.show()
+# Save the factual-only plot
+output_file_factual = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_factual_only.png'
+plt.savefig(output_file_factual, dpi=300, bbox_inches='tight')
+plt.show()
 
 # ===== SUMMARY STATISTICS =====
 print(f"\nLocations with significant population exposure changes:")
