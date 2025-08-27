@@ -246,7 +246,7 @@ else:
     diff_boundaries = np.linspace(diff_min, diff_max, 11)
 
 diff_norm = BoundaryNorm(diff_boundaries, ncolors=256, clip=True)
-diff_cmap = plt.get_cmap('RdBu_r')  # Red for increases, Blue for decreases
+diff_cmap = plt.get_cmap('Reds')  # Red for increases, Blue for decreases
 
 print(f"Damage boundaries: {boundaries}")
 print(f"Difference boundaries: {diff_boundaries}")
