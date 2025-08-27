@@ -13,6 +13,8 @@ import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 from matplotlib.patches import ConnectionPatch
 import dfm_tools as dfmt
+import xarray as xr
+from shapely.geometry import MultiPoint
 
 #%% Load TC track shapefiles as geopandas geodataframe
 shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
@@ -40,6 +42,8 @@ norm = plt.Normalize(wind_min, wind_max)
 gdf_wflow = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\wflow\staticgeoms\basins.geojson")
 gdf_sfincs = gpd.read_file(r"p:\11210471-001-compass\02_Models\sofala\Idai\sfincs\gis\region.geojson")
 gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
+gdf_snapwave = gpd.read_file(r"P:\11210471-001-compass\01_Data\sofala_geoms\SnapWave_region_sofala_only.shp")
+gdf_snapwave = gdf_snapwave.to_crs("EPSG:4326")
 
 # Getting DFM grid
 dir_runs = f'p:/11210471-001-compass/03_Runs/sofala/Idai/dfm'
@@ -50,22 +54,81 @@ for fname in os.listdir(os.path.join(dir_runs,F__model,'output')):
     if fname.endswith("map.nc"):
         print(fname)
         file_nc_map_F.append(os.path.join(dir_runs,F__model,'output',fname))
-
 ds_map_F = dfmt.open_partitioned_dataset(file_nc_map_F)
 
-# grid_dfm = xr.open_dataset(r"p:\11210471-001-compass\02_Models\sofala\Idai\dfm\base_450_gebco2024_MZB_GTSMv41opendap\grid_network.nc")
+
+#%%
+# Calculate surface area of DFM grid
+# Extract node coordinates
+x = ds_map_F['mesh2d_node_x'].values
+y = ds_map_F['mesh2d_node_y'].values
+
+# Create a convex hull polygon of all nodes (outer edge)
+points = MultiPoint(list(zip(x, y)))
+boundary_polygon = points.convex_hull  # outer edge
+
+# Save to GeoDataFrame
+gdf = gpd.GeoDataFrame(index=[0], crs="EPSG:4326", geometry=[boundary_polygon])
+
+# Remove land from DFM grid boundary
+land_gdf = gpd.read_file(r"p:\11210471-001-compass\01_Data\land_polygon\ne_10m_land\ne_10m_land.shp").to_crs(gdf.crs)
+ocean_only = gpd.overlay(gdf, land_gdf, how='difference')
+
+# Your existing DFM grid plot
+fig, ax = plt.subplots(figsize=(8, 8))
+ds_map_F.grid.plot(ax=ax, edgecolor='white', linewidth=0.5, alpha=0.5, zorder=1)
+ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=gdf.crs, attribution=False, zorder=0)
+
+# Plot the boundary polygon
+gdf.boundary.plot(ax=ax, edgecolor='red', linewidth=2, zorder=2)  # adjust color/width
+ocean_only.plot(ax=ax, edgecolor='orange', alpha=0.5, linewidth=2, zorder=2)  # adjust color/width
+ax.set_title("DFM Grid with Outer Boundary")
+plt.show()
+
+# Reproject to UTM 36S
+ocean_utm = ocean_only.to_crs("EPSG:32736")
+# Calculate area in m²
+ocean_utm["area_m2"] = ocean_utm.geometry.area
+# Sum total ocean area
+total_ocean_area = ocean_utm["area_m2"].sum()
+total_ocean_area_rounded = round((total_ocean_area/1e6), -2)
+print(f"Total ocean area: {total_ocean_area_rounded} km²")
+
+
+#%%
+# import xugrid as xu
+# import os
+
+# root = r"p:\11210471-001-compass\code\From Fernaldi\For_COMPASS\For_COMPASS\SFINCS_Idai_Wave"
+# ncfile = os.path.join(root, "sfincs_map_wlonly.nc")
+
+# # Use netcdf4 engine
+# dsu = xu.open_dataset(ncfile, engine='netcdf4')
+
+# # Convert UGRID to GeoDataFrame
+# gdf_snapwave = dsu.zb.ugrid.to_geodataframe()
+# gdf_snapwave = gdf_snapwave.set_crs("EPSG:32736")
+# gdf_snapwave = gdf_snapwave.to_crs("EPSG:4326")
+
+# # Save as geopackage
+# filename = os.path.join(root, "grid.gpkg")
+# gdf_snapwave.to_file(filename, driver="GPKG")
 
 #%%
 # Set up figure
 fig, ax = plt.subplots(figsize=(9, 5))
 
 # Plot SFINCS region and set up legend entry
-gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=3)
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=4)
 sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
 
 # Plot wflow basins region and set up legend entry
-gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=2)
+gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=3)
 wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
+
+# Plot wflow basins region and set up legend entry
+gdf_snapwave.plot(ax=ax, facecolor='#FFFF99', edgecolor='#FFFF99', linewidth=1, alpha=0.5, zorder=2)
+snap_patch = mpatches.Patch(facecolor='#FFFF99', edgecolor='#FFFF99', alpha=0.5, label="SnapWave Domain")
 
 # Plotting of DFM Grid
 ds_map_F.grid.plot(ax=ax, edgecolor='white', linewidth=0.5, alpha=0.5, zorder=1)
@@ -115,8 +178,12 @@ ax.text(32.5, -17.3, "Wflow Domain", color='lightskyblue', fontsize=10, fontweig
         bbox=dict(boxstyle="round,pad=0.3", facecolor='grey', alpha=0.7, edgecolor='lightskyblue'),
         zorder=10)
 
-ax.text(36.3, -21, "DFM Domain", color='white', fontsize=10, fontweight='bold',
+ax.text(37.2, -21.7, "DFM Domain", color='white', fontsize=10, fontweight='bold',
         bbox=dict(boxstyle="round,pad=0.3", facecolor='grey', alpha=0.7, edgecolor='white'),
+        zorder=10)
+
+ax.text(35, -20.7, "SnapWave Domain", color='#FFFF99', fontsize=10, fontweight='bold',
+        bbox=dict(boxstyle="round,pad=0.3", facecolor='grey', alpha=0.7, edgecolor='#FFFF99'),
         zorder=10)
 
 ax.annotate("Track TC Idai", xy=(36.02,-19.8), xytext=(37.2,-19.15), textcoords='data',
