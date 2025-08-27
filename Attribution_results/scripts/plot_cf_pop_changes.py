@@ -1,3 +1,4 @@
+#%%
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -342,6 +343,7 @@ output_file_main = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_compa
 plt.savefig(output_file_main, dpi=300, bbox_inches='tight')
 plt.show()
 
+#%%
 # ===== CREATE SEPARATE BAR CHART FOR TOTAL EXPOSED POPULATION =====
 print("Creating separate total exposed population bar chart...")
 # Calculate total exposed population for bar chart
@@ -365,7 +367,7 @@ ax_bar.set_axisbelow(True)
 
 # Calculate difference for annotation
 difference = abs(total_cf0 - total_cf8)
-percentage_diff = (difference / min(total_cf0, total_cf8)) * 100 if min(total_cf0, total_cf8) > 0 else 0
+percentage_diff = (difference / total_cf0) * 100
 
 # Add annotation showing climate change attribution
 # Get bar positions
@@ -432,6 +434,7 @@ output_file_bar = OUTPUT_DIR / f'population_exposure_{EVENT_NAME.lower()}_totals
 plt.savefig(output_file_bar, dpi=300, bbox_inches='tight')
 plt.show()
 
+#%%
 # ===== DETAILED DIFFERENCE PLOT =====
 print("Creating detailed population exposure difference plot...")
 
@@ -545,3 +548,4 @@ print("Files created:")
 print(f"\nTotal locations analyzed: {len(merged)}")
 print(f"Locations with exposed population in CF0: {(merged[f'{POPULATION_COLUMN}_cf0'] > 0).sum()}")
 print(f"Locations with exposed population in CF-8: {(merged[f'{POPULATION_COLUMN}_cf8'] > 0).sum()}")
+# %%
