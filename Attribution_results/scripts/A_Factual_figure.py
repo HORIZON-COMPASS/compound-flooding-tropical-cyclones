@@ -354,7 +354,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 ################################################
 # Define conversion factor from 2010 euros to 2019 USD
 eur_to_usd = 1.326 #
-usd_2010_to_2019 = 1.152 
+usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056 (https://www.bls.gov/cpi/tables/supplemental-files/)
 
 # Base paths - update these as needed
 BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))
@@ -390,6 +390,7 @@ print("Extracting coordinates from building centroids...")
 crs = ccrs.PlateCarree()
 
 # Extract x, y coordinates from geometry centroids (for polygon buildings)
+gdf_cf0 = gdf_cf0[gdf_cf0['total_damage'] > 0]
 gdf_cf0['centroid'] = gdf_cf0.geometry.centroid
 gdf_cf0['x'] = gdf_cf0['centroid'].x
 gdf_cf0['y'] = gdf_cf0['centroid'].y
@@ -412,9 +413,9 @@ gdf_cf0_crs = gpd.GeoDataFrame(gdf_cf0,
 # Ensure same CRS
 gdf_damage = gdf_cf0_crs.to_crs(crs)
 
-
 # same for the CF
 # Extract x, y coordinates from geometry centroids (for polygon buildings)
+gdf_cfall = gdf_cfall[gdf_cfall['total_damage'] > 0]
 gdf_cfall['centroid'] = gdf_cfall.geometry.centroid
 gdf_cfall['x'] = gdf_cfall['centroid'].x
 gdf_cfall['y'] = gdf_cfall['centroid'].y
@@ -679,95 +680,95 @@ gdf_cf_grid_masked["relative_aggr_damage_diff"] = gdf_cf_grid_masked["relative_a
 
 # %%
 # Plot the damage and flooding as sub panels
-# print("plotting factual flooding and aggregated total damage")
-# fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 6), dpi=300, constrained_layout=True, 
-#                          subplot_kw={"projection": ccrs.PlateCarree()})
+print("plotting factual flooding and aggregated damage")
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 6), dpi=300, constrained_layout=True, 
+                         subplot_kw={"projection": ccrs.PlateCarree()})
 
-# # Plot the flooding
-# utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
-# hmax = mod.results['hmax_masked'].load()
-# im = hmax.plot.pcolormesh(ax=axes[0], cmap="viridis", vmin=0, vmax=3.5, add_colorbar=False, transform=utm_crs, rasterized=True)
+# Plot the flooding
+utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
+hmax = mod.results['hmax_masked'].load()
+im = hmax.plot.pcolormesh(ax=axes[0], cmap="viridis", vmin=0, vmax=3.5, add_colorbar=False, transform=utm_crs, rasterized=True)
 
-# # Plot the total damage
-# norm = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_grid_masked['total_damage_M'].max())
-# gdf_grid_masked[gdf_grid_masked['total_damage_M'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+# Plot the total damage
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_grid_masked['total_damage_M'].max())
+gdf_grid_masked[gdf_grid_masked['total_damage_M'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
 
-# plot = gdf_grid_masked[gdf_grid_masked['total_damage_M'] > 0].plot(column='total_damage_M', cmap='Reds', norm=norm, edgecolor='grey', 
-#                                                                  linewidth=0.2, ax=axes[1], legend=False, zorder=2)
+plot = gdf_grid_masked[gdf_grid_masked['total_damage_M'] > 0].plot(column='total_damage_M', cmap='Reds', norm=norm, edgecolor='grey', 
+                                                                 linewidth=0.2, ax=axes[1], legend=False, zorder=2)
 
-# background = gdf_valid.to_crs("EPSG:4326")  # Do once
-# region_boundary = model_region_gdf.to_crs("EPSG:4326")
-# subplot_labels = ['(a)', '(b)']
+background = gdf_valid.to_crs("EPSG:4326")  # Do once
+region_boundary = model_region_gdf.to_crs("EPSG:4326")
+subplot_labels = ['(a)', '(b)']
 
-# for i, ax in enumerate(axes):
-#     # Add model region
-#     region_boundary.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+for i, ax in enumerate(axes):
+    # Add model region
+    region_boundary.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
 
-#     # # Add background and set extent (based on actual lat/lon coordinates)
-#     background.plot(ax=ax, color='#E0E0E0', zorder=0)
+    # Add background and set extent (based on actual lat/lon coordinates)
+    background.plot(ax=ax, color='#E0E0E0', zorder=0)
 
-#     # Add gridlines and format tick labels
-#     gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-#     gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
-#     gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
-#     gl.xformatter = mticker.FuncFormatter(lon_formatter)
-#     gl.yformatter = mticker.FuncFormatter(lat_formatter)
-#     gl.right_labels = False
-#     gl.top_labels = False
-#     gl.xlabel_style = {'size': 9}
-#     gl.ylabel_style = {'size': 9}
-#     if i == 1:  
-#         gl.left_labels = False  # disable y-axis labels
+    # Add gridlines and format tick labels
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    gl.xlocator = mticker.FixedLocator(np.arange(minx, maxx + 0.1, 0.2))
+    gl.ylocator = mticker.FixedLocator(np.arange(miny, maxy + 0.1, 0.2))
+    gl.xformatter = mticker.FuncFormatter(lon_formatter)
+    gl.yformatter = mticker.FuncFormatter(lat_formatter)
+    gl.right_labels = False
+    gl.top_labels = False
+    gl.xlabel_style = {'size': 9}
+    gl.ylabel_style = {'size': 9}
+    if i == 1:  
+        gl.left_labels = False  # disable y-axis labels
             
-#     # ==== Plot city and river names ====
-#     # Plot Beira location
-#     ax.plot(34.848, -19.832, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
-#     text = ax.text(34.84, -19.89, "Beira", transform=ccrs.PlateCarree(),
-#                         fontsize=8, color='black', zorder=5)
-#     text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+    # ==== Plot city and river names ====
+    # Plot Beira location
+    ax.plot(34.848, -19.832, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text = ax.text(34.84, -19.89, "Beira", transform=ccrs.PlateCarree(),
+                        fontsize=8, color='black', zorder=5)
+    text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
     
-#     # Buzi River marker and label
-#     ax.plot(34.43, -19.89, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
-#     text2 = ax.text(34.44, -19.87, "Buzi River", transform=ccrs.PlateCarree(),
-#                     fontsize=8, color='black', zorder=5)
-#     text2.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+    # Buzi River marker and label
+    ax.plot(34.43, -19.89, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text2 = ax.text(34.44, -19.87, "Buzi River", transform=ccrs.PlateCarree(),
+                    fontsize=8, color='black', zorder=5)
+    text2.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
 
-#     # Pungwe River marker and label
-#     ax.plot(34.543, -19.545, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
-#     text3 = ax.text(34.554, -19.52, "Pungwe River", transform=ccrs.PlateCarree(),
-#                     fontsize=8, color='black', zorder=5)
-#     text3.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+    # Pungwe River marker and label
+    ax.plot(34.543, -19.545, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text3 = ax.text(34.554, -19.52, "Pungwe River", transform=ccrs.PlateCarree(),
+                    fontsize=8, color='black', zorder=5)
+    text3.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
 
-#     ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
-#             fontsize=10, fontweight='bold', va='bottom', ha='left')
+    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
 
-# minx, miny, maxx, maxy = region_boundary.bounds.minx.item(), region_boundary.bounds.miny.item(), region_boundary.bounds.maxx.item(), region_boundary.bounds.maxy.item()
-# for ax in axes:
-#     ax.set_extent([minx, maxx, miny, maxy], crs=ccrs.PlateCarree())
+minx, miny, maxx, maxy = region_boundary.bounds.minx.item(), region_boundary.bounds.miny.item(), region_boundary.bounds.maxx.item(), region_boundary.bounds.maxy.item()
+for ax in axes:
+    ax.set_extent([minx, maxx, miny, maxy], crs=ccrs.PlateCarree())
 
-# # Titles
-# axes[0].set_title("", fontsize=10)
-# axes[1].set_title("", fontsize=10)
+# Titles
+axes[0].set_title("", fontsize=10)
+axes[1].set_title("", fontsize=10)
 
-# # ==== Colorbar for Flood Depth ====
-# cbar1 = fig.colorbar(im, ax=axes[0], orientation="vertical", 
-#                      fraction=0.035, aspect=20, pad=0.01)
-# cbar1.set_label("Maximum flood depth (m)", labelpad=6, fontsize=9)
-# cbar1.ax.tick_params(labelsize=8)
+# ==== Colorbar for Flood Depth ====
+cbar1 = fig.colorbar(im, ax=axes[0], orientation="vertical", 
+                     fraction=0.035, aspect=20, pad=0.01)
+cbar1.set_label("Maximum flood depth (m)", labelpad=6, fontsize=9)
+cbar1.ax.tick_params(labelsize=8)
 
-# # ==== Colorbar for Damage ====
-# sm = ScalarMappable(norm=norm, cmap="Reds")
-# sm.set_array([])  # Required to avoid warning, even if dummy
-# cbar2 = fig.colorbar(sm, ax=axes[1], orientation="vertical", 
-#                      fraction=0.035, aspect=20, pad=0.01)
-# cbar2.set_label('Aggregated total damage [M USD]', labelpad=6, fontsize=9)
-# cbar2.ax.tick_params(labelsize=8)
-# # Make the 1e7 offset text smaller
-# cbar2.ax.yaxis.offsetText.set_fontsize(7)
+# ==== Colorbar for Damage ====
+sm = ScalarMappable(norm=norm, cmap="Reds")
+sm.set_array([])  # Required to avoid warning, even if dummy
+cbar2 = fig.colorbar(sm, ax=axes[1], orientation="vertical", 
+                     fraction=0.035, aspect=20, pad=0.01)
+cbar2.set_label('Aggregated total damage [M USD]', labelpad=6, fontsize=9)
+cbar2.ax.tick_params(labelsize=8)
+# Make the 1e7 offset text smaller
+cbar2.ax.yaxis.offsetText.set_fontsize(7)
 
 
-# fig.savefig("../figures/f03.png", bbox_inches='tight', dpi=300)
-# fig.savefig("../figures/f03.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f03.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f03.pdf", bbox_inches='tight', dpi=300)
 
 # %%
 # print("plotting factual flooding and aggregated relative damage")
