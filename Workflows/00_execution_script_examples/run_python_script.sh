@@ -5,7 +5,8 @@
 #SBATCH --partition=test          # or your queue name
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
-#SBATCH --exclusive
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
 
 set -euo pipefail
 
@@ -22,6 +23,6 @@ source hook.sh
 # Run your script
 cd ../Attribution_results/scripts
 
-python plot_cf_pop_changes.py
+python -u A_Attribution_figures.py
 
 echo "Finished at $(date)"
