@@ -161,3 +161,60 @@ plt.tight_layout()
 plt.show()
 
 # %%
+
+import matplotlib.pyplot as plt
+
+# Read the model
+mod = WflowModel(
+    root=join(wflow_root_30yr, "warmup"),
+    data_libs=data_cats,
+    mode="r",
+    logger=logger,
+)
+mod.read()
+
+# Read in the wflow discharge 
+df = mod.results['netcdf']['Q'].to_pandas()
+
+# Select first two gauges
+gauges = df[['1', '2']]
+
+# Create subplots for two gauges
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+qbankfull = []
+
+for i, gauge in enumerate(gauges):
+    data = df[gauge]
+    model_bm = EVA(data=data)
+
+    peaks = model_bm.get_extremes(
+        method="BM",
+        extremes_type="high",
+        block_size="365.2425D",
+        errors="raise",
+    )
+
+    model_bm.fit_model(model="Emcee")
+
+    rp = [2]
+    summary = model_bm.get_summary(return_period=rp, alpha=0.95)
+    summary = summary.reset_index(drop=True)
+    summary["gauge"] = gauge
+    qbankfull.append(summary)
+
+    # Plot on respective subplot
+    model_bm.plot_return_values(alpha=0.95, ax=axes[i])
+    # axes[i].plot(ax_sub.lines[0].get_xdata(), ax_sub.lines[0].get_ydata())
+    axes[i].set_title(f"Gauge {i+1}")
+    axes[i].set_ylabel("Discharge [m³/s]")
+    axes[i].text(0.02, 1.06, f"({chr(97+i)})", transform=axes[i].transAxes,
+                 fontsize=12, fontweight='bold', va='top')
+    
+    fig.savefig(f"../../../../Attribution_results/figures/bankfull_discharge_fit_Buzi_Pungwe.png", dpi=300, bbox_inches='tight')
+    fig.savefig(f"../../../../Attribution_results/figures/bankfull_discharge_fit_Buzi_Pungwe.pdf", dpi=300, bbox_inches='tight')
+
+plt.tight_layout()
+plt.show()
+
+# %%
