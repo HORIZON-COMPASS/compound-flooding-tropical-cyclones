@@ -39,9 +39,12 @@ import platform
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 def lat_formatter(x, pos):
-    return f"{abs(x):.1f}°"
+    direction = 'N' if x >= 0 else 'S'
+    return f"{abs(x):.1f}°{direction}"
+
 def lon_formatter(x, pos):
-    return f"{abs(x):.1f}°"
+    direction = 'E' if x >= 0 else 'W'
+    return f"{abs(x):.1f}°{direction}"
 
 def custom_formatter(value, pos=None):
     return f"{value:.1f}°"
@@ -219,7 +222,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 # # Plot hmax masked
 # utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
 # im = mod.results['hmax_masked'].plot.pcolormesh(
-#     ax=ax_map, cmap="viridis", vmin=0, vmax=3.5, add_colorbar=False, transform=utm_crs)
+#     ax=ax_map, cmap="viridis", vmin=0, vmax=3.5, add_colorbar=False, transform=utm_crs, rasterized=True)
 
 # ax_map.set_title("Factual Max Flood Depth", fontsize=10)
 
@@ -263,7 +266,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 
 # # Colorbar for map
 # cbar = fig.colorbar(im, ax=ax_map, orientation="vertical", shrink=0.6, pad=0.01)
-# cbar.set_label('Flood depth (m)', rotation=270, labelpad=10, fontsize=9)
+# cbar.set_label('Flood Depth (m)', labelpad=10, fontsize=9)
 # cbar.ax.tick_params(labelsize=9)
 
 # # RIGHT: three stacked time series subplots
@@ -339,6 +342,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 
 
 # fig.savefig("../figures/factual_hmax_timeseries.png", bbox_inches='tight', dpi=300)
+# fig.savefig("../figures/factual_hmax_timeseries.pdf", bbox_inches='tight', dpi=300)
 # plt.show()
 
 
@@ -919,7 +923,7 @@ norm = Normalize(vmin=0, vmax=gdf_cf_grid_masked["total_damage_diff"].max())
 sm2 = ScalarMappable(cmap=red_half, norm=norm_diff)
 sm2.set_array([])
 cbar2 = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.4, pad=0.01)
-cbar2.set_label("Total Damage Attributable to Climate Change [M USD]", fontsize = 9)
+cbar2.set_label("Attributable Total Damage [M USD]", fontsize = 9)
 cbar2.ax.tick_params(labelsize=8)
 
 axes[0].set_title("Factual", fontsize=10)
@@ -927,8 +931,8 @@ axes[1].set_title("Counterfactual", fontsize=10)
 axes[2].set_title("Factual - Counterfactual", fontsize=10)
 
 # fig.suptitle("Total Aggregated Flood Damage", fontsize=12)
-fig.savefig("../figures/f_and_cf_total_aggregated_damage_ylabel.png", bbox_inches='tight', dpi=300)
-# fig.savefig("../figures/f_and_cf_total_aggregated_damage.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f_and_cf_total_aggregated_damage.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f_and_cf_total_aggregated_damage.pdf", bbox_inches='tight', dpi=300)
 
 # %%
 gdf_cf_grid_masked['rel_dam_diff'] = (gdf_grid_masked['relative_aggr_damage'] - gdf_cf_grid_masked['relative_aggr_damage']) / gdf_grid_masked['relative_aggr_damage'] * 100
@@ -996,10 +1000,10 @@ cbar.ax.tick_params(labelsize=8)
 sm2 = ScalarMappable(cmap=white_red, norm=norm_diff)
 sm2.set_array([])
 cbar2 = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.4, pad=0.01)
-cbar2.set_label("Relative Damage Attributable to Climate Change [%]", fontsize=9)
+cbar2.set_label("Attributable Relative Damage [%]", fontsize=9)
 cbar2.ax.tick_params(labelsize=8)
 
-fig.savefig("../figures/f_and_cf_aggregated_rel_damage_ylabel.png", bbox_inches='tight', dpi=300)
-# fig.savefig("../figures/f_and_cf_aggregated_rel_damage.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f_and_cf_aggregated_rel_damage.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/f_and_cf_aggregated_rel_damage.pdf", bbox_inches='tight', dpi=300)
 
 # %%
