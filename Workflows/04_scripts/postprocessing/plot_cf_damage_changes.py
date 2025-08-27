@@ -17,7 +17,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
@@ -25,17 +25,17 @@ DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
 # Base paths - update these as needed
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
-# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test"))
-BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))
+BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test"))  # Kenneth & Freddy
+# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))  # Idai
 OUTPUT_DIR = Path(os.path.join(prefix,"11210471-001-compass","04_Results","CF_figs", "redone"))
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
-# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
 
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "output_relative_damage.fgb"
+# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
+# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "output_relative_damage.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -155,7 +155,7 @@ if DAMAGE_COLUMN == 'relative_damage':
     print(f"CF-8 total damage: {cf8_damage.sum():.0f}%")
     print(f"CF-8 buildings with >0% damage: {(cf8_damage > 0).sum()}")
     print(f"Difference in total damage: {cf0_damage.sum() - cf8_damage.sum():.0f}%")
-    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
+    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf0_damage.sum() * 100):.1f}%")
     print(f"Max increase (CF0 vs CF-8): {damage_diff.max():.1f}%")
     print(f"Max decrease (CF0 vs CF-8): {damage_diff.min():.1f}%")
     print(f"Mean difference: {damage_diff.mean():.1f}%")
@@ -167,7 +167,7 @@ else:
     print(f"CF-8 mean damage: ${cf8_damage.mean():.0f}")
     print(f"CF-8 total damage: ${cf8_damage.sum():.0f}")
     print(f"Difference in total damage: ${cf0_damage.sum() - cf8_damage.sum():.0f}")
-    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%")
+    print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf0_damage.sum() * 100):.1f}%")
     print(f"Max increase (CF0 vs CF-8): ${damage_diff.max():.0f}")
     print(f"Max decrease (CF0 vs CF-8): ${damage_diff.min():.0f}")
     print(f"Mean difference: ${damage_diff.mean():.0f}")
@@ -488,14 +488,14 @@ plt.savefig(output_file_diff, dpi=300, bbox_inches='tight')
 print("Creating factual-only damage plot...")
 
 if use_cartopy:
-    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8), subplot_kw={'projection': crs})
+    fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8), subplot_kw={'projection': ccrs.PlateCarree()})
 else:
     fig_factual, ax_factual = plt.subplots(1, 1, figsize=(10, 8))
 
 # Plot only the factual (CF0) data
 if use_cartopy:
     scatter_factual = ax_factual.scatter(merged['lon'], merged['lat'], c=merged[f'{DAMAGE_COLUMN}_cf0'], 
-                                       cmap=damage_cmap, norm=damage_norm, s=point_size*1.5, alpha=alpha)
+                                       cmap=damage_cmap, norm=damage_norm, s=point_size*1.5, alpha=alpha, transform=ccrs.PlateCarree())
     ax_factual.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
     ax_factual.set_facecolor('lightgray')
@@ -547,7 +547,7 @@ else:
 # %%
 
 # Save statistics to a text file
-with open(f"summary_damage_({DAMAGE_COLUMN})_{EVENT_NAME}.txt", "w") as f:
+with open(f"{OUTPUT_DIR}/summary_damage_({DAMAGE_COLUMN})_{EVENT_NAME}.txt", "w") as f:
     if DAMAGE_COLUMN == 'relative_damage':
         print(f"Damage Statistics for {EVENT_NAME} ({DAMAGE_COLUMN}):", file=f)
         print(f"CF0 max damage: {cf0_damage.max():.1f}%", file=f)
@@ -559,7 +559,7 @@ with open(f"summary_damage_({DAMAGE_COLUMN})_{EVENT_NAME}.txt", "w") as f:
         print(f"CF-8 total damage: {cf8_damage.sum():.0f}%", file=f)
         print(f"CF-8 buildings with >0% damage: {(cf8_damage > 0).sum()}", file=f)
         print(f"Difference in total damage: {cf0_damage.sum() - cf8_damage.sum():.0f}%", file=f)
-        print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%", file=f)
+        print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf0_damage.sum() * 100):.1f}%", file=f)
         print(f"Max increase (CF0 vs CF-8): {damage_diff.max():.1f}%", file=f)
         print(f"Max decrease (CF0 vs CF-8): {damage_diff.min():.1f}%", file=f)
         print(f"Mean difference: {damage_diff.mean():.1f}%", file=f)
@@ -580,18 +580,10 @@ with open(f"summary_damage_({DAMAGE_COLUMN})_{EVENT_NAME}.txt", "w") as f:
         print(f"CF-8 mean damage: ${cf8_damage.mean():.0f}", file=f)
         print(f"CF-8 total damage: ${cf8_damage.sum():.0f}", file=f)
         print(f"Difference in total damage: ${cf0_damage.sum() - cf8_damage.sum():.0f}", file=f)
-        print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf8_damage.sum() * 100):.1f}%", file=f)
+        print(f"Percentage change: {((cf0_damage.sum() - cf8_damage.sum()) / cf0_damage.sum() * 100):.1f}%", file=f)
         print(f"Max increase (CF0 vs CF-8): ${damage_diff.max():.0f}", file=f)
         print(f"Max decrease (CF0 vs CF-8): ${damage_diff.min():.0f}", file=f)
         print(f"Mean difference: ${damage_diff.mean():.0f}", file=f)
-
-        threshold_low = diff_max * 0.1
-        threshold_high = diff_max * 0.25
-        print(f"Buildings with >${threshold_low:.0f} damage increase: {(damage_diff > threshold_low).sum()}", file=f)
-        print(f"Buildings with >${threshold_low:.0f} damage decrease: {(damage_diff < -threshold_low).sum()}", file=f)
-        print(f"Buildings with >${threshold_high:.0f} damage increase: {(damage_diff > threshold_high).sum()}", file=f)
-        print(f"Buildings with >${threshold_high:.0f} damage decrease: {(damage_diff < -threshold_high).sum()}", file=f)
-
 
     print(f"\nTotal buildings analyzed: {len(merged)}", file=f)
 
