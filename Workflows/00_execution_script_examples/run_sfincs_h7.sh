@@ -9,7 +9,7 @@
 # Run SFINCS using Docker
 echo "Running SFINCS model using Docker..."
 
-RUN_DIR="/p/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_CF0_GTSMv41_CF0_spw_IBTrACS_CF0_waves"
+RUN_DIR="/p/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_base_copy"
 
 echo "Working directory: ${RUN_DIR}"
 
