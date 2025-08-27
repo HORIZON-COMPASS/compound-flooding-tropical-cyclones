@@ -219,7 +219,12 @@ elif DAMAGE_COLUMN == 'total_damage':
     boundaries = np.linspace(0, max_total, 11)
     damage_norm = BoundaryNorm(boundaries, ncolors=256, clip=True)
     damage_cmap = plt.get_cmap('Reds')
-    damage_label = 'Total Damage [USD]'
+    if EVENT_NAME == "Idai" or EVENT_NAME == "Kenneth":
+        damage_label = 'Total Damage [USD 2019]'
+    elif EVENT_NAME == "Freddy":
+        damage_label = 'Total Damage [USD 2023]'
+    else:
+        damage_label = 'Total Damage [USD]'
     vmin, vmax = 0, max_total
 else:
     # Generic fallback
@@ -231,13 +236,14 @@ else:
     vmin, vmax = 0, max_val
 
 # Difference colormap with discrete intervals
-diff_max = damage_diff.quantile(0.6)
+diff_max = damage_diff.quantile(0.9)
+diff_min = damage_diff.quantile(0.1)
 if DAMAGE_COLUMN == 'relative_damage':
     # For relative damage differences, use smaller intervals
     diff_boundaries = np.linspace(-20, 20, 11)  # intervals from -20% to +20%
 else:
     # For absolute damage differences
-    diff_boundaries = np.linspace(-diff_max, diff_max, 11)
+    diff_boundaries = np.linspace(diff_min, diff_max, 11)
 
 diff_norm = BoundaryNorm(diff_boundaries, ncolors=256, clip=True)
 diff_cmap = plt.get_cmap('RdBu_r')  # Red for increases, Blue for decreases
@@ -246,7 +252,7 @@ print(f"Damage boundaries: {boundaries}")
 print(f"Difference boundaries: {diff_boundaries}")
 
 # ===== CREATE MAIN COMPARISON PLOT (3-PANEL) =====
-print("Creating damage comparison plots...")
+# print("Creating damage comparison plots...")
 # Convert merged DataFrame to GeoDataFrame
 gdf = gpd.GeoDataFrame(
     merged,
@@ -350,7 +356,12 @@ if DAMAGE_COLUMN == 'total_damage':
     # Calculate total damage for bar chart
     total_cf0 = cf0_damage.sum()
     total_cf8 = cf8_damage.sum()
-    bar_label = 'Total Damage [USD]'
+    if EVENT_NAME == "Idai" or EVENT_NAME == "Kenneth":
+        bar_label = 'Total Damage [USD 2019]'
+    elif EVENT_NAME == "Freddy":
+        bar_label = 'Total Damage [USD 2023]'
+    else:
+        bar_label = 'Total Damage [USD]'
 
     # Create separate bar chart figure
     fig_bar, ax_bar = plt.subplots(1, 1, figsize=(6, 6))
@@ -453,13 +464,13 @@ else:
 
 # Plot only the difference with larger points
 if use_cartopy:
-    scatter_diff = ax.scatter(plot_data_diff['lon'], plot_data_diff['lat'], c=plot_data_diff['damage_diff'], 
+    scatter_diff = ax.scatter(merged['lon'], merged['lat'], c=merged['damage_diff'], 
                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha, 
                              transform=crs)
     ax.add_feature(cfeature.LAND, color='lightgray', alpha=0.5)
 else:
     ax.set_facecolor('lightgray')
-    scatter_diff = ax.scatter(plot_data_diff['lon'], plot_data_diff['lat'], c=plot_data_diff['damage_diff'], 
+    scatter_diff = ax.scatter(merged['lon'], merged['lat'], c=merged['damage_diff'], 
                              cmap=diff_cmap, norm=diff_norm, s=point_size*2, alpha=alpha)
 
 # Colorbar
