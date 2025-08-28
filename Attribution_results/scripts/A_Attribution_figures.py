@@ -4,7 +4,6 @@ import os
 from os.path import join
 import yaml
 import itertools
-import math
 import gc
 import xarray as xr
 import pandas as pd
@@ -18,16 +17,13 @@ from hydromt import DataCatalog
 import matplotlib.pyplot as plt
 from pyproj import Transformer
 import geopandas as gpd
-import contextily as ctx
 import cartopy.crs as ccrs
 from matplotlib.patches import Patch
 import matplotlib.ticker as mticker
+import matplotlib.dates as mdates
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.colors import LinearSegmentedColormap
-import cartopy.feature as cfeature
-import pyproj
 from shapely.geometry import box
-from shapely.ops import transform
 from rasterio.features import shapes
 from shapely.geometry import shape
 from matplotlib.cm import ScalarMappable
@@ -47,12 +43,12 @@ def get_driver_group_model(group, models):
          and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - set(group))
          and "hmax_diff" in m["sfincs_results"]), None)
 
-def get_single_driver_model(driver):
-        return next(
-            (m for m in models
-             if m["CF_info"].get(driver, 0) != 0
-             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
-             and "hmax_diff" in m["sfincs_results"]), None)
+def get_single_driver_model(driver, models):
+    return next(
+        (m for m in models
+         if m["CF_info"].get(driver, 0) != 0
+         and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
+         and "hmax_diff" in m["sfincs_results"]), None)
 
 def lat_formatter(x, pos):
     direction = 'N' if x >= 0 else 'S'
@@ -72,6 +68,18 @@ def format_label(drivers):
         label = " &\n".join(parts)
         label = label.replace("Slr", "SLR")
         return label
+
+def format_pct(val, show_zero=False, signed=False):
+    if val == 0 or val is None:
+        return "0 %" if show_zero else ""
+    abs_val = abs(val)
+    if abs_val < 1:
+        return "<1 %"
+    if signed:
+        return f"{val:+.0f} %"
+    else:
+        return f"{int(round(val))} %"
+
 
 # Function to load YAML configuration file
 def load_config(config_path):
@@ -141,7 +149,6 @@ def load_fiat_models(config):
     for rain, wind, slr in itertools.product(run['CF_value_rain'], run['CF_value_wind'], run['CF_value_SLR']):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
         model_path = os.path.join(base_path, model_name)
-        # fiat_results = pd.read_csv(join(f"{model_path}", "output/output.csv"))
         fiat_results =  gpd.read_file(join(f"{model_path}", "output/spatial.fgb"))
         relative_damage =  gpd.read_file(join(f"{model_path}", "output/output_relative_damage.fgb"))
 
@@ -235,28 +242,6 @@ def compute_hmax_masked(models, gwso_region, model_region_gdf):
 
         del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
         gc.collect()
-        
-        # Open the existing NetCDF dataset in append mode
-        # nc_file = join(model["model_path"], "sfincs_his.nc")
-        
-        # try:
-        #     with xr.open_dataset(nc_file, mode="a") as ds:  
-        #         # Convert DataArrays to Dataset with proper variable names
-        #         ds_new = xr.Dataset({
-        #             "hmax": da_hmax,
-        #             "hmax_masked": da_hmax_masked
-        #         })
-                
-        #         # Merge with existing dataset and save
-        #         ds_updated = xr.merge([ds, ds_new])
-        #         ds.close()
-
-        #         ds_updated.to_netcdf(nc_file, mode="w")  # Overwrite with new data
-
-        #         print(f"Saved hmax and hmax_masked to {nc_file}")
-
-        # except Exception as e:
-        #     print(f"Error saving to {nc_file}: {e}")
 
     return models, gdf_valid
 
@@ -299,41 +284,6 @@ def compute_hmax_diff(models):
     return models
 
 
-def zoom_in_sfincs_data(models, zoom_region_latlon=None):
-    """
-    Filters each model's sfincs_results data to retain only the region within the zoom extent.
-
-    Parameters:
-        models (list): List of model dictionaries.
-        zoom_region_latlon (tuple, optional): (lat_min, lat_max, lon_min, lon_max)
-    """
-    if zoom_region_latlon:
-        lat_min, lat_max, lon_min, lon_max = zoom_region_latlon
-
-        # Get CRS and transformer
-        model_crs = models[0]['sfincs_model'].crs
-        model_epsg = model_crs.to_epsg()
-        transformer = Transformer.from_crs("EPSG:4326", model_epsg, always_xy=True)
-
-        # Transform lat/lon to model coordinates
-        xmin, ymin = transformer.transform(lon_min, lat_min)
-        xmax, ymax = transformer.transform(lon_max, lat_max)
-
-        for model in models:
-            sfincs_results = model['sfincs_results']
-
-            for key, val in sfincs_results.items():
-                if isinstance(val, xr.DataArray) and {'x', 'y'}.issubset(val.dims):
-                    sfincs_results[key] = val.sel(x=slice(xmin, xmax), y=slice(ymin, ymax))
-
-            print(f"Model {model['model_name']} zoomed to region {zoom_region_latlon}")
-    
-    else:
-        print("No zoom region specified. Returning unzoomed models.")
-    
-    return models
-
-
 # Function to calculate the surface area of one grid cell
 def calculate_cell_area(model):
     # Error handling for missing 'hmax_masked'
@@ -363,7 +313,7 @@ def calculate_flood_extent(models):
             print(f"Error: 'hmax_masked' not found for model: {model['model_name']}")
             continue  # Skip this model if 'hmax_masked' is missing
 
-        # Create a boolean mask for flooded cells (hmax_masked > 0) hmin = 0.05
+        # Create a boolean mask for flooded cells (hmax_masked > 0)
         flooded_cells = hmax_masked > 0 # Necessary for boolean mask!!
         # Compute the total flooded area (in square meters)
         flood_extent = (flooded_cells * calculate_cell_area(model)).sum(dim=['x', 'y']).compute()
@@ -444,64 +394,64 @@ def calculate_flood_differences(models):
 
 # # Function to calculate the flood volume and extent differences between factual and counterfactual datasets
 # def calculate_flood_differences(models):
-#     factual_flood_volume = None
-#     factual_flood_extent = None
+    factual_flood_volume = None
+    factual_flood_extent = None
     
-#     for model in models:
-#         # Store factual flood volume and extent for comparison
-#         if model["category"] == "Factual":
-#             factual_flood_volume = model['sfincs_results']['flood_volume_km3']
-#             factual_flood_extent = model['sfincs_results']['flood_extent_km2']
+    for model in models:
+        # Store factual flood volume and extent for comparison
+        if model["category"] == "Factual":
+            factual_flood_volume = model['sfincs_results']['flood_volume_km3']
+            factual_flood_extent = model['sfincs_results']['flood_extent_km2']
 
-#             if factual_flood_volume is None:
-#                 print(f"Error: 'flood_volume_km3' not found for factual model: {model['model_name']}")
-#                 continue  # Skip this model if factual flood volume is missing
+            if factual_flood_volume is None:
+                print(f"Error: 'flood_volume_km3' not found for factual model: {model['model_name']}")
+                continue  # Skip this model if factual flood volume is missing
             
-#             if factual_flood_extent is None:
-#                 print(f"Error: 'flood_extent_km2' not found for factual model: {model['model_name']}")
-#                 continue  # Skip this model if factual flood extent is missing
+            if factual_flood_extent is None:
+                print(f"Error: 'flood_extent_km2' not found for factual model: {model['model_name']}")
+                continue  # Skip this model if factual flood extent is missing
 
-#         # Compute flood volume difference for counterfactual models
-#         if factual_flood_volume is not None and model["category"] != "Factual":
-#             # Error handling for missing flood extent in counterfactual models
-#             flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
+        # Compute flood volume difference for counterfactual models
+        if factual_flood_volume is not None and model["category"] != "Factual":
+            # Error handling for missing flood extent in counterfactual models
+            flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
 
-#             if flood_volume is None:
-#                 print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
-#                 continue  # Skip this model if flood volume is missing
+            if flood_volume is None:
+                print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
+                continue  # Skip this model if flood volume is missing
             
-#             flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
-#             model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
-#             print(f"flood_volume_diff calculated for {model['model_name']}")
+            flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
+            model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
+            print(f"flood_volume_diff calculated for {model['model_name']}")
 
-#         # Compute flood extent difference for counterfactual models
-#         if factual_flood_extent is not None and model["category"] != "Factual":
-#             # Error handling for missing flood extent in counterfactual models
-#             flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
-#             if flood_extent is None:
-#                 print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
-#                 continue  # Skip this model if flood extent is missing
+        # Compute flood extent difference for counterfactual models
+        if factual_flood_extent is not None and model["category"] != "Factual":
+            # Error handling for missing flood extent in counterfactual models
+            flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
+            if flood_extent is None:
+                print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
+                continue  # Skip this model if flood extent is missing
 
-#             flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
-#             model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
-#             print(f"flood_extent_diff calculated for {model['model_name']}")
+            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
+            model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
+            print(f"flood_extent_diff calculated for {model['model_name']}")
         
-#         # Calculate the area affected by the counterfactual flooding, 
-#         if model["category"] != "Factual":
-#             hmax_diff = model['sfincs_results']["hmax_diff"]
-#             dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
-#             dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
-#             cell_area = dx * dy  # in map units (e.g., m² if projected)
-#             total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
-#             total_flooded_area = round(float(total_flooded_area), -1)
+        # Calculate the area affected by the counterfactual flooding, 
+        if model["category"] != "Factual":
+            hmax_diff = model['sfincs_results']["hmax_diff"]
+            dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
+            dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
+            cell_area = dx * dy  # in map units (e.g., m² if projected)
+            total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
+            total_flooded_area = round(float(total_flooded_area), -1)
 
             
-#             print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
+            print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
 
-#     del factual_flood_volume, factual_flood_extent  # Clean up to free memory
-#     gc.collect()
+    del factual_flood_volume, factual_flood_extent  # Clean up to free memory
+    gc.collect()
 
-#     return models
+    return models
 
 
 def calculate_damage_differences(fiat_models):
@@ -511,7 +461,6 @@ def calculate_damage_differences(fiat_models):
         # Store factual total damage for comparison
         if model["category"] == "Factual":
             factual_total_damage = model['fiat_results'].get("total_damage", None).sum()
-            # factual_total_damage_spatial = model['fiat_results_spatial'].get("relative_damage", None).sum()
 
             if factual_total_damage is None:
                 print(f"Error: 'total_damage' not found for factual model: {model['model_name']}")
@@ -528,17 +477,6 @@ def calculate_damage_differences(fiat_models):
             damage_diff = (factual_total_damage - total_damage) / factual_total_damage * 100
             model['Damage_diff_from_F(%)'] = damage_diff
             print(f"damage_diff calculated for {model['model_name']}")
-        
-        # if factual_total_damage_spatial is not None and model["category"] != "Factual":
-        #     total_spatial_damage = model['fiat_results_spatial'].get('total_damage', None).sum()
-        #     if total_spatial_damage is None:
-        #         print(f"Error: 'total_damage' not found for counterfactual model: {model['model_name']}")
-        #         continue  # Skip this model if total damage is missing
-            
-        #     # Calculate the damage difference from the factual model (in percentage)
-        #     damage_diff = (factual_total_damage_spatial - total_spatial_damage) / factual_total_damage_spatial * 100
-        #     model['Damage_spatial_diff_from_F(%)'] = damage_diff
-        #     print(f"damage_diff calculated for {model['model_name']}")
 
     del factual_total_damage  # Clean up to free memory
     gc.collect()
@@ -580,7 +518,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
         # Plot background
         mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
-        background_outside_box = background[~background.intersects(mask_box)]
+        background_outside_box = background[~background.intersects(mask_box)] # removing errorneous lines outside model region
         background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
         
         # Plot model region
@@ -609,8 +547,6 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
             gl.left_labels = False
 
     # === Final touches ===
-    # fig.suptitle("Factual vs. Counterfactual", fontsize=12, y=0.92)
-
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
     cbar.set_label('Attributable Flood Depth (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
@@ -620,39 +556,40 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
     
     # === Plot hmax_diff distributions ===
-    # fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
-    # titles = list(driver_groups.keys())
+    # Just to check
+    fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
+    titles = list(driver_groups.keys())
 
-    # for i, (ax, (title, group)) in enumerate(zip(axes2, driver_groups.items())):
-    #     model = get_driver_group_model(group, models)
-    #     if model is None:
-    #         continue
+    for i, (ax, (title, group)) in enumerate(zip(axes2, driver_groups.items())):
+        model = get_driver_group_model(group, models)
+        if model is None:
+            continue
 
-    #     hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
+        hmax_diff = model["sfincs_results"]["hmax_diff"] * -1
 
-    #     # Mask values > 2 m
-    #     hmax_diff_masked = hmax_diff.where(hmax_diff <= 1)
-    #     hmax_diff_np = hmax_diff_masked.compute().values
-    #     hmax_diff_clean = hmax_diff_np[~np.isnan(hmax_diff_np)]
+        # Mask values > 2 m
+        hmax_diff_masked = hmax_diff.where(hmax_diff <= 1)
+        hmax_diff_np = hmax_diff_masked.compute().values
+        hmax_diff_clean = hmax_diff_np[~np.isnan(hmax_diff_np)]
 
-    #     # Histogram
-    #     ax.hist(hmax_diff_clean, bins=100, color='steelblue', edgecolor='black')
-    #     ax.set_title(title, fontsize=10)
-    #     ax.set_xlabel("hmax_diff (m)")
-    #     if i == 0:
-    #         ax.set_ylabel("Frequency")
-    #     ax.set_xlim(0, 1)
-    #     ax.set_xticks(np.arange(0, 1.1, 0.1))
-    #     ax.grid(True, linestyle='--', alpha=0.6)
+        # Histogram
+        ax.hist(hmax_diff_clean, bins=100, color='steelblue', edgecolor='black')
+        ax.set_title(title, fontsize=10)
+        ax.set_xlabel("hmax_diff (m)")
+        if i == 0:
+            ax.set_ylabel("Frequency")
+        ax.set_xlim(0, 1)
+        ax.set_xticks(np.arange(0, 1.1, 0.1))
+        ax.grid(True, linestyle='--', alpha=0.6)
 
-    # fig2.suptitle("Distribution of hmax_diff (<= 1 m)", fontsize=12, y=1.02)
-    # fig2.savefig("../figures/hmax_diff_distribution_subplots.png", bbox_inches='tight', dpi=300)
-    # plt.show()
+    fig2.suptitle("Distribution of hmax_diff (<= 1 m)", fontsize=12, y=1.02)
+    fig2.savefig("../figures/hmax_diff_distribution_subplots.png", bbox_inches='tight', dpi=300)
+    plt.show()
 
-    # print(model['model_name'])
-    # hmax_diff = model['sfincs_results']['hmax_diff'] * -1
-    # hmax_diff_999 = hmax_diff.quantile(0.999).compute()
-    # print(f"99.9th percentile value: {hmax_diff_999.values}") # .max() gives too high values that are not included in permanent water mask
+    print(model['model_name'])
+    hmax_diff = model['sfincs_results']['hmax_diff'] * -1
+    hmax_diff_999 = hmax_diff.quantile(0.999).compute()
+    print(f"99.9th percentile value: {hmax_diff_999.values}") # .max() gives too high values that are not included in permanent water mask
 
 
 def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):
@@ -707,34 +644,24 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     x = np.arange(len(data_plot))
     width = 0.2
 
-    def format_pct_label(val):
-        if val == 0 or val is None:
-            return ""
-        abs_val = abs(val)
-        if abs_val < 1:
-            return f"<1 %"
-        else:
-            return f"{int(round(abs_val))} %"
-
     max_pct = 0
-    # max_abs_damage = 0
     for i, d in enumerate(data_plot):
         # Bars for % changes
-        b_ext = ax.bar(x[i] - width, d['extent_pct'], width=width, color="#384860", edgecolor='black')
-        b_vol = ax.bar(x[i], d['volume_pct'], width=width, color="#5a7d9a", edgecolor='black')
-        b_dam_pct = ax.bar(x[i] + width, d['damage_pct'], width=width, color="#c34a36", edgecolor='black')
+        ax.bar(x[i] - width, d['extent_pct'], width=width, color="#384860", edgecolor='black')
+        ax.bar(x[i], d['volume_pct'], width=width, color="#5a7d9a", edgecolor='black')
+        ax.bar(x[i] + width, d['damage_pct'], width=width, color="#c34a36", edgecolor='black')
 
         # Annotate % change bars
         if d['extent_pct'] != 0:
-            ax.text(x[i] - width, d['extent_pct'] + 0.35, format_pct_label(d['extent_pct']), ha='center', va='bottom', fontsize=13)
+            ax.text(x[i] - width, d['extent_pct'] + 0.35, format_pct(d['extent_pct']), ha='center', va='bottom', fontsize=13)
         if d['volume_pct'] != 0:
-            ax.text(x[i], d['volume_pct'] + 0.35, format_pct_label(d['volume_pct']), ha='center', va='bottom', fontsize=13)
+            ax.text(x[i], d['volume_pct'] + 0.35, format_pct(d['volume_pct']), ha='center', va='bottom', fontsize=13)
         if d['damage_pct'] != 0:
-            ax.text(x[i] + width, d['damage_pct'] + 0.35, format_pct_label(d['damage_pct']), ha='center', va='bottom', fontsize=13)
+            ax.text(x[i] + width, d['damage_pct'] + 0.35, format_pct(d['damage_pct']), ha='center', va='bottom', fontsize=13)
 
         max_pct = max(max_pct, abs(d['volume_pct']), abs(d['extent_pct']), abs(d['damage_pct']))
 
-
+    # Layout settings
     ax.set_xticks(x)
     ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
     ax.set_ylabel("Attributable Relative Change (%)", fontsize=16)
@@ -809,15 +736,6 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
     # Prepare final keys, start with factual
     sorted_keys = [("FACTUAL",)] + sorted(data_dict.keys(), key=lambda k: (len(k), k))
-
-    def format_pct(val):
-        if val == 0:
-            return "0 %"
-        elif 0 < abs(val) < 1:
-            return "<1 %"
-        else:
-            return f"{val:+.0f} %"
-
     labels = [format_label(k) for k in sorted_keys]
 
     # Build rows: factual first, then counterfactuals
@@ -877,23 +795,12 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
 
 def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1,2]):
-    def get_single_driver_model(driver):
-        return next(
-            (m for m in models
-             if m["CF_info"].get(driver, 0) != 0
-             and all(m["CF_info"].get(d, 0) == 0 for d in {"rain", "SLR", "wind"} - {driver})
-             and "hmax_diff" in m["sfincs_results"]),
-            None
-        )
-
-    import matplotlib.dates as mdates
     colors = plt.get_cmap('tab10').colors  # Ensure consistent coloring
 
-
     # Extract single-driver models
-    rain_model = get_single_driver_model("rain")
-    slr_model = get_single_driver_model("SLR")
-    wind_model = get_single_driver_model("wind")
+    rain_model = get_single_driver_model("rain", models)
+    slr_model = get_single_driver_model("SLR", models)
+    wind_model = get_single_driver_model("wind", models)
 
     if not all([rain_model, slr_model, wind_model]):
         print("Missing single-driver model (rain, SLR, or wind) with 'hmax_diff'.")
@@ -999,19 +906,6 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
 
 
 def aggregate_damage_to_grid(fiat_models, model_region_gdf, background, cell_size=0.025):
-    """
-    Spatially aggregate damage from point data to a regular grid for only the factual and 
-    counterfactual models with all drivers changed.
-
-    Parameters:
-    - fiat_models: list of dicts, each containing a 'relative_results' GeoDataFrame.
-    - model_region_gdf: GeoDataFrame, polygon for model domain.
-    - background: GeoDataFrame, polygon for valid region mask.
-    - cell_size: float, resolution of the grid (default=0.025 degrees).
-
-    Returns:
-    - filtered_fiat_models: List of fiat models with aggregated damage added.
-    """
     print("Spatially aggregating damage for factual and all-driver counterfactuals...")
 
     # === Filter models ===
@@ -1197,7 +1091,6 @@ def plot_f_and_cf_relative_damage_diff(
     cbar2.ax.tick_params(labelsize=8)
 
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
-    
 
 
 def plot_f_and_cf_diff_relative_damage_diff(
@@ -1305,7 +1198,6 @@ def plot_f_and_cf_diff_relative_damage_diff(
     # Save and show
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
     
-
 
 def plot_f_and_cf_diff_total_damage_diff(
     filtered_fiat_models,
@@ -1416,7 +1308,6 @@ def plot_f_and_cf_diff_total_damage_diff(
     # Save and show
     fig.savefig(output_path, bbox_inches='tight', dpi=300)
     
-
 
 ##############################################################
 # Use of functions
