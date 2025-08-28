@@ -8,6 +8,8 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 import rioxarray as rxr  # Required for reading TIFF files
 import warnings
 from pathlib import Path
+import platform
+import os
 
 warnings.filterwarnings("ignore")
 
@@ -17,13 +19,15 @@ warnings.filterwarnings("ignore")
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Base paths - update these as needed
-# BASE_RUN_PATH = Path("p:/11210471-001-compass/03_Runs/sofala")
-# OUTPUT_DIR = Path("p:/11210471-001-compass/04_Results/CF_figs")
-BASE_RUN_PATH = Path("p:/11210471-001-compass/03_Runs/test")
-OUTPUT_DIR = Path("p:/11210471-001-compass/04_Results/CF_figs")
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
+
+BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass", "03_Runs","sofala"))   # Idai
+OUTPUT_DIR = Path(os.path.join(prefix,"11210471-001-compass", "04_Results","CF_figs","redone")) # Idai
+# BASE_RUN_PATH = Path(os.path.join(prefix, "11210471-001-compass", "03_Runs", "test")) # Kenneth & Freddy
+# OUTPUT_DIR = Path(os.path.join(prefix, "11210471-001-compass", "04_Results", "CF_figs", "redone"))    # Kenneth & Freddy
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
@@ -31,7 +35,7 @@ file_cf0 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "sfincs"
-    / "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0" # "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
+    / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" # "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" | event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0 | event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0 --- (Idai | Kenneth | Freddy)
     / "plot_output"
     / "sfincs_output_hmax_AllTime.tif"
 )
@@ -39,7 +43,7 @@ file_cf8 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "sfincs"
-    / "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0" # "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" 
+    / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" # "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" | event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0 | event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0 --- (Idai | Kenneth | Freddy)
     / "plot_output"
     / "sfincs_output_hmax_AllTime.tif"
 )
@@ -121,7 +125,7 @@ zsmax_cf8_plot = zsmax_cf8.where(zsmax_cf8 > 0.0)
 
 # ===== PRINT STATISTICS (REDUCED) =====
 # Remove previous verbose block
-# print(f"\nStatistics for {EVENT_NAME}:")
+print(f"\nStatistics for {EVENT_NAME}:")
 # ...previous detailed prints removed...
 
 # Mean differences restricted to flooded cells (using same threshold)
@@ -386,3 +390,31 @@ print("Files created:")
 print(f"  - {output_file_main}")
 print(f"  - {output_file_diff}")
 # %%
+print("Save all statistics in a file")
+with open(f"{OUTPUT_DIR}/summary_flooding_{EVENT_NAME}.txt", "w") as f:
+    # redirect print to file with "file=f"
+    print("\n================ SUMMARY ================", file=f)
+    print(f"Event: {EVENT_NAME}", file=f)
+
+    print(f"\n[1] Flood Extent (threshold > {flood_threshold} m)", file=f)
+    print(f"  Factual area:        {area_cf0_m2/1e6:.3f} km^2", file=f)
+    print(f"  Counterfactual area: {area_cf8_m2/1e6:.3f} km^2", file=f)
+    print(f"  Absolute change:     {extent_area_diff_m2/1e6:.3f} km^2", file=f)
+    print(f"  Percent change:      {extent_area_pct:.2f} %", file=f)
+
+    print("\n[2] Flood Depth", file=f)
+    print(f"  Max depth factual:        {max_depth_cf0:.3f} m", file=f)
+    print(f"  Max depth counterfactual: {max_depth_cf8:.3f} m", file=f)
+    print(f"  Mean depth diff (all cells):        {mean_diff_all:.3f} m", file=f)
+    print(f"  Mean depth diff (flooded union):    {mean_diff_union:.3f} m", file=f)
+    print(
+        f"  Mean percent depth change (where CF-8 > 0): {percent_diff.mean(skipna=True).values:.2f} %",
+        file=f,
+    )
+
+    print(f"\n[3] Flood Volume (threshold > {flood_threshold} m)", file=f)
+    print(f"  Factual volume:        {volume_cf0_m3/1e6:.3f} Mm^3", file=f)
+    print(f"  Counterfactual volume: {volume_cf8_m3/1e6:.3f} Mm^3", file=f)
+    print(f"  Absolute change:       {volume_diff_m3/1e6:.3f} Mm^3", file=f)
+    print(f"  Percent change:        {volume_pct:.2f} %", file=f)
+    print("=========================================\n", file=f)
