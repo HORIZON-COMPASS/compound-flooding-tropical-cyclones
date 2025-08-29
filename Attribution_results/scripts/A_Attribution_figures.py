@@ -211,7 +211,8 @@ def compute_hmax_masked(models, gwso_region, model_region_gdf):
         da_dep = model["sfincs_model"].data_catalog.get_rasterdataset(depfile)
 
         # compute the maximum over all time steps
-        da_zsmax = model["sfincs_results"]["zsmax"].max(dim="timemax")
+        # First timestep leads to incorrect diiference values for permanent water cells that are incorrectly unmasked; requires filtering.
+        da_zsmax = model["sfincs_results"]["zsmax"].isel(timemax=slice(1, None)).max(dim="timemax")
      
         # downscale the floodmap
         da_hmax = utils.downscale_floodmap(
