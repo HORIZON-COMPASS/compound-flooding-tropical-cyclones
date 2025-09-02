@@ -1,3 +1,5 @@
+# Code from Dirk Eilander to calculate satellite comparison skills scores
+# https://zenodo.org/records/7274465
 import numpy as np
 import xarray as xr
 
