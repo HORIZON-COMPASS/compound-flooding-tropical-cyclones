@@ -1,3 +1,4 @@
+#%%
 import rasterio
 import geopandas as gpd
 import numpy as np
@@ -9,11 +10,16 @@ import rasterio.windows
 import xarray as xr
 import warnings
 warnings.filterwarnings('ignore')
+import platform
+import os
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 # ===== CONFIGURATION =====
-EVENT_NAME = "Freddy"
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
-SCENARIO_PATH = "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0"
+EVENT_NAME = "Idai"
+# BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
+BASE_RUN_PATH = Path(os.path.join(prefix, "11210471-001-compass","03_Runs","sofala"))
+SCENARIO_PATH = "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
 
 # ===== FILE PATHS =====
 # Base directory for the specific event and scenario
@@ -25,7 +31,7 @@ buildings_fp_path = base_dir / "output" / "spatial.fgb"
 exposure_csv_path = base_dir / "exposure" / "exposure.csv"
 
 # Population raster path
-population_raster_path = "/p/11210471-001-compass/01_Data/population_data/moz_ppp_2020_UNadj_constrained.tif"  
+population_raster_path = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","moz_ppp_2020_UNadj_constrained.tif")  
 
 # Flood depth NetCDF path
 flood_depth_path = base_dir / "hazard" / "floodmap.nc"
@@ -379,3 +385,4 @@ print(f"Average flood depth per building (where > 0): {result_df[result_df['inun
 print(f"Maximum flood depth: {result_df['inun_depth'].max():.2f} m")
 
 print(f"\nOutput files saved to: {output_dir}")
+# %%
