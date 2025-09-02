@@ -49,32 +49,22 @@ dir_obs_cems = join(prefix,'11210471-001-compass', '01_Data','Validation_GFM')
 rundirs = join(prefix,'11210471-001-compass','03_Runs')
 
 # %%
-if event == 'idai':
-    mdir = join(rundirs, 'sofala','Idai','sfincs','event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_spw_IBTrACS_CF0')
-    #file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP\ST1_20190319_WaterExtent_SofalaProvince.shp')
-    file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP', 'ST1_20190319_WaterExtent_ManicaSofalaProvinces.shp')
-    file_floodmap_cems = join(dir_obs_cems, 'Idai_2019','maximum_2019_03','maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_06_26T11_41_09_531327.geojson')
-    sfincs_crs = '32736'
-    sfincs_utm = '36S'
-elif event == 'freddy':
-    mdir = join(rundirs, 'test\Freddy\sfincs\event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0')
-    file_floodmap_unosat = join(dir_obs_unosat, 'TC20230221MOZ_shp\VIIRS_20230315_20230319_Mozambique_FloodExtent.shp')
-    file_floodmap_cems = None
-    sfincs_crs = '32737'
-    sfincs_utm = '36S'    
-elif event == 'Iota':
-    mdir = join(rundirs, 'honduras\EtaIota\sfincs\event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0')
-    file_floodmap_unosat = join(dir_obs_unosat, r'TC20201116HND_SHP\NOAA_20201113_20201117_FloodExtent_Honduras.shp')
-    file_floodmap_cems = None
-    sfincs_crs = '32616'
-    sfincs_utm = '16p'       
+event == 'idai'
+mdir = join(rundirs, 'sofala','Idai','sfincs','event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_spw_IBTrACS_CF0')
+file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP', 'ST1_20190319_WaterExtent_ManicaSofalaProvinces.shp')
+file_floodmap_cems = join(dir_obs_cems, 'Idai_2019','maximum_2019_03','maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_06_26T11_41_09_531327.geojson')
+sfincs_crs = '32736'
+sfincs_utm = '36S'
 
 # %%
 hmin=0.05
 
 # %%
 print(os.getcwd())
-dataCat = hydromt.data_catalog.DataCatalog(join('..','..','Workflows', "03_data_catalogs", "datacatalog_general___linux.yml"))
+if platform.system() == "Windows":
+    dataCat = hydromt.data_catalog.DataCatalog(join('..','..','Workflows', "03_data_catalogs", "datacatalog_general.yml"))
+else:
+    dataCat = hydromt.data_catalog.DataCatalog(join('..','..','Workflows', "03_data_catalogs", "datacatalog_general___linux.yml"))
 
 # %%
 # Read model output data 
@@ -274,15 +264,24 @@ for ii, source in enumerate(source_list):
         gl.left_labels = False  # disable y-axis labels
 
 fig.subplots_adjust(wspace=0.04, hspace=0.06)
-axs[0].set_title(f'(a) {source_list[0].upper()}')
-axs[1].set_title(f'(b) {source_list[1].upper()}')
+axs[0].set_title(f'{source_list[0].upper()}')
+axs[1].set_title(f'{source_list[1].upper()}')
 
-# # Add a colorbar axis 
+# Add a colorbar axis 
 cbar_ax = fig.add_axes([0.93, 0.2, 0.015, 0.5])
 
-# # Draw the colorbar
+# Draw the colorbar
 cbar=fig.colorbar(cs, cax=cbar_ax, orientation='vertical', ticks=ticks)
 cbar_ax.set_yticklabels(ticklabs, va='center', rotation=90)
 
-fig.savefig("../figures/satellite_comparison_crs.png",dpi=300, bbox_inches='tight')
+# Subplot (a) - first plot
+axs[0].text(0.0, 1.06, "(a)", transform=axs[0].transAxes,
+             fontsize=11, fontweight='bold', va='top', ha='left')
+
+# Subplot (b) - second plot
+axs[1].text(0.0, 1.06, "(b)", transform=axs[1].transAxes,
+             fontsize=11, fontweight='bold', va='top', ha='left')
+
+fig.savefig("../figures/fS7.png",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS7.pdf",dpi=300, bbox_inches='tight')
 # %%
