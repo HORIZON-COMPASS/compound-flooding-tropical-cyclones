@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi evironment: compass-wflow
 print("Loading packages...")
 import os
 from os.path import join
@@ -272,42 +272,66 @@ print("Matched WFLOW grid points to GRDC stations for wflow_30yr_maxL06.")
 ################### PLOT SPATIAL MATCHING OVERVIEW ################
 ###################################################################
 
-# print("Plotting spatial match of GRDC and WFLOW points...")
-# matched_wflow_gdf = gpd.GeoDataFrame(
-#     geometry=[Point(lon, lat) for lat, lon in matches_df[['wflow_matched_grid_lat', 'wflow_matched_grid_lon']].values],
-#     crs='EPSG:4326'
-# )
+print("Plotting spatial match of GRDC and WFLOW points...")
+matched_wflow_gdf = gpd.GeoDataFrame(
+    geometry=[Point(lon, lat) for lat, lon in matches_df[['wflow_matched_grid_lat', 'wflow_matched_grid_lon']].values],
+    crs='EPSG:4326'
+)
 
-# fig, ax = plt.subplots(figsize=(10, 10))
-# gdf_wflow.plot(ax=ax, edgecolor='skyblue', facecolor='skyblue', alpha=0.5, label="Wflow Basins")
-# gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', alpha=0.5, label="SFINCS Region")
-# mod_ini.geoms["rivers"].plot(ax=ax, color='white', zorder=1)
-# gdf_stations.plot(ax=ax, color='red', label='All GRDC Stations', zorder=10)
-# closest_stations.plot(ax=ax, color='blue', label='Closest GRDC Stations', zorder=10)
-# matched_wflow_gdf.plot(ax=ax, marker='x', color='green', markersize=50, label='Matched WFLOW Grid', zorder=10)
+fig, ax = plt.subplots(figsize=(12,7))
+gdf_wflow.plot(ax=ax, edgecolor='skyblue', facecolor='skyblue', alpha=0.8, label="Wflow Basins")
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', alpha=0.5, label="SFINCS Region")
+mod_ini.geoms["rivers"].plot(ax=ax, color='white', zorder=1)
+gdf_stations.plot(ax=ax, color='red', label='All GRDC Stations', zorder=10)
+closest_stations.plot(ax=ax, color='orange', label='Closest GRDC Stations (G)', zorder=10)
+matched_wflow_gdf.plot(ax=ax, marker='x', color="blue", linewidth=1.5, markersize=50, label='Matched WFLOW Grid Point (Q)', zorder=10)
 
-# # Add text labels to matched WFLOW grid points
-# for i, point in enumerate(matched_wflow_gdf.geometry):
-#     ax.text(point.x + 0.02, point.y + 0.02, f"Q{i}", fontsize=9, fontweight='bold', color='green', ha='left', zorder=10)
+# Add text labels to matched WFLOW grid points
+for i, point in enumerate(matched_wflow_gdf.geometry):
+    ax.text(point.x + 0.02, point.y + 0.05, f"Q{i+1}", fontsize=12, fontweight='bold', color='blue', ha='left', zorder=10, 
+            bbox=dict(boxstyle="round,pad=0.1", facecolor='grey', alpha=0.5, edgecolor='grey'))
 
-# for i, point in enumerate(closest_stations.geometry):
-#     ax.text(point.x + 0.02, point.y - 0.02, f"G{i}", fontsize=9, fontweight='bold', color='blue', ha='left', zorder=10)
+for i, point in enumerate(closest_stations.geometry):
+    ax.text(point.x + 0.02, point.y - 0.1, f"G{i+1}", fontsize=12, fontweight='bold', color='orange', ha='left', zorder=10, 
+            bbox=dict(boxstyle="round,pad=0.1", facecolor='grey', alpha=0.5, edgecolor='grey'))
 
-# gdf_gauges = mod_ini.geoms["gauges_locs"]
-# # for i in [1, 2]:
-# #     gauge = gdf_gauges[gdf_gauges['index'] == i]
-# #     gauge.plot(ax=ax, markersize=30, label=f'wflow-sfincs Gauge {i}', zorder=10)
-# #     ax.text(gauge.geometry.x.iloc[0] + 0.1, gauge.geometry.y.iloc[0],
-# #             str(i), fontsize=9, fontweight='bold', ha='right')
+gdf_gauges = mod_ini.geoms["gauges_locs"]
+# for i in [1, 2]:
+#     gauge = gdf_gauges[gdf_gauges['index'] == i]
+#     gauge.plot(ax=ax, markersize=30, label=f'wflow-sfincs Gauge {i}', zorder=10)
+#     ax.text(gauge.geometry.x.iloc[0] + 0.1, gauge.geometry.y.iloc[0],
+#             str(i), fontsize=9, fontweight='bold', ha='right')
 
 
-# ax.set_xlim(gdf_stations.geometry.x.min() - 0.2, gdf_stations.geometry.x.max() + 1)
-# ax.set_ylim(gdf_stations.geometry.y.min() - 0.5, gdf_stations.geometry.y.max() + 0.5)
-# ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, attribution=False, crs=gdf_stations.crs)
-# ax.legend(loc='lower left')
-# plt.tight_layout()
-# plt.savefig('../figures/GRDC_stations_wflow_gridpoints.png', dpi=300)
-# plt.show()
+ax.set_xlim(gdf_stations.geometry.x.min() - 0.2, gdf_stations.geometry.x.max() + 1)
+ax.set_ylim(gdf_stations.geometry.y.min() - 0.5, gdf_stations.geometry.y.max() + 0.5)
+
+# Add basemap (LOWER zoom = faster)
+ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9, crs=gdf_stations.crs, attribution=False, zorder=0)
+
+txt = ax.text(
+    33.9, -20.75,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
+    "Tiles © Esri -- Source: Esri, i-cubed, USDA, USGS, AEX, \nGeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and \nthe GIS User Community",
+    fontsize=7,
+    color='white',
+    alpha=0.7,
+    ha='left',
+    va='bottom',
+    zorder=20,
+)
+
+x = gdf_stations.geometry.x
+y = gdf_stations.geometry.y
+xticks = np.arange(32.5, 36, 0.5)    
+yticks = np.arange(-21, -17.5, 0.5) 
+ax.set_xticklabels([f"{x}°E" for x in xticks], fontsize=12)
+ax.set_yticklabels([f"{abs(y)}°S" for y in yticks], fontsize=12)
+
+ax.legend(loc='upper right')
+plt.tight_layout()
+plt.savefig('../figures/GRDC_stations_wflow_gridpoints.png', dpi=300, bbox_inches="tight")
+plt.savefig('../figures/GRDC_stations_wflow_gridpoints.pdf', dpi=300, bbox_inches="tight")
+plt.show()
 
 
 # %% ##############################################################
