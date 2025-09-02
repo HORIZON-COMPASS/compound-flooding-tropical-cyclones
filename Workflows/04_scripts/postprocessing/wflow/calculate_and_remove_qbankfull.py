@@ -3,7 +3,7 @@
 # This bankfull discharge estimate is removed from the TC event discharge as an approximation for streamflow
 # This script is based on: https://scaling-robot-wgkjqqr.pages.github.io/notebooks/Fit_univariate.html
 
-# First, load the packages
+# First, load the packages using the ixi environement compass-wflow
 import os
 from datetime import datetime as datetime
 from os.path import join
@@ -96,7 +96,7 @@ if not os.path.exists(wflow_bankfull):
     # Combine all into one DataFrame
     qbankfull_df = pd.concat(qbankfull, ignore_index=True)
 
-    # Save to CSV
+    # Save to CSV - input Table S1
     qbankfull_df.to_csv(wflow_bankfull, index=False)
 
 else:
@@ -146,22 +146,37 @@ for gauge in df_F_no_bankfull.columns:
 # Plot the masked discharge compared to the full discharge
 fig, ax = plt.subplots(figsize=(12, 6))
 
-# Plot both time series on same axis
-df_F['1'].plot(ax=ax, label='Original', color='blue')
-df_F_no_bankfull['1'].plot(ax=ax, label='Masked', color='orange')
+# Plot both time series
+df_F['1'].plot(ax=ax, label='Raw WFLOW output', color='steelblue', linewidth=1.8)
+df_F_no_bankfull['1'].plot(ax=ax, label='Effective discharge', color='darkorange', linewidth=1.8)
 
 # Add horizontal bankfull line
-ax.axhline(qbankfull_df.loc['1', 'return value'], color='red', linestyle=':', linewidth=2, label='Bankfull Q')
+ax.axhline(
+    qbankfull_df.loc['1', 'return value'],
+    color='crimson', linestyle='--', linewidth=2,
+    label='Estimated bankfull Q'
+)
 
-ax.set_ylabel("Discharge (m³/s)")
-ax.set_title("Discharge with Bankfull Threshold for Gauge 1")
-ax.legend()
+# Labels and title
+ax.set_xlabel("Time", fontsize=13)       # X-axis label
+ax.set_ylabel("Discharge [m³/s]", fontsize=13)
+ax.set_title("Gauge 1: Discharge with bankfull threshold removed", fontsize=14)
 
-plt.tight_layout()
-plt.show()
+# Tick label sizes
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
+
+# Grid for clarity
+ax.grid(True, linestyle="--", alpha=0.6)
+
+# Legend outside plot
+ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize=11)
+
+# Save
+fig.savefig("../../../../Attribution_results/figures/fS3.png", dpi=300, bbox_inches='tight')
+fig.savefig("../../../../Attribution_results/figures/fS3.pdf", dpi=300, bbox_inches='tight')
 
 # %%
-
 import matplotlib.pyplot as plt
 
 # Read the model
@@ -211,8 +226,8 @@ for i, gauge in enumerate(gauges):
     axes[i].text(0.02, 1.06, f"({chr(97+i)})", transform=axes[i].transAxes,
                  fontsize=12, fontweight='bold', va='top')
     
-    fig.savefig(f"../../../../Attribution_results/figures/bankfull_discharge_fit_Buzi_Pungwe.png", dpi=300, bbox_inches='tight')
-    fig.savefig(f"../../../../Attribution_results/figures/bankfull_discharge_fit_Buzi_Pungwe.pdf", dpi=300, bbox_inches='tight')
+    fig.savefig(f"../../../../Attribution_results/figures/fS2.png", dpi=300, bbox_inches='tight')
+    fig.savefig(f"../../../../Attribution_results/figures/fS2.pdf", dpi=300, bbox_inches='tight')
 
 plt.tight_layout()
 plt.show()
