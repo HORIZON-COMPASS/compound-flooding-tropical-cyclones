@@ -1,4 +1,5 @@
 #%% Import the necessary packages
+# Use pixi environment compass-snake-dfm
 import os
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -202,7 +203,7 @@ size_handles = [
 
 # --- Create legend ---
 leg = ax.legend(handles=size_handles, loc="upper right", fontsize=8, 
-                edgecolor='grey', title="Wind Speed", title_fontsize=8,
+                edgecolor='grey', title="Wind speed", title_fontsize=8,
                 bbox_to_anchor=(1, 1))
 
 # --- Inset: East Africa context map placed outside
