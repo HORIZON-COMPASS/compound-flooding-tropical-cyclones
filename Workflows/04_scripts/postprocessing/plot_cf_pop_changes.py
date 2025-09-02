@@ -18,28 +18,28 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose population column to analyze
 POPULATION_COLUMN = "population"  # Main population column to analyze
 
 # Inundation depth threshold (in meters)
-INUNDATION_THRESHOLD = 0.2  # Only consider areas with >0.2m flooding
+INUNDATION_THRESHOLD = 0  # Only consider areas with >0.2m flooding
 
 # Base paths - update these as needed
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
-# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test"))
-BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))
-OUTPUT_DIR = Path(os.path.join(prefix,"11210471-001-compass","04_Results","CF_figs","redone"))
+BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test")) # For Kenneth & Freddy
+# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala")) # For Idai
+OUTPUT_DIR = Path(os.path.join(prefix,"11210471-001-compass","04_Results","CF_figs","redone", "pop_noThreshold"))
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
-# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
 
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "spatial_with_pop_and_flood.fgb"
+# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "spatial_with_pop_and_flood.fgb"
+# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "spatial_with_pop_and_flood.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -88,6 +88,7 @@ if 'inun_depth' not in gdf_cf0.columns:
 else:
     inun_col = 'inun_depth'
 
+#%%
 # ===== FILTER BY INUNDATION DEPTH =====
 print(f"Filtering data by inundation depth > {INUNDATION_THRESHOLD}m...")
 print(f"CF0 records before filtering: {len(gdf_cf0)}")
@@ -252,9 +253,10 @@ vmin, vmax = 0, max_pop
 
 # Difference colormap with discrete intervals
 diff_max = max(abs(pop_diff.quantile(0.05)), abs(pop_diff.quantile(0.95)))
-diff_boundaries = np.linspace(-diff_max, diff_max, 11)
+diff_min = min(abs(pop_diff.quantile(0.05)), abs(pop_diff.quantile(0.95)))
+diff_boundaries = np.linspace(diff_min, diff_max, 11)
 diff_norm = BoundaryNorm(diff_boundaries, ncolors=256, clip=True)
-diff_cmap = plt.get_cmap('RdBu_r')  # Red for increases, Blue for decreases
+diff_cmap = plt.get_cmap('Reds')  # Red for increases, Blue for decreases
 
 print(f"Population boundaries: {boundaries}")
 print(f"Difference boundaries: {diff_boundaries}")
@@ -589,3 +591,5 @@ with open(f"{OUTPUT_DIR}/summary_population_{EVENT_NAME}.txt", "w") as f:
     print(f"Locations with exposed population in CF0: {(merged[f'{POPULATION_COLUMN}_cf0'] > 0).sum()}", file=f)
     print(f"Locations with exposed population in CF-8: {(merged[f'{POPULATION_COLUMN}_cf8'] > 0).sum()}", file=f)
 
+
+# %%
