@@ -127,12 +127,12 @@ matched_wflow_gdf = gpd.GeoDataFrame(
 )
 
 fig, ax = plt.subplots(figsize=(12,7))
-gdf_wflow.plot(ax=ax, edgecolor='skyblue', facecolor='skyblue', alpha=0.8, label="Wflow Basins")
-gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', alpha=0.5, label="SFINCS Region")
+gdf_wflow.plot(ax=ax, edgecolor='skyblue', facecolor='skyblue', alpha=0.8, label="Wflow basins")
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', alpha=0.5, label="SFINCS region")
 mod_ini.geoms["rivers"].plot(ax=ax, color='white', zorder=1)
-gdf_stations.plot(ax=ax, color='red', label='All GRDC Stations', zorder=10)
-closest_stations.plot(ax=ax, color='orange', label='Closest GRDC Stations (G)', zorder=10)
-matched_wflow_gdf.plot(ax=ax, marker='x', color="blue", linewidth=1.5, markersize=50, label='Matched WFLOW Grid Point (Q)', zorder=10)
+gdf_stations.plot(ax=ax, color='red', label='All GRDC stations', zorder=10)
+closest_stations.plot(ax=ax, color='orange', label='Closest GRDC stations (G)', zorder=10)
+matched_wflow_gdf.plot(ax=ax, marker='x', color="blue", linewidth=1.5, markersize=50, label='Matched wflow grid goint (Q)', zorder=10)
 
 # Add text labels to matched WFLOW grid points
 for i, point in enumerate(matched_wflow_gdf.geometry):
@@ -238,9 +238,17 @@ for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
     axs[i].set_title(f"{river_name}: Monthly Climatology", fontsize=13)
     axs[i].set_xticks(months)
     axs[i].set_xticklabels(month_labels)
+    axs[i].set_xlim(1, 12)
     axs[i].legend(loc="upper right", fontsize=10)
     axs[i].grid(True, linestyle="--", alpha=0.6)
     axs[i].tick_params(axis="both", labelsize=11)
+
+axs[0].text(0.0, 1.03, "(a)", transform=axs[0].transAxes,
+             fontsize=14, fontweight='bold', va='top', ha='left')
+
+# Subplot (b) - second plot
+axs[1].text(0.0, 1.03, "(b)", transform=axs[1].transAxes,
+             fontsize=14, fontweight='bold', va='top', ha='left')
 
 axs[-1].set_xlabel("Month", fontsize=12)
 fig.suptitle("Observed (GRDC) vs. simulated (wflow) monthly discharge (1954–1984)", fontsize=14, y=0.95)
@@ -251,15 +259,11 @@ plt.savefig("../figures/fS5.pdf", dpi=300, bbox_inches="tight")
 plt.show()
 
 
-#%%
-# plot for 1974 & 1975 as example time period
-print("Comparing WFLOW time series to GRDC records with skill statistics...")
+# %%
+print("Comparing wflow time series to GRDC records with skill statistics...")
 
-fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True, constrained_layout=True)
 color = ["#0C75C0", "#4DA54E"]  # Blue for BUDZI, Green for RIOPUNGOE
-
-# Define time range
-time_range = slice("1974-01-01", "1975-12-31")
 
 for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
     print(f"Processing {river}...")
@@ -268,23 +272,20 @@ for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
     grdc_ts = GRDC_data['runoff_mean'].isel(id=idx[matches_df['station_index'].iloc[i]])
     wflow_ts = station_series[i]
 
-    # Filter both time series to 1974–1975
-    grdc_ts = grdc_ts.sel(time=time_range)
-    wflow_ts = wflow_ts.sel(time=time_range)
-
-    # Align times for fair comparison
+    # Stats
+    print(grdc_ts)
+    print(wflow_ts)
     common_time = np.intersect1d(wflow_ts.time.values, grdc_ts.time.values)
     wflow_aligned = wflow_ts.sel(time=common_time)
     grdc_aligned = grdc_ts.sel(time=common_time)
 
-    # Stats
     wflow_stat = grdc_aligned.chunk(dict(time=-1))
     grdc_stat = wflow_aligned.chunk(dict(time=-1))
 
     kge = skillstats.kge(wflow_stat, grdc_stat, dim='time')["kge"].values.round(2)
 
     # Plot time series
-    axs[i].plot(wflow_ts.time, wflow_ts.values, label=f'wflow Q{i+1},  KGE: {kge}', color=color[i])
+    axs[i].plot(wflow_ts.time, wflow_ts.values, label=f'wflow (Q{i+1}),  KGE: {kge}', color=color[i])
     axs[i].plot(grdc_ts.time, grdc_ts.values, label=f'GRDC (G{i+1})', color='orange')
 
     # Add max lines
@@ -293,16 +294,23 @@ for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
 
     axs[i].set_ylabel('Discharge [m³/s]', fontsize=12)
     axs[i].set_title(f"The {river_name} River; Gauge Q{i+1}", fontsize=13)
-    axs[i].legend(loc='upper right')
+    axs[i].legend(loc='upper right', fontsize=10)
     axs[i].grid(True)
     axs[i].tick_params(axis='both', which='major', labelsize=11)
+    axs[i].set_xlim([np.datetime64('1954-01-01'), np.datetime64('1984-12-31')])
 
-fig.suptitle(f"Observed (GRDC) vs. simulated (wflow) discharge (1974–1975)", fontsize=14) 
+axs[0].text(0, 1.03, "(a)", transform=axs[0].transAxes, 
+            fontsize=14, fontweight='bold', va='top', ha='left')
+axs[1].text(0, 1.03, "(b)", transform=axs[1].transAxes, 
+            fontsize=14, fontweight='bold', va='top', ha='left')
+
+fig.suptitle(f"Observed (GRDC) vs. simulated (wflow) discharge (1954–1984)", fontsize=14) 
 axs[1].set_xlabel('Time', fontsize=12)
-plt.tight_layout()
-plt.savefig('../figures/fS6.png', dpi=300)
-plt.savefig('../figures/fS6.pdf', dpi=300)
+fig.savefig('../figures/fS6.png', dpi=300)
+fig.savefig('../figures/fS6.pdf', dpi=300)
 plt.show()
 
 print("Daily time series comparison with statistics saved.")
+
+
 # %%
