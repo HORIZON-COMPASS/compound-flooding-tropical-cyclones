@@ -17,7 +17,7 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", etc.
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
@@ -25,17 +25,17 @@ DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
 # Base paths - update these as needed
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
-BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test"))  # Kenneth & Freddy
-# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))  # Idai
+# BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","test"))  # Kenneth & Freddy
+BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))  # Idai
 OUTPUT_DIR = Path(os.path.join(prefix,"11210471-001-compass","04_Results","CF_figs", "redone"))
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
-file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
-file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
+# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0" / "output" / "output_relative_damage.fgb"
 
-# file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
-# file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "output_relative_damage.fgb"
+file_cf0 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "output" / "output_relative_damage.fgb"
+file_cf8 = BASE_RUN_PATH / EVENT_NAME / "fiat" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "output" / "output_relative_damage.fgb"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -51,6 +51,11 @@ print(f"Loading CF-8: {file_cf8}")
 # Read the geodataframes
 gdf_cf0 = gpd.read_file(file_cf0)
 gdf_cf8 = gpd.read_file(file_cf8)
+
+# Not done in postprocessing for Idai because of relative damage plots
+if EVENT_NAME == "Idai":
+    gdf_cf0 = gdf_cf0[gdf_cf0['total_damage'] > 0]
+    gdf_cf8 = gdf_cf8[gdf_cf8['total_damage'] > 0]
 
 print(f"CF0 data shape: {gdf_cf0.shape}")
 print(f"CF-8 data shape: {gdf_cf8.shape}")
@@ -604,3 +609,5 @@ with open(f"{OUTPUT_DIR}/summary_damage_({DAMAGE_COLUMN})_{EVENT_NAME}.txt", "w"
         print(f"Damage Statistics for {EVENT_NAME} ({DAMAGE_COLUMN}):", file=f)
         print(f"Buildings with damage in CF0: {(merged[f'{DAMAGE_COLUMN}_cf0'] > 0).sum()}", file=f)
         print(f"Buildings with damage in CF-8: {(merged[f'{DAMAGE_COLUMN}_cf8'] > 0).sum()}", file=f)
+
+# %%
