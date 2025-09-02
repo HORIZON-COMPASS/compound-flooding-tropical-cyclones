@@ -11,7 +11,7 @@ SNAPWAVE_Idai_runup:
     notes: SNAPWAVE simulation using ERA5 significant wave height
     source_author: Fernaldi Gradiyanto
   crs: 4326
-SNAPWAVE_Idai_setup:
+SNAPWAVE_Idai_setup_Aldi:
   data_type: GeoDataset
   path: 11210471-001-compass/01_Data/SNAPWAVE_waves/setup/setup_timeseries_transposed.nc
   driver: netcdf
@@ -22,6 +22,17 @@ SNAPWAVE_Idai_setup:
     notes: SNAPWAVE simulation using ERA5 significant wave height
     source_author: Fernaldi Gradiyanto
   crs: 4326
+SNAPWAVE_Idai_setup:
+  data_type: GeoDataset
+  path: 11210471-001-compass/code/SFINCS/SFINCS_Idai_Wave_Tim/max_wave_setup_TL_v03.nc
+  driver: netcdf
+  rename:
+    transects: station
+    obs_id: station_name
+  meta:
+    notes: SNAPWAVE simulation using ERA5 significant wave height
+    source_author: Fernaldi Gradiyanto & Tim Leijnse
+  crs: 32736
 coastal_coupling_DFM_obs_points_HND:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_Honduras_5mMSL_points_1km.shp
