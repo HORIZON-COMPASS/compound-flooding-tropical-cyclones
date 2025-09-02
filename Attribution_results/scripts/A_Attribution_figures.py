@@ -58,16 +58,13 @@ def lon_formatter(x, pos):
     direction = 'E' if x >= 0 else 'W'
     return f"{abs(x):.1f}°{direction}"
 
-def format_label(drivers):
-        if drivers == ("RAIN", "SLR", "WIND"):
+def format_driver_label(drivers) -> str:
+    """Format driver labels consistently."""
+    if isinstance(drivers, (list, tuple)):
+        if set(drivers) == {"RAIN", "SLR", "WIND"}:
             return "All"
-        parts = [w.lower() for w in " & ".join(drivers).split(" & ")]
-        parts[0] = parts[0].capitalize()
-        if len(parts) > 1:
-            parts[1] = parts[1].capitalize()
-        label = " &\n".join(parts)
-        label = label.replace("Slr", "SLR")
-        return label
+        return " & ".join(d.upper() if d.upper() == "SLR" else d.capitalize() for d in drivers)
+    return drivers.upper() if drivers.upper() == "SLR" else drivers.capitalize()
 
 def format_pct(val, show_zero=False, signed=False):
     if val == 0 or val is None:
@@ -499,7 +496,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
     # Plot settings
     cmap = LinearSegmentedColormap.from_list("white_red", ["white", "red"])
-    vmin, vmax = -0.6, 0.6
+    vmin, vmax = 0, 0.6
     utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
     model_region_gdf = model_region_gdf.to_crs("EPSG:4326")
     background = background.to_crs("EPSG:4326")
@@ -547,7 +544,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
     # === Final touches ===
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
-    cbar.set_label('Attributable Flood Depth (m)', labelpad=10, fontsize=9)
+    cbar.set_label('Attributable flood Depth (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
     cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
@@ -623,9 +620,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
         # Skip if all changes are below tolerance
         if all(abs(vals[v]) < tolerance for v in ['volume_pct', 'extent_pct', 'damage_pct']):
             continue
-        label = " & ".join(key)
-        if label == "RAIN & SLR & WIND":
-            label = "All"
+        label = format_driver_label(key)
         data_plot.append({'label': label, 'key': key, **vals})
 
     data_plot.sort(key=lambda d: d['damage_pct'])
@@ -663,7 +658,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     # Layout settings
     ax.set_xticks(x)
     ax.set_xticklabels([d['label'] for d in data_plot], fontsize=14)
-    ax.set_ylabel("Attributable Relative Change (%)", fontsize=16)
+    ax.set_ylabel("Attributable relative change (%)", fontsize=16)
     ax.set_ylim(0, max_pct*1.15)
     ax.set_xlim(-0.5, len(data_plot) - 0.5)
     ax.tick_params(axis='y', labelsize=14)
@@ -672,8 +667,8 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     ax.set_axisbelow(True)
 
     legend_elements = [
-        Patch(facecolor='#384860', edgecolor='black', label='Flood Extent'),
-        Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood Volume'),
+        Patch(facecolor='#384860', edgecolor='black', label='Flood extent'),
+        Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood volume'),
         Patch(facecolor='#c34a36', edgecolor='black', label='Damage')
     ]
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
@@ -735,7 +730,7 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
     # Prepare final keys, start with factual
     sorted_keys = [("FACTUAL",)] + sorted(data_dict.keys(), key=lambda k: (len(k), k))
-    labels = [format_label(k) for k in sorted_keys]
+    labels = [format_driver_label(k) for k in sorted_keys]
 
     # Build rows: factual first, then counterfactuals
     table_data = []
@@ -794,7 +789,7 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
 
 def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1,2]):
-    colors = plt.get_cmap('tab10').colors  # Ensure consistent coloring
+    colors = plt.get_cmap('tab10').colors  
 
     # Extract single-driver models
     rain_model = get_single_driver_model("rain", models)
@@ -806,102 +801,91 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
         return
 
     counterfactuals = {
-        "Rain": rain_model,
         "SLR": slr_model,
-        "Wind": wind_model
+        "Wind": wind_model,
+        "Rain": rain_model
     }
 
-    for scenario_name, cf_mod in counterfactuals.items():
-        fig, (ax0, ax1, ax2, ax3) = plt.subplots(4, 1, figsize=(6, 8), dpi=300, constrained_layout=True)
-        fig.suptitle(f"Factual vs. Counterfactual Forcing")
+    # Create figure
+    fig, axs = plt.subplots(4, 1, figsize=(6, 8), dpi=300, constrained_layout=True)
+    fig.suptitle("Factual vs. Counterfactual Forcing")
 
-        # Define start and end of range
-        start = ("2019-03-14")
-        end = ("2019-03-16")
+    # Define plotting ranges
+    start, end = "2019-03-14", "2019-03-16"
+    start_dis, end_dis = "2019-03-17", "2019-03-22"
 
-        # --- Water level subplot ---
-        # ax0.plot(models[0]["sfincs_his"].time, models["sfincs_his"]['point_zs'].isel(stations=stations_list[0]),
-        #          color=colors[4], label=f'S{stations_list[0]} Factual')
-        ax0.plot(models[0]['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
-                 models[0]['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
-                 color=colors[1], label=f'S{stations_list[1]} Factual')
-        ax0.plot(slr_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
-                 slr_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
-                     color="#206AAF", linestyle='-', label=f'S{stations_list[1]} -0.14 cm SLR')
-        
-        ax1.plot(models[0]['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
-                 models[0]['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
-                 color=colors[1], label=f'S{stations_list[1]} Factual')
-        ax1.plot(wind_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
-                 wind_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
-                     color="#36CEC6", linestyle='-', label=f'S{stations_list[1]} -10% Wind')
+    # -------------------
+    # 1. SLR subplot
+    axs[0].plot(models[0]['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
+                models[0]['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
+                color=colors[1], label=f'S{stations_list[1]} Factual')
+    axs[0].plot(slr_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
+                slr_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
+                color="#206AAF", linestyle='-', label=f'S{stations_list[1]} -0.14 cm SLR')
+    axs[0].set_ylabel("Water level\n[m]")
+    axs[0].set_title("CF SLR")
 
-        ax0.set_ylabel("Water level \n[m]")
-        ax0.grid(True, linestyle='--', alpha=0.6)
-        ax0.legend(fontsize=8, loc="upper right")
-        ax0.tick_params(labelsize=9)
-        ax0.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-        ax0.set_xlim(slr_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)).min(), 
-                     slr_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)).max())
-        ax0.set_title("CF SLR", fontsize=10)
+    # -------------------
+    # 2. Wind subplot
+    axs[1].plot(models[0]['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
+                models[0]['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
+                color=colors[1], label=f'S{stations_list[1]} Factual')
+    axs[1].plot(wind_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)), 
+                wind_model['sfincs_model'].forcing['bzs'].sel(index=stations_list[1]).sel(time=slice(start, end)),
+                color="#36CEC6", linestyle='-', label=f'S{stations_list[1]} -10% Wind')
+    axs[1].set_ylabel("Water level\n[m]")
+    axs[1].set_title("CF Wind")
 
-        ax1.set_ylabel("Water level \n[m]")
-        ax1.grid(True, linestyle='--', alpha=0.6)
-        ax1.legend(fontsize=8, loc="upper right")
-        ax1.tick_params(labelsize=9)
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-        ax1.set_xlim(wind_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)).min(), 
-                     wind_model['sfincs_model'].forcing['bzs'].time.sel(time=slice(start, end)).max())
-        ax1.set_title("CF Wind", fontsize=10)
+    # -------------------
+    # 3. Rain - discharge subplot
+    axs[2].plot(models[0]['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
+                models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[0]).sel(time=slice(start_dis, end_dis)),
+                color=colors[2], label=f'G{gauges_list[0]} Factual')
+    axs[2].plot(models[0]['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
+                models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[1]).sel(time=slice(start_dis, end_dis)),
+                color=colors[3], label=f'G{gauges_list[1]} Factual')
 
-        # --- Discharge subplot ---
-        # Define start and end of range
-        start_dis = ("2019-03-17")
-        end_dis = ("2019-03-22")
-        ax2.plot(models[0]['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
-                 models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[0]).sel(time=slice(start_dis, end_dis)),
-                 color=colors[2], label=f'G{gauges_list[0]} Factual')
-        ax2.plot(models[0]['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
-                 models[0]['sfincs_model'].forcing['dis'].sel(index=gauges_list[1]).sel(time=slice(start_dis, end_dis)),
-                 color=colors[3], label=f'G{gauges_list[1]} Factual')
+    axs[2].plot(rain_model['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
+                rain_model['sfincs_model'].forcing['dis'].sel(index=gauges_list[0]).sel(time=slice(start_dis, end_dis)),
+                color=colors[2], linestyle='--', label=f'G{gauges_list[0]} -8% Rain')
+    axs[2].plot(rain_model['sfincs_model'].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
+                rain_model['sfincs_model'].forcing['dis'].sel(index=gauges_list[1]).sel(time=slice(start_dis, end_dis)),
+                color=colors[3], linestyle='--', label=f'G{gauges_list[1]} -8% Rain')
+    axs[2].set_ylabel("Discharge\n[m³/s]")
+    axs[2].set_title("CF Rain")
 
-        ax2.plot(rain_model["sfincs_model"].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
-                 rain_model["sfincs_model"].forcing['dis'].sel(index=gauges_list[0]).sel(time=slice(start_dis, end_dis)),
-                 color=colors[2], linestyle='--', label=f'G{gauges_list[0]} -8% Rain')
-        ax2.plot(rain_model["sfincs_model"].forcing['dis'].time.sel(time=slice(start_dis, end_dis)), 
-                 rain_model["sfincs_model"].forcing['dis'].sel(index=gauges_list[1]).sel(time=slice(start_dis, end_dis)),
-                 color=colors[3], linestyle='--', label=f'G{gauges_list[1]} -8% Rain')
+    # -------------------
+    # 4. Rain - precipitation subplot
+    axs[3].step(models[0]['sfincs_model'].forcing['precip_2d'].time.sel(time=slice(start, end)),
+                models[0]['sfincs_model'].forcing['precip_2d'].sum(dim=["x", "y"]).sel(time=slice(start, end)),
+                where='post', color=colors[0], label='Factual')
 
-        ax2.set_ylabel("Discharge \n[m³/s]")
-        ax2.grid(True, linestyle='--', alpha=0.6)
-        ax2.legend(fontsize=8, loc="upper right")
-        ax2.tick_params(labelsize=9)
-        ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-        ax2.set_xlim(rain_model["sfincs_model"].forcing['dis'].time.sel(time=slice(start_dis, end_dis)).min(), 
-                     rain_model["sfincs_model"].forcing['dis'].time.sel(time=slice(start_dis, end_dis)).max())
-        ax2.set_title("CF Rain", fontsize=10)
+    axs[3].step(rain_model['sfincs_model'].forcing['precip_2d'].time,
+                rain_model['sfincs_model'].forcing['precip_2d'].sum(dim=["x", "y"]),
+                where='post', color=colors[4], linestyle='-', label='-8% Rain')
+    axs[3].set_ylabel("Accum. precipitation\n[mm/h]")
+    axs[3].set_xlabel("Day in March 2019")
+    axs[3].set_title("CF Rain")
 
-        # --- Precipitation subplot ---
-        ax3.step(models[0]['sfincs_model'].forcing['precip_2d'].time.sel(time=slice(start, end)),
-                 models[0]['sfincs_model'].forcing['precip_2d'].sum(dim=["x", "y"]).sel(time=slice(start, end)),
-                 where='post', color=colors[0], label='Factual')
+    # -------------------
+    # Style all axes
+    for i, ax in enumerate(axs):
+        ax.grid(True, linestyle="--", alpha=0.6)
+        ax.legend(fontsize=8, loc="upper right")
+        ax.tick_params(labelsize=9)
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+        # Add subplot label (a), (b), ...
+        ax.text(0.02, 0.9, f"({chr(97+i)})", transform=ax.transAxes, fontsize=10, fontweight="bold")
 
-        ax3.step(rain_model["sfincs_model"].forcing['precip_2d'].time,
-                 rain_model["sfincs_model"].forcing['precip_2d'].sum(dim=["x", "y"]),
-                 where='post', color=colors[4], linestyle='-', label='-8% Rain')
+    # set xlim for different plots
+    axs[0].set_xlim([np.datetime64(start), np.datetime64(end)])
+    axs[1].set_xlim([np.datetime64(start), np.datetime64(end)])
+    axs[2].set_xlim([np.datetime64(start_dis), np.datetime64(end_dis)])
+    axs[3].set_xlim([np.datetime64(start), np.datetime64(end)])
 
-        ax3.set_ylabel("Accum. Precipitation \n[mm/h]")
-        ax3.set_xlabel("Day in March 2019")
-        ax3.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
-        ax3.grid(True, linestyle='--', alpha=0.6)
-        ax3.tick_params(labelsize=9)
-        ax3.legend(fontsize=8, loc="upper right")
-        ax3.set_xlim(models[0]['sfincs_model'].forcing['precip_2d'].time.sel(time=slice(start, end)).min(), 
-                     models[0]['sfincs_model'].forcing['precip_2d'].time.sel(time=slice(start, end)).max())
-        ax3.set_title("CF Rain", fontsize=10)
-
-        fig.savefig(f"../figures/fS11.png", bbox_inches='tight', dpi=300)
-        fig.savefig(f"../figures/fS11.pdf", bbox_inches='tight', dpi=300)
+    # Save
+    fig.savefig("../figures/fS11.png", bbox_inches="tight", dpi=300)
+    # fig.savefig("../figures/fS11.pdf", bbox_inches="tight", dpi=300)
 
 
 
@@ -947,11 +931,16 @@ fiat_models = calculate_damage_differences(fiat_models)
 # Figure 4
 plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
+#%%
 # # Table 2 & S2
 table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
+#%%
 # # Figure 5
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 
+#%%
 # # Figure S11
 plot_cf_timeseries_from_models(models)
+
+# %%
