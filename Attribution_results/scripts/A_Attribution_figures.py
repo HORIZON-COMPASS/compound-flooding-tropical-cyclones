@@ -679,7 +679,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
-    eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
+    # eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
     usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056
     
     data_dict = {}
@@ -693,14 +693,14 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
             factual_data = {
                 "vol_abs": float(sf['sfincs_results'].get("flood_volume_m3", None)),
                 "ext_abs": float(sf['sfincs_results'].get("flood_extent_km2", None)),
-                "dam_abs": float(fiat['fiat_results'].get("total_damage", None).sum()) * eur_to_usd * usd_2010_to_2019
+                "dam_abs": float(fiat['fiat_results'].get("total_damage", None).sum()) * usd_2010_to_2019
             }
             continue  # skip adding factual to data_dict
 
         # Extract metrics
         vol_abs = sf['sfincs_results'].get("flood_volume_m3", None)
         ext_abs = sf['sfincs_results'].get("flood_extent_km2", None)
-        dam_abs = fiat['fiat_results'].get("total_damage", None).sum() * eur_to_usd * usd_2010_to_2019
+        dam_abs = fiat['fiat_results'].get("total_damage", None).sum() * usd_2010_to_2019
 
         vol_pct = sf['sfincs_results'].get("Volume_diff_from_F(%)", None)
         ext_pct = sf['sfincs_results'].get("Extent_diff_from_F(%)", None)

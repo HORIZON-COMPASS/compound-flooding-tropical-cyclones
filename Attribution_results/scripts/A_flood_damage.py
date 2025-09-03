@@ -1,4 +1,4 @@
-#%%
+#%% use compass-wflow pixi environment
 print("Loading packages")
 import os
 from os.path import join
@@ -104,7 +104,7 @@ del da_hmax, da_zsmax, da_dep  # Clean up to free memory
 # ========== Flood damage plotting ===========
 ################################################
 # Define conversion factor from 2010 euros to 2019 USD
-eur_to_usd = 1.326 #
+# eur_to_usd = 1.326 #
 usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056 (https://www.bls.gov/cpi/tables/supplemental-files/)
 
 # Base paths - update these as needed
@@ -172,8 +172,8 @@ crs = ccrs.PlateCarree()
 gdf_cf0['centroid'] = gdf_cf0.geometry.centroid
 gdf_cf0['x'] = gdf_cf0['centroid'].x
 gdf_cf0['y'] = gdf_cf0['centroid'].y
-gdf_cf0['total_damage_USD'] = gdf_cf0['total_damage'] * eur_to_usd * usd_2010_to_2019
-gdf_cf0['max_total_damage_USD'] = gdf_cf0['max_damage_total'] * eur_to_usd * usd_2010_to_2019
+gdf_cf0['total_damage_USD'] = gdf_cf0['total_damage'] * usd_2010_to_2019
+gdf_cf0['max_total_damage_USD'] = gdf_cf0['max_damage_total'] * usd_2010_to_2019
 
 gdf_cf0 = gdf_cf0[['object_id', 'x', 'y', 'total_damage_USD', 'max_total_damage_USD']]
 
@@ -196,8 +196,8 @@ gdf_damage = gdf_cf0_crs.to_crs(crs)
 gdf_cfall['centroid'] = gdf_cfall.geometry.centroid
 gdf_cfall['x'] = gdf_cfall['centroid'].x
 gdf_cfall['y'] = gdf_cfall['centroid'].y
-gdf_cfall['total_damage_USD'] = gdf_cfall['total_damage'] * eur_to_usd * usd_2010_to_2019
-gdf_cfall['max_total_damage_USD'] = gdf_cfall['max_damage_total'] * eur_to_usd * usd_2010_to_2019
+gdf_cfall['total_damage_USD'] = gdf_cfall['total_damage'] * usd_2010_to_2019
+gdf_cfall['max_total_damage_USD'] = gdf_cfall['max_damage_total'] * usd_2010_to_2019
 
 gdf_cfall = gdf_cfall[['object_id', 'x', 'y', 'total_damage_USD', 'max_total_damage_USD']]
 
