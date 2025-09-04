@@ -226,13 +226,8 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves
     category: ocean
   driver_kwargs:
     chunks:
+      station: 10
       time: -1
-  variants:
-  - driver_kwargs:
-      chunks: {}
-  - driver_kwargs:
-      chunks:
-        station: 10
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
