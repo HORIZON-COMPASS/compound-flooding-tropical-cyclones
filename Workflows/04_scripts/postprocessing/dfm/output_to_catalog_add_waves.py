@@ -1,5 +1,5 @@
 #%% Adding DFM output to the SFINCS coastal coupling data catalog
-# use compass-snake-dfm environment
+# use compass-wflow environment
 # Importing the necessary packages
 import os
 import hydromt
@@ -17,6 +17,7 @@ import xarray as xr
 import cartopy.crs as ccrs
 from pathlib import Path
 from scipy.interpolate import PchipInterpolator
+import matplotlib.dates as mdates
 
 #%%
 if "snakemake" in locals():
@@ -243,12 +244,12 @@ if use_wave:
     })
 
     # Compute total water level
-    ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"]
+    ds_combined["waterlevel"] = ds_combined["tide_surge"] + ds_combined["wave_setup"].fillna(0)
     ds_combined["waterlevel"].attrs = ds_dfm["waterlevel"].attrs.copy()
    
     print("Export the combined dataset")
     output_path = Path(datacatalog[dfm_run].path).parent
-    ds_combined.to_netcdf(os.path.join(output_path, "settings_0000_his_WAVES.nc"))
+    # ds_combined.to_netcdf(os.path.join(output_path, "settings_0000_his_WAVES.nc"))
 
     # Add the DFM output with the added waves to the catalog and save
     print("Add the combined dataset to the datacatalog ")
@@ -309,7 +310,7 @@ def plot_station_wave_components(station_idx=30):
     plt.figure(figsize=(9,6))
     plt.plot(waterlevel["time"], waterlevel, label="Total water level")
     plt.plot(wave_wl["time"], wave_wl, label="Wave Induced WL")
-    plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
+    # plt.plot(tide_surge["time"], tide_surge, label="Tide + Surge Induced WL")
 
     wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
 
@@ -459,9 +460,184 @@ def plot_wave_impact(station_idx = 30):
     plt.show()
 
 
-# if use_wave:
+def max_wave_ratio(ds_combined):
+    # 1. Find the time index where waterlevel is maximum per station
+    idx_max_wl = ds_combined["waterlevel"].argmax(dim="time")
+
+    # 2. Select wave setup at those times
+    wave_setup_at_max_wl = ds_combined["wave_setup"].isel(time=idx_max_wl)
+
+    # 3. Get summary stats
+    max_wl = ds_combined["waterlevel"].max(dim="time").max().item()
+    max_wave_setup_at_max_wl = wave_setup_at_max_wl.max().item()
+    min_wave_setup_at_max_wl = wave_setup_at_max_wl.min().item()
+
+    # Ratio at max WL
+    ratio_at_max_wl = (wave_setup_at_max_wl / ds_combined["waterlevel"].isel(time=idx_max_wl)).max().item()
+
+    print(f"Maximum total water level: {max_wl:.2f} m")
+    print(f"Wave setup during max WL: {min_wave_setup_at_max_wl:.2f}–{max_wave_setup_at_max_wl:.2f} m")
+    print(f"Max ratio (wave_setup / waterlevel at max WL): {ratio_at_max_wl*100:.0f}%")
+
+
+# Plot the selected staions and their tide+surge, waves only and combined
+def plot_wave_overview(station_idx = 30):
+    # Plot the selected staions and their tide+surge, waves only and combined
+    # ------------------------------------------------------------------
+    # MAP: max(wave_setup)
+    # ------------------------------------------------------------------
+    # Define figure with unequal subplot widths
+    import matplotlib.gridspec as gridspec
+
+    fig = plt.figure(figsize=(12, 6), dpi=300)
+
+# Map subplot: full height, left side
+    ax_map = fig.add_axes([0.05, 0.05, 0.5, 0.8], projection=ccrs.PlateCarree())
+    # [left, bottom, width, height] in figure coordinates (0–1)
+
+    # Time series subplot: 2/3 height, vertically centered, right side
+    ax_abs = fig.add_axes([0.65, 0.2, 0.3, 0.45])
+    # Narrow time series (only bottom-right cell)
+    # )
+    # ax_abs = fig.add_subplot(gs[1, 1])
+
+    # Remove projection for ax_abs manually (otherwise both get PlateCarree)
+    
+    # ax_abs = fig.add_subplot(1, 2, 2)  # normal 2D axis# Create figure and two axes
+
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
+
+    # Plot which wave transects are matched to which DFM 5 m depth-contour points
+    # Wave points in light blue
+    gdf_wave_subset = gdf_wave_latlon[
+        (gdf_wave_latlon['lat'] >= -20.3) & (gdf_wave_latlon['lat'] <= -19.58) &
+        (gdf_wave_latlon['lon'] >= 34.7) & (gdf_wave_latlon['lon'] <= 35.22)]    
+    gdf_wave_subset.plot(ax=ax_map, color='lightblue', markersize=40, edgecolor="k",
+                         linewidth=0.2, label='Wave output points')
+
+    vmin = 0.0
+    vmax = (ds_combined["waterlevel"].max(dim='time').values).max()
+    vcenter = (vmin + vmax) / 2.0
+    norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+
+    sc1 = ax_map.scatter(
+            ds_combined.lon,
+            ds_combined.lat,
+            c=ds_combined["waterlevel"].max(dim='time').values,
+            cmap="viridis",
+            norm=norm,
+            s=40,
+            edgecolor="k",
+            linewidth=0.2,
+            label = "DFM output points"
+        )
+    
+    # Plot lines connecting DFM to nearest wave point
+    label_added = False
+    for _, row in gdf_dfm_matched.iterrows():
+        x_vals = [row['lon_dfm'], row['lon_wave']]
+        y_vals = [row['lat_dfm'], row['lat_wave']]
+        
+        if not label_added:
+            ax_map.plot(x_vals, y_vals, color='gray', linestyle='--', linewidth=0.7, label='Match line')
+            label_added = True
+        else:
+            ax_map.plot(x_vals, y_vals, color='gray', linestyle='--', linewidth=0.7)
+
+    # Extract coordinates and value
+    station = ds_combined["station"].values[station_idx]
+    lon = ds_combined.lon.sel(station=station).values
+    lat = ds_combined.lat.sel(station=station).values
+    ax_map.annotate(
+        f"Station {station}",           # text
+        xy=(lon, lat),               # point coordinates
+        xytext=(lon + 0.03, lat),  # offset in lon/lat
+        arrowprops=dict(arrowstyle='->', color='white', lw=1),
+        fontsize=8,
+        color='white',
+        fontweight='bold'
+    )
+
+    # Labels and legend
+    ax_map.set_title("DFM stations matched to nearest \nwave points", fontsize=11)
+
+    ax_map.set_extent([ds_combined['lon'].min().values - 0.1, 
+                       ds_combined['lon'].max().values + 0.025,
+                       ds_combined['lat'].min().values - 0.03, 
+                    ds_combined['lat'].max().values + 0.03], crs=ccrs.PlateCarree())
+  
+    # Add basemap (LOWER zoom = faster)
+    ctx.add_basemap(ax_map, source=ctx.providers.Esri.WorldImagery, zoom=10, 
+                    crs="EPSG:4326", attribution=False, zorder=0)
+
+    txt = ax_map.text(
+        34.94, -20.3,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
+        "Tiles © Esri -- Source: Esri, i-cubed, USDA, USGS, " \
+        "\nAEX, GeoEye, Getmapping, Aerogrid, IGN, IGP," \
+        "\nUPR-EGP, and the GIS User Community",
+        fontsize=5.5,
+        color='white',
+        alpha=0.7,
+        ha='left',
+        va='bottom',
+        zorder=20,
+    )
+
+    lon_ticks = np.linspace(*ax_map.get_xlim(), 5)
+    lat_ticks = np.linspace(*ax_map.get_ylim(), 5)
+    ax_map.set_xticks(lon_ticks)
+    ax_map.set_yticks(lat_ticks)
+    ax_map.set_xticklabels([f"{transformer.transform(x, df_dfm.lat.min())[0]:.1f}°E" for x in lon_ticks], fontsize=10)
+    ax_map.set_yticklabels([f"{transformer.transform(df_dfm.lon.min(), y)[1]:.1f}°S" for y in lat_ticks], fontsize=10)
+    ax_map.legend(fontsize=9)
+    sm = plt.cm.ScalarMappable(norm=norm, cmap="viridis")
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax_map, orientation="vertical", fraction=0.04, pad=0.02, shrink=0.7)
+    cbar.set_label("DFM max combined water level (m)", fontsize=11)
+
+    # ---- Timeseries plotting (ax_abs) ----
+    station_to_plot = ds_combined["station"].values[station_idx]
+    tide_surge = ds_combined["tide_surge"].sel(station=station_to_plot, time=slice("2019-03-12","2019-03-17")).compute()
+    wave_wl = ds_combined["wave_setup"].sel(station=station_to_plot, time=slice("2019-03-12","2019-03-17")).fillna(0).compute()
+    waterlevel = ds_combined["waterlevel"].sel(station=station_to_plot, time=slice("2019-03-12","2019-03-17")).compute()
+
+    ax_abs.plot(waterlevel["time"], waterlevel, label="Total water level")
+    ax_abs.plot(wave_wl["time"], wave_wl, label="Wave setup")
+    ax_abs.plot(tide_surge["time"], tide_surge, label="Tide + surge")
+
+    wave_max = ds_combined["wave_setup"].max(dim='time').values[station_idx]
+
+    ax_abs.set_ylabel("Water level (m)", fontsize=11)
+    ax_abs.set_title(f"Water levels at station {station_to_plot}\nMax wave setup = {wave_max:.2f} m", fontsize=11)
+    ax_abs.legend(fontsize=9)
+    ax_abs.set_xlim(tide_surge["time"].min().values, tide_surge["time"].max().values)
+    ax_abs.set_xlabel("Day in March 2019", fontsize=10)
+    ax_abs.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+    ax_abs.tick_params(axis='both', labelsize=9)
+    ax_abs.grid(True)   
+
+    ax_map.text(0.0, 1.05, "(a)", transform=ax_map.transAxes,
+             fontsize=12, fontweight='bold', va='top', ha='left')
+
+    # Subplot (b) - second plot
+    ax_abs.text(0.0, 1.08, "(b)", transform=ax_abs.transAxes,
+                fontsize=12, fontweight='bold', va='top', ha='left')  
+
+
+    fig.tight_layout()
+
+    fig.savefig('../../../../Attribution_results/figures/fS7_waves.png', dpi=300, bbox_inches = 'tight')
+    fig.savefig('../../../../Attribution_results/figures/fS7_waves.pdf', dpi=300, bbox_inches = 'tight')
+    return fig, ax_map, ax_abs
+
+
+
+
+if use_wave:
     # plot_wave_impact()
     # plot_station_wave_components()
+    # max_wave_ratio(ds_combined)
+    plot_wave_overview()
 
 
 # %%
