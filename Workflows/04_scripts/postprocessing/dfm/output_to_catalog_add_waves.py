@@ -462,18 +462,23 @@ def plot_wave_impact(station_idx = 30):
 
 def max_wave_ratio(ds_combined):
     # 1. Find the time index where waterlevel is maximum per station
-    idx_max_wl = ds_combined["waterlevel"].argmax(dim="time")
+    idx_max_wl = ds_combined["waterlevel"].argmax(dim="time").compute()  # numpy array now
 
-    # 2. Select wave setup at those times
-    wave_setup_at_max_wl = ds_combined["wave_setup"].isel(time=idx_max_wl)
+    # 2. Select wave setup at those times per station
+    wave_setup_at_max_wl = ds_combined["wave_setup"].isel(
+        time=xr.DataArray(idx_max_wl, dims="station")
+    )
 
-    # 3. Get summary stats
-    max_wl = ds_combined["waterlevel"].max(dim="time").max().item()
-    max_wave_setup_at_max_wl = wave_setup_at_max_wl.max().item()
-    min_wave_setup_at_max_wl = wave_setup_at_max_wl.min().item()
+    # 3. Get summary stats (compute for Dask arrays)
+    max_wl = ds_combined["waterlevel"].max(dim="time").max().compute().item()
+    max_wave_setup_at_max_wl = wave_setup_at_max_wl.max().compute().item()
+    min_wave_setup_at_max_wl = wave_setup_at_max_wl.min().compute().item()
 
-    # Ratio at max WL
-    ratio_at_max_wl = (wave_setup_at_max_wl / ds_combined["waterlevel"].isel(time=idx_max_wl)).max().item()
+    # 4. Ratio at max WL
+    wl_at_max = ds_combined["waterlevel"].isel(
+        time=xr.DataArray(idx_max_wl, dims="station")
+    )
+    ratio_at_max_wl = (wave_setup_at_max_wl / wl_at_max).max().compute().item()
 
     print(f"Maximum total water level: {max_wl:.2f} m")
     print(f"Wave setup during max WL: {min_wave_setup_at_max_wl:.2f}–{max_wave_setup_at_max_wl:.2f} m")
@@ -493,18 +498,9 @@ def plot_wave_overview(station_idx = 30):
 
 # Map subplot: full height, left side
     ax_map = fig.add_axes([0.05, 0.05, 0.5, 0.8], projection=ccrs.PlateCarree())
-    # [left, bottom, width, height] in figure coordinates (0–1)
 
     # Time series subplot: 2/3 height, vertically centered, right side
     ax_abs = fig.add_axes([0.65, 0.2, 0.3, 0.45])
-    # Narrow time series (only bottom-right cell)
-    # )
-    # ax_abs = fig.add_subplot(gs[1, 1])
-
-    # Remove projection for ax_abs manually (otherwise both get PlateCarree)
-    
-    # ax_abs = fig.add_subplot(1, 2, 2)  # normal 2D axis# Create figure and two axes
-
     transformer = Transformer.from_crs("EPSG:4326", "EPSG:4326", always_xy=True)
 
     # Plot which wave transects are matched to which DFM 5 m depth-contour points
@@ -636,8 +632,8 @@ def plot_wave_overview(station_idx = 30):
 if use_wave:
     # plot_wave_impact()
     # plot_station_wave_components()
-    # max_wave_ratio(ds_combined)
-    plot_wave_overview()
+    max_wave_ratio(ds_combined)
+    # plot_wave_overview()
 
 
 # %%
