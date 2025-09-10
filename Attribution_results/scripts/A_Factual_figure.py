@@ -252,8 +252,8 @@ ax1.text(0.02, 0.85, '(c)', transform=ax1.transAxes, bbox=props, fontsize=10, fo
 ax2.text(0.02, 0.85, '(d)', transform=ax2.transAxes, bbox=props, fontsize=10, fontweight='bold')
 
 
-fig.savefig("../figures/fS12.png", bbox_inches='tight', dpi=300)
-fig.savefig("../figures/fS12.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS13.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS13.pdf", bbox_inches='tight', dpi=300)
 plt.show()
 
 
