@@ -106,5 +106,3 @@ rule run_fiat_model:
             print(f"Running FIAT model with settings: {input.fiat_settings}")
             shell(f"fiat run {input.fiat_settings}")
             print("Finished running FIAT on Linux.")
-
-#TODO add postprocessing script to calculate relative damage
