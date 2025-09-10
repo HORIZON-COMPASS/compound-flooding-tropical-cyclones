@@ -17,11 +17,8 @@ module load pixi
 module load apptainer 
 
 echo "=== Changing directory to COMPASS root ==="
-#Going to the folder where git checkout is
-#ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
-#ROOT="/u/bovensch/git_repos/COMPASS"
+# Going to the folder where git checkout is
 ROOT="/u/vertegaa/git_repos/COMPASS"
-# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
 # Installing pixi environment
@@ -33,11 +30,11 @@ eval "$(pixi shell-hook --environment compass-snake-sfincs)"
 echo "=== Changing to workflow rules directory ==="
 cd Workflows/02_workflow_rules
 
-#Unlocking the directory for snakemake
+ #Unlocking the directory for snakemake
 echo "=== Unlocking Snakemake working directory ==="
 snakemake --unlock -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
-# # running workflow with snakemake
+# running workflow with snakemake
 echo "=== Performing dry run of Snakemake ==="
 snakemake -s snakefile_sfincs_update.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete
 

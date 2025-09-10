@@ -17,11 +17,6 @@ echo "Running DFM model manually..."
 EVENT_DIR="/p/11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0"
 SCRIPT="${EVENT_DIR}/run_singularity_h7.sh"
 
-# Optional: copy script and make it executable if needed
-# cp "$SCRIPT" "${SCRIPT}_copy"
-# chmod +x "${SCRIPT}_copy"
-# "${SCRIPT}_copy"
-
 chmod +x "$SCRIPT"
 "$SCRIPT"
 
