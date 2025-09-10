@@ -130,14 +130,14 @@ This workflow creates a dfm base model and updates it by adding forcing data and
   - `{model_name}.mdu`
   - `ext_file_old.ext`
   - `dimr_config.xml`
-  - `submit_singularity_h7.sh` (if run on linux)
+  - `run_singularity_h7.sh` (if run on linux)
   - `run_parallel.bat` (if run on windows)
 - **Description**: This rule copies the base model configuration and adds the TC meteo forcing. It also set the model output points (through an obs file) and generates the files required to run the model (mdu, dimr, bat and sh)
 
 #### Rule: run_dfm
 - **Script**: `scripts/model_building/dfm/setup_dfm_event.py`
 - **Input**: 
-  - `submit_singularity_h7.sh` (if run on linux)
+  - `run_singularity_h7.sh` (if run on linux)
   - `run_parallel.bat` (if run on windows)
   - (and all other files in the event model folder, needed for model execution)
 - **Run**:
