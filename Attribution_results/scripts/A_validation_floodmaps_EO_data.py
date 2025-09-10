@@ -239,11 +239,11 @@ for ii, source in enumerate(source_list):
     da_cm = da_cm.load()
     da_skill = da_skill.load()
     hr, csi, fr = np.round(da_skill['H'].item(),2), np.round(da_skill['C'].item(),2), np.round(da_skill['F'].item(),2)
-    cs = da_cm.where(da_cm>0).plot(ax=ax, cmap=cmap, norm=norm, transform=utm_crs, add_colorbar=False)
+    cs = da_cm.where(da_cm>0).plot(ax=ax, cmap=cmap, norm=norm, transform=utm_crs, add_colorbar=False, rasterized=True)
     ax.text(0.8, 0.85, f'C: {csi:.2f}\nH: {hr:.2f}\nF: {fr:.2f}', transform=ax.transAxes, bbox=props, fontsize=10)
 
     # Add model region
-    gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+    gdf_valid.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0, rasterized=True)
     region_wsg.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
     
     # Set extent (based on actual lat/lon coordinates)
