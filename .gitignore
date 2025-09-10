@@ -26,7 +26,7 @@ Workflows/*.svg
 Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
-Attribution_results/figures
+Attribution_results/figures/*
 
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
