@@ -214,20 +214,20 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0:
     category: ocean
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves:
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-  crs: 4326
-  driver: netcdf
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
   data_type: GeoDataset
-  meta:
-    notes: DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto
-    category: ocean
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
   driver_kwargs:
     chunks:
       station: 10
       time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto
+  crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
