@@ -13,7 +13,7 @@ runname_ids:
             
         # For all model setups
         start_time: 20190309 000000
-        end_time: 20190325 060000      
+        end_time: 20190325 000000      
         precip_forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
         wind_forcing: era5_hourly_spw_IBTrACS               # era5_hourly, spw_IBTrACS or combined as era5_hourly_spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
