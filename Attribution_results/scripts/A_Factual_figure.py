@@ -1,4 +1,4 @@
-#%%
+#%% Use compass-wflow pixi environment
 print("Loading packages")
 import os
 from os.path import join
@@ -257,4 +257,24 @@ fig.savefig("../figures/fS12.pdf", bbox_inches='tight', dpi=300)
 plt.show()
 
 
+# %%
+# Some numbers
+max_buzi = mod.forcing['dis'].sel(index=gauges_list[0]).max()
+max_pungwe = mod.forcing['dis'].sel(index=gauges_list[1]).max()
+
+max_buzi_1000 = np.round(max_buzi.values, -3)
+max_pungwe_1000 = np.round(max_pungwe.values, -3)
+
+print(f"Max discharge Buzi gauge: {max_buzi_1000} m3/s (rounded to 1000)")
+print(f"Max discharge Pungwe gauge: {max_pungwe_1000} m3/s (rounded to 1000)")
+
+
+#%%
+# Coastal water level
+max_S5 = ds_his['point_zs'].isel(stations=stations_list[0]).max().values
+max_tide_S5 = ds_his['point_zs'].sel(time=slice("2019-03-19", "2019-03-25"), stations=stations_list[0]).max().values
+max_storm_surge_S5 = max_S5 - max_tide_S5
+
+print(f"Max coastal water level at S5: {max_S5:.1f} m")
+print(f"Max storm surge at S5: {max_storm_surge_S5:.1f} m")
 # %%
