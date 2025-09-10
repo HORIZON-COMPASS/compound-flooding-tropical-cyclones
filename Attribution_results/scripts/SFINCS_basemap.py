@@ -1,4 +1,4 @@
-#%%
+#%% use pixi environment compass-wflow
 # Load modules
 import os
 import numpy as np

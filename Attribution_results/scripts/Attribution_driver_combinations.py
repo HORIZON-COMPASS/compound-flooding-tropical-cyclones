@@ -1,4 +1,4 @@
-#%%
+#%% use pixi environment compass-wflow
 # Load the necessary packages
 import os
 from os.path import join
@@ -931,15 +931,15 @@ fiat_models = calculate_damage_differences(fiat_models)
 plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
 #%%
-# # Table 2 & S2
+# Table 2 & S2
 table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 #%%
-# # Figure 5
+# Figure 5
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 
 #%%
-# # Figure S11
+# Figure S11
 plot_cf_timeseries_from_models(models)
 
 # %%

@@ -1,4 +1,15 @@
 # %% Script of jupyter notebook made by Natalia Aleksandrova - edits by Doris Vertegaal
+# Script can be executed using the pixi environment compass-wflow
+
+### Validation using satellite-deived flood maps
+
+# Multiple sources of EO-based flood maps are available, for example:
+# - [UNOSAT](https://unosat.org/products/) database contains flood maps for major flood events. This includes both satellite-derived maps from specific dates and aggregated maps for multi-day periods. It can include flood maps from various sources (e.g. Sentinel-1, VIIRS).
+# - [CEMS](https://portal.gfm.eodc.eu/products) portal allows the user to download available flood map data for a given area (bounding box) and time. Maximum flood extent maps over the selected period are also available, these are user-friendly (single file instead of a tiled image) and suitable for comparison with maximum flood extent maps from flood modelling.
+
+# For Idai (2019) flooding in Sofala, Mozambique maps are [available from UNOSAT](https://unosat.org/products/2715) and from CEMS. 
+# Both are derived from Sentinel-1 observations.
+#%%
 import sys
 from pathlib import Path
 
