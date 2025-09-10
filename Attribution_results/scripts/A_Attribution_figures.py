@@ -147,7 +147,6 @@ def load_fiat_models(config):
         model_name = f"event_tp_{run['precip_forcing']}_CF{rain}_{run['tidemodel']}_CF{slr}_{run['wind_forcing']}_CF{wind}"
         model_path = os.path.join(base_path, model_name)
         fiat_results =  gpd.read_file(join(f"{model_path}", "output/spatial.fgb"))
-        relative_damage =  gpd.read_file(join(f"{model_path}", "output/output_relative_damage.fgb"))
 
         num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
         categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
@@ -160,7 +159,6 @@ def load_fiat_models(config):
             "model_name":             model_name,
             "model_path":             model_path,
             "fiat_results":           fiat_results,
-            "relative_results":       relative_damage,
             "category":               categories[num_CF_diff],
             "cat_short":              short_cats[num_CF_diff],
             "CF_info":                CF_info,
@@ -544,12 +542,12 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
     # === Final touches ===
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
-    cbar.set_label('Attributable flood Depth (m)', labelpad=10, fontsize=9)
+    cbar.set_label('Attributable flood depth (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
     cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
-    fig.savefig("../figures/f04_check.png", bbox_inches='tight', dpi=300)
-    # fig.savefig("../figures/f04_check.pdf", bbox_inches='tight', dpi=300)
+    fig.savefig("../figures/f04.png", bbox_inches='tight', dpi=300)
+    fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
     
     # === Plot hmax_diff distributions ===
     # Just to check
@@ -784,8 +782,9 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
     df = pd.DataFrame(table_data, columns=columns)
     df.insert(0, "Counterfactual", labels)
 
-    df.to_csv("../figures/flood_summary_table.csv", index=False)
-    print("✅ Saved table as 'flood_summary_table.csv'")
+    df.to_csv("../figures/TS2.csv", index=False)
+    fig.savefig("../figures/TS2.png", dpi=300, bbox_inches="tight")
+    print("✅ Saved table as 'TS2.csv/.png'")
 
 
 def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1,2]):
@@ -885,7 +884,7 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
 
     # Save
     fig.savefig("../figures/fS11.png", bbox_inches="tight", dpi=300)
-    # fig.savefig("../figures/fS11.pdf", bbox_inches="tight", dpi=300)
+    fig.savefig("../figures/fS11.pdf", bbox_inches="tight", dpi=300)
 
 
 
