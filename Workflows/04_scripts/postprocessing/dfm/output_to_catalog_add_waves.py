@@ -270,7 +270,7 @@ if use_wave:
         },
         meta={
             "category": "ocean",
-            "notes": "DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto",
+            "notes": "DFM output combined with wave data from SnapWave provided by Fernaldi Gradyanto & Tim Leijnse",
         },
         crs=4326
         )
