@@ -22,10 +22,6 @@ repository = "https://github.com/Deltares-research/COMPASS"
 jupyterlab = ">=4.2.1,<4.3"
 ipykernel = ">=6.29.5,<7"
 pip = ">=25.0.1,<26"
-# gcc = ">=15.1.0,<15.2"
-# libstdcxx-ng = "12.*"
-# descartes = ">=1.1.0" 
-# cftime = ">=1.6.4"
 
 [feature.py311.dependencies]
 python = "3.11.*"
@@ -37,7 +33,7 @@ matplotlib = ">=3.8.4,<3.9"
 
 [feature.fiat.dependencies]
 gdal = "*"
-delft_fiat = "*"
+delft_fiat = "0.3.2"
 matplotlib = "*"
 toml = "*"
 libnetcdf = "*"
