@@ -558,7 +558,7 @@ axes[2].set_title("Factual - Counterfactual", fontsize=10)
 sm1 = ScalarMappable(cmap="Reds", norm=plt.Normalize(vmin=0, vmax=100))
 sm1.set_array([])
 cbar = fig.colorbar(sm1, ax=axes[0:2], orientation="vertical", shrink=0.4, pad=0.01)
-cbar.set_label("Aggregated relative camage [%]", fontsize=9)
+cbar.set_label("Aggregated relative damage [%]", fontsize=9)
 cbar.ax.tick_params(labelsize=8)
 
 sm2 = ScalarMappable(cmap=white_red, norm=norm_diff)
