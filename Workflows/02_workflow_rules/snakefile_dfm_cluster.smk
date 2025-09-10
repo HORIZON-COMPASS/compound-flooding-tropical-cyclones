@@ -82,7 +82,7 @@ def get_cf_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return join(curdir, '..', '03_data_catalogs','datacatalog_CF_forcing.yml')
     elif os.name == "posix": #Running on linux
-        return join(curdir, '..', '03_data_catalogs', 'datacatalog_SFINCS_coastal_coupling___linux.yml')
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing___linux.yml')
 
 def get_coast_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
