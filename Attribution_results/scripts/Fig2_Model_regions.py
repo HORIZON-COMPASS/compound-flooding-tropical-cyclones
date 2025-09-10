@@ -120,30 +120,30 @@ print(f"Total ocean area: {total_ocean_area_rounded} km²")
 fig, ax = plt.subplots(figsize=(9, 5))
 
 # Plot SFINCS region and set up legend entry
-gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=4)
+gdf_sfincs.plot(ax=ax, edgecolor='pink', facecolor='pink', linewidth=1, alpha=0.5, zorder=4, rasterized=True)
 sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, label="SFINCS Region")
 
 # Plot wflow basins region and set up legend entry
-gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=3)
+gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=3, rasterized=True)
 wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
 
 # Plot wflow basins region and set up legend entry
-gdf_snapwave.plot(ax=ax, facecolor='#FFFF99', edgecolor='#FFFF99', linewidth=1, alpha=0.5, zorder=2)
+gdf_snapwave.plot(ax=ax, facecolor='#FFFF99', edgecolor='#FFFF99', linewidth=1, alpha=0.5, zorder=2, rasterized=True)
 snap_patch = mpatches.Patch(facecolor='#FFFF99', edgecolor='#FFFF99', alpha=0.5, label="SnapWave Domain")
 
 # Plotting of DFM Grid
-ds_map_F.grid.plot(ax=ax, edgecolor='white', linewidth=0.5, alpha=0.5, zorder=1)
+ds_map_F.grid.plot(ax=ax, edgecolor='white', linewidth=0.5, alpha=0.5, zorder=1, rasterized=True)
 
 # Plot TC Tracks
 tc_idai_filtered = tc_idai[tc_idai.geometry.y < -18]
 tc_scatter = ax.scatter(tc_idai_filtered.geometry.x, tc_idai_filtered.geometry.y, s=tc_idai_filtered["size"]*0.5,  # Size based on wind speed
-                        c=tc_idai_filtered["USA_WIND"], cmap=cmap_idai, alpha=0.7, label="Track TC Idai", zorder=6)
-ax.plot(tc_idai_filtered.geometry.x, tc_idai_filtered.geometry.y, color="grey", linewidth=1, alpha=0.7, linestyle="-", zorder=5)
+                        c=tc_idai_filtered["USA_WIND"], cmap=cmap_idai, alpha=0.7, label="Track TC Idai", zorder=6, rasterized=True)
+ax.plot(tc_idai_filtered.geometry.x, tc_idai_filtered.geometry.y, color="grey", linewidth=1, alpha=0.7, linestyle="-", zorder=5, rasterized=True)
 # Create a custom legend entry for the TC scatter plot (you can modify the color or markersize)
 tc_marker = Line2D([0], [0], marker='o', color='darkgrey', markerfacecolor='red', markersize=5, label='Track TC Idai')
 
 # Add basemap (LOWER zoom = faster)
-ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=tc_idai_filtered.crs, attribution=False, zorder=0)
+ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=tc_idai_filtered.crs, attribution=False, zorder=0, rasterized=True)
 
 txt = ax.text(
     32.01, -21.99,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
