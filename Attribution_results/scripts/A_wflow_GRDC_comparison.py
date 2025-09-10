@@ -243,11 +243,11 @@ for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
     axs[i].grid(True, linestyle="--", alpha=0.6)
     axs[i].tick_params(axis="both", labelsize=11)
 
-axs[0].text(0.0, 1.03, "(a)", transform=axs[0].transAxes,
+axs[0].text(0.0, 1.07, "(a)", transform=axs[0].transAxes,
              fontsize=14, fontweight='bold', va='top', ha='left')
 
 # Subplot (b) - second plot
-axs[1].text(0.0, 1.03, "(b)", transform=axs[1].transAxes,
+axs[1].text(0.0, 1.07, "(b)", transform=axs[1].transAxes,
              fontsize=14, fontweight='bold', va='top', ha='left')
 
 axs[-1].set_xlabel("Month", fontsize=12)
@@ -299,9 +299,9 @@ for i, (river, river_name) in enumerate(zip(wanted_rivers, river_names)):
     axs[i].tick_params(axis='both', which='major', labelsize=11)
     axs[i].set_xlim([np.datetime64('1954-01-01'), np.datetime64('1984-12-31')])
 
-axs[0].text(0, 1.03, "(a)", transform=axs[0].transAxes, 
+axs[0].text(0, 1.07, "(a)", transform=axs[0].transAxes, 
             fontsize=14, fontweight='bold', va='top', ha='left')
-axs[1].text(0, 1.03, "(b)", transform=axs[1].transAxes, 
+axs[1].text(0, 1.07, "(b)", transform=axs[1].transAxes, 
             fontsize=14, fontweight='bold', va='top', ha='left')
 
 fig.suptitle(f"Observed (GRDC) vs. simulated (wflow) discharge (1954–1984)", fontsize=14) 
