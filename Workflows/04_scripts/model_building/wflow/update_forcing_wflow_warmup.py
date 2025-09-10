@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-wflow
 from datetime import datetime as datetime
 from datetime import timedelta
 from os.path import basename, join

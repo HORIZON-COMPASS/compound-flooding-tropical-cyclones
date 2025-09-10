@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-snake-sfincs
 from datetime import datetime as datetime
 from os.path import basename, join, exists
 from hydromt.config import configread
@@ -34,8 +34,8 @@ else:
     region                  = "sofala"
     utmzone                 = '36s'
     tc_name                 = "Idai"
-    wind_forcing            = 'spw_IBTrACS'
-    precip_forcing          = 'era5_hourly'
+    wind_forcing            = 'era5_hourly_spw_IBTrACS'
+    precip_forcing          = 'era5_hourly_zarr'
     dfm_res                 = "450"
     bathy                   = "gebco2024_MZB"
     tidemodel               = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
@@ -50,7 +50,7 @@ else:
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
     start_time              = '20190309 000000'
-    end_time                = '20190325 060000'
+    end_time                = '20190325 000000'
     use_dfm                 = True
     use_waves               = True
     dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"

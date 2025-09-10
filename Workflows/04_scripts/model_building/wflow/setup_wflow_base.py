@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-wflow
 from os.path import join, exists
 import os
 from hydromt.config import configread

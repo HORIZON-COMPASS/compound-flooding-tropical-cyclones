@@ -1,5 +1,6 @@
 # This script is based on the ModelBuilder template from dfm_tools v0.23.0 (accessed on 18/07/2024). 
-# Adapted by Natalia Aleksandrova
+# Adapted by Natalia Aleksandrova & Doris Vertegaal
+# Use pixi environment compass-snake-dfm
 #%%
 # import packages
 import os
@@ -29,7 +30,6 @@ if "snakemake" in locals():
     end_time             = snakemake.params.end_time
     bbox_dfm             = ast.literal_eval(snakemake.params.dfm_bbox)
     sfincs_region        = os.path.abspath(snakemake.params.sfincs_region)
-    # output_bbox          = ast.literal_eval(snakemake.params.output_bbox)
     dfm_obs_file         = snakemake.params.dfm_obs_file
     verification_points  = snakemake.params.verif_points
     path_data_cat        = snakemake.params.data_cat
@@ -65,6 +65,7 @@ else:
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
         ]
     model_name           = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
     base_model           = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'

@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-snake-sfincs
 from datetime import datetime as datetime
 from os.path import join
 import os

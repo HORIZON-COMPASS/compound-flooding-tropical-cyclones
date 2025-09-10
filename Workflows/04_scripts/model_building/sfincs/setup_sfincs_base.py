@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-snake-sfincs
 from os.path import join, exists
 import geopandas as gpd
 from hydromt.config import configread

@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-wflow
 from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel

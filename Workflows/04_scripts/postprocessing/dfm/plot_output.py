@@ -1,4 +1,4 @@
-#%% Import the necessary packages
+#%% Import the necessary packages using pixi environment compass-snake-dfm
 import xarray as xr
 import matplotlib.pyplot as plt
 import contextily as ctx
