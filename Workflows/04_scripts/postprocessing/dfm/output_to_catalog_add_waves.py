@@ -4,7 +4,6 @@
 import os
 import hydromt
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from matplotlib.colors import TwoSlopeNorm
 import contextily as ctx
 from pyproj import Transformer
@@ -16,7 +15,6 @@ from datetime import datetime
 import xarray as xr
 import cartopy.crs as ccrs
 from pathlib import Path
-from scipy.interpolate import PchipInterpolator
 import matplotlib.dates as mdates
 
 #%%
@@ -459,44 +457,56 @@ def plot_wave_impact(station_idx = 30):
     
     plt.show()
 
+# Compute the max wave / total water level ratio clsest to Beira
+def max_wave_ratio_Beira(ds_combined):
+    lat_beira, lon_beira = -19.8436, 34.8389  # example coordinates
 
-def max_wave_ratio(ds_combined):
-    # 1. Find the time index where waterlevel is maximum per station
-    idx_max_wl = ds_combined["waterlevel"].argmax(dim="time").compute()  # numpy array now
-
-    # 2. Select wave setup at those times per station
-    wave_setup_at_max_wl = ds_combined["wave_setup"].isel(
-        time=xr.DataArray(idx_max_wl, dims="station")
+    # Compute distance to all stations
+    distances = np.sqrt(
+        (ds_combined['lat'] - lat_beira)**2 +
+        (ds_combined['lon'] - lon_beira)**2
     )
+    station_idx_beira = distances.argmin().compute()  # index of closest station
 
-    # 3. Get summary stats (compute for Dask arrays)
-    max_wl = ds_combined["waterlevel"].max(dim="time").max().compute().item()
-    max_wave_setup_at_max_wl = wave_setup_at_max_wl.max().compute().item()
-    min_wave_setup_at_max_wl = wave_setup_at_max_wl.min().compute().item()
+    # 2. Get the time index of max water level for that station
+    idx_max_wl_beira = ds_combined["waterlevel"][:, station_idx_beira].argmax().compute()
 
-    # 4. Ratio at max WL
-    wl_at_max = ds_combined["waterlevel"].isel(
-        time=xr.DataArray(idx_max_wl, dims="station")
-    )
-    ratio_at_max_wl = (wave_setup_at_max_wl / wl_at_max).max().compute().item()
+    # 3. Extract wave setup and water level at that time
+    wl_max_beira = ds_combined["waterlevel"].isel(
+        time=idx_max_wl_beira, station=station_idx_beira
+    ).compute().item()
 
-    print(f"Maximum total water level: {max_wl:.2f} m")
-    print(f"Wave setup during max WL: {min_wave_setup_at_max_wl:.2f}–{max_wave_setup_at_max_wl:.2f} m")
-    print(f"Max ratio (wave_setup / waterlevel at max WL): {ratio_at_max_wl*100:.0f}%")
+    wave_setup_beira = ds_combined["wave_setup"].isel(
+        time=idx_max_wl_beira, station=station_idx_beira
+    ).compute().item()
+
+    # 4. Compute ratio
+    ratio_wave_wl = wave_setup_beira / wl_max_beira
+
+    print(f"Station closest to Beira: {station_idx_beira}")
+    print(f"Max water level: {wl_max_beira:.2f} m")
+    print(f"Wave setup at max WL: {wave_setup_beira:.2f} m")
+    print(f"Wave / total water level ratio: {ratio_wave_wl*100:.0f}%")
 
 
-# Plot the selected staions and their tide+surge, waves only and combined
-def plot_wave_overview(station_idx = 30):
+# Plot the selected stations closest to Beira and their tide+surge, waves only and combined
+def plot_wave_overview_Beira(station_idx=52):
     # Plot the selected staions and their tide+surge, waves only and combined
     # ------------------------------------------------------------------
     # MAP: max(wave_setup)
     # ------------------------------------------------------------------
-    # Define figure with unequal subplot widths
-    import matplotlib.gridspec as gridspec
+    lat_beira, lon_beira = -19.8436, 34.8389  # example coordinates
+
+    # Compute distance to all stations
+    distances = np.sqrt(
+            (ds_combined['lat'] - lat_beira)**2 +
+            (ds_combined['lon'] - lon_beira)**2
+        )
+    station_idx = distances.argmin().compute()  # index of closest station
 
     fig = plt.figure(figsize=(12, 6), dpi=300)
 
-# Map subplot: full height, left side
+    # Map subplot: full height, left side
     ax_map = fig.add_axes([0.05, 0.05, 0.5, 0.8], projection=ccrs.PlateCarree())
 
     # Time series subplot: 2/3 height, vertically centered, right side
@@ -622,18 +632,17 @@ def plot_wave_overview(station_idx = 30):
 
     fig.tight_layout()
 
-    fig.savefig('../../../../Attribution_results/figures/fS7_waves.png', dpi=300, bbox_inches = 'tight')
-    fig.savefig('../../../../Attribution_results/figures/fS7_waves.pdf', dpi=300, bbox_inches = 'tight')
+    fig.savefig('../../../../Attribution_results/figures/fS7.png', dpi=300, bbox_inches = 'tight')
+    fig.savefig('../../../../Attribution_results/figures/fS7.pdf', dpi=300, bbox_inches = 'tight')
     return fig, ax_map, ax_abs
-
 
 
 
 if use_wave:
     # plot_wave_impact()
     # plot_station_wave_components()
-    max_wave_ratio(ds_combined)
-    # plot_wave_overview()
+    # max_wave_ratio_Beira(ds_combined)
+    plot_wave_overview_Beira()
 
 
 # %%
