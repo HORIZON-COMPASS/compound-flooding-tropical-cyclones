@@ -549,42 +549,6 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
     fig.savefig("../figures/f04.png", bbox_inches='tight', dpi=300)
     fig.savefig("../figures/f04.pdf", bbox_inches='tight', dpi=300)
     
-    # === Plot hmax_diff distributions ===
-    # Just to check
-    # fig2, axes2 = plt.subplots(1, 3, figsize=(10, 3), dpi=300, constrained_layout=True)
-    # titles = list(driver_groups.keys())
-
-    # for i, (ax, (title, group)) in enumerate(zip(axes2, driver_groups.items())):
-    #     model = get_driver_group_model(group, models)
-    #     if model is None:
-    #         continue
-
-    #     hmax_diff = model["sfincs_results"]["hmax_diff"]
-
-    #     # Mask values > 2 m
-    #     hmax_diff_masked = hmax_diff.where(hmax_diff <= 1)
-    #     hmax_diff_np = hmax_diff_masked.compute().values
-    #     hmax_diff_clean = hmax_diff_np[~np.isnan(hmax_diff_np)]
-
-    #     # Histogram
-    #     ax.hist(hmax_diff_clean, bins=100, color='steelblue', edgecolor='black')
-    #     ax.set_title(title, fontsize=10)
-    #     ax.set_xlabel("hmax_diff (m)")
-    #     if i == 0:
-    #         ax.set_ylabel("Frequency")
-    #     ax.set_xlim(0, 1)
-    #     ax.set_xticks(np.arange(0, 1.1, 0.1))
-    #     ax.grid(True, linestyle='--', alpha=0.6)
-
-    # fig2.suptitle("Distribution of hmax_diff (<= 1 m)", fontsize=12, y=1.02)
-    # fig2.savefig("../figures/hmax_diff_distribution_subplots.png", bbox_inches='tight', dpi=300)
-    # plt.show()
-
-    # print(model['model_name'])
-    # hmax_diff = model['sfincs_results']['hmax_diff']
-    # hmax_diff_999 = hmax_diff.quantile(0.999).compute()
-    # print(f"99.9th percentile value: {hmax_diff_999.values}") # .max() gives too high values that are not included in permanent water mask
-
 
 def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, filter_keys=None, tolerance=1e-6):
     model_dict = {}
@@ -677,7 +641,6 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models, fil
     
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
-    # eur_to_usd = 1.326 # Convert JRC Damage Values (Euro 2010) into US-Dollars (2010)
     usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056
     
     data_dict = {}
@@ -883,8 +846,8 @@ def plot_cf_timeseries_from_models(models, stations_list=[5, 40], gauges_list=[1
     axs[3].set_xlim([np.datetime64(start), np.datetime64(end)])
 
     # Save
-    fig.savefig("../figures/fS11.png", bbox_inches="tight", dpi=300)
-    fig.savefig("../figures/fS11.pdf", bbox_inches="tight", dpi=300)
+    fig.savefig("../figures/fS12.png", bbox_inches="tight", dpi=300)
+    fig.savefig("../figures/fS12.pdf", bbox_inches="tight", dpi=300)
 
 
 
