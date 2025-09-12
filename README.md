@@ -5,9 +5,9 @@ This work is part of the paper Vertegaal et al. (submitted) and Work Package 1 o
 ![logoCOMPASS](https://github.com/user-attachments/assets/4c3b95d4-bfc0-4727-a1e8-ee6653a03b5e)
 
 ## Description
-This repository contains workflows to setup a global-to-local modelling chain for the hazard and impact modelling of tropical cyclone (TC) Idai. More specifically, it contains specific workflows to setup a hydrological model (wflow), a coastal hydrodynamic model (Delft3D-FM), a local compound flooding model (SFINCS), and a flood impact model (Delft-FIAT) for a user-defined region. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local compound flooding. A final workflow combines all the separate workflows together for the local compound flood model setup. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)), SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)), Delft-FIAT ([hydromt-fiat](https://github.com/Deltares/hydromt_fiat)), and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. 
+This repository contains workflows to setup a global-to-local modelling chain for the hazard and impact modelling of tropical cyclone (TC) Idai. More specifically, it contains specific workflows to setup a hydrological model (wflow), a coastal hydrodynamic model (Delft3D-FM), a local compound flooding model (SFINCS), and a flood impact model (Delft-FIAT) for the sofala province in Mozambique. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local compound flooding. A final workflow combines all the separate workflows together for the local compound flood model setup. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)), SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)), Delft-FIAT ([hydromt-fiat](https://github.com/Deltares/hydromt_fiat)), and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. Data to generate all figures is still to be added. 
 
-![image](https://github.com/user-attachments/assets/d50faecf-2b06-4193-8780-150476cb8315)
+![image](f01.png)
 
 This code is specifically for the climate and impact attribution of TC Idai but can be applied to other flood events.
 
@@ -35,7 +35,8 @@ snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
 
 All snakemake workflows use the same configuration file: config_snakemake/config_general_MZB.yml.
 
-Here is a visual overview of the combined workflow
+Here is a visual overview of the combined workflows:
+![image](Snakemake_overview.png)
 
 We provide examples on how to run each workflow in specific Jupyter notebook in the docs folder. Building the workflow requires the same general steps in snakemake, summarized below.
  1. Activating the environments to load all the required dependencies
