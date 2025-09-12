@@ -97,25 +97,6 @@ print(f"Total ocean area: {total_ocean_area_rounded} km²")
 
 
 #%%
-# import xugrid as xu
-# import os
-
-# root = r"p:\11210471-001-compass\code\From Fernaldi\For_COMPASS\For_COMPASS\SFINCS_Idai_Wave"
-# ncfile = os.path.join(root, "sfincs_map_wlonly.nc")
-
-# # Use netcdf4 engine
-# dsu = xu.open_dataset(ncfile, engine='netcdf4')
-
-# # Convert UGRID to GeoDataFrame
-# gdf_snapwave = dsu.zb.ugrid.to_geodataframe()
-# gdf_snapwave = gdf_snapwave.set_crs("EPSG:32736")
-# gdf_snapwave = gdf_snapwave.to_crs("EPSG:4326")
-
-# # Save as geopackage
-# filename = os.path.join(root, "grid.gpkg")
-# gdf_snapwave.to_file(filename, driver="GPKG")
-
-#%%
 # Set up figure
 fig, ax = plt.subplots(figsize=(9, 5))
 
