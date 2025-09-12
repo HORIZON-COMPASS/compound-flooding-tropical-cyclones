@@ -67,7 +67,7 @@ opt = {
         "press_correction": True,
         "temp_correction": True,
         "dem_forcing_fn": "era5_orography",
-        "pet_method": "debruin",
+        "pet_method": "debruin",                             # de Bruin et al. (2015) - DOI: 10.1175/JHM-D-15-0006.1
         "skip_pet": False,
         "chunksize": 10,
     },

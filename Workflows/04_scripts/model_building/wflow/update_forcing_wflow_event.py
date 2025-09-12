@@ -60,7 +60,7 @@ opt = {
         "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,
-        "pet_method": "debruin",
+        "pet_method": "debruin",                        # de Bruin et al. (2015) - DOI: 10.1175/JHM-D-15-0006.1
         "skip_pet": False,
     },
 }
