@@ -293,6 +293,6 @@ axs[0].text(0.0, 1.06, "(a)", transform=axs[0].transAxes,
 axs[1].text(0.0, 1.06, "(b)", transform=axs[1].transAxes,
              fontsize=11, fontweight='bold', va='top', ha='left')
 
-fig.savefig("../figures/fS7.png",dpi=300, bbox_inches='tight')
-fig.savefig("../figures/fS7.pdf",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS8.png",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS8.pdf",dpi=300, bbox_inches='tight')
 # %%

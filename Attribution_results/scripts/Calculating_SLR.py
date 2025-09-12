@@ -138,8 +138,8 @@ axs[0].text(0.0, 1.03, "(a)", transform=axs[0].transAxes,
 axs[1].text(0.0, 1.03, "(b)", transform=axs[1].transAxes,
              fontsize=14, fontweight='bold', va='top', ha='left')
 
-fig.savefig("../figures/fS8.png",dpi=300, bbox_inches='tight')
-fig.savefig("../figures/fS8.pdf",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS10.png",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS10.pdf",dpi=300, bbox_inches='tight')
 plt.show()
 
 
@@ -291,7 +291,7 @@ axes.legend()
 axes.set_xlim([mean_water_level_difference_1990['time'][0], mean_water_level_difference_2000['time'][-1]])
 axes.xaxis.set_major_locator(mdates.YearLocator(2))
 
-fig.savefig("../figures/fS10.png",dpi=300, bbox_inches='tight')
-fig.savefig("../figures/fS10.pdf",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS11.png",dpi=300, bbox_inches='tight')
+fig.savefig("../figures/fS11.pdf",dpi=300, bbox_inches='tight')
 
 # %%

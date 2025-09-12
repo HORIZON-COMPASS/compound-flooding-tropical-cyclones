@@ -495,8 +495,8 @@ axes[1].set_title("Counterfactual", fontsize=10)
 axes[2].set_title("Factual - Counterfactual", fontsize=10)
 
 # fig.suptitle("Total Aggregated Flood Damage", fontsize=12)
-fig.savefig("../figures/fS12.png", bbox_inches='tight', dpi=300)
-fig.savefig("../figures/fS12.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS14.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS14.pdf", bbox_inches='tight', dpi=300)
 
 # %%
 gdf_cf_grid_masked['rel_dam_diff'] = (gdf_grid_masked['relative_aggr_damage'] - gdf_cf_grid_masked['relative_aggr_damage']) / gdf_grid_masked['relative_aggr_damage'] * 100
