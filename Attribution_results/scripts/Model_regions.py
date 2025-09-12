@@ -160,7 +160,7 @@ ax.text(32.5, -17.3, "Wflow Domain", color='lightskyblue', fontsize=10, fontweig
         bbox=dict(boxstyle="round,pad=0.3", facecolor='grey', alpha=0.7, edgecolor='lightskyblue'),
         zorder=10)
 
-ax.text(37.2, -21.7, "DFM Domain", color='white', fontsize=10, fontweight='bold',
+ax.text(36.6, -21.7, "D-Flow FM Domain", color='white', fontsize=10, fontweight='bold',
         bbox=dict(boxstyle="round,pad=0.3", facecolor='grey', alpha=0.7, edgecolor='white'),
         zorder=10)
 
