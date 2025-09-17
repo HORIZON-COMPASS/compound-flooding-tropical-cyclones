@@ -1,6 +1,6 @@
 # Scripts and data to reproduce the figures from Vertegaal et al. (submitted)
 
-## DATA
+## Data
 For data from the models, and some other data that is openly available, the files are provided in the *data* folder. 
 
 For data from the data catalogs (e.g. gswo), links to download the data are provided in the data catalogs.
