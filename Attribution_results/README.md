@@ -11,7 +11,6 @@ For any questions, you can contact the authors.
 # Scripts
 The script sin the folder *scripts* can be used to reproduce the figures and numbers presented in Vertegaal et al. (submitted). On top of every script is stated which Pixi environment from the pixi.toml file can be used to run the scripts. See the main *README.md* on how to use Pixi for Python environments. The figures and table are saved according to their figure or table number in the paper. See the Table below for which script is used for the production of which asset
 
-|------------------------------------------------------------------------------------------------|
 | Asset                 | Path                                                                   |
 |-----------------------|------------------------------------------------------------------------|
 | F01                   | *NA*                                                                   |
@@ -22,9 +21,8 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | F06                   | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Table 1               | *NA*                                                                   |
 | Table 2               | Attribution_results\scripts\Attribution_driver_combinations.py         |
-|------------------------------------------------------------------------------------------------|
+|                                                                                                |
 | *Supplement*                                                                                   |
-|------------------------------------------------------------------------------------------------|
 | FS1                   | Attribution_results\scripts\SFINCS_basemap.py                          |
 | FS2                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
 | FS3                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
@@ -41,9 +39,8 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | FS14                  | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Table S1              | Attribution_results\scripts\Wflow_bankfull_removal.py                  |
 | Table S2              | Attribution_results\scripts\Attribution_driver_combinations.py         |
-|------------------------------------------------------------------------------------------------|
+|                                                                                                |
 | *In-text numbers*                                                                              |
-|------------------------------------------------------------------------------------------------|
 | Fact flood extent     | Table 2                                                                |
 | Fact discharge        | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
 | Discharge normal      | Table S2                                                               |
@@ -53,6 +50,5 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | Flooded buildings     | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Total damage          | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Damage in Beira       | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| slr & wind area       | Attribution_results\scripts\Attribution_driver_combinations.py         |
-| rain area             | Attribution_results\scripts\Attribution_driver_combinations.py         |
-|------------------------------------------------------------------------------------------------|
+| affected slr & wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| affected rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
