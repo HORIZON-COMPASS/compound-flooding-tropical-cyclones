@@ -1,6 +1,6 @@
-## Scripts and data to reproduce the figures from Vertegaal et al. (submitted)
+# Scripts and data to reproduce the figures from Vertegaal et al. (submitted)
 
-# DATA
+## DATA
 For data from the models, and some other data that is openly available, the files are provided in the *data* folder. 
 
 For data from the data catalogs (e.g. gswo), links to download the data are provided in the data catalogs.
@@ -8,8 +8,8 @@ For data from the data catalogs (e.g. gswo), links to download the data are prov
 For any questions, you can contact the authors.
 
 
-# Scripts
-The script sin the folder *scripts* can be used to reproduce the figures and numbers presented in Vertegaal et al. (submitted). On top of every script is stated which Pixi environment from the pixi.toml file can be used to run the scripts. See the main *README.md* on how to use Pixi for Python environments. The figures and table are saved according to their figure or table number in the paper. See the Table below for which script is used for the production of which asset
+## Scripts
+The script sin the folder *scripts* can be used to reproduce the figures and numbers presented in Vertegaal et al. (submitted). On top of every script is stated which Pixi environment from the pixi.toml file can be used to run the scripts. See the main *README.md* on how to use Pixi for Python environments. The figures and table are saved according to their figure or table number in the paper. See the Table below for which script is used for the production of which asset:
 
 | Asset                 | Path                                                                   |
 |-----------------------|------------------------------------------------------------------------|
