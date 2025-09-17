@@ -11,7 +11,7 @@ __pycache__/
 pixi.lock
 ../hook.sh
 
-#Workflow output files
+# Workflow output files
 Workflows/dag*.png
 Workflows/dag*.pdf
 Workflows/*.dot
@@ -27,6 +27,10 @@ Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
 Attribution_results/figures/*
+
+# Data files
+Attribution_results/data/validation/UNOSAT/*
+Attribution_results/data/validation/CEMS/*
 
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
