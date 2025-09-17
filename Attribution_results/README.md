@@ -50,5 +50,5 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | Flooded buildings     | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Total damage          | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Damage in Beira       | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| affected slr & wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
-| affected rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| Affected CF slr & wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| Affected CF rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
