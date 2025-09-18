@@ -2,34 +2,22 @@
 print("Loading packages")
 import os
 from os.path import join
-from pathlib import Path
 import xarray as xr
 import numpy as np
 import geopandas as gpd
-
-from hydromt_sfincs import SfincsModel, utils
+from hydromt_sfincs import SfincsModel
 from hydromt import DataCatalog
-
 import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
-from matplotlib.colors import PowerNorm
-from matplotlib.colors import BoundaryNorm
-from matplotlib.cm import ScalarMappable
 import matplotlib.patheffects as path_effects
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.colors import Normalize
 from matplotlib import gridspec
 import cartopy.crs as ccrs
-from shapely.geometry import box
 from rasterio.features import shapes
 from shapely.geometry import shape
 import matplotlib.dates as mdates
-
+import rioxarray as rxr  # Required for reading TIFF files
 import warnings
 warnings.filterwarnings('ignore')
-
-import platform
-prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 def lat_formatter(x, pos):
     direction = 'N' if x >= 0 else 'S'
@@ -39,24 +27,12 @@ def lon_formatter(x, pos):
     direction = 'E' if x >= 0 else 'W'
     return f"{abs(x):.1f}°{direction}"
 
-def custom_formatter(value, pos=None):
-    return f"{value:.1f}°"
-
 #%%
 print("Loading Factual model")
 # define model and data catalog file paths
-factual_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
-cf_model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10")
+factual_model_dir = os.path.join("..","data","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 
-if platform.system() == "Windows":
-    datacat = [
-        '../../Workflows/03_data_catalogs/datacatalog_general.yml'
-        ]
-else:
-    datacat = [
-        '../../Workflows/03_data_catalogs/datacatalog_general___linux.yml'
-        ]
-
+datacat = ['../../Workflows/03_data_catalogs/datacatalog_general.yml']
 data_catalog = DataCatalog(data_libs = datacat)
 
 #%%
@@ -66,42 +42,26 @@ mod = SfincsModel(factual_model_dir, data_libs=datacat, mode="r")
 hisfile = os.path.join(factual_model_dir,"sfincs_his.nc")
 ds_his = xr.open_dataset(hisfile, engine='netcdf4')
 
-model_region_gdf = gpd.read_file(join(
-    prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs", 
-    "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0", "gis", "region.geojson"
-)).to_crs("EPSG:4326") 
+model_region_gdf = gpd.read_file(join("..", "data", "sfincs", "gis", "region.geojson")).to_crs("EPSG:4326") 
 
-#%%
-print("Masking permanent water")
-# we set a threshold to mask minimum flood depth
-hmin = 0.05
+#%%print("Loading flood map")
+# Load flood map which is already downscaled, masked for permanent water and represents a cells as flooded from 0.05 m or more
+flood_file = join(factual_model_dir, "floodmap.tif")
+hmax = rxr.open_rasterio(flood_file)
 
-# compute the maximum over all time steps
-da_zsmax = mod.results["zsmax"].max(dim="timemax")
-     
-# downscale the floodmap
-depfile  = join(factual_model_dir, "subgrid", "dep_subgrid.tif")
-da_dep   = mod.data_catalog.get_rasterdataset(depfile)
-
-da_hmax = utils.downscale_floodmap(
-      zsmax=da_zsmax,
-      dep=da_dep,
-      hmin=hmin,
-      )
-    
-# GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
-sfincs_region = mod.region
-projection    = mod.crs.to_epsg()
-gwso_region   = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
-gswo_mask     = gwso_region.raster.reproject_like(da_hmax, method="max")
-# permanent water where water occurence > 5%
-da_hmax_masked = da_hmax.where(gswo_mask <= 5)
+# Remove band dimension if present (common with TIFF files)
+if "band" in hmax.dims:
+    hmax = hmax.squeeze("band", drop=True)
 
 # Add the name attribute for identification
-mod.results['hmax'] = da_hmax
-mod.results['hmax_masked'] = da_hmax_masked
+mod.results['hmax_masked'] = hmax
+    
+# GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+projection    = model_region_gdf.crs.to_epsg()
+gswo_region   = data_catalog.get_rasterdataset("gswo", geom=model_region_gdf, buffer=1000)
+gswo_mask     = gswo_region.raster.reproject_like(hmax, method="max")
 
-# Make own background shape
+# Make own background shape that aligns with permanent water mask: permanent water where water occurence > 5%
 valid_mask = (gswo_mask <= 5).astype("uint8").squeeze()
 
 # Extract shapes
@@ -110,7 +70,7 @@ valid_polygons = [shape(geom) for geom, val in shapes_gen if val == 1]
 gdf_valid = gpd.GeoDataFrame(geometry=valid_polygons, crs=gswo_mask.rio.crs)
 gdf_valid = gdf_valid.to_crs(model_region_gdf.crs)
 
-del da_hmax, da_zsmax, da_dep  # Clean up to free memory
+del hmax  # Clean up to free memory
 
 
 # %%
@@ -120,7 +80,7 @@ stations_list = [5, 40]
 
 fig = plt.figure(figsize=(12, 5), dpi=300, constrained_layout=True)
 
-projection = mod.crs.to_epsg()
+projection = 32736
 colors = plt.get_cmap('tab10').colors  # Tuple of 10 colors
 
 gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig,
@@ -255,6 +215,7 @@ ax2.text(0.02, 0.85, '(d)', transform=ax2.transAxes, bbox=props, fontsize=10, fo
 fig.savefig("../figures/fS13.png", bbox_inches='tight', dpi=300)
 fig.savefig("../figures/fS13.pdf", bbox_inches='tight', dpi=300)
 plt.show()
+
 
 
 # %%

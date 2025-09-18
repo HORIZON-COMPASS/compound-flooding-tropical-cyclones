@@ -15,7 +15,6 @@ from hydromt_sfincs import SfincsModel, utils
 from hydromt import DataCatalog
 
 import matplotlib.pyplot as plt
-from pyproj import Transformer
 import geopandas as gpd
 import cartopy.crs as ccrs
 from matplotlib.patches import Patch
@@ -26,12 +25,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from shapely.geometry import box
 from rasterio.features import shapes
 from shapely.geometry import shape
-from matplotlib.cm import ScalarMappable
-import matplotlib.patheffects as path_effects
-from matplotlib.colors import Normalize
-from matplotlib.colors import PowerNorm
-from matplotlib.colors import TwoSlopeNorm
-from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+from matplotlib.colors import LinearSegmentedColormap
+import rioxarray as rxr  # Required for reading TIFF files
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -88,9 +83,8 @@ def load_config(config_path):
 def load_sfincs_models(config):
     """Generates model paths and categories for SFINCS runs based on CF values."""
     run = config['runname_ids']['Idai']
-    base_path = join(prefix, "11210471-001-compass", "03_Runs", run["region"], run["tc_name"], "sfincs")
+    base_path = join("..", "data", "sfincs")
     
-
     models = []
     factual_model = None  # Initialize factual_model before the loop
     
@@ -99,8 +93,8 @@ def load_sfincs_models(config):
         model_path = join(base_path, model_name)
         utmzone    = run['utmzone']
         model_obj  = SfincsModel(model_path, mode="r")
-        his_path   = os.path.join(model_path,"sfincs_his.nc")
-        ds_his     = xr.open_dataset(his_path, engine="netcdf4")
+        flood_file = join(model_path,"floodmap.tif")
+        model_obj.results['flood_file'] = flood_file
 
         num_CF_diff      = sum(v != 0 for v in [rain, wind, slr])
         categories       = ["Factual", "Single Driver Counterfactual", "Counterfactual Driver Pair", "Counterfactual Compound Driver"]
@@ -116,7 +110,6 @@ def load_sfincs_models(config):
             "utmzone": utmzone,
             "sfincs_model": model_obj,
             "sfincs_results": model_obj.results,
-            "sfincs_his": ds_his,
             "category": categories[num_CF_diff],
             "cat_short": short_cats[num_CF_diff],
             "CF_info": CF_info,
@@ -138,7 +131,7 @@ def load_sfincs_models(config):
 
 def load_fiat_models(config):
     run = config['runname_ids']['Idai']
-    base_path = os.path.join(prefix, "11210471-001-compass", "03_Runs", run['region'], run['tc_name'], "fiat")
+    base_path = os.path.join('..', 'data', "fiat")
     
     models = []
     factual_model = None  # Initialize factual_model before the loop
@@ -183,49 +176,40 @@ def load_fiat_models(config):
 
 
 # read global surface water occurance (GSWO) data to mask permanent water for the model region
-def gwso_sfincs_region(model):
+def gwso_sfincs_region(model, region):
     if platform.system() == "Windows":
         datacat_path = os.path.abspath("../../Workflows/03_data_catalogs/datacatalog_general.yml")
     else:
         datacat_path = os.path.abspath("../../Workflows/03_data_catalogs/datacatalog_general___linux.yml")
     data_catalog = DataCatalog(data_libs = [datacat_path])
-    sfincs_region = model["sfincs_model"].region
+    sfincs_region = region
     gwso_region = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
     return gwso_region
 
 
 # Compute the maximum water level (hmax) and mask out permanent water
 def compute_hmax_masked(models, gwso_region, model_region_gdf):
-    # we set a threshold to mask minimum flood depth
-    hmin = 0.05
-
     for model in models:
         # select the highest-resolution elevation dataset
         print(f"Processing model: {model['model_name']}")
-        depfile = join(model["model_path"], "subgrid", "dep_subgrid.tif")
-        da_dep = model["sfincs_model"].data_catalog.get_rasterdataset(depfile)
+       
+        # Load flood map which is already downscaled, masked for permanent water and represents a cells as flooded from 0.05 m or more
+        print("Loading preprocessed flood map...")
+        flood_file = model['sfincs_results']['flood_file']
+        hmax = rxr.open_rasterio(flood_file)
 
-        # compute the maximum over all time steps
-        # First timestep leads to incorrect diiference values for permanent water cells that are incorrectly unmasked; requires filtering.
-        da_zsmax = model["sfincs_results"]["zsmax"].isel(timemax=slice(1, None)).max(dim="timemax")
-     
-        # downscale the floodmap
-        da_hmax = utils.downscale_floodmap(
-            zsmax=da_zsmax,
-            dep=da_dep,
-            hmin=hmin,
-            reproj_method = "bilinear"
-            )
-    
-        # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
-        gswo_mask = gwso_region.raster.reproject_like(da_hmax, method="max")
-        # permanent water where water occurence > 5%
-        da_hmax_masked = da_hmax.where(gswo_mask <= 5)
-
+        # Remove band dimension if present (common with TIFF files)
+        if "band" in hmax.dims:
+            hmax = hmax.squeeze("band", drop=True)
+        
         # Add the name attribute for identification
-        model["sfincs_results"]['hmax'] = da_hmax
-        model["sfincs_results"]['hmax_masked'] = da_hmax_masked
+        model["sfincs_results"]['hmax_masked'] = hmax    
 
+        # Create background polygon that aligns with the permanent water mask for the model region
+        # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+        gswo_mask = gwso_region.raster.reproject_like(hmax, method="max")    
+
+        # permanent water where water occurence > 5%
         valid_mask = (gswo_mask <= 5).astype("uint8").squeeze()
 
         # Extract shapes
@@ -234,8 +218,7 @@ def compute_hmax_masked(models, gwso_region, model_region_gdf):
         gdf_valid = gpd.GeoDataFrame(geometry=valid_polygons, crs=gswo_mask.rio.crs)
         gdf_valid = gdf_valid.to_crs(model_region_gdf.crs)
 
-
-        del da_hmax, da_zsmax, da_dep, gswo_mask  # Clean up to free memory
+        del hmax, gswo_mask  # Clean up to free memory
         gc.collect()
 
     return models, gdf_valid
@@ -379,68 +362,6 @@ def calculate_flood_differences(models):
             positive_mask = (hmax_diff > 0.01)
             affected_area = (positive_mask * calculate_cell_area(model)).sum().compute() / 1e6  # km²
             print(f"The MOST affected area by climate-change-induced flooding: {round(float(affected_area), -1)} km²")
-
-    del factual_flood_volume, factual_flood_extent  # Clean up to free memory
-    gc.collect()
-
-    return models
-
-
-# # Function to calculate the flood volume and extent differences between factual and counterfactual datasets
-# def calculate_flood_differences(models):
-    factual_flood_volume = None
-    factual_flood_extent = None
-    
-    for model in models:
-        # Store factual flood volume and extent for comparison
-        if model["category"] == "Factual":
-            factual_flood_volume = model['sfincs_results']['flood_volume_km3']
-            factual_flood_extent = model['sfincs_results']['flood_extent_km2']
-
-            if factual_flood_volume is None:
-                print(f"Error: 'flood_volume_km3' not found for factual model: {model['model_name']}")
-                continue  # Skip this model if factual flood volume is missing
-            
-            if factual_flood_extent is None:
-                print(f"Error: 'flood_extent_km2' not found for factual model: {model['model_name']}")
-                continue  # Skip this model if factual flood extent is missing
-
-        # Compute flood volume difference for counterfactual models
-        if factual_flood_volume is not None and model["category"] != "Factual":
-            # Error handling for missing flood extent in counterfactual models
-            flood_volume = model['sfincs_results'].get('flood_volume_km3', None)
-
-            if flood_volume is None:
-                print(f"Error: 'flood_volume_km3' not found for counterfactual model: {model['model_name']}")
-                continue  # Skip this model if flood volume is missing
-            
-            flood_volume_diff = (factual_flood_volume - flood_volume) / factual_flood_volume * 100
-            model['sfincs_results']['Volume_diff_from_F(%)'] = flood_volume_diff
-            print(f"flood_volume_diff calculated for {model['model_name']}")
-
-        # Compute flood extent difference for counterfactual models
-        if factual_flood_extent is not None and model["category"] != "Factual":
-            # Error handling for missing flood extent in counterfactual models
-            flood_extent = model['sfincs_results'].get('flood_extent_km2', None)
-            if flood_extent is None:
-                print(f"Error: 'flood_extent_km2' not found for counterfactual model: {model['model_name']}")
-                continue  # Skip this model if flood extent is missing
-
-            flood_extent_diff = (factual_flood_extent - flood_extent) / factual_flood_extent * 100
-            model['sfincs_results']['Extent_diff_from_F(%)'] = flood_extent_diff
-            print(f"flood_extent_diff calculated for {model['model_name']}")
-        
-        # Calculate the area affected by the counterfactual flooding, 
-        if model["category"] != "Factual":
-            hmax_diff = model['sfincs_results']["hmax_diff"]
-            dx = abs(hmax_diff.x[1] - hmax_diff.x[0])
-            dy = abs(hmax_diff.y[1] - hmax_diff.y[0])
-            cell_area = dx * dy  # in map units (e.g., m² if projected)
-            total_flooded_area = (cell_area * (hmax_diff).sum().values) / 1e6
-            total_flooded_area = round(float(total_flooded_area), -1)
-
-            
-            print(f"The affect area by climate-change-induced flooding: {total_flooded_area} km2")
 
     del factual_flood_volume, factual_flood_extent  # Clean up to free memory
     gc.collect()
@@ -698,18 +619,18 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
     # Factual row
     table_data.append([
-        f"{factual_data['vol_abs']/1e6:.3f}", "-",  # no percent change for factual
-        f"{factual_data['ext_abs']:.3f}", "-",
-        f"{factual_data['dam_abs']/1e6:.3f}", "-"
+        f"{factual_data['vol_abs']/1e6:.0f}", "-",  # no percent change for factual
+        f"{factual_data['ext_abs']:.0f}", "-",
+        f"{factual_data['dam_abs']/1e6:.0f}", "-"
     ])
 
     # Counterfactual rows
     for key in sorted_keys[1:]:
         d = data_dict[key]
         row = [
-            f"{d['vol_abs']/1e6:.3f}", f"{d['vol_pct']:.3f}",
-            f"{d['ext_abs']:.3f}", f"{d['ext_pct']:.3f}",
-            f"{d['dam_abs']/1e6:.3f}", f"{d['dam_pct']:.3f}"
+            f"{d['vol_abs']/1e6:.0f}", f"{d['vol_pct']:.2f}",
+            f"{d['ext_abs']:.0f}", f"{d['ext_pct']:.2f}",
+            f"{d['dam_abs']/1e6:.0f}", f"{d['dam_pct']:.2f}"
         ]
         table_data.append(row)
 
@@ -865,13 +786,11 @@ print(models)
 
 #%%
 # Read model region
-model_region = gpd.read_file(join(prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs", 
-                                  "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
-                                  "gis", "region.geojson"))
+model_region = gpd.read_file(join("..", "data", "sfincs", "gis", "region.geojson"))
 
 #%%
 # Calculate hmax and mask out permanent water
-gwso = gwso_sfincs_region(models[0])
+gwso = gwso_sfincs_region(models[0], model_region)
 models, gdf_valid = compute_hmax_masked(models, gwso, model_region)
 models = compute_hmax_diff(models)
 
@@ -893,15 +812,12 @@ fiat_models = calculate_damage_differences(fiat_models)
 # Figure 4
 plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
-#%%
 # Table 2 & S2
 table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
-#%%
 # Figure 5
 plot_driver_combination_volume_extent_damage(models, fiat_models, filter_keys=["RAIN", "SLR & WIND", "RAIN & SLR & WIND"])
 
-#%%
 # Figure S11
 plot_cf_timeseries_from_models(models)
 

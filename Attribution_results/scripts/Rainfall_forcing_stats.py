@@ -11,23 +11,22 @@ import hydromt
 path_data_cat = "../../Workflows/03_data_catalogs/datacatalog_general.yml"
 data_catalog = hydromt.data_catalog.DataCatalog(data_libs = path_data_cat)
 
-sfincs        = "p:/11210471-001-compass/02_Models/sofala/Idai/sfincs/gis/region.geojson"
-wflow_region  = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow/staticgeoms/region.geojson"
-wflow_basins  = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow/staticgeoms/basins.geojson"
+sfincs        = "../data/sfincs/gis/region.geojson"
+wflow_region  = "../data/wflow/gis/region.geojson"
 
 # region of eastern Africa
 bbox_big = (29,-27,46,-9)
 region = gpd.read_file(wflow_region)
 sfincs_region = gpd.read_file(sfincs).to_crs(epsg=4326).total_bounds
-basins = gpd.read_file(wflow_basins)
 
 # time range of the event
 start_date = np.datetime64('2019-03-09T00:00') 
 end_date = np.datetime64('2019-03-25T06:00') 
 time_range = (start_date, end_date)
 
-# In[3]:
-# Load raster data for specified region and time range for ERA5
+# %%:
+# Load raster data for specified region and time range for ERA5 
+# Make sure to download ERA5 through the source in the data catalog entry
 era5_tp = data_catalog.get_rasterdataset(
     data_like = 'era5_hourly_zarr',
     time_tuple = time_range,

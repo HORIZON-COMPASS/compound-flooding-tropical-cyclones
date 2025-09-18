@@ -33,9 +33,9 @@ start_date = np.datetime64(datetime.strptime(config['start_time'], "%Y%m%d %H%M%
 end_date = np.datetime64(datetime.strptime(config['end_time'], "%Y%m%d %H%M%S"))
 
 # %%
-# Reading in Factual (F) and Counterfactual (CF) data
-SLR_hist_F  = xr.open_dataset(r"c:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
-SLR_hist_CF = xr.open_dataset(r"c:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
+# Reading in Factual (F) and Counterfactual (CF) data (make sure to download from https://data.isimip.org/search/query/10.48364/ISIMIP.749905.1/)
+SLR_hist_F  = xr.open_dataset("../data/slr/hcc_obsclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
+SLR_hist_CF = xr.open_dataset("../data/slr/hcc_counterclim_geocentricwaterlevel_global_hourly_2015.nc", engine='netcdf4')
                                                          
 # %%
 # Load lat and lon variables into memory
@@ -144,7 +144,7 @@ plt.show()
 
 
 # %%
-# Extend and plot the timeseries until the time of the TC, and the std deviation between the 5 selected stations
+# Extent and plot the timeseries until the time of the TC, and the std deviation between the 5 selected stations
 # --- Prepare data ---
 time_2015 = pd.to_datetime(mean_water_level_difference_DFM['time'].values)
 x_2015 = (time_2015 - time_2015[0]).total_seconds() / (3600 * 24)  # days since start
@@ -185,7 +185,7 @@ axes[0].legend(handles=[axes[0].lines[0], std_patch], fontsize=10)
 
 # --- Plot 2: Original 2015 data and extrapolated trend ---
 axes[1].plot(time_2015, y_2015, label="Mean of 5 stations along MZ coast", color='blue', linewidth=2)
-print_time = end_date.strftime("%Y-%m-%d")
+print_time = pd.to_datetime(end_date).strftime("%Y-%m-%d")
 axes[1].plot(extended_time, y_extended, label=f"Extrapolated trend to {print_time}", color='red', linestyle='--', linewidth=2)
 
 axes[1].set_title("Extrapolated Trend of 2015 Sea Level Rise", fontsize=12)
@@ -211,12 +211,13 @@ plt.show()
 #################################################################################
 ### Do the same for the long dataset to get the correct SLR for the Bathy ref ###
 #################################################################################
-# Load the 1990 & 2000 F and CF dataset to calculte the average SLR in this period
-SLR_hist_F_1990 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
-SLR_hist_CF_1990 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
+# Load the 1990 & 2000 F and CF dataset to calculte the average SLR in this period 
+# (make sure to download from https://data.isimip.org/search/query/10.48364/ISIMIP.749905.1/)
+SLR_hist_F_1990 = xr.open_dataset("../data/slr/hcc_obsclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
+SLR_hist_CF_1990 = xr.open_dataset("../data/slr/hcc_counterclim_geocentricwaterlevel_global_hourly_1990.nc", engine='netcdf4')
 
-SLR_hist_F_2000 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
-SLR_hist_CF_2000 = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
+SLR_hist_F_2000 = xr.open_dataset("../data/slr/hcc_obsclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
+SLR_hist_CF_2000 = xr.open_dataset("../data/slr/hcc_counterclim_geocentricwaterlevel_global_hourly_2000.nc", engine='netcdf4')
 
 # Apply spatial mask to the long term monthly data
 SLR_hist_F_1990 = SLR_hist_F_1990.sel(stations=mask_DFM)

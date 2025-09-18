@@ -17,13 +17,12 @@ import matplotlib.patheffects as path_effects
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import Normalize
 import cartopy.crs as ccrs
+import rioxarray as rxr  # Required for reading TIFF files
 from shapely.geometry import box
 from rasterio.features import shapes
 from shapely.geometry import shape
 import warnings
 warnings.filterwarnings('ignore')
-import platform
-prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 def lat_formatter(x, pos):
     direction = 'N' if x >= 0 else 'S'
@@ -40,55 +39,36 @@ def custom_formatter(value, pos=None):
 # Get the model boundaries
 print("Loading Factual SFINCS model to load masked model region")
 # define model and data catalog file paths
-model_dir = os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
+model_dir = os.path.join("..","data","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 
-if platform.system() == "Windows":
-    datacat = ['../../Workflows/03_data_catalogs/datacatalog_general.yml']
-else:
-    datacat = ['../../Workflows/03_data_catalogs/datacatalog_general___linux.yml']
-
+datacat = ['../../Workflows/03_data_catalogs/datacatalog_general.yml']
 data_catalog = DataCatalog(data_libs = datacat)
 
 #%%
 # Load in model, model region, and buffer model region
 mod = SfincsModel(model_dir, data_libs=datacat, mode="r")
 
-model_region_gdf = gpd.read_file(join(
-    prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs", 
-    "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0", "gis", "region.geojson"
-)).to_crs("EPSG:4326") 
+model_region_gdf = gpd.read_file(join("..", "data", "sfincs", "gis", "region.geojson")).to_crs("EPSG:4326") 
 
 #%%
-print("Masking permanent water")
-# we set a threshold to mask minimum flood depth
-hmin = 0.05
+print("Loading flood map")
+# Load flood map which is already downscaled, masked for permanent water and represents a cells as flooded from 0.05 m or more
+flood_file = join(model_dir, "floodmap.tif")
+hmax = rxr.open_rasterio(flood_file)
 
-# compute the maximum over all time steps
-da_zsmax = mod.results["zsmax"].max(dim="timemax")
-     
-# downscale the floodmap
-depfile  = join(model_dir, "subgrid", "dep_subgrid.tif")
-da_dep   = mod.data_catalog.get_rasterdataset(depfile)
-
-da_hmax = utils.downscale_floodmap(
-      zsmax=da_zsmax,
-      dep=da_dep,
-      hmin=hmin,
-      )
-    
-# GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
-sfincs_region = mod.region
-projection    = mod.crs.to_epsg()
-gwso_region   = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
-gswo_mask     = gwso_region.raster.reproject_like(da_hmax, method="max")
-# permanent water where water occurence > 5%
-da_hmax_masked = da_hmax.where(gswo_mask <= 5)
+# Remove band dimension if present (common with TIFF files)
+if "band" in hmax.dims:
+    hmax = hmax.squeeze("band", drop=True)
 
 # Add the name attribute for identification
-mod.results['hmax'] = da_hmax
-mod.results['hmax_masked'] = da_hmax_masked
+mod.results['hmax_masked'] = hmax
+    
+# GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+projection    = model_region_gdf.crs.to_epsg()
+gwso_region   = data_catalog.get_rasterdataset("gswo", geom=model_region_gdf, buffer=1000)
+gswo_mask     = gwso_region.raster.reproject_like(hmax, method="max")
 
-# Make own background shape
+# Make own background shape that aligns with permanent water mask: permanent water where water occurence > 5%
 valid_mask = (gswo_mask <= 5).astype("uint8").squeeze()
 
 # Extract shapes
@@ -97,18 +77,17 @@ valid_polygons = [shape(geom) for geom, val in shapes_gen if val == 1]
 gdf_valid = gpd.GeoDataFrame(geometry=valid_polygons, crs=gswo_mask.rio.crs)
 gdf_valid = gdf_valid.to_crs(model_region_gdf.crs)
 
-del da_hmax, da_zsmax, da_dep  # Clean up to free memory
+del hmax  # Clean up to free memory
 
 
 #%% ############################################
 # ========== Flood damage plotting ===========
 ################################################
 # Define conversion factor from 2010 euros to 2019 USD
-# eur_to_usd = 1.326 #
 usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056 (https://www.bls.gov/cpi/tables/supplemental-files/)
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala"))
+BASE_RUN_PATH = Path(join("..","data"))
 OUTPUT_DIR = Path("../figures")
 
 FACTUAL_EVENT = "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
@@ -116,12 +95,11 @@ COUNTERFACTUAL_EVENT = "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hour
 
 # ===== FILE PATHS =====
 # CF0 refers to Factual and CFall to Counterfactual with climate trends removed from rain, SLR & wind
-file_cf0 = BASE_RUN_PATH / "Idai" / "fiat" / FACTUAL_EVENT / "output" / "spatial.fgb"
-file_cfall = BASE_RUN_PATH / "Idai" / "fiat" / COUNTERFACTUAL_EVENT / "output" / "spatial.fgb"
+file_cf0 = BASE_RUN_PATH / "fiat" / FACTUAL_EVENT / "output" / "spatial.fgb"
+file_cfall = BASE_RUN_PATH / "fiat" / COUNTERFACTUAL_EVENT / "output" / "spatial.fgb"
 
 # To calculate damage in Beira region, based on Admin level 3 from GADM https://gadm.org/download_country.html
-beira_region = gpd.read_file(join(prefix, "11210471-001-compass", "01_Data", "sofala_geoms", "Beira_region.shp")
-                             ).to_crs("EPSG:4326")
+beira_region = gpd.read_file(join("..", "data", "gis", "beira", "Beira_region.shp")).to_crs("EPSG:4326")
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -138,8 +116,8 @@ gdf_cfall = gpd.read_file(file_cfall)
 #%%
 # Adding the max building value as column from exposure data
 print("Adding the max building value as column from exposure data")
-exposure_cf0 = BASE_RUN_PATH / "Idai" / "fiat" / FACTUAL_EVENT / "exposure" / "exposure.csv"
-exposure_cfall = BASE_RUN_PATH / "Idai" / "fiat" / COUNTERFACTUAL_EVENT / "exposure" / "exposure.csv"
+exposure_cf0 = BASE_RUN_PATH / "fiat" / FACTUAL_EVENT / "exposure" / "exposure.csv"
+exposure_cfall = BASE_RUN_PATH / "fiat" / COUNTERFACTUAL_EVENT / "exposure" / "exposure.csv"
 
 # Load the exposure data
 print(f"Reading exposure data from: {exposure_cf0}")
@@ -236,9 +214,9 @@ total_damage = cf0_damage.sum()
 perct_dam_beira = (total_damage_beira / total_damage) * 100
 print(f"Total damage in Beira region: ${total_damage_beira:.0f}, {perct_dam_beira:.0f}% of total")
 
-print(f"CF0 max damage: ${cf0_damage.max():.0f}")
-print(f"CF0 mean damage: ${cf0_damage.mean():.0f}")
-print(f"CF0 total damage: ${cf0_damage.sum():.0f}")
+print(f"Factual max damage: ${cf0_damage.max():.0f}")
+print(f"Factual mean damage: ${cf0_damage.mean():.0f}")
+print(f"Factual total damage: ${cf0_damage.sum():.0f}")
 
 print(f"# buildings damaged: {len(cf0_damage[cf0_damage>0])}")
 print(f"# buildings totally destroyed: {len(gdf_equal)}")

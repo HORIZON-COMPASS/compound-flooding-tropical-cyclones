@@ -50,20 +50,24 @@ def lon_formatter(x, pos):
 def custom_formatter(value, pos=None):
     return f"{value:.1f}°"
 
-# %% [markdown]
+# %%
 event = 'idai'
 
 # %%
-dir_obs_unosat = join(prefix,'11210471-001-compass','01_Data','Validation_UNOSAT')
-dir_obs_cems = join(prefix,'11210471-001-compass', '01_Data','Validation_GFM')
+# Downdload the UNOSAT data from https://unosat.org/products/2715 and place it in the right directory
+dir_obs_unosat = join('..','data','validation', 'UNOSAT')
 
-rundirs = join(prefix,'11210471-001-compass','03_Runs')
+# Downdload the CEMS (first make an account or log in) data from https://portal.gfm.eodc.eu/products and place it in the right directory
+# Draw an area of interest (AOI) based on bbox = [34.0, 35.6, -20.5, -19.1]  # [xmin, xmax, ymin, ymax], for 2019/03/01 to 2019/03/30 and get the Maximum Flood Extent
+dir_obs_cems = join('..','data','validation', 'CEMS')
+
+rundirs = join('..','data','sfincs')
 
 # %%
 event == 'idai'
 mdir = join(rundirs, 'sofala','Idai','sfincs','event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_spw_IBTrACS_CF0')
 file_floodmap_unosat = join(dir_obs_unosat, 'TC20190312MOZ_SHP', 'ST1_20190319_WaterExtent_ManicaSofalaProvinces.shp')
-file_floodmap_cems = join(dir_obs_cems, 'Idai_2019','maximum_2019_03','maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_06_26T11_41_09_531327.geojson')
+file_floodmap_cems = join(dir_obs_cems, 'maximum_flood_extent_2019-03-01_2019-03-30_beira_2025_09_17T12_35_51_115329.geojson') # Adjust file path if necessary
 sfincs_crs = '32736'
 sfincs_utm = '36S'
 
@@ -79,9 +83,8 @@ else:
 
 # %%
 # Read model output data 
-da_model = rxr.open_rasterio(join(prefix,'11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs', 
-                                  'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0',
-                                  'plot_output','floodmap.tif'))
+da_model = rxr.open_rasterio(join('..', 'data', 'sfincs', 'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0',
+                                  'floodmap.tif'))
 
 # %%
 # add crs information and convert to rioxarray dataset
@@ -91,8 +94,7 @@ ds = da_model.to_dataset(name='model')
 
 # %%
 # read region mask
-region = gpd.read_file(join(prefix,'11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs',
-                            'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0', 'gis', 'region.geojson'))
+region = gpd.read_file(join('..', 'data', 'sfincs', 'gis', 'region.geojson'))
 region_wsg = region.to_crs("EPSG:4326")
 # %%
 # read permanent water mask
@@ -108,8 +110,7 @@ gdf_valid = gdf_valid.to_crs(region_wsg.crs)
 
 # %%
 # Load raster flood map with rasterio as a basis for rasterization of the region and EO flood map vectors
-raster = rio.open(join(prefix, '11210471-001-compass', '03_Runs', 'sofala', 'Idai', 'sfincs', 
-                       'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0', 'plot_output', 'floodmap.tif'), 'r+')
+raster = rio.open(join('..', 'data', 'sfincs', 'event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0', 'floodmap.tif'), 'r+')
 raster.crs = CRS.from_epsg(sfincs_crs)
 
 # %%
