@@ -1,11 +1,13 @@
 # Scripts and data to reproduce the figures from Vertegaal et al. (submitted)
 
 ## Data
-For data from the models, and some other data that is openly available, the files are provided in the *data* folder. 
+For data from the models, the files are provided in the *data* folder that first has to be unzipped. 
 
-For data from the data catalogs (e.g. gswo), links to download the data are provided in the data catalogs.
+For data from the data catalogs (e.g. gswo), links to download the data are provided in the data catalogs (see Workflows/03_data_catalogs).
 
-For any questions, you can contact the authors.
+For the data of 30 year wflow runs, the authors can be contacted (see email below), since the files are quite large. This data is necessary for the scripts *Wflow_bankfull_removal.py* & *Wflow_GRDC_comparison.py*.
+
+For questions, you can contact the authors (main contact: doris.vertegaal@deltares.nl).
 
 
 ## Scripts
@@ -24,11 +26,11 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 |                                                                                                |
 | *Supplement*                                                                                   |
 | FS1                   | Attribution_results\scripts\SFINCS_basemap.py                          |
-| FS2                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
-| FS3                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
-| FS4                   | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
-| FS5                   | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
-| FS6                   | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
+| FS2 (request data)    | Attribution_results\scripts\Wflow_bankfull_removal                     |
+| FS3 (request data)    | Attribution_results\scripts\Wflow_bankfull_removal                     |
+| FS4 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
+| FS5 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
+| FS6 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
 | FS7                   | Workflows\04_scripts\postprocessing\dfm\output_to_catalog_add_waves.py |
 | FS8                   | Attribution_results\scripts\Validation_floodmaps_EO_data.py            |
 | FS9                   | Attribution_results\scripts\Calculating_SLR.py                         |
@@ -37,7 +39,7 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | FS12                  | Attribution_results\scripts\Attribution_driver_combinations.py         |
 | FS13                  | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
 | FS14                  | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| Table S1              | Attribution_results\scripts\Wflow_bankfull_removal.py                  |
+| Table S1 (request data) | Attribution_results\scripts\Wflow_bankfull_removal.py                  |
 | Table S2              | Attribution_results\scripts\Attribution_driver_combinations.py         |
 |                                                                                                |
 | *In-text numbers*                                                                              |
@@ -50,5 +52,5 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | Flooded buildings     | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Total damage          | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Damage in Beira       | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| Affected CF slr & wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
-| Affected CF rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| Affected CF SLR & Wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| Affected CF Rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
