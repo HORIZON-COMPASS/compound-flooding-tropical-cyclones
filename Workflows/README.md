@@ -1,4 +1,3 @@
-
 The structure of the folder is as follows:
 - Workflows
     - Config - per model  : Model configuration files
@@ -12,15 +11,17 @@ The structure of the folder is as follows:
 
 ## **Workflows**
 
-Four snakemake workflow files are present. All workflows work both on Linux as well as on Windows. All snakemake workflows use the same config yml file: config_snakemake/config_general.yml. 
+Seven snakemake workflow files are present. All workflows work both on Linux as well as on Windows. All snakemake workflows use the same config yml file: config_snakemake/config_general_MZB.yml. All data that is necessary to run the workflows is open source and can be found through the links in the data catalogs or are self generated and can be found in the Data folder.
 
 - [Workflows](#workflows)
-  - [snakefile_all.smk](#snakefile_allsmk): This workflow combines all other snakemake workflows into one large workflow. The sequence of the workflows are: snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
-  - [snakefile_sfincs_build.smk](#snakefile_sfincs_buildsmk): This workflow builds a SFINCS model without adding any forcing yet. The workflow consists of just one rule.
-  - [snakefile_wflow.smk](#snakefile_wflowsmk): This workflow builds a wflow model, using the SFINCS region as input. Gauges are added on the SFINCS inflow points, in order to generate output at the correct locations. Precipitation forcing is added based on the event start and end time. First, the wflow model is warmed up for a period of 1 year, with daily ERA5 data. The event itself is run with the forcing data as given in the snakemake configuration file.
-  - [snakefile_sfincs_update](#snakefile_sfincs_updatesmk): This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of both meteorological and WFlow forcing data, executes the model, and generates the output.
-   - [snakefile_dfm.smk](#snakefile_dfmsmk):This workflow creates a dfm base model and updates it by adding forcing data and running the model simulations. It also add the output to a data catalog which can be used as SFINCS waterlevel forcing.
-
+- **snakefile_sfincs_build.smk**: This workflow builds a SFINCS model without adding any forcing yet. The workflow consists of just one rule.
+- **snakefile_wflow.smk**: This workflow builds a wflow model, using the SFINCS region as input. Gauges are added on the SFINCS inflow points, in order to generate output at the correct locations. Precipitation forcing is added based on the event start and end time. First, the wflow model is warmed up for a period of 1 year, with daily ERA5 data. The event itself is run with ERA5 hourly precipitation and tmeperature forcing data as given in the snakemake configuration file. Both factual and counterfactual precipitation can be provided as input.
+- **snakefile_wflow_30yr.smk**: This workflow builds a 30-year long wflow model, ending at the start of the TC event, using the wflow base model as input. The bankfull discharge (2-year return period) is based on this 30-year long simulation and removed from the wflow generated discharge for the event, before added as discharge boundary condition to SFINCS.The remain incoming discharge represents the out of banks discharge, thereby removing the need to burn in an (unknown) river conveyance in the DEM. For this purpose, the same gauges as the wflow model for the event are used, in order to generate output at the correct locations. Precipitation forcing is added based on the event start time and exactly 30 years prior. The 30-year wflow model is run with daily ERA5 data for precipitation and temperature.
+- **snakefile_dfm.smk**/**snakefile_dfm_cluster.smk**: This workflow creates a dfm base model on windows or linux (_cluster) and updates it by adding forcing data and running the model simulations. Afterwards, wave setup results from a SFINCS-SnapWave simulation is added to the DFM output. The output is added to a data catalog which can be used as SFINCS waterlevel forcing. Both factual and counterfactual sea level and wind speed can be provided as input.
+- **snakefile_sfincs_update.smk**: This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of meteorological, coastal and discharge forcing data; executes the model, and generates the output. Both factual and counterfactual precipitation, sea level and wind speed can be provided as input.
+- **snakefile_all_wflow_sfincs.smk**: This workflow combines the wflow and sfincs into one large workflow. Combining all workflow is not possible due to conflicting packages and the need for one overarching pixi environment. You can use this snakefile instead of the one mentioned shortly. The sequence of the workflows are: 
+snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
+- **snakefile_fiat.smk**: This workflow builds and runs the Delft-FIAT model to estimate flood damage, based on the floodmap generated by the SFINCS simulations. 
 In the section below, the different workflows are described:
 
 ## Workflow --- snakefile_all.smk ---
@@ -38,7 +39,7 @@ This workflow builds a SFINCS model without adding any forcing yet. The workflow
 - **Output**: SFINCS model for the region (bounding box defined in `config_snakemake/config_general.yml`).
 - **Description**: This rule creates the SFINCS model  using the bbox given in the snakemakeThe model domain is based on the bounding box as given in the config_snakemake/config_general.yml file.
 Further options for building the model are given in the *config_sfincs\sfincs_base_build.yml* input file.
-The bounding box is then  used to find all intersecting subbasins (hydroAtlas level 12). These intersecting subbasins form the model region. Also, the model region extents to the -5???m contour line. 
+The bounding box is then used to find all intersecting subbasins (hydroAtlas level 12). These intersecting subbasins form the model region. Also, the model region extents to the -5???m contour line. 
 
 
 ## Workflow --- snakefile_wflow.smk ---
