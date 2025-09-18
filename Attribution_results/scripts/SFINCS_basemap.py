@@ -1,14 +1,8 @@
 #%% use pixi environment compass-wflow
 # Load modules
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import xarray as xr
-from os.path import join
-from hydromt_sfincs import SfincsModel, utils
+from hydromt_sfincs import SfincsModel
 
-region               = "sofala"
-tc_name              = "Idai"
 wind_forcing         = 'era5_hourly_spw_IBTrACS'
 precip_forcing       = 'era5_hourly_zarr'
 tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
@@ -24,7 +18,7 @@ CF_rain_txt          = "0"
 
 # Factual model
 model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
-dir_run              = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
+dir_run              = f"../data/sfincs/{model_name}"
 outfile_png          = f"../figures/fS1.png"
 outfile_pdf          = f"../figures/fS1.pdf"
 
