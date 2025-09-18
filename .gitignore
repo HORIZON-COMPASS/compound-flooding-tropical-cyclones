@@ -34,6 +34,7 @@ Attribution_results/data/validation/CEMS/*
 Attribution_results/data/grdc/*
 Attribution_results/data/ibtracs/*
 Attribution_results/data/slr/*
+Attribution_results/data.zip
 
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
