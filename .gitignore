@@ -31,6 +31,9 @@ Attribution_results/figures/*
 # Data files
 Attribution_results/data/validation/UNOSAT/*
 Attribution_results/data/validation/CEMS/*
+Attribution_results/data/grdc/*
+Attribution_results/data/ibtracs/*
+Attribution_results/data/slr/*
 
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
