@@ -18,13 +18,8 @@ import matplotlib.pyplot as plt
 # Set up wflow run variables
 logger = setuplog("update", "./hydromt.log", log_level=10)
 
-region           = "sofala"
-TC_name          = "Idai"
-precip_forcing   = "era5_hourly_zarr"
-CF_rain          = 0
-CF_rain_txt      = "0"
-wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF0_30yr"
-wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+wflow_root_30yr  = f"../data/wflow/event_precip_era5_hourly_zarr_CF0_30yr"
+wflow_root_event = f"../data/wflow/event_precip_era5_hourly_zarr_CF0"
 maindir           = '../../'
 data_cats        = [
     join(maindir, "Workflows", "03_data_catalogs", "datacatalog_general.yml"), 

@@ -10,25 +10,18 @@ from shapely.geometry import Point
 import contextily as ctx
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from hydromt_wflow import WflowModel
-import platform
 from pathlib import Path
 from geopy.distance import geodesic
 from hydromt.stats import skills as skillstats  # NSE, KGE, etc.
 import calendar
 
 #%%
-if platform.system() == "Windows":
-    P = Path("p:/")
-else:
-    # adjust this if your cluster mounts “P:” somewhere else, e.g. “/mnt/p”
-    P = Path("/p/")
-
-# Now build your base directories
-BASE        = P / "11210471-001-compass"
-BASE_RUNS   = P / "11210471-001-compass" / "03_Runs"  / "sofala" / "Idai" / "wflow"
-BASE_SFINCS = P / "11210471-001-compass" / "03_Runs"  / "sofala" / "Idai" / "sfincs" 
-BASE_MODELS = P / "11210471-001-compass" / "02_Models" / "sofala" / "Idai" / "wflow"
-BASE_DATA   = P / "11210471-001-compass" / "01_Data"
+# Set directories
+BASE        = Path("..")
+BASE_RUNS   = BASE / "data" / "wflow"
+BASE_SFINCS = BASE / "data" / "sfincs" 
+BASE_MODELS = BASE / "data" / "wflow" / "base_model"
+BASE_DATA   = BASE / "data"
 
 # Load base model for shapefiles
 mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS / "wflow_sbm.toml"))
@@ -40,13 +33,15 @@ mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS
 print("Loading GRDC dataset...")
 # Retrieved from https://grdc.bafg.de/data/data_portal/
 
-grdc_path = BASE_DATA / "GRDC" / "GRDC-Daily.nc"
+# Make sure to retrieve the data and store it in the correct folder
+grdc_path = BASE_DATA / "grdc" / "GRDC-Daily.nc"
 GRDC_data = xr.open_dataset(str(grdc_path))
 
+# Make sure to change "C:/Code/COMPASS/" to directory where to github repo is stored
 print("Initializing 30-year WFLOW model...")
 def make_model_warmup(subfolder: str):
-    root = BASE_RUNS / subfolder / "warmup"
-    cfg = root / "wflow_sbm.toml"
+    root = (Path(BASE_RUNS) / subfolder / "warmup").resolve()
+    cfg = (Path(BASE_RUNS) / subfolder / "warmup" / "wflow_sbm.toml").resolve()
     return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
 
 wflow_30yr_hist = make_model_warmup("event_precip_era5_daily_CF0_30yr_1954")
@@ -71,8 +66,8 @@ gdf_stations = gpd.GeoDataFrame({'name': selected['river_name'].values},
 ######################## LOAD REGIONS & MATCH #####################
 ###################################################################
 print("Loading WFLOW and SFINCS regions...")
-gdf_wflow = gpd.read_file(BASE_MODELS / "staticgeoms" / "basins.geojson").to_crs("EPSG:4326")
-gdf_sfincs = gpd.read_file(BASE / "02_Models" / "sofala" / "Idai" / "sfincs" / "gis" / "region.geojson").to_crs("EPSG:4326")
+gdf_wflow = gpd.read_file(BASE_RUNS / "gis" / "basins.geojson").to_crs("EPSG:4326")
+gdf_sfincs = gpd.read_file(BASE_SFINCS / "gis" / "region.geojson").to_crs("EPSG:4326")
 
 print("Finding closest GRDC stations to SFINCS domain...")
 sfincs_geom = gdf_sfincs.unary_union
