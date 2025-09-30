@@ -104,3 +104,4 @@ compass-fiat = { features = ["py311", "fiat"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
+compass-socio = { features = ["py311", "sfincs"]}
