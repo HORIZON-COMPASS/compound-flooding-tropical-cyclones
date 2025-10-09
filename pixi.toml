@@ -95,6 +95,12 @@ snakemake-executor-plugin-cluster-generic = "*"
 zarr = "==2.18.3"
 cartopy = ">=0.24.0,<0.25"
 
+[feature.socio.dependencies]
+openpyxl = "*"
+
+[feature.socio_pypi.pypi-dependencies]
+deep-translator = ">=1.11.4, <2"
+
 [environments]
 default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
@@ -104,4 +110,6 @@ compass-fiat = { features = ["py311", "fiat"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
-compass-socio = { features = ["py311", "sfincs"]}
+compass-socio = { features = ["py311", "sfincs", "socio_pypi", "socio"]}
+
+
