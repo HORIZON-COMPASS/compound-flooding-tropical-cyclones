@@ -113,14 +113,14 @@ def reproject_and_redistribute_population_over_land(
     # --- Rasterize each coarse cell and store indices of fine pixels ---
     mapping = np.empty((rows, cols), dtype=object)
     for idx, row in tqdm(gdf_coarse.iterrows(), total=len(gdf_coarse), desc="Rasterizing coarse cells"):
-        mask = features.rasterize(
+        cell_mask = features.rasterize(
             [(row.geometry, 1)],
             out_shape=flood_shape,
             transform=flood_transform,
             fill=0,
             dtype=np.uint8
         ).astype(bool)
-        mapping[row.row, row.col] = np.flatnonzero(mask & land_mask_flat)
+        mapping[row.row, row.col] = np.flatnonzero(cell_mask & land_mask_flat)
 
     # --- Redistribute population with Numba ---
     pop_fine_flat = redistribute_population_numba(pop_coarse, mapping, pop_fine_flat)
