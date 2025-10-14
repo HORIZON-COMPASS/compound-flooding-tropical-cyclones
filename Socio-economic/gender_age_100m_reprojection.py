@@ -218,48 +218,52 @@ def prepare_worldpop_to_flood_grid(
 
 #%%
 # ===== RUN THE PROCESSING =====
-
-# ds = prepare_worldpop_to_flood_grid(
-#     folder_raster=worldpop_folder_2020_100m,
-#     path_output_nc=path_moz_agesex_combined_2020_100m,
-#     land_gdf=background,
-#     flood_crs=flood_grid_crs,
-#     flood_transform=flood_grid_transform,
-#     flood_shape=flood_grid_shape,
-#     region_gdf=region,
-#     exclude_genders=['t'],
-#     year=2020
-# )
+test_folder = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder")
+test_output = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder", "test_output.nc")
+ds = prepare_worldpop_to_flood_grid(
+    folder_raster=test_folder,
+    path_output_nc=test_output,
+    land_gdf=background,
+    flood_crs=flood_grid_crs,
+    flood_transform=flood_grid_transform,
+    flood_shape=flood_grid_shape,
+    region_gdf=region,
+    exclude_genders=['t'],
+    year=2020
+)
 
 # %%
-# ===== OPTIMIZED VERSION WITH NUMBA & VECTORIZATION =====
+import numpy as np
+import geopandas as gpd
+import rasterio
+from rasterio import features
+from shapely.geometry import box
+from tqdm import tqdm
+import xarray as xr
+import pandas as pd
+from numba import njit
 
-@njit(parallel=True)
-def redistribute_population(pop_coarse, mapping, land_mask, pop_fine):
-    """
-    Fast redistribution using precomputed mask indices.
-    
-    pop_coarse: 2D array of coarse population
-    mapping: 3D array of shape (coarse_rows, coarse_cols, max_pixels_per_cell) 
-             containing flat indices in pop_fine for each coarse cell
-    land_mask: flattened land mask
-    pop_fine: flattened fine grid to accumulate population
-    """
-    for i in prange(pop_coarse.shape[0]):
+# -----------------------------
+# Numba-accelerated redistribution
+# -----------------------------
+@njit
+def redistribute_population_numba(pop_coarse, mapping, pop_fine_flat):
+    for i in range(pop_coarse.shape[0]):
         for j in range(pop_coarse.shape[1]):
             val = pop_coarse[i, j]
-            if val <= 0 or np.isnan(val):
+            if val <= 0:
                 continue
-            cell_indices = mapping[i, j]
-            n = len(cell_indices)
+            idxs = mapping[i, j]
+            n = len(idxs)
             if n > 0:
-                portion = val / n
-                for idx in cell_indices:
-                    pop_fine[idx] += portion
-    return pop_fine
+                for k in idxs:
+                    pop_fine_flat[k] += val / n
+    return pop_fine_flat
 
-
-def reproject_and_redistribute_population_over_land_vectorized(
+# -----------------------------
+# Vectorized reproject + redistribute
+# -----------------------------
+def reproject_and_redistribute_population_over_land(
     pop_data,  # raster path
     land_gdf,
     flood_crs,
@@ -268,9 +272,9 @@ def reproject_and_redistribute_population_over_land_vectorized(
     region=None,
     year=None
 ):
-    """Vectorized and accelerated redistribution of population."""
-    
-    print(f"▶ Processing {year} population data (vectorized)...")
+    """Vectorized & accelerated redistribution of population onto flood grid."""
+
+    print(f"▶ Processing {year} population data...")
 
     # --- Load raster ---
     with rasterio.open(pop_data) as src:
@@ -286,7 +290,7 @@ def reproject_and_redistribute_population_over_land_vectorized(
             pop_coarse, coarse_affine = rasterio.mask.mask(src, region_geom, crop=True, nodata=0)
         pop_coarse = pop_coarse.squeeze()
 
-    # --- Precompute land mask on fine grid ---
+    # --- Prepare land mask on fine grid ---
     land_mask = features.rasterize(
         [(geom, 1) for geom in land_gdf.geometry],
         out_shape=flood_shape,
@@ -298,26 +302,22 @@ def reproject_and_redistribute_population_over_land_vectorized(
     pop_fine_flat = np.zeros(flood_shape[0] * flood_shape[1], dtype=np.float32)
     print("  ✔ Land mask created on flood grid.")
 
-    # --- Create GeoDataFrame of coarse pixels ---
-    coarse_rows, coarse_cols = pop_coarse.shape
-    polys = []
-    for i in range(coarse_rows):
-        for j in range(coarse_cols):
-            x0, y0 = coarse_affine * (j, i)
-            x1, y1 = coarse_affine * (j+1, i+1)
-            polys.append(box(x0, y0, x1, y1))
-    gdf_coarse = gpd.GeoDataFrame({'row': np.repeat(np.arange(coarse_rows), coarse_cols),
-                                   'col': np.tile(np.arange(coarse_cols), coarse_rows)},
-                                  geometry=polys, crs=coarse_crs)
-    
+    # --- Create all coarse cell polygons at once ---
+    rows, cols = pop_coarse.shape
+    polys = [box(*coarse_affine * (j, i), *coarse_affine * (j+1, i+1))
+             for i in range(rows) for j in range(cols)]
+    gdf_coarse = gpd.GeoDataFrame(
+        {'row': np.repeat(np.arange(rows), cols),
+         'col': np.tile(np.arange(cols), rows)},
+        geometry=polys, crs=coarse_crs
+    )
+
     # --- Transform all coarse polygons at once ---
     gdf_coarse = gdf_coarse.to_crs(flood_crs)
-    
-    # --- Rasterize coarse polygons to fine grid and store indices ---
-    max_pixels_per_cell = 5000  # adjust depending on resolution
-    mapping = np.empty((coarse_rows, coarse_cols), dtype=object)
-    
-    for idx, row in gdf_coarse.iterrows():
+
+    # --- Rasterize each coarse cell and store indices of fine pixels ---
+    mapping = np.empty((rows, cols), dtype=object)
+    for idx, row in tqdm(gdf_coarse.iterrows(), total=len(gdf_coarse), desc="Rasterizing coarse cells"):
         mask = features.rasterize(
             [(row.geometry, 1)],
             out_shape=flood_shape,
@@ -325,12 +325,11 @@ def reproject_and_redistribute_population_over_land_vectorized(
             fill=0,
             dtype=np.uint8
         ).astype(bool)
-        mask_flat = mask.ravel()
-        valid_mask = np.flatnonzero(mask_flat & land_mask_flat)
-        mapping[row.row, row.col] = valid_mask
+        valid_mask = np.flatnonzero(mask.ravel() & land_mask_flat)
+        mapping[row.row, row.col] = np.flatnonzero(mask & land_mask_flat)
 
-    # --- Flatten coarse pop and redistribute ---
-    pop_fine_flat = redistribute_population(pop_coarse, mapping, land_mask_flat, pop_fine_flat)
+    # --- Redistribute population with Numba ---
+    pop_fine_flat = redistribute_population_numba(pop_coarse, mapping, pop_fine_flat)
     pop_fine = pop_fine_flat.reshape(flood_shape)
 
     # --- Validation ---
@@ -346,22 +345,10 @@ def reproject_and_redistribute_population_over_land_vectorized(
 
     return pop_fine
 
-# --- Helper to process one raster file ---
-def process_worldpop_file(file, land_gdf, flood_crs, flood_transform, flood_shape, region_gdf, year):
-    """Top-level function for parallel processing of one raster file."""
-    name = file.stem
-    pop_fine = reproject_and_redistribute_population_over_land_vectorized(
-        pop_data=file,
-        land_gdf=land_gdf,
-        flood_crs=flood_crs,
-        flood_transform=flood_transform,
-        flood_shape=flood_shape,
-        region=region_gdf,
-        year=year
-    )
-    return name, pop_fine
-
-def prepare_worldpop_to_flood_grid_slurm(
+# -----------------------------
+# Wrapper for all rasters
+# -----------------------------
+def prepare_worldpop_to_flood_grid(
     folder_raster,
     path_output_nc,
     land_gdf,
@@ -371,32 +358,30 @@ def prepare_worldpop_to_flood_grid_slurm(
     region_gdf=None,
     exclude_genders=None,
     year=None,
-    chunk_size={'x': 1000, 'y': 1000},
-    n_workers=6  # adjust for number of CPUs on node or SLURM job
+    chunk_size={'x': 1000, 'y': 1000}
 ):
-    """
-    Process all WorldPop rasters and reproject to flood grid using vectorized redistribution.
-    Designed for parallel execution (local or SLURM cluster).
-    """
-    print(f"▶ Preparing WorldPop rasters from {folder_raster} with {n_workers} workers")
+    print(f"▶ Preparing WorldPop rasters from {folder_raster}")
 
     files = sorted(Path(folder_raster).glob("*.tif"))
-    if exclude_genders:
-        files = [f for f in files if not any(g in f.stem for g in exclude_genders)]
-
-    if len(files) == 0:
-        raise ValueError("No raster files found in folder or all excluded by filter.")
-
     ds_vars = {}
 
-    # --- Parallel execution ---
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
-        futures = {executor.submit(process_worldpop_file, f, land_gdf, flood_crs, flood_transform, flood_shape, region_gdf, year): f for f in files}
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing rasters"):
-            name, pop_fine = future.result()
-            ds_vars[name] = (("y", "x"), pop_fine)
+    for file in tqdm(files, desc="Processing rasters"):
+        name = file.stem
+        if exclude_genders and any(g in name for g in exclude_genders):
+            continue
 
-    # --- Combine all rasters into one xarray.Dataset ---
+        pop_fine = reproject_and_redistribute_population_over_land(
+            pop_data=file,
+            land_gdf=land_gdf,
+            flood_crs=flood_crs,
+            flood_transform=flood_transform,
+            flood_shape=flood_shape,
+            region=region_gdf,
+            year=year,
+        )
+
+        ds_vars[name] = (("y", "x"), pop_fine)
+
     ds = xr.Dataset(ds_vars)
     ds = ds.chunk(chunk_size)
 
@@ -404,6 +389,9 @@ def prepare_worldpop_to_flood_grid_slurm(
         'title': f'WorldPop Data reprojected to flood grid ({year})',
         'source': 'WorldPop',
         'year': year,
+        'chunked': 'True',
+        'chunk_size': str(chunk_size),
+        'clipped_to_region': str(region_gdf is not None),
         'created_date': pd.Timestamp.now().isoformat(),
     })
 
@@ -412,7 +400,6 @@ def prepare_worldpop_to_flood_grid_slurm(
 
     return ds
 
-#%%
 test_folder = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder")
 test_output = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder", "test_output.nc")
 ds = prepare_worldpop_to_flood_grid(
@@ -426,4 +413,5 @@ ds = prepare_worldpop_to_flood_grid(
     exclude_genders=['t'],
     year=2020
 )
+
 # %%
