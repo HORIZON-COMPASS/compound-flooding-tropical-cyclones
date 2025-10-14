@@ -67,7 +67,7 @@ background = gpd.read_file(os.path.join(prefix, "11210471-001-compass","01_Data"
 # CF_flooding = sfincs_dir_CF / "floodmap.tif"
 
 # Flood model subgrid
-sfincs_subgrid = BASE_RUN_PATH / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "sfincs" / "subgrid" / "dep_subgrid.tif"
+sfincs_subgrid = BASE_RUN_PATH / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "subgrid" / "dep_subgrid.tif"
 
 
 #%% Read flood data and background polygons
