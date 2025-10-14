@@ -258,6 +258,7 @@ def redistribute_population(pop_coarse, mapping, land_mask, pop_fine):
                     pop_fine[idx] += portion
     return pop_fine
 
+
 def reproject_and_redistribute_population_over_land_vectorized(
     pop_data,  # raster path
     land_gdf,
@@ -324,7 +325,8 @@ def reproject_and_redistribute_population_over_land_vectorized(
             fill=0,
             dtype=np.uint8
         ).astype(bool)
-        valid_mask = np.flatnonzero(mask & land_mask_flat)
+        mask_flat = mask.ravel()
+        valid_mask = np.flatnonzero(mask_flat & land_mask_flat)
         mapping[row.row, row.col] = valid_mask
 
     # --- Flatten coarse pop and redistribute ---
@@ -344,6 +346,20 @@ def reproject_and_redistribute_population_over_land_vectorized(
 
     return pop_fine
 
+# --- Helper to process one raster file ---
+def process_worldpop_file(file, land_gdf, flood_crs, flood_transform, flood_shape, region_gdf, year):
+    """Top-level function for parallel processing of one raster file."""
+    name = file.stem
+    pop_fine = reproject_and_redistribute_population_over_land_vectorized(
+        pop_data=file,
+        land_gdf=land_gdf,
+        flood_crs=flood_crs,
+        flood_transform=flood_transform,
+        flood_shape=flood_shape,
+        region=region_gdf,
+        year=year
+    )
+    return name, pop_fine
 
 def prepare_worldpop_to_flood_grid_slurm(
     folder_raster,
@@ -373,23 +389,9 @@ def prepare_worldpop_to_flood_grid_slurm(
 
     ds_vars = {}
 
-    # --- Helper to process one raster file ---
-    def process_file(file):
-        name = file.stem
-        pop_fine = reproject_and_redistribute_population_over_land_vectorized(
-            pop_data=file,
-            land_gdf=land_gdf,
-            flood_crs=flood_crs,
-            flood_transform=flood_transform,
-            flood_shape=flood_shape,
-            region=region_gdf,
-            year=year
-        )
-        return name, pop_fine
-
     # --- Parallel execution ---
     with ProcessPoolExecutor(max_workers=n_workers) as executor:
-        futures = {executor.submit(process_file, f): f for f in files}
+        futures = {executor.submit(process_worldpop_file, f, land_gdf, flood_crs, flood_transform, flood_shape, region_gdf, year): f for f in files}
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing rasters"):
             name, pop_fine = future.result()
             ds_vars[name] = (("y", "x"), pop_fine)
@@ -402,12 +404,7 @@ def prepare_worldpop_to_flood_grid_slurm(
         'title': f'WorldPop Data reprojected to flood grid ({year})',
         'source': 'WorldPop',
         'year': year,
-        'chunked': True,
-        'chunk_size': str(chunk_size),
-        'clipped_to_region': str(region_gdf is not None),
         'created_date': pd.Timestamp.now().isoformat(),
-        'parallelized': True,
-        'n_workers': n_workers
     })
 
     print(f"💾 Saving to {path_output_nc}")
@@ -417,9 +414,10 @@ def prepare_worldpop_to_flood_grid_slurm(
 
 #%%
 test_folder = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder")
-ds = prepare_worldpop_to_flood_grid_slurm(
+test_output = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_agesex_structures_2020_CN_100m_R2025A_v1","test_folder", "test_output.nc")
+ds = prepare_worldpop_to_flood_grid(
     folder_raster=test_folder,
-    path_output_nc=test_folder / "test_output.nc",
+    path_output_nc=test_output,
     land_gdf=background,
     flood_crs=flood_grid_crs,
     flood_transform=flood_grid_transform,
