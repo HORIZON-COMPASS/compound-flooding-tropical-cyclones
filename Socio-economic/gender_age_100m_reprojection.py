@@ -1,4 +1,5 @@
 #%%
+print("Loading packages...")
 import os
 import yaml
 import json
@@ -28,6 +29,7 @@ prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 #%%
 # ===== CONFIGURATION =====
+print("Setting up paths and parameters...")
 # EVENT_NAME = "Idai"
 BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai"))
 # SCENARIO_PATH_F = "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" # factual
@@ -120,7 +122,7 @@ path_moz_agesex_combined_2020_100m = os.path.join(worldpop_folder_2020_100m, "mo
 #%% ###################################################################################
 ######################### Overlay population with flood map ###########################
 #######################################################################################
-
+print("Reprojecting WorldPop 100m age-sex rasters to flood grid...")
 def prepare_worldpop_to_flood_grid(
     folder_raster,
     path_output_nc,
