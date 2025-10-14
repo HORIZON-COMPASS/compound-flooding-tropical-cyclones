@@ -12,6 +12,9 @@ from numba import njit
 import platform
 from pathlib import Path
 import json
+import numpy as np
+from rasterio import mask
+
 
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
@@ -79,7 +82,7 @@ def reproject_and_redistribute_population_over_land(
         region_proj = region.to_crs(coarse_crs)
         region_geom = [feature["geometry"] for feature in json.loads(region_proj.to_json())["features"]]
         with rasterio.open(pop_data) as src:
-            pop_coarse, coarse_affine = rasterio.mask.mask(src, region_geom, crop=True, nodata=0)
+            pop_coarse, coarse_affine = mask.mask(src, region_geom, crop=True, nodata=0)
         pop_coarse = pop_coarse.squeeze()
 
     # --- Prepare land mask on fine grid ---
