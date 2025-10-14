@@ -1,4 +1,5 @@
 #%%
+import os
 import numpy as np
 import geopandas as gpd
 import rasterio
@@ -8,6 +9,31 @@ from tqdm import tqdm
 import xarray as xr
 import pandas as pd
 from numba import njit
+import platform
+from pathlib import Path
+import json
+
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
+
+#%%
+# ===== CONFIGURATION =====
+print("Setting up paths and parameters...")
+BASE_RUN_PATH = Path(os.path.join(prefix,"11210471-001-compass","03_Runs","sofala","Idai"))
+
+#%%
+# Input files
+shapefile_fp = BASE_RUN_PATH / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "gis" / "region.geojson"   # replace with your region shapefile
+background = gpd.read_file(os.path.join(prefix, "11210471-001-compass","01_Data","sofala_geoms","sofala_region_background.geojson"))
+region = gpd.read_file(shapefile_fp)
+
+# Flood model subgrid
+sfincs_subgrid = BASE_RUN_PATH / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "subgrid" / "dep_subgrid.tif"
+
+# --- Flood grid properties ---
+with rasterio.open(sfincs_subgrid) as src:
+    flood_grid_crs, flood_grid_transform, flood_grid_shape = src.crs, src.transform, (src.height, src.width)
+
 
 # -----------------------------
 # Numba-accelerated redistribution
