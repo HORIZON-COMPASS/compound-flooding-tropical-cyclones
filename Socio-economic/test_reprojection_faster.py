@@ -120,7 +120,7 @@ def reproject_and_redistribute_population_over_land(
             fill=0,
             dtype=np.uint8
         ).astype(bool)
-        mapping[row.row, row.col] = np.flatnonzero(cell_mask & land_mask_flat)
+        mapping[row.row, row.col] = np.flatnonzero(cell_mask.ravel() & land_mask_flat)
 
     # --- Redistribute population with Numba ---
     pop_fine_flat = redistribute_population_numba(pop_coarse, mapping, pop_fine_flat)
