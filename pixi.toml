@@ -98,6 +98,7 @@ cartopy = ">=0.24.0,<0.25"
 [feature.socio.dependencies]
 openpyxl = "*"
 tqdm = "*"
+rasterstats = "*"
 
 [feature.socio_pypi.pypi-dependencies]
 deep-translator = ">=1.11.4, <2"
