@@ -1,55 +1,43 @@
 #%%
-import rasterio
-import geopandas as gpd
+import os
+from matplotlib import cm
+import yaml
+import json
 import numpy as np
-from shapely.geometry import box
+import pandas as pd
+import xarray as xr
 from pathlib import Path
+from os.path import join
+import rasterio
+from rasterio import features
+import geopandas as gpd
+import itertools
 import warnings
 warnings.filterwarnings('ignore')
 import platform
-import os
 import matplotlib.pyplot as plt
-from rasterio.warp import reproject, Resampling
-from rasterio.mask import mask
-import json
+import matplotlib.colors as mcolors
 from matplotlib.colors import PowerNorm
-import matplotlib.colors as colors
-# import matplotlib.cm as cm
-from shapely.geometry import Polygon
-import cartopy.crs as ccrs
-import matplotlib.ticker as mticker
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LinearSegmentedColormap
-from rasterio.vrt import WarpedVRT
-import matplotlib.colors as mcolors
-import rioxarray as rxr  # Required for reading TIFF files
-import pandas as pd
 from matplotlib.colors import BoundaryNorm
-from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-import geopandas as gpd
+from rasterio.vrt import WarpedVRT
+from rasterio.warp import reproject, Resampling
+from rasterio.mask import mask
 from shapely.geometry import box
-from rasterio.transform import Affine
-from rasterio.features import rasterize
-from shapely.geometry import Point
-import yaml
-import xarray as xr
-import os
-from os.path import join
+from shapely.geometry import Polygon
+import cartopy.crs as ccrs
+import rioxarray as rxr 
 from hydromt_sfincs import SfincsModel, utils
 from hydromt import DataCatalog
-import itertools
+from tqdm import tqdm
+import gc
+from scipy.stats import gaussian_kde
+from scipy.signal import find_peaks
+
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
-
-def lat_formatter(x, pos):
-    direction = 'N' if x >= 0 else 'S'
-    return f"{abs(x):.1f}°{direction}"
-
-def lon_formatter(x, pos):
-    direction = 'E' if x >= 0 else 'W'
-    return f"{abs(x):.1f}°{direction}"
-
 
 # ===== CONFIGURATION =====
 EVENT_NAME = "Idai"
@@ -64,11 +52,21 @@ fiat_dir_CF   = BASE_RUN_PATH / "fiat" / SCENARIO_PATH_CF
 sfincs_dir_F  = BASE_RUN_PATH / "sfincs" / SCENARIO_PATH_F
 sfincs_dir_CF = BASE_RUN_PATH / "sfincs" / SCENARIO_PATH_CF
 
+# ===== DATA CATALOG =====
+if platform.system() == "Windows":
+    datacat_path = os.path.abspath("../Workflows/03_data_catalogs/datacatalog_general.yml")
+else:
+    datacat_path = os.path.abspath("../Workflows/03_data_catalogs/datacatalog_general___linux.yml")
+data_catalog = DataCatalog(data_libs = [datacat_path])
 
 #%%
-# Input files
+# ===== Input files ==== #
 shapefile_fp = "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/gis/region.geojson"   # replace with your region shapefile
 background = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_region_background.geojson")
+shapefile_sofala = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_province.shp")
+
+# Load the admin3 district in the case study region to validate exposed people
+districts = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_districts_study_region.shp")
 
 # population in provided inthousand persons per grid cell
 population_raster_path_2020 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2020_30.tif")  
@@ -82,8 +80,7 @@ CF_flooding = sfincs_dir_CF / "floodmap.tif"
 sfincs_subgrid = BASE_RUN_PATH / "sfincs" / "subgrid" / "dep_subgrid.tif"
 
 
-
-#%% Read flood data and backgorund polygons
+#%% Read flood data and background polygons
 # --- Flood grid properties ---
 with rasterio.open(sfincs_subgrid) as src:
     flood_grid_crs, flood_grid_transform, flood_grid_shape = src.crs, src.transform, (src.height, src.width)
@@ -108,7 +105,6 @@ def get_extent(transform, width, height):
 
 flood_extent = get_extent(flood_grid_transform, flood_grid_shape[1], flood_grid_shape[0])
 
-
 # --- Background layers for plotting ---
 # Define a polygon to remove/mask out land layer (incorrect boundary over the ocean)
 mask_poly = Polygon([(34.9,-20.3), (36,-20.3), (36,-19.9), (34.9,-19.9)])
@@ -119,36 +115,133 @@ bg_filtered['geometry'] = bg_filtered.geometry.apply(lambda g: g.difference(mask
 background_utm = background.to_crs(flood_grid_crs)
 bg_filtered_utm = bg_filtered.to_crs(flood_grid_crs)
 region_utm = region.to_crs(flood_grid_crs)
+districts_utm = districts.to_crs(flood_grid_crs)
 
+# Remove districts that are not connecting to the region
+drop_districts = ["Muanza", "Gororngosa-Sede", "Galinha"]
+districts_filtered = districts_utm[~districts_utm['NAME_3'].isin(drop_districts)]
 
 
 #%% Read and regrid population data
-def reproject_and_clip_population(pop_path, region_geom, flood_crs, flood_transform, flood_shape, year):
-    print("Reproject population raster directly into flood grid CRS & resolution, clipped to the region of interest")
+# --- Function to redistribute population over land pixels on flood grid ---
+def reproject_and_redistribute_population_over_land(pop_path, land_gdf, flood_crs, flood_transform, flood_shape, province_geom=None, region=None, districts=None, year=None, out_raster_path=None):    
+    print(f"▶ Loading {year} population raster...")
     with rasterio.open(pop_path) as src:
-        # Build a WarpedVRT to act like the raster is already in flood CRS
-        with WarpedVRT(src, crs=flood_crs, resampling=Resampling.sum) as vrt:
-            # Clip to region (already in flood CRS)
-            pop_clipped, transform_clipped = mask(vrt, region_geom, crop=True, nodata=src.nodata)
+        pop = src.read(1, masked=True)
+        pop_affine = src.transform
+        pop_crs = src.crs
 
-        # Prepare output array at flood grid resolution
-        pop_regridded = np.zeros(flood_shape, dtype=pop_clipped.dtype)
+        # Clip to province
+        province_geom = province_geom.to_crs(src.crs)
+        province_geom = [json.loads(province_geom.to_json())["features"][0]["geometry"]]
 
-        # Reproject clipped population → flood grid directly
-        reproject(
-            source=pop_clipped,
-            destination=pop_regridded,
-            src_transform=transform_clipped,
-            src_crs=vrt.crs,
-            dst_transform=flood_transform,
-            dst_crs=flood_crs,
-            resampling=Resampling.sum
-        )
+        pop_sofala, transform_sofala = mask(src, province_geom, crop=True, nodata=src.nodata)
 
-        print(f"[{year}] No-data value:", src.nodata)
-        return pop_regridded
+        # Dissolve districts into one geometry
+        districts_single = districts.dissolve().reset_index(drop=True)
+        districts_single = districts_single.to_crs(src.crs)
+        districts_geom = [districts_single.geometry.iloc[0].__geo_interface__]
+
+        pop_districts, pop_affine_districts = mask(src, districts_geom, crop=True, nodata=src.nodata)
+
+        if out_raster_path is not None and os.path.exists(out_raster_path):
+            print(f"▶ Loading existing raster from {out_raster_path}")
+            with rasterio.open(out_raster_path) as src:
+                pop_fine = src.read(1)
+                return pop_fine, pop_sofala, transform_sofala, pop_districts, pop_affine_districts
+
+        # Clip to region if provided
+        if region is not None:
+            region_wsg = region.to_crs(src.crs)
+            region_geom = [json.loads(region_wsg.to_json())["features"][0]["geometry"]] 
+            pop, pop_affine = rasterio.mask.mask(src, region_geom, crop=True, nodata=src.nodata)
+
+        pop = pop.squeeze()
+
+    # Prepare empty high-resolution array
+    pop_fine = np.zeros(flood_shape, dtype=np.float32)
+
+    # Rasterize land mask to flood grid (True for land)
+    land_mask = features.rasterize(
+        [(geom, 1) for geom in land_gdf.geometry],
+        out_shape=flood_shape,
+        transform=flood_transform,
+        fill=0,
+        dtype=np.uint8
+    ).astype(bool)
+
+    print("  ✔ Land mask created on flood grid.")
+
+    # Loop through each coarse pixel
+    print("▶ Redistributing population to fine grid...")
+    for row in tqdm(range(pop.shape[0]), desc="  Processing coarse cells"):
+        for col in range(pop.shape[1]):
+            pop_value = pop[row, col]
+            if np.isnan(pop_value) or pop_value <= 0:
+                continue
+
+            # Get coarse pixel bounds (in coarse CRS)
+            x_min, y_max = pop_affine * (col, row)
+            x_max, y_min = pop_affine * (col + 1, row + 1)
+            coarse_bounds = box(x_min, y_min, x_max, y_max)
+
+            # Transform to flood CRS
+            coarse_bounds_flood = gpd.GeoSeries([coarse_bounds], crs=pop_crs).to_crs(flood_crs).iloc[0]
+
+            # Rasterize this coarse cell footprint to flood grid
+            coarse_mask = features.rasterize(
+                [(coarse_bounds_flood, 1)],
+                out_shape=flood_shape,
+                transform=flood_transform,
+                fill=0,
+                # all_touched=True,
+                dtype=np.uint8
+            ).astype(bool)
+
+            # Identify land pixels within this coarse cell
+            valid_mask = coarse_mask & land_mask
+            n_valid = valid_mask.sum()
+
+            # Distribute population evenly over valid pixels
+            if n_valid > 0:
+                pop_fine[valid_mask] += pop_value / n_valid
+
+    # else: all water → skip or optionally add to nearest land (not done here)
+    total_input_pop = float(np.nansum(pop))
+    total_output_pop = float(pop_fine.sum())
+    diff = abs(total_output_pop - total_input_pop)
+    rel_diff = diff / total_input_pop * 100
+
+    # --- 7️⃣ Validation printout ---
+    print("  ✔ Redistribution done.")
+    print(f"  🔹 Input population:  {total_input_pop:,.0f}")
+    print(f"  🔹 Output population: {total_output_pop:,.0f}")
+    print(f"  🔹 Difference:        {diff:,.2f} ({rel_diff:.4f} %)")
+
+    if rel_diff > 0.01:
+        print("  ⚠ WARNING: Population not perfectly preserved — check CRS or mask alignment!")
+
+    print(f"  ✔ Redistribution done. Total population preserved: {pop_fine.sum():,.0f}")
     
+    # Optional: save the result as a GeoTIFF
+    if out_raster_path is not None:
+        print(f"▶ Saving redistributed population raster to {out_raster_path}")
+        new_profile = {
+            "driver": "GTiff",
+            "dtype": rasterio.float32,
+            "count": 1,
+            "height": pop_fine.shape[0],
+            "width": pop_fine.shape[1],
+            "crs": flood_crs,
+            "transform": flood_transform,
+            "compress": "deflate"
+        }
+        with rasterio.open(out_raster_path, "w", **new_profile) as dst:
+            dst.write(pop_fine, 1)
 
+    return pop_fine, pop_sofala, transform_sofala, pop_districts, pop_affine_districts
+
+# --- Function to link population raster to flood depth as DataFrame ---
 def pop_raster_to_df(pop_array, flood_array, transform):
     print("Linking population raster to flood depth as DataFrame...")
     # Flatten arrays
@@ -165,7 +258,7 @@ def pop_raster_to_df(pop_array, flood_array, transform):
     xs, ys = transform * (cols.ravel()[mask] + 0.5, rows.ravel()[mask] + 0.5)
 
     df = pd.DataFrame({
-        "population": pop_vals.astype(int),
+        "population": pop_vals,
         "flood_depth": flood_vals,
         "x": xs,
         "y": ys
@@ -173,7 +266,7 @@ def pop_raster_to_df(pop_array, flood_array, transform):
 
     return df
 
-
+# --- Function to aggregate population and flood depth to coarser grid ---
 def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, background=None, factor=100):
     print("Aggregating population raster to coarser grid polygons...")
     # Pixel size from transform
@@ -194,20 +287,37 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
                                 ncols_crop//factor, factor).sum(axis=(1,3))
         return agg
 
+    # Aggregate raster by factor (mean)
     def block_mean(arr, factor):
         nrows, ncols = arr.shape
         nrows_crop = nrows - nrows % factor
         ncols_crop = ncols - ncols % factor
         arr_cropped = arr[:nrows_crop, :ncols_crop]
-        mean = arr_cropped.reshape(nrows_crop//factor, factor,
-                                   ncols_crop//factor, factor).mean(axis=(1,3))
+        mean = np.nanmean(
+            arr_cropped.reshape(nrows_crop//factor, factor,
+                                ncols_crop//factor, factor),
+            axis=(1, 3)
+        )
         return mean
+    
+    # Count number of pixels >1 m per block
+    def block_count_threshold(arr, factor, threshold=1):
+        nrows, ncols = arr.shape
+        nrows_crop = nrows - nrows % factor
+        ncols_crop = ncols - ncols % factor
+        arr_cropped = arr[:nrows_crop, :ncols_crop]
+        count = (arr_cropped.reshape(nrows_crop//factor, factor,
+                                    ncols_crop//factor, factor) > threshold).sum(axis=(1,3))
+        return count
 
     total_agg = block_sum(total_pop_array, factor)
     exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
 
     # Aggregate flood depth
     avg_flood_depth = block_mean(flood_raster, factor)
+
+    # Number of pixels above 1 m per block
+    pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
 
     # Coarse grid coordinates based on raster bounds
     nrows_coarse, ncols_coarse = total_agg.shape
@@ -225,7 +335,8 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
         {
             "total_population": total_agg.flatten(),
             "exposed_population": exposed_agg.flatten(),
-            "avg_flood_depth": avg_flood_depth.flatten()
+            "avg_flood_depth": avg_flood_depth.flatten(),
+            "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100
         },
         geometry=grid_cells,
         crs=crs
@@ -233,68 +344,239 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
 
     # Clip to region/background
     region_bg = gpd.overlay(region, background, how="intersection") if background is not None else region.copy()
-    gdf_grid_masked = gpd.overlay(gdf_grid, region_bg, how="intersection")
+    
+    # Compute area-weighted intersection
+    intersections = gpd.overlay(gdf_grid, region_bg, how="intersection")
+
+    # Compute overlap area and fraction of each original coarse cell
+    intersections["overlap_area"] = intersections.geometry.area
+    gdf_grid["cell_area"] = gdf_grid.geometry.area
+
+    # Join overlap fraction back to grid cells
+    intersections = intersections.merge(
+        gdf_grid[["geometry", "cell_area", "total_population", "exposed_population", "avg_flood_depth", "pct_cells_higher_1m"]],
+        on="geometry", how="left"
+    )
+    intersections["area_fraction"] = intersections["overlap_area"] / intersections["cell_area"]
+
+    # Scale population and exposure by overlap fraction
+    intersections["total_population"] *= intersections["area_fraction"]
+    intersections["exposed_population"] *= intersections["area_fraction"]
+
+    # Drop temporary columns and clean up
+    gdf_grid_masked = intersections.drop(columns=["overlap_area", "cell_area", "area_fraction"])
+
 
     # Relative population
     gdf_grid_masked["relative_population"] = (
         gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
     )
+
+    print(f"Total pop (original): {np.nansum(total_pop_array):,.2f}")
+    print(f"Total pop (aggregated): {gdf_grid_masked['total_population'].sum():,.2f}")
+    print(f"Diff: {np.nansum(total_pop_array) - gdf_grid_masked['total_population'].sum():,.2f}")
+
+
     return gdf_grid_masked
 
+# #%%
+# from rasterio.features import rasterize
 
-# --- Process population directly into flood grid ---
+# def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, background=None, factor=100):
+#     print("Aggregating population raster to coarser grid polygons...")
+
+#     # --- 1️⃣ Mask input rasters to the region before aggregation ---
+#     # if region is not None:
+#     #     print("Masking population and flood rasters to region extent...")
+#     #     mask = rasterize(
+#     #         [(region.geometry.unary_union, 1)],
+#     #         out_shape=total_pop_array.shape,
+#     #         transform=transform,
+#     #         fill=0,
+#     #         dtype=np.uint8
+#     #     )
+#     #     total_pop_array = np.where(mask == 1, total_pop_array, 0)
+#     #     flood_raster = np.where(mask == 1, flood_raster, np.nan)
+
+#     # --- 2️⃣ Compute pixel & cell sizes ---
+#     pixel_width = transform.a
+#     pixel_height = -transform.e
+#     cell_width = factor * pixel_width
+#     cell_height = factor * pixel_height
+
+#     # --- 3️⃣ Define aggregation helpers ---
+#     def block_sum(arr, factor):
+#         nrows, ncols = arr.shape
+#         nrows_crop = nrows - nrows % factor
+#         ncols_crop = ncols - ncols % factor
+#         arr_cropped = arr[:nrows_crop, :ncols_crop]
+#         agg = arr_cropped.reshape(nrows_crop//factor, factor,
+#                                   ncols_crop//factor, factor).sum(axis=(1, 3))
+#         return agg
+
+#     def block_mean(arr, factor):
+#         nrows, ncols = arr.shape
+#         nrows_crop = nrows - nrows % factor
+#         ncols_crop = ncols - ncols % factor
+#         arr_cropped = arr[:nrows_crop, :ncols_crop]
+#         mean = np.nanmean(
+#             arr_cropped.reshape(nrows_crop//factor, factor,
+#                                 ncols_crop//factor, factor),
+#             axis=(1, 3)
+#         )
+#         return mean
+
+#     def block_count_threshold(arr, factor, threshold=1):
+#         nrows, ncols = arr.shape
+#         nrows_crop = nrows - nrows % factor
+#         ncols_crop = ncols - ncols % factor
+#         arr_cropped = arr[:nrows_crop, :ncols_crop]
+#         count = (arr_cropped.reshape(nrows_crop//factor, factor,
+#                                     ncols_crop//factor, factor) > threshold).sum(axis=(1, 3))
+#         return count
+
+#     # --- 4️⃣ Aggregate population and flood ---
+#     total_agg = block_sum(total_pop_array, factor)
+#     exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
+#     avg_flood_depth = block_mean(flood_raster, factor)
+#     pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
+
+#     # --- 5️⃣ Build coarse grid polygons ---
+#     nrows_coarse, ncols_coarse = total_agg.shape
+#     x0, y0 = transform * (0, 0)
+#     x_coords = x0 + np.arange(ncols_coarse) * cell_width
+#     y_coords = y0 + np.arange(nrows_coarse) * -cell_height
+
+#     grid_cells = [
+#         box(x, y - cell_height, x + cell_width, y)
+#         for j, y in enumerate(y_coords)
+#         for i, x in enumerate(x_coords)
+#     ]
+
+#     gdf_grid = gpd.GeoDataFrame(
+#         {
+#             "total_population": total_agg.flatten(),
+#             "exposed_population": exposed_agg.flatten(),
+#             "avg_flood_depth": avg_flood_depth.flatten(),
+#             "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100,
+#         },
+#         geometry=grid_cells,
+#         crs=crs,
+#     )
+
+#     # --- 6️⃣ (Optional) Clip to background for clean plotting ---
+#     if background is not None:
+#         region_bg = gpd.overlay(region, background, how="intersection")
+#         gdf_grid_masked = gpd.overlay(gdf_grid, region_bg, how="intersection")
+#     else:
+#         gdf_grid_masked = gdf_grid
+
+#     # --- 7️⃣ Relative population ---
+#     gdf_grid_masked["relative_population"] = (
+#         gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
+#     )
+
+#     print(f"Total pop (original): {np.nansum(total_pop_array):,.2f}")
+#     print(f"Total pop (aggregated): {gdf_grid_masked['total_population'].sum():,.2f}")
+#     print(f"Diff: {np.nansum(total_pop_array) - gdf_grid_masked['total_population'].sum():,.2f}")
+
+#     return gdf_grid_masked
+
+
+#%%
+# ============================================================================================ #
+# ====================== Process population directly into flood grid ========================= #
+# ============================================================================================ #
+
 pop_arrays = {}
+pop_sofala_arrays = {}
+pop_sofala_districts = {}
+pop_affine_sofala_districts = {}
 for year, path in [(1990, population_raster_path_1990),
                    (2020, population_raster_path_2020)]:
-    pop_arrays[year] = reproject_and_clip_population(
-        path, region_geom, flood_grid_crs, flood_grid_transform, flood_grid_shape, year
+    pop_arrays[year], pop_sofala_arrays[year], transform_sofala_land, pop_sofala_districts[year], pop_affine_sofala_districts[year] = reproject_and_redistribute_population_over_land(
+        pop_path=path, land_gdf=background_utm, flood_crs=flood_grid_crs, flood_transform=flood_grid_transform,
+        flood_shape=flood_grid_shape, province_geom=shapefile_sofala, region=region, districts=districts_filtered, year=year,
+        out_raster_path=f"c:/Code/COMPASS_exposure/Data/Modified/population_{year}_region_regrid.tif"
     )
 
 # --- Compute exposed population GeoDataFrames ---
 df_pop_2020_flood_depth_F  = pop_raster_to_df(pop_arrays[2020], hmax_F, flood_grid_transform)
 df_pop_2020_flood_depth_CF = pop_raster_to_df(pop_arrays[2020], hmax_CF, flood_grid_transform)
-df_pop_1990_flood_depth_F = pop_raster_to_df(pop_arrays[1990], hmax_F, flood_grid_transform)
+df_pop_1990_flood_depth_F  = pop_raster_to_df(pop_arrays[1990], hmax_F, flood_grid_transform)
+df_pop_1990_flood_depth_CF = pop_raster_to_df(pop_arrays[1990], hmax_CF, flood_grid_transform)
 
 # simple rasters for fast plotting
-ra_exposed_pop_2020_F = np.where(hmax_F > 0, pop_arrays[2020], 0)
+ra_exposed_pop_2020_F  = np.where(hmax_F > 0, pop_arrays[2020], 0)
 ra_exposed_pop_2020_CF = np.where(hmax_CF > 0, pop_arrays[2020], 0)
-ra_exposed_pop_1990_F = np.where(hmax_F > 0, pop_arrays[1990], 0)
+ra_exposed_pop_1990_F  = np.where(hmax_F > 0, pop_arrays[1990], 0)
+ra_exposed_pop_1990_CF = np.where(hmax_CF > 0, pop_arrays[1990], 0)
 
 # Compute exposed pop on fine grid
 df_pop_2020_exposed_F  = df_pop_2020_flood_depth_F[df_pop_2020_flood_depth_F['flood_depth'] > 0]
 df_pop_2020_exposed_CF = df_pop_2020_flood_depth_CF[df_pop_2020_flood_depth_CF['flood_depth'] > 0]
 df_pop_1990_exposed_F  = df_pop_1990_flood_depth_F[df_pop_1990_flood_depth_F['flood_depth'] > 0]
+df_pop_1990_exposed_CF = df_pop_1990_flood_depth_CF[df_pop_1990_flood_depth_CF['flood_depth'] > 0]
 
 # --- Aggregate population to coarser grid ---
-gdf_pop_2020_exposed_F_coarse = aggregate_pop(pop_arrays[2020], hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
+gdf_pop_2020_exposed_F_coarse  = aggregate_pop(pop_arrays[2020], hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
 gdf_pop_2020_exposed_CF_coarse = aggregate_pop(pop_arrays[2020], hmax_CF, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
-gdf_pop_1990_exposed_F_coarse = aggregate_pop(pop_arrays[1990], hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
+gdf_pop_1990_exposed_F_coarse  = aggregate_pop(pop_arrays[1990], hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
+gdf_pop_1990_exposed_CF_coarse = aggregate_pop(pop_arrays[1990], hmax_CF, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
 
-# %%
+#%%
+# Uniform population growth
+pop_growth = np.nansum(pop_arrays[2020]) / np.nansum(pop_arrays[1990])
+print(f"Uniform population growth from 1990 to 2020 in Sofala region: {(pop_growth*100):.2f}%")
+
+pop_array_uniform_2020 = pop_arrays[1990] * (pop_growth)
+
+# Sanity check
+print(f"{np.nansum(pop_array_uniform_2020):,.0f} people in 2020 with uniform growth")
+print(f"{np.nansum(pop_arrays[2020]):,.0f} people in 2020 actual")
+
+# Calculate exposure
+ra_exposed_pop_2020_F_uniform = np.where(hmax_F > 0, pop_array_uniform_2020, 0)
+
+# Aggregate to coarser cells
+gdf_pop_2020_exposed_F_uniform_coarse = aggregate_pop(pop_array_uniform_2020, hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
+
+#%%# ============================================================================================ #
+# ===================== Print summary statistics of exposed population ========================== #
+# =============================================================================================== #
 print("2020 Factual exposed population stats:")
-print("Max people exposed per cell:", np.nanmax(df_pop_2020_exposed_F["population"].astype(int)))
-print("Total exposed people:", np.nansum(df_pop_2020_exposed_F["population"].astype(int)))
-print("Count of exposed cells:", np.sum(~np.isnan(df_pop_2020_exposed_F['population'])))
+print("Total population in region:", np.nansum(pop_arrays[2020]))
+print("Total population in Sofala:", np.nansum(pop_sofala_arrays[2020]))
+print("Total exposed people:", np.nansum(ra_exposed_pop_2020_F).astype(int))
+print("Exposed people percentage of total population:", 100 * np.nansum(ra_exposed_pop_2020_F).astype(int) / np.nansum(pop_arrays[2020]))
 
-print("2020 Counterfactual exposed population stats:")
-print("Max people exposed per cell:", np.nanmax(df_pop_2020_exposed_CF["population"].astype(int)))
-print("Total exposed people:", np.nansum(df_pop_2020_exposed_CF["population"].astype(int)))
-print("Count of exposed cells:", np.sum(~np.isnan(df_pop_2020_exposed_CF['population'])))
+print("\n2020 Counterfactual exposed population stats:")
+print("Total population in region:", np.nansum(pop_arrays[2020]))
+print("Total population in Sofala:", np.nansum(pop_sofala_arrays[2020]))
+print("Total exposed people:", np.nansum(ra_exposed_pop_2020_CF).astype(int))
+print("Exposed people percentage of total population:", 100 * np.nansum(ra_exposed_pop_2020_CF).astype(int) / np.nansum(pop_arrays[2020]))
 
-print("1990 Factual exposed population stats:")
-print("Max people exposed per cell:", np.nanmax(df_pop_1990_exposed_F["population"].astype(int)))
-print("Total exposed people:", np.nansum(df_pop_1990_exposed_F["population"].astype(int)))
-print("Count of exposed cells:", np.sum(~np.isnan(df_pop_1990_exposed_F['population'])))
+print("\n1990 Factual exposed population stats:")
+print("Total population in region:", np.nansum(pop_arrays[1990]))
+print("Total population in Sofala:", np.nansum(pop_sofala_arrays[1990]))
+print("Total exposed people:", np.nansum(ra_exposed_pop_1990_F).astype(int))
+print("Exposed people percentage of total population:", 100 * np.nansum(ra_exposed_pop_1990_F).astype(int) / np.nansum(pop_arrays[1990]))
 
-print("One-line attribution numbers:")
-print(f"Exposed population in 2020 Factual: {int(np.nansum(df_pop_2020_exposed_F['population'].astype(int))):,}")
-print(f"Exposed population attributable to climate change: {int(np.nansum(df_pop_2020_exposed_F['population'].astype(int)) - np.nansum(df_pop_2020_exposed_CF['population'].astype(int))):,} {100 * (np.nansum(df_pop_2020_exposed_F['population'].astype(int)) - np.nansum(df_pop_2020_exposed_CF['population'].astype(int))) / np.nansum(df_pop_2020_exposed_F['population'].astype(int)):.2f}%")
-print(f"Exposed population attributable to population change (2020-1990): {int(np.nansum(df_pop_2020_exposed_F['population'].astype(int)) - np.nansum(df_pop_1990_exposed_F['population'].astype(int))):,} {100 * (np.nansum(df_pop_2020_exposed_F['population'].astype(int)) - np.nansum(df_pop_1990_exposed_F['population'].astype(int))) / np.nansum(df_pop_2020_exposed_F['population'].astype(int)):.2f}%")
-print(f"Population growth from 1990 to 2020 in Sofala region: {int(np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])):,} {100 * (np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])) / np.nansum(pop_arrays[2020]):.2f}%")
+print("\n2020 UNIFORM exposed population stats:")
+print("Total population in region:", np.nansum(pop_array_uniform_2020))
+print("Total exposed people:", np.nansum(ra_exposed_pop_2020_F_uniform).astype(int))
+print("Exposed people percentage of total population:", 100 * np.nansum(ra_exposed_pop_2020_F_uniform).astype(int) / np.nansum(pop_arrays[2020]))
 
+print("\nOne-line attribution numbers:")
+print(f"Exposed population in 2020 Factual: {int(np.nansum(ra_exposed_pop_2020_F).astype(int)):,}")
+print(f"Exposed population attributable to climate change: {int(np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_CF)):,} {100 * (np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_CF)) / np.nansum(ra_exposed_pop_2020_F):.2f}%")
+print(f"Exposed population attributable to population change (2020-1990): {int(np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_1990_F)):,} {100 * (np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_1990_F)) / np.nansum(ra_exposed_pop_2020_F):.2f}%")
+print(f"Exposed population attributable to population change (uniform growth): {int(np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_F_uniform)):,} {100 * (np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_F_uniform)) / np.nansum(ra_exposed_pop_2020_F):.2f}%")
+print(f"Population growth from 1990 to 2020 in the region: {int(np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])):,} {100 * (np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])) / np.nansum(pop_arrays[2020]):.2f}%")
 
 #%% ============================================================================================ # 
-# Plot distribution of flood depth per exposed population
+# ================== Plot distribution of flood depth per exposed population =================== #
+# ============================================================================================== #
 def compute_cdf_and_bins(gdf, bins, depth_col="flood_depth", pop_col="population"):
     """Return sorted (depth, cdf) arrays and population counts per depth bin."""
     flood = gdf[depth_col].values
@@ -322,18 +604,26 @@ bins = np.arange(0, 3.5 + 0.25, 0.25)
 flood_F_2020_sorted, cdf_F, pop_2020_by_depth_F   = compute_cdf_and_bins(df_pop_2020_exposed_F, bins)
 flood_CF_2020_sorted, cdf_CF_clim, pop_2020_by_depth_CF = compute_cdf_and_bins(df_pop_2020_exposed_CF, bins)
 flood_F_1990_sorted, cdf_CF_pop, pop_1990_by_depth_F = compute_cdf_and_bins(df_pop_1990_exposed_F, bins)
+flood_CF_1990_sorted, cdf_CF_pop_clim, pop_1990_by_depth_CF = compute_cdf_and_bins(df_pop_1990_exposed_CF, bins)
+
+bins_fine = np.arange(0, 3.5 + 0.1, 0.1)
+flood_F_2020_sorted_fine, cdf_F_fine, pop_2020_by_depth_F_fine   = compute_cdf_and_bins(df_pop_2020_exposed_F, bins_fine)
+flood_CF_2020_sorted_fine, cdf_CF_clim_fine, pop_2020_by_depth_CF_fine = compute_cdf_and_bins(df_pop_2020_exposed_CF, bins_fine)
+flood_F_1990_sorted_fine, cdf_CF_pop_fine, pop_1990_by_depth_F_fine = compute_cdf_and_bins(df_pop_1990_exposed_F, bins_fine)
+flood_CF_1990_sorted_fine, cdf_CF_pop_clim_fine, pop_1990_by_depth_CF_fine = compute_cdf_and_bins(df_pop_1990_exposed_CF, bins_fine)
 
 # --- Plot continuous CDF ---
 plt.figure(figsize=(8,5))
 plt.plot(flood_F_2020_sorted, cdf_F, label="Factual")
 plt.plot(flood_CF_2020_sorted, cdf_CF_clim, label="Counterfactual Climate")
 plt.plot(flood_F_1990_sorted, cdf_CF_pop, label="Counterfactual Population")
+plt.plot(flood_CF_1990_sorted, cdf_CF_pop_clim, label="Counterfactual Climate & Population")
 plt.xlim(0, 3.5)
 plt.xlabel("Flood depth (m)")
 plt.ylabel("Cumulative fraction of exposed population")
 plt.title("Continuous CDF of exposed population by flood depth")
 plt.legend()
-plt.grid(True)
+plt.grid(True, linestyle="--", alpha=0.5)
 plt.show()
 
 # --- Plot binned bar chart ---
@@ -342,18 +632,430 @@ plt.figure(figsize=(8,5))
 plt.bar(bin_centers - 0.05, pop_2020_by_depth_F.values, width=0.05, label="Factual", alpha=0.7)
 plt.bar(bin_centers, pop_2020_by_depth_CF.values, width=0.05, label="Counterfactual Climate", alpha=0.7)
 plt.bar(bin_centers + 0.05, pop_1990_by_depth_F.values, width=0.05, label="Counterfactual Population", alpha=0.7)
+plt.bar(bin_centers + 0.1, pop_1990_by_depth_CF.values, width=0.05, label="Counterfactual Climate & Population", alpha=0.7)
 
 plt.xlabel("Flood depth (m)")
 plt.ylabel("Exposed population")
 plt.title("Population exposed by flood depth bins")
 plt.legend()
 plt.grid(True, linestyle="--", alpha=0.5)
+plt.xlim(0, 3.5)
+plt.show()
+
+
+# --- PLot absolute line plot ---
+bin_centers = bins_fine[:-1] + np.diff(bins_fine) / 2
+plt.figure(figsize=(8,5))
+plt.plot(bin_centers, pop_2020_by_depth_F_fine.values, label="Factual")
+plt.plot(bin_centers, pop_2020_by_depth_CF_fine.values, label="Counterfactual Climate")
+plt.plot(bin_centers, pop_1990_by_depth_F_fine.values, label="Counterfactual Population")
+plt.plot(bin_centers, pop_1990_by_depth_CF_fine.values, label="Counterfactual Climate & Population")
+plt.xlabel("Flood depth (m)")  
+plt.ylabel("Exposed population")
+plt.title("Population exposed by flood depth bins") 
+plt.legend()
+plt.xlim(0, 3.5)
+plt.grid(True, linestyle="--", alpha=0.5)
+
+#%%
+# ================================================================================================== #
+# =========================== Plot density-weighted population exposure ============================ #
+# ================================================================================================== #
+
+
+x = np.linspace(0, 3.5, 200)
+
+kde = gaussian_kde(df_pop_2020_exposed_F['flood_depth'].values, weights=df_pop_2020_exposed_F['population'].values)
+y_F = kde(x) # probability density
+# Find peaks and sort by height
+peaks, _ = find_peaks(y_F)
+sorted_peaks_F = peaks[np.argsort(y_F[peaks])[::-1]]
+
+kde = gaussian_kde(df_pop_2020_exposed_CF['flood_depth'].values, weights=df_pop_2020_exposed_CF['population'].values)
+y_CF_clim = kde(x) # probability density
+# Find peaks and sort by height
+peaks, _ = find_peaks(y_CF_clim)
+sorted_peaks_CF_clim = peaks[np.argsort(y_CF_clim[peaks])[::-1]]
+
+kde = gaussian_kde(df_pop_1990_exposed_F['flood_depth'].values, weights=df_pop_1990_exposed_F['population'].values)
+y_CF_pop = kde(x) # probability density
+# Find peaks and sort by height
+peaks, _ = find_peaks(y_CF_pop)
+sorted_peaks_CF_pop = peaks[np.argsort(y_CF_pop[peaks])[::-1]]
+
+kde = gaussian_kde(df_pop_1990_exposed_CF['flood_depth'].values, weights=df_pop_1990_exposed_CF['population'].values)
+y_CF_clim_pop = kde(x) 
+
+#%%
+# Plot density-weighted population exposure per flood depth
+plt.figure(figsize=(8,5))
+plt.plot(x, y_F, label="Factual")
+plt.plot(x, y_CF_clim, label="Counterfactual Climate")
+plt.plot(x, y_CF_pop, label="Counterfactual Population")
+plt.plot(x, y_CF_clim_pop, label="Counterfactual Climate & Population")
+
+if len(sorted_peaks_F) > 1:
+    second_peak_x = x[sorted_peaks_F[1]]
+    plt.axvline(second_peak_x, linestyle="--", color = '#1f77b4', linewidth=0.8)
+for i, idx in enumerate(sorted_peaks_F[:2]):  # only top 2 peaks
+    plt.annotate(f"{x[idx]:.2f} m",
+                 xy=(x[idx], y_F[idx]),
+                 xytext=(x[idx]+0.1, y_F[idx]+0.001), color='#1f77b4', fontsize=9,
+                 arrowprops=dict(arrowstyle="->", lw=1, color='#1f77b4'))
+
+if len(sorted_peaks_CF_clim) > 1:
+    second_peak_x = x[sorted_peaks_CF_clim[1]]
+    plt.axvline(second_peak_x, linestyle="--", color='#ff7f0e', linewidth=0.8)
+for i, idx in enumerate(sorted_peaks_CF_clim[:2]):  # only top 2 peaks
+    plt.annotate(f"{x[idx]:.2f} m",
+                 xy=(x[idx], y_CF_clim[idx]),
+                 xytext=(x[idx]+0.1, y_CF_clim[idx]+0.001), color='#ff7f0e', fontsize=9,    
+                 arrowprops=dict(arrowstyle="->", lw=1, color='#ff7f0e'))
+
+for i, idx in enumerate(sorted_peaks_CF_pop[:2]):  # only top 2 peaks
+    plt.annotate(f"{x[idx]:.2f} m",
+                 xy=(x[idx], y_CF_pop[idx]),
+                 xytext=(x[idx]+0.1, y_CF_pop[idx]+0.001), color='#2ca02c', fontsize=9,
+                 arrowprops=dict(arrowstyle="->", lw=1, color='#2ca02c'))
+
+plt.xlabel("Flood depth (m)")
+plt.ylabel("Density-weighted population exposure")
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.5)
+plt.xlim(0, 3.5)
+
+
+#%%
+#%% ============================================================================================ # 
+# =================== Plot the flood depth per exposed population spatially ==================== #
+# ============================================================================================== #
+# Plot average flood depth per exposed population cell
+fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+# Plot average flood depth among exposed population
+gdf_2020_F = gdf_pop_2020_exposed_F_coarse.copy()
+gdf_2020_F.loc[gdf_2020_F["exposed_population"] <= 0, "avg_flood_depth"] = np.nan
+
+gdf_2020_CF = gdf_pop_2020_exposed_CF_coarse.copy()
+gdf_2020_CF.loc[gdf_2020_CF["exposed_population"] <= 0, "avg_flood_depth"] = np.nan
+
+gdf_2020_CF['change_in_flood_depth'] = gdf_2020_F['avg_flood_depth'] - gdf_2020_CF['avg_flood_depth']
+
+# Define colormap: from white to #67CBE4
+cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#67CBE4"])
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
+
+plot = gdf_2020_F.plot(column="avg_flood_depth", cmap=cmap, vmin=0, vmax=3.5, linewidth=0.1, 
+                edgecolor="grey", ax=axes[0], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="avg_flood_depth", cmap=cmap, vmin=0, vmax=3.5, linewidth=0.1, 
+                edgecolor="grey", ax=axes[1], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="change_in_flood_depth", cmap=cmap_change, vmin=0, vmax=0.5, linewidth=0.1, 
+                edgecolor="grey", ax=axes[2], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=0, vmax=3.5))
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("Average flood depth among exposed population (m)")
+
+sm = ScalarMappable(cmap=cmap_change, norm=plt.Normalize(vmin=0, vmax=0.5))
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in Average flood depth \namong exposed population (m)")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No Climate Change", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("Average flood depth among exposed population", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+
+#%% ============================================================================================ # 
+# ============================= Plot the change in population spatially ======================== #
+# ============================================================================================== #
+# Plot average flood depth per exposed population cell
+fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+gdf_2020_F = gdf_pop_2020_exposed_CF_coarse.copy()
+gdf_2020_F.loc[gdf_2020_F["total_population"] == 0] = np.nan
+
+gdf_1990_F = gdf_pop_1990_exposed_CF_coarse.copy()
+gdf_1990_F.loc[gdf_1990_F["total_population"] == 0] = np.nan
+
+gdf_1990_F['change_in_population'] = gdf_2020_F['total_population'] - gdf_1990_F['total_population']
+
+# Define colormap: from white to #67CBE4
+cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_pop_2020_exposed_F_coarse['total_population']))  
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#BD2A2A"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_1990_F['change_in_population']))
+
+plot = gdf_2020_F.plot(column="total_population", cmap=cmap, norm=norm ,
+                       linewidth=0.1, edgecolor="grey", ax=axes[0], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_1990_F.plot(column="total_population", cmap=cmap, norm=norm,
+                        linewidth=0.1, edgecolor="grey", ax=axes[1], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_1990_F.plot(column="change_in_population", cmap=cmap_change, norm=norm_change,
+                       linewidth=0.1, edgecolor="grey", ax=axes[2], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+for ax in axes:
+    region.boundary.plot(ax=ax, color='black', linewidth=1)
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("Population (people per cell)")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in population (people per cell)")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No population growth", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("Total population in study region", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+
+
+#%%
+#%% ============================================================================================ # 
+# ================ Plot the diff in uniform and spatial change in population =================== #
+# ============================================================================================== #
+# Plot average flood depth per exposed population cell
+fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+gdf_2020_F = gdf_pop_2020_exposed_CF_coarse.copy()
+gdf_2020_F.loc[gdf_2020_F["total_population"] == 0] = np.nan
+
+gdf_2020_F_uni = gdf_pop_2020_exposed_F_uniform_coarse.copy()
+gdf_2020_F_uni.loc[gdf_2020_F_uni["total_population"] == 0] = np.nan
+
+gdf_2020_F_uni['change_in_population'] = gdf_2020_F['total_population'] - gdf_2020_F_uni['total_population']
+
+# Define colormap: from white to #67CBE4
+cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_pop_2020_exposed_F_coarse['total_population']))  
+cmap_change = plt.get_cmap('RdBu_r')
+norm_change = mcolors.TwoSlopeNorm(vmin=np.nanmin(gdf_2020_F_uni['change_in_population']),
+                                   vcenter=0,
+                                   vmax=np.nanmax(gdf_2020_F_uni['change_in_population']))
+
+plot = gdf_2020_F.plot(column="total_population", cmap=cmap, norm=norm ,
+                       linewidth=0.1, edgecolor="grey", ax=axes[0], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_F_uni.plot(column="total_population", cmap=cmap, norm=norm,
+                        linewidth=0.1, edgecolor="grey", ax=axes[1], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_F_uni.plot(column="change_in_population", cmap=cmap_change, norm=norm_change,
+                       linewidth=0.1, edgecolor="grey", ax=axes[2], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+for ax in axes:
+    region.boundary.plot(ax=ax, color='black', linewidth=1)
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("Population (people per cell)")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in population (people per cell)")
+
+axes[0].set_title("Factual 2020", fontsize=10)
+axes[1].set_title("Uniform population growth 2020", fontsize=10)
+axes[2].set_title("Factual - Uniform Factual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("Total population in study region", fontsize=12)
+
+plt.tight_layout()
 plt.show()
 
 
 
 #%% ============================================================================================ # 
-# Plot the factual flood and exposed population
+# =============== Plot the change in exposed population > 1 m flood depth spatially ============ #
+# ============================================================================================== #
+# Plot average flood depth per exposed population cell
+fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+# Plot average flood depth among exposed population
+gdf_2020_F = gdf_pop_2020_exposed_F_coarse.copy()
+gdf_2020_F.loc[gdf_2020_F["exposed_population"] <= 1, "avg_flood_depth"] = np.nan
+
+gdf_2020_CF = gdf_pop_2020_exposed_CF_coarse.copy()
+gdf_2020_CF.loc[gdf_2020_CF["exposed_population"] <= 1, "avg_flood_depth"] = np.nan
+
+gdf_2020_CF['change_in_exposed_population_>1m'] = gdf_2020_F['exposed_population'] - gdf_2020_CF['exposed_population']
+
+# Define colormap: from white to #67CBE4
+cmap = 'Blues'
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2020_F['exposed_population']))
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2020_CF['change_in_exposed_population_>1m']))
+
+plot = gdf_2020_F.plot(column="exposed_population", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[0], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="exposed_population", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[1], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="change_in_exposed_population_>1m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+                edgecolor="grey", ax=axes[2], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("Exposed population > 1 m flood depth")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in Exposed population > 1 m flood depth")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No Climate Change", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("Population exposed to > 1 m flood depth", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+
+#%% ============================================================================================ # 
+# ============================= Plot % cells with flood depth > 1 m ============================ #
+# ============================================================================================== #
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+
+# Plot average flood depth among exposed population
+gdf_2020_F = gdf_pop_2020_exposed_F_coarse.copy()
+gdf_2020_CF = gdf_pop_2020_exposed_CF_coarse.copy()
+
+gdf_2020_CF['change_in_%more_1m'] = gdf_2020_F['pct_cells_higher_1m'] - gdf_2020_CF['pct_cells_higher_1m']
+
+# Define colormap: from white to #67CBE4
+cmap = 'Blues'
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2020_F['pct_cells_higher_1m']))
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2020_CF['change_in_%more_1m']))
+
+plot = gdf_2020_F.plot(column="pct_cells_higher_1m", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[0], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="pct_cells_higher_1m", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[1], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2020_CF.plot(column="change_in_%more_1m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+                edgecolor="grey", ax=axes[2], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("% cells > 1 m flood depth")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in % cells > 1 m flood depth")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No Climate Change", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("% cells > 1 m flood depth", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+#%% ============================================================================================ # 
+# ======================== Plot the factual flood and exposed population ======================= #
+# ============================================================================================== #
 fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
 for i, ax in enumerate(axes):
@@ -377,8 +1079,164 @@ plt.tight_layout()
 plt.show()
 
 
+#%%
+# ============================================================================================ #
+# ======================= Compute total exposed population per district ====================== #
+# ============================================================================================ #
+pop_totals = []
+pop_exposed = []
+pop_per_district = []
+
+for _, row in districts_filtered.iterrows():
+    # Mask raster to district polygon
+    from rasterio import features
+    district_mask = features.geometry_mask([row.geometry],
+                                           out_shape=ra_exposed_pop_2020_F.shape,
+                                           transform=flood_grid_transform,
+                                           invert=True)
+    pop_exposed.append(ra_exposed_pop_2020_F[district_mask].sum())
+    pop_totals.append(pop_arrays[2020][district_mask].sum())
+
+districts_filtered['pop_exposed'] = pop_exposed
+districts_filtered['pop_total'] = pop_totals
+
+# Make sure districts are in the same CRS as the original pop raster
+with rasterio.open(population_raster_path_2020) as src:
+    pop_crs = src.crs
+
+districts_native = districts_filtered.to_crs(pop_crs)
+
+for _, row in districts_native.iterrows():
+    district_mask = features.geometry_mask(
+        [row.geometry],
+        out_shape=pop_sofala_districts[2020][0].shape,
+        transform=pop_affine_sofala_districts[2020],
+        invert=True
+    )
+    pop_per_district.append(pop_sofala_districts[2020][0][district_mask].sum())
+
+districts_filtered['pop_per_district'] = pop_per_district
+
+#%%
+# --- Plot ---
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+for ax in axes:
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    districts_filtered.boundary.plot(ax=ax, color='orange', linewidth=2, zorder=2)
+    region_utm.boundary.plot(ax=ax, color='lightblue', linewidth=0.5, zorder=2)
+
+# Rasterize the case-study region polygon
+region_mask = rasterio.features.rasterize(
+    [(geom, 1) for geom in region.geometry],
+    out_shape=ra_exposed_pop_2020_F.shape,
+    transform=flood_grid_transform,
+    fill=0,
+    all_touched=True,
+    dtype=np.uint8
+).astype(bool)
+
+# Mask raster outside region
+ra_exposed_pop_masked = np.where(region_mask, ra_exposed_pop_2020_F, np.nan)
+    
+# Exposed population
+im = axes[0].imshow(ra_exposed_pop_masked, cmap='viridis', extent=flood_extent, origin='lower')
+cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
+cbar.set_label("Exposed population")
+axes[0].set_title("Factual Exposed Population")
+
+# Exposed population
+im = axes[1].imshow(pop_arrays[2020], cmap='Reds', extent=flood_extent, origin='lower')
+cbar = plt.colorbar(im, ax=axes[1], shrink=0.8)
+cbar.set_label("Total population")
+axes[1].set_title("Total 2020 Population")
+
+# Dictionary with (dx, dy) offsets in map units for specific districts
+label_offsets = {
+    "Sofala": (0, 10000),  # move 0 m east, 10000 m north
+    "Nhamatanda": (18000, -22000),
+    "Estaquinha": (20000, -5000),
+    # add more as needed
+}
+
+outside_districts = ["Nhamatanda", "Estaquinha"]
+
+for idx, row in districts_filtered.iterrows():
+    x, y = row.geometry.centroid.x, row.geometry.centroid.y
+    # Apply offset if district in dictionary
+    if row['NAME_3'] in label_offsets:
+        dx, dy = label_offsets[row['NAME_3']]
+        x += dx
+        y += dy
+    axes[0].text(x, y, f"{row['pop_exposed']:,.0f}", fontsize=8, ha='center', va='center',
+            color='white', fontweight='bold', zorder=5)
+    
+    axes[1].text(x, y, f"{row['pop_total']:,.0f}", fontsize=8, ha='center', va='center',
+            color='black', fontweight='bold', zorder=5)
+    
+    # District name label
+    name_x = x - 8000 if row['NAME_3'] in outside_districts else x
+    name_y = y - 3000  # all 3000 south of pop label
+
+    axes[0].text(
+        name_x, name_y, row['NAME_3'], fontsize=8, ha='center', va='center',
+        color='coral', fontweight='bold', zorder=5
+    )
+    axes[1].text(
+        name_x, name_y, row['NAME_3'], fontsize=8, ha='center', va='center',
+        color='coral', fontweight='bold', zorder=5
+    )
+    
+plt.tight_layout()
+
+#%%
+# --- Plot ---
+fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+
+# background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+# bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+districts_filtered.boundary.plot(ax=ax, color='orange', linewidth=2, zorder=2)
+region_utm.boundary.plot(ax=ax, color='lightblue', linewidth=1, zorder=2)
+
+# Dictionary with (dx, dy) offsets in map units for specific districts
+label_offsets = {
+    "Sofala": (0, 10000),  # move 0 m east, 10000 m north
+    "Nhamatanda": (18000, -22000),
+    "Estaquinha": (20000, -5000),
+    # add more as needed
+}
+outside_districts = ["Nhamatanda", "Estaquinha"]
+
+for idx, row in districts_filtered.iterrows():
+    x, y = row.geometry.centroid.x, row.geometry.centroid.y
+    ax.text(x, y, f"{row['pop_per_district']:,.0f}", fontsize=8, ha='center', va='center',
+            color='black', fontweight='bold', zorder=5)
+    
+    # District name label
+    name_x = x
+    name_y = y - 4000  # all 3000 south of pop label
+
+    ax.text(
+        name_x, name_y, row['NAME_3'], fontsize=8, ha='center', va='center',
+        color='grey', fontweight='bold', zorder=5
+    )
+
+ax.set_title("2020 District Population")
+
+plt.tight_layout()
+
+#%%
+# table with numbers per district
+df_district_summary = districts_filtered[['NAME_3', 'pop_per_district', 'pop_total', 'pop_exposed']].copy()
+df_district_summary.columns = ['District', 'District Population (2020)', 'Total Population in Region', 'Exposed Population (2020 Factual)']
+df_district_summary["% of district pop"] = (100 * df_district_summary['Total Population in Region'] / df_district_summary['District Population (2020)']).round(0)
+df_district_summary["% exposed"] = (100 * df_district_summary['Exposed Population (2020 Factual)'] / df_district_summary['Total Population in Region']).round(0)
+df_district_summary[['District', 'District Population (2020)', 'Total Population in Region', 'Exposed Population (2020 Factual)']] = df_district_summary[['District', 'District Population (2020)', 'Total Population in Region', 'Exposed Population (2020 Factual)']].round(0)
+
+df_district_summary.to_csv("c:/Code/COMPASS_exposure/Data/Modified/sofala_district_exposed_population_summary.csv", index=False)
+
 #%% ============================================================================================ # 
-# Plot the difference between 1990 and 2020 of the HE dataset, and between WP 2020 and HE 2020
 # --- Prepare colormap for absolute pop exposed ---
 colors = plt.cm.Blues(np.linspace(0, 1, 256))
 colors[0] = [1, 1, 1, 0]  # make first color transparent
@@ -463,7 +1321,7 @@ plt.show()
 
 #%%
 # ============================================================================================ #
-# ===================== Differences in AGGREGATED exposed population ======================== #
+# ===================== Differences in AGGREGATED exposed population ========================= #
 # ============================================================================================ #
 print("Plotting spatially aggregated exposed population change")
 # plot the total_damage, emphazizing lower values
@@ -646,7 +1504,7 @@ axes[1].set_title("Counterfactual population \n(1990)", fontsize=9)
 axes[2].set_title("Factual - Counterfactual", fontsize=9)
 
 # %%
-print("Plotting spatially aggregated exposed population damage for F, CF climate and diff")
+print("Plotting spatially aggregated exposed population for F, CF climate and diff")
 
 gdf_pop_2020_exposed_CF_coarse['population_diff'] = (gdf_pop_2020_exposed_F_coarse['exposed_population'] - gdf_pop_2020_exposed_CF_coarse['exposed_population'])
 
@@ -658,6 +1516,8 @@ fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5), dpi=300, sharey=True
 norm_pop = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2020_exposed_F_coarse["exposed_population"].max())
 norm_diff = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2020_exposed_CF_coarse["population_diff"].max())
 red_half = LinearSegmentedColormap.from_list("bwr_red", plt.cm.bwr(np.linspace(0.5, 1, 256)))
+
+cmap = LinearSegmentedColormap.from_list("custom_cmap", ["white", "#67CBE4"])
 
 # Plot using GeoPandas, but draw to custom ax and return colorbar mappable
 gdf_pop_2020_exposed_F_coarse[gdf_pop_2020_exposed_F_coarse['exposed_population'] == 0].plot(ax=axes[0], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
@@ -713,6 +1573,77 @@ axes[0].set_title("Factual climate", fontsize=9)
 axes[1].set_title("Counterfactual climate", fontsize=9)
 axes[2].set_title("Factual - Counterfactual", fontsize=9)
 
+
+
+# %%
+# Plotting uniform population 1990 vs spatially differing 1990
+print("Plotting spatially aggregated exposed population damage for F, CF population and diff")
+
+gdf_pop_2020_exposed_F_uniform_coarse['population_diff'] = (gdf_pop_2020_exposed_F_coarse['exposed_population'] - gdf_pop_2020_exposed_F_uniform_coarse['exposed_population'])
+
+# plot the total_damage, emphazizing lower values
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 6), dpi=300, sharey=True, constrained_layout=True,
+                         subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+# Create colormap normalization
+norm_pop = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2020_exposed_F_coarse["exposed_population"].max())
+norm_2020_diff = mcolors.TwoSlopeNorm(vmin=(gdf_pop_2020_exposed_F_uniform_coarse["population_diff"].min()), vcenter=0, vmax=(gdf_pop_2020_exposed_F_uniform_coarse["population_diff"].max()))
+cmap_2020_diff = plt.get_cmap('RdBu_r')
+
+
+# Plot using GeoPandas, but draw to custom ax and return colorbar mappable
+gdf_pop_2020_exposed_F_coarse[gdf_pop_2020_exposed_F_coarse['exposed_population'] == 0].plot(ax=axes[0], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+plot = gdf_pop_2020_exposed_F_coarse[gdf_pop_2020_exposed_F_coarse['exposed_population'] > 0].plot(column='exposed_population', cmap='Blues',  edgecolor='grey',
+                                                                               norm=norm_pop, linewidth=0.2, ax=axes[0], legend=False, 
+                                                                               zorder=2, rasterized=True)
+
+gdf_pop_2020_exposed_F_uniform_coarse[gdf_pop_2020_exposed_F_uniform_coarse['exposed_population'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+plot = gdf_pop_2020_exposed_F_uniform_coarse[gdf_pop_2020_exposed_F_uniform_coarse['exposed_population'] > 0].plot(column='exposed_population', cmap='Blues', edgecolor='grey',
+                                                                               norm=norm_pop, linewidth=0.2, ax=axes[1], legend=False, 
+                                                                               zorder=2, rasterized=True)
+plot = gdf_pop_2020_exposed_F_uniform_coarse.plot(column='population_diff', cmap=cmap_2020_diff, norm=norm_2020_diff, edgecolor='grey',
+                                                  linewidth=0.2, ax=axes[2], missing_kwds={"color": "white", "edgecolor": "none"}, 
+                                                  zorder=2, rasterized=True)
+
+subplot_labels = ['(a)', '(b)', '(c)']
+
+for i, ax in enumerate(axes):
+    # Add model region
+    region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+
+    # Add background and set extent (based on actual lat/lon coordinates)
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    minx, miny, maxx, maxy = region_utm.bounds.minx.item(), region_utm.bounds.miny.item(), region_utm.bounds.maxx.item(), region_utm.bounds.maxy.item()
+    ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+
+    # Add gridlines and format tick labels
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    gl.right_labels = False
+    gl.top_labels = False
+    gl.xlabel_style = {'size': 9}
+    gl.ylabel_style = {'size': 9}
+    if i != 0: 
+        gl.left_labels = False
+    
+    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
+
+# Colorbars
+sm1 = ScalarMappable(cmap="Blues", norm=norm_pop)
+sm1._A = []  # required for colorbar without passing data
+cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.5)
+cbar.set_label("Aggregated exposed population (# people)", fontsize=10)
+cbar.ax.tick_params(labelsize=9)
+
+sm2 = ScalarMappable(cmap=cmap_2020_diff, norm=norm_2020_diff)
+sm2.set_array([])
+cbar2 = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.5)
+cbar2.set_label("Attributable affected population [# people]", fontsize = 9)
+cbar2.ax.tick_params(labelsize=8)
+
+axes[0].set_title("Factual exposed population \n(2020)", fontsize=9)
+axes[1].set_title("Factual exposed population \n(2020 - uniform)", fontsize=9)
+axes[2].set_title("Spatial - Uniform", fontsize=9)
 
 # %% #################################################################
 ##################### diff in relative population ####################
@@ -860,106 +1791,11 @@ axes[2].set_title("Factual - Counterfactual", fontsize=9)
 ###################################################################################
 # Eq. 3 from Jonkman et al (2008), based on Boyd (2005)
 
-def fatality_curve_Boyd2005(h):
-    """Fatality curve based on Boyd (2005) as reported in Jonkman et al. (2008).
-    
-    Parameters
-    ----------
-    h : float or array-like
-        Flood depth in meters.
-
-    Returns
-    -------
-    float or array-like
-        Fatality rate (between 0 and 1).
-    """
-    h = np.asarray(h)
-    return 0.34 / (1 + np.exp(20.37 - 6.18 * h))
-
-
-df_pop_2020_exposed_F['fatalities'] = df_pop_2020_exposed_F['population'] * fatality_curve_Boyd2005(df_pop_2020_exposed_F['flood_depth'])
-
-# %%
-CF_rain_flooding = BASE_RUN_PATH / "sfincs" / "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" / "floodmap.tif"
-CF_SLR_wind_flooding = BASE_RUN_PATH / "sfincs" / "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" / "floodmap.tif"
-hmax_CF_rain_da = rxr.open_rasterio(CF_rain_flooding).squeeze("band", drop=True)  # if single-band
-hmax_CF_SLR_wind_da = rxr.open_rasterio(CF_SLR_wind_flooding).squeeze("band", drop=True)  # if single-band
-
-# river flooding vs. coastal flooding
-def calculate_flood_type_area(df, hmax_F_da, hmax_CF_da, hmax_CF_rain_da, hmax_CF_SLR_wind_da):
-    # Masks for valid values
-    mask_F_valid = ~np.isnan(hmax_F_da.values)
-    mask_CF_total_valid = ~np.isnan(hmax_CF_da.values)
-    mask_CF_rain_valid = ~np.isnan(hmax_CF_rain_da.values)
-    mask_CF_SLR_wind_valid = ~np.isnan(hmax_CF_SLR_wind_da.values)
-
-    # Replace .where() with np.where()
-    hmax_F_filled = np.where(mask_F_valid | ~mask_CF_total_valid, hmax_F_da.values, 0)
-    hmax_CF_total_filled = np.where(mask_CF_total_valid | ~mask_F_valid, hmax_CF_da.values, 0)
-    hmax_diff_total = hmax_F_filled - hmax_CF_total_filled
-
-    # Fluvial (rain) difference
-    hmax_CF_fluvial_filled = np.where(mask_CF_rain_valid | ~mask_F_valid, hmax_CF_rain_da.values, 0)
-    hmax_diff_fluvial = hmax_F_filled - hmax_CF_fluvial_filled
-
-    # Coastal (SLR + wind) difference
-    hmax_CF_coastal_filled = np.where(mask_CF_SLR_wind_valid | ~mask_F_valid, hmax_CF_SLR_wind_da.values, 0)
-    hmax_diff_coastal = hmax_F_filled - hmax_CF_coastal_filled
-
-    # Masks for each type
-    fluvial_mask = (hmax_diff_fluvial > 0)
-    coastal_mask = (hmax_diff_coastal > 0)
-
-    # Interpolate flood type for df based on (x,y)
-    from scipy.interpolate import RegularGridInterpolator
-
-    # Create interpolators
-    interp_fluvial = RegularGridInterpolator((hmax_F_da.y, hmax_F_da.x), fluvial_mask, bounds_error=False, fill_value=False)
-    interp_coastal = RegularGridInterpolator((hmax_F_da.y, hmax_F_da.x), coastal_mask, bounds_error=False, fill_value=False)
-
-    # Apply to df
-    df = df.copy()
-    df['is_fluvial'] = interp_fluvial(df[['y', 'x']])
-    df['is_coastal'] = interp_coastal(df[['y', 'x']])
-
-    # Assign flood type
-    df['flood_type'] = 'none'
-    df.loc[df['is_fluvial'] == 1, 'flood_type'] = 'fluvial'
-    df.loc[df['is_coastal'] == 1, 'flood_type'] = 'coastal'
-
-    return df
-
-df_pop_2020_exposed_F_type = calculate_flood_type_area(df_pop_2020_exposed_F, hmax_F_da, hmax_CF_da, hmax_CF_rain_da, hmax_CF_SLR_wind_da)
-# %%
-def mortality_rate(depth, a, b):
-    return 1 / (1 + np.exp(-(a + b * depth)))
-
-# Jonkman parameters
-params = {
-    "fluvial": {"a": -6.4, "b": 2.0},
-    "coastal": {"a": -5.4, "b": 2.0},
-}
-
-def compute_fatalities(row):
-    ft = row['flood_type']
-    if ft == 'none' or row['flood_depth'] <= 0:
-        return 0
-    a, b = params[ft]['a'], params[ft]['b']
-    pf = mortality_rate(row['flood_depth'], a, b)
-    return pf * row['population']
-
-df_pop_2020_exposed_F_type['expected_fatalities'] = df_pop_2020_exposed_F_type.apply(compute_fatalities, axis=1)
-
-# %%
-import gc
-from rasterio.features import shapes
-from shapely.geometry import shape
-
+#### Load SFINCS model ####
 # Function to load YAML configuration file
 def load_config(config_path):
     with open(config_path, 'r') as file:
         return yaml.safe_load(file)
-
 
 # Load the SFINCS models and create a model dictonary
 def load_sfincs_models(config):
@@ -1012,7 +1848,6 @@ def load_sfincs_models(config):
 
     return models
 
-
 # read global surface water occurance (GSWO) data to mask permanent water for the model region
 def gwso_sfincs_region(model):
     if platform.system() == "Windows":
@@ -1024,192 +1859,191 @@ def gwso_sfincs_region(model):
     gwso_region = data_catalog.get_rasterdataset("gswo", geom=sfincs_region, buffer=1000)
     return gwso_region
 
-#%%
-# Compute the maximum water level (hmax) and mask out permanent water
-def compute_hmax_masked(models, gwso_region):
+# compute maximum flood depth, maximum rise rate of flood depth, maximum velocity at maximum flood depth, and their masked versions excluding permanent water
+def compute_hmax_masked_riserate(models, gwso_region):
     # we set a threshold to mask minimum flood depth
     hmin = 0.05
 
     for model in models:
-        # select the highest-resolution elevation dataset
-        print(f"Processing model: {model['model_name']}")
-        depfile = join(model["model_path"], "subgrid", "dep_subgrid.tif")
-        da_dep = model["sfincs_model"].data_catalog.get_rasterdataset(depfile)
+        if os.path.exists(model['model_path'] + "/sfincs_derived.nc"):
+            print(f"Skipping {model['model_name']} — results already exist.")
+            dataset = xr.open_dataset(join(model['model_path'], "sfincs_derived.nc"))
 
-        # compute the maximum over all time steps
-        # First timestep leads to incorrect diiference values for permanent water cells that are incorrectly unmasked; requires filtering.
-        da_zsmax = model["sfincs_results"]["zsmax"].isel(timemax=slice(1, None)).max(dim="timemax")
-        da_zs = model["sfincs_results"]["zs"]
-        da_zb = model["sfincs_results"]["zb"]
-     
-        # downscale the floodmap for max water depth
-        da_hmax = utils.downscale_floodmap(
-            zsmax=da_zsmax,
-            dep=da_dep,
-            hmin=hmin,
-            reproj_method = "bilinear"
-            )
+            model["sfincs_results"]['hmax'] = dataset['hmax']
+            model["sfincs_results"]['hmax_masked'] = dataset['hmax_masked']
+            model["sfincs_results"]['max_rise_rate_h'] = dataset['max_rise_rate_h']
+            model["sfincs_results"]['vmax_masked'] = dataset['vmax_masked']
+            model["sfincs_results"]['hvmax_masked'] = dataset['hvmax_masked']
         
-        # downscale the floodmap for hourly water depth
-        # da_h = utils.downscale_floodmap(
-        #     zsmax=da_zs,
-        #     dep=da_dep,
-        #     hmin=hmin,
-        #     reproj_method = "bilinear"
-        #     )
-        da_h = da_zs - da_zb
-        da_h = da_h.where(da_h > hmin, np.nan)
-    
-        # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
-        gswo_mask = gwso_region.raster.reproject_like(da_hmax, method="max")
-        # permanent water where water occurence > 5%
-        da_hmax_masked = da_hmax.where(gswo_mask <= 5)
-        da_h_masked = da_h.where(gswo_mask <= 5)
+        else:
+            print(f"Processing model: {model['model_name']}")
 
-        # --- Compute velocity using Manning's equation ---
-        manning_file = join(model["model_path"], "subgrid", "manning_subgrid.tif")
-        manning_ra = rxr.open_rasterio(manning_file).squeeze("band", drop=True) 
-        manning_subgrid = manning_ra.rio.reproject_match(da_h_masked)
+            # select the highest-resolution elevation dataset
+            depfile = join(model["model_path"], "subgrid", "dep_subgrid.tif")
+            da_dep = model["sfincs_model"].data_catalog.get_rasterdataset(depfile)
 
-        # Extract grid spacing from coordinates (assumes regular grid)
-        dx = float(da_h_masked['x'][0,1] - da_h_masked['x'][0,0])
-        dy = float(da_h_masked['y'][1,0] - da_h_masked['y'][0,0])
+            # compute the maximum over all time steps
+            # First timestep leads to incorrect diiference values for permanent water cells that are incorrectly unmasked; requires filtering.
+            da_zsmax = model["sfincs_results"]["zsmax"].isel(timemax=slice(1, None)).max(dim="timemax")
+            da_zs = model["sfincs_results"]["zs"]
+        
+            # downscale the floodmap for max water depth
+            da_hmax = utils.downscale_floodmap(
+                zsmax=da_zsmax,
+                dep=da_dep,
+                hmin=hmin,
+                reproj_method = "bilinear"
+                )
+            
+            # Calculate rise rate
+            dzs_dt_h = da_zs.diff(dim="time") / (da_zs["time"].diff("time") / np.timedelta64(1, "h"))
+            # Take the per-pixel maximum rise rate (over time)
+            dzs_dt_max_h = dzs_dt_h.max(dim="time", skipna=True)
+            # Downscale or reproject to match dep_subgrid
+            dzs_dt_max_h.rio.write_crs("EPSG:32736")
+            dzs_dt_max_h_sub = dzs_dt_max_h.rio.reproject_match(da_dep)
+            # Mask cells where max water depth ≤ hmin
+            mask_valid = da_hmax > 0.05
+            dzs_dt_max_h_sub = dzs_dt_max_h_sub.where(mask_valid)
+            
+            # velocity at maximum water depth - also downscale and mask
+            da_vmax = model['sfincs_results']['vmax'].max(dim='timemax')
+            da_vmax = da_vmax.rio.reproject_match(da_dep)
+            da_vmax_sub = da_vmax.where(mask_valid)
 
-        # Compute slopes
-        dH_dx = da_h_masked.differentiate('m') / dx  # slope in x
-        dH_dy = da_h_masked.differentiate('n') / dy  # slope in y
-        S = np.sqrt(dH_dx**2 + dH_dy**2)  # slope magnitude
+            # GSWO dataset to mask permanent water by first geprojecting it to the subgrid of hmax
+            gswo_mask = gwso_region.raster.reproject_like(da_hmax, method="max")
+            # permanent water where water occurence > 5%
+            da_hmax_masked = da_hmax.where(gswo_mask <= 5)
 
-        # Compute velocity
-        da_v = (1 / manning_subgrid) * da_h_masked**(2/3) * S**0.5
-        da_v = da_v.fillna(0).rename('velocity')
-        da_v.attrs['units'] = 'm/s'
+            # Do the same for rise rate
+            # gswo_mask = gwso_region.raster.reproject_like(dzs_dt_max_h, method="max")
+            dzs_dt_max_h_masked = dzs_dt_max_h_sub.where(gswo_mask <= 5)
 
-        # --- Save results ---
-        model["sfincs_results"]['hmax'] = da_hmax
-        model["sfincs_results"]['hmax_masked'] = da_hmax_masked
-        model["sfincs_results"]['h_masked'] = da_h_masked
-        model["sfincs_results"]['velocity'] = da_v
+            # same for max velocity
+            vmax_masked = da_vmax_sub.where(gswo_mask <= 5)  
 
-        del da_hmax, da_zsmax, da_zs, da_dep, gswo_mask  # Clean up to free memory
-        gc.collect()
+            # calculate hv product
+            hvmax_masked = (da_hmax_masked * vmax_masked).where((da_hmax_masked > 0) & (vmax_masked > 0))      
+
+            # --- Save results ---
+            model["sfincs_results"]['hmax'] = da_hmax
+            model["sfincs_results"]['hmax_masked'] = da_hmax_masked
+            model["sfincs_results"]['max_rise_rate_h'] = dzs_dt_max_h_masked
+            model["sfincs_results"]['vmax_masked'] = vmax_masked
+            model["sfincs_results"]['hvmax_masked'] = hvmax_masked
+
+            dataset = xr.Dataset({
+                "hmax": da_hmax,
+                "hmax_masked": da_hmax_masked,
+                "max_rise_rate_h": dzs_dt_max_h_masked,
+                "vmax_masked": vmax_masked,
+                "hvmax_masked": hvmax_masked
+            })
+            dataset.to_netcdf(join(model["model_path"], "sfincs_derived.nc"))
+
+            del da_hmax, da_zsmax, da_zs, da_dep, gswo_mask  # Clean up to free memory
+            gc.collect()
 
     return models
 
-# %%
-print("=== Step 1: Extract SFINCS results ===")
-da_zs = model["sfincs_results"]["zs"]      # (time, y, x)
-da_zb = model["sfincs_results"]["zb"]      # (y, x)
-print("  - Extracted water surface and bed elevation.")
+# Calculate fatalities according to Jonkman et al (2008)
+def fatality_fraction_Jonkman_etal2008(h, mu_N, sigma_N):
+    """Compute fatality fraction FD(h) from water depth (m) using Jonkman (2008) lognormal fit."""
+    from scipy.stats import norm
 
-print("=== Step 2: Compute hourly depth ===")
-da_h = da_zs - da_zb                        # (time, y, x)
-da_h_valid = da_h.where(da_h > hmin)
-valid_mask = ~da_h_valid.isnull().all(dim="time")
-print(f"  - Applied hmin={hmin} mask. Valid pixels: {valid_mask.sum().values}/{valid_mask.size}")
-
-print("=== Step 3: Compute per-pixel max depth and time index ===")
-imax = da_h_valid.argmax(dim="time", skipna=True)
-imax = imax.where(valid_mask)
-da_hmax = da_h_valid.max(dim="time", skipna=True)
-print("  - Computed max depth per pixel and index of max time.")
-
-print("=== Step 4: Compute slope from water surface ===")
-dx = float(da_zs['x'][1] - da_zs['x'][0])
-dy = float(da_zs['y'][1] - da_zs['y'][0])
-dZs_dx = da_zs.differentiate("x") / dx
-dZs_dy = da_zs.differentiate("y") / dy
-S = np.sqrt(dZs_dx**2 + dZs_dy**2)
-print("  - Computed slope magnitude over time.")
-
-print("=== Step 5: Extract slope at time of max depth ===")
-# Bring slope to memory (or compute chunkwise if too big)
-# Define a small function that selects per-pixel slope at the given time index
-def select_slope_at_hmax(S_block, imax_block):
-    out = np.take_along_axis(S_block, imax_block[None, ...], axis=0)
-    return out.squeeze(0)
-
-# Apply blockwise (Dask parallelized)
-S_at_hmax = xr.map_blocks(
-    select_slope_at_hmax,
-    S,
-    args=(imax),
-    template=xr.zeros_like(imax, dtype=float)
-)
-S_at_hmax.name = "slope_at_hmax"
-print("  - Extracted slope at max depth per pixel (chunked + parallelized).")
-
-
-print("=== Step 6: Mask permanent water ===")
-gswo_mask = gwso.raster.reproject_like(da_hmax, method="max")
-mask_perm_water = gswo_mask > 5
-S_masked = S_at_hmax.where(~mask_perm_water)
-hmax_masked = da_hmax.where(~mask_perm_water)
-print(f"  - Applied permanent water mask and clipped hmax to hmin={hmin}.")
-
-print("=== Step 7: Reproject to Manning grid ===")
-S_sub = S_masked.rio.reproject_match(manning_subgrid)
-hmax_sub = hmax_masked.rio.reproject_match(manning_subgrid)
-print("  - Reprojected slope and max depth to Manning grid.")
-
-print("=== Step 8: Compute velocity using Manning's equation ===")
-eps = 1e-9
-da_v_hmax = (1.0 / (manning_subgrid + eps)) * (hmax_sub ** (2.0 / 3.0)) * np.sqrt(S_sub + eps)
-da_v_hmax = da_v_hmax.fillna(0).rename("velocity")
-da_v_hmax.attrs["units"] = "m/s"
-print("  - Computed velocity at max water depth.")
-
-print("=== Done: Velocity at max water depth computed ===")
-da_v_hmax
+    h = np.maximum(h, 1e-3)  # avoid log(0)
+    return norm.cdf((np.log(h) - mu_N) / sigma_N)
 
 
 #%%
-
-# Function to compute hourly velocity using Manning's equation
-def compute_hourly_velocity(ds, n_manning):
-    # 1. Compute water depth
-    h = ds['zs'] - ds['zb']  # (n, m, time)
-    h = h.where(h > 0, 0.0)  # ensure non-negative depths
-
-    # 2. Compute slopes in x and y directions
-    # Get grid spacing from coordinates (assuming uniform grid)
-    dx = float(ds['x'][0,1] - ds['x'][0,0])  # meters per cell
-    dy = float(ds['y'][1,0] - ds['y'][0,0])
-
-    # compute gradients
-    dH_dx = h.differentiate('m') / dx  # approximate slope in x-direction
-    dH_dy = h.differentiate('n') / dy  # approximate slope in y-direction
-
-    # magnitude of slope
-    S = np.sqrt(dH_dx**2 + dH_dy**2)
+# Fatality function from Boyd (2005) as reported in Jonkman et al. (2008)
+def fatality_curve_Boyd2005(h):
+    """Fatality curve based on Boyd (2005) as reported in Jonkman et al. (2008).
     
-    # 3. Compute velocity using Manning's equation
-    # v = (1/n) * h^(2/3) * S^(1/2)
-    v = (1 / n_manning) * h**(2/3) * S**0.5
-    v = v.fillna(0)  # fill NaNs with 0 for dry cells
+    Parameters
+    ----------
+    h : float or array-like
+        Flood depth in meters.
 
-    # 4. Attach coordinates and return as DataArray
-    v = v.rename('velocity')
-    v.attrs['units'] = 'm/s'
-    
-    return v
+    Returns
+    -------
+    float or array-like
+        Fatality rate (between 0 and 1).
+    """
+    h = np.asarray(h)
+    return 0.34 / (1 + np.exp(20.37 - 6.18 * h))
 
+
+#%%
+# Apply fatality function of Boyd (2005)
+df_pop_2020_exposed_F['fatalities'] = df_pop_2020_exposed_F['population'] * fatality_curve_Boyd2005(df_pop_2020_exposed_F['flood_depth'])
+df_pop_2020_exposed_CF['fatalities'] = df_pop_2020_exposed_CF['population'] * fatality_curve_Boyd2005(df_pop_2020_exposed_CF['flood_depth'])
+df_pop_1990_exposed_F['fatalities'] = df_pop_1990_exposed_F['population'] * fatality_curve_Boyd2005(df_pop_1990_exposed_F['flood_depth'])
+
+print(f"Total fatalities acc. to Boyd et al. (2005):")
+print(f"Factual climate 2020 population scenario:        {df_pop_2020_exposed_F['fatalities'].sum():.0f} people")
+print(f"Counterfactual climate 2020 population scenario: {df_pop_2020_exposed_CF['fatalities'].sum():.0f} people")
+print(f"Factual climate 1990 population scenario:        {df_pop_1990_exposed_F['fatalities'].sum():.0f} people")
 
 #%%
 # Load snakemake config file to construct the model paths
 config_path  = '../Workflows/01_config_snakemake/config_general_MZB.yml'
 cfg = load_config(config_path)
 
-#%%
 # Load the SFINCS models in one dictonary
 models = load_sfincs_models(cfg)
 print(models)
-# %%
+
 # Calculate hmax and mask out permanent water
 gwso = gwso_sfincs_region(models[0])
 
-#%%
-models, gdf_valid = compute_hmax_masked(models, gwso, model_region)
-models = compute_hmax_diff(models)
 
+#%%
+# Create model object for SFINCS model incl velocity output
+base_path = join(prefix, "11210471-001-compass", "03_Runs", "sofala", "Idai", "sfincs")
+model_name = f"event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_maxvel"
+model_path = join(base_path, model_name)
+model_obj  = SfincsModel(model_path, mode="r")
+his_path   = os.path.join(model_path,"sfincs_his.nc")
+ds_his     = xr.open_dataset(his_path, engine="netcdf4")
+
+# Create model dictionary
+model_velocity = {
+    "model_name": model_name,
+    "model_path": model_path,
+    "sfincs_model": model_obj,
+    "sfincs_results": model_obj.results,
+    "sfincs_his": ds_his
+    }
+
+model_velocity = compute_hmax_masked_riserate([model_velocity], gwso)
+
+hvmax = model_velocity[0]['sfincs_results']['hvmax_masked']
+vmax = model_velocity[0]['sfincs_results']['vmax_masked']
+hmax = model_velocity[0]['sfincs_results']['hmax_masked']
+rise = model_velocity[0]['sfincs_results']['max_rise_rate_h']
+
+# Apply Jonkman et al. (2008) fatality function based on zones defined by hvmax, vmax, hmax, and rise rate
+# Initialize with zeros
+fatality_frac = xr.zeros_like(hmax)
+
+# Define masks
+mask_breach = (hvmax >= 7) & (vmax > 2)
+mask_rapid = (hmax > 2.1) & (rise > 0.5)
+mask_remaining = (hmax > 0) & ~mask_breach & ~mask_rapid
+
+# Apply per zone
+fatality_frac = xr.where(mask_breach, 1, fatality_frac)
+fatality_frac = xr.where(mask_rapid, fatality_fraction_Jonkman_etal2008(hmax, mu_N=1.46, sigma_N=0.28), fatality_frac)
+fatality_frac = xr.where(mask_remaining, fatality_fraction_Jonkman_etal2008(hmax, mu_N=7.60, sigma_N=2.75), fatality_frac)
+
+# Store the result
+model_velocity[0]['sfincs_results']['fatality_frac'] = fatality_frac
+
+
+# Calculate exposed fatalities for exposed population to factual flooding
+flood_fatalities_F = model_velocity[0]['sfincs_results']['fatality_frac'] * ra_exposed_pop_2020_F
+
+print(f"Total fatalities acc. to Jonkman et al. (2008): {flood_fatalities_F.sum().values:.0f} people")
 # %%
