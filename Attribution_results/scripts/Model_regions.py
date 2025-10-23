@@ -1,5 +1,6 @@
 #%% Import the necessary packages
 # Use pixi environment compass-snake-dfm
+import os
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import contextily as ctx
@@ -13,9 +14,12 @@ import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 from matplotlib.patches import ConnectionPatch
 
-#%% Load TC track shapefiles as geopandas geodataframe - obtain from https://www.ncei.noaa.gov/products/international-best-track-archive (v4r01 ALL)
-shapefile_path = "../data/ibtracs/IBTrACS_IDAI.shp"
-tc_idai = gpd.read_file(shapefile_path)
+#%% Load TC track shapefiles as geopandas geodataframe - obtain from https://www.ncei.noaa.gov/products/international-best-track-archive (v4r01 SI points)
+data_base = "C:/Code/Paper_1/Data_submission"
+
+shapefile_path = os.path.join(data_base, "ibtracs/IBTrACS.SI.list.v04r01.points.shp")
+gdf = gpd.read_file(shapefile_path)
+tc_idai = gdf[gdf['SID'] == '2019063S18038']
 
 # Normalize windspeed for point sizing (adjust scaling as needed)
 tc_idai["size"] = (tc_idai["USA_WIND"] - tc_idai["USA_WIND"].min()) / (
@@ -35,12 +39,12 @@ norm = plt.Normalize(wind_min, wind_max)
 
 # %% PLOTTING MODEL DOMAIN FIGURES FOR PAPER
 # Getting the model regions
-gdf_wflow = gpd.read_file("../data/wflow/gis/basins.geojson")
-gdf_sfincs = gpd.read_file("../data/sfincs/gis/region.geojson")
+gdf_wflow = gpd.read_file(os.path.join(data_base, "wflow/gis/basins.geojson"))
+gdf_sfincs = gpd.read_file(os.path.join(data_base, "sfincs/gis/region.geojson"))
 gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
-gdf_snapwave = gpd.read_file("../data/snapwave/gis/SnapWave_region_sofala_only.shp")
+gdf_snapwave = gpd.read_file(os.path.join(data_base, "snapwave/gis/SnapWave_region_sofala_only.shp"))
 gdf_snapwave = gdf_snapwave.to_crs("EPSG:4326")
-dfm_grid = gpd.read_file('../data/dfm/dfm_grid.gpkg')
+dfm_grid = gpd.read_file(os.path.join(data_base, "dfm/dfm_grid.gpkg"))
 
 
 #%%
@@ -55,7 +59,7 @@ sfincs_patch = mpatches.Patch(facecolor='pink', edgecolor='pink', alpha=0.5, lab
 gdf_wflow.plot(ax=ax, edgecolor='lightskyblue', facecolor='lightskyblue', linewidth=1, alpha=0.5, zorder=3, rasterized=True)
 wflow_patch = mpatches.Patch(facecolor='lightskyblue', edgecolor='lightskyblue', alpha=0.5, label="Wflow Basins")
 
-# Plot wflow basins region and set up legend entry
+# Plot snapwave region and set up legend entry
 gdf_snapwave.plot(ax=ax, facecolor='#FFFF99', edgecolor='#FFFF99', linewidth=1, alpha=0.5, zorder=2, rasterized=True)
 snap_patch = mpatches.Patch(facecolor='#FFFF99', edgecolor='#FFFF99', alpha=0.5, label="SnapWave Domain")
 
@@ -135,7 +139,7 @@ leg = ax.legend(handles=size_handles, loc="upper right", fontsize=8,
                 bbox_to_anchor=(1, 1))
 
 # --- Inset: East Africa context map placed outside
-inset_position = [0.63, 0.11, 0.6, 0.6]  # [left, bottom, width, height]
+inset_position = [0.65, 0.11, 0.6, 0.6]  # [left, bottom, width, height]
 inset_ax = fig.add_axes(inset_position, projection=ccrs.PlateCarree())
 inset_ax.set_extent([20, 50.2, -35, 0], crs=ccrs.PlateCarree())
 inset_ax.add_feature(cfeature.LAND, facecolor='lightgrey')
@@ -200,7 +204,7 @@ con_bottom = ConnectionPatch(
 fig.add_artist(con_top)
 fig.add_artist(con_bottom)
 
-fig.savefig("../figures/f02.png", dpi=300, bbox_inches="tight", transparent=False)
-fig.savefig("../figures/f02.pdf", dpi=300, bbox_inches="tight", transparent=False)
+fig.savefig("../figures/f02_none.png", dpi=300, bbox_inches="tight", transparent=False)
+# fig.savefig("../figures/f02.pdf", dpi=300, bbox_inches="tight", transparent=False)
 plt.show()
 # %%
