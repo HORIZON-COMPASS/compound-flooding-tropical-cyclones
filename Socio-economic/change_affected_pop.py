@@ -267,8 +267,10 @@ def pop_raster_to_df(pop_array, flood_array, transform):
     return df
 
 # --- Function to aggregate population and flood depth to coarser grid ---
+# Problem is that population is either lost when area weighted averaging or overcounted when summing and redistributing.
 def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, background=None, factor=100):
     print("Aggregating population raster to coarser grid polygons...")
+
     # Pixel size from transform
     pixel_width = transform.a
     pixel_height = -transform.e
@@ -277,60 +279,42 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
     cell_width = factor * pixel_width
     cell_height = factor * pixel_height
 
-    # Aggregate raster by factor
+    # --- Helper functions ---
     def block_sum(arr, factor):
         nrows, ncols = arr.shape
         nrows_crop = nrows - nrows % factor
         ncols_crop = ncols - ncols % factor
         arr_cropped = arr[:nrows_crop, :ncols_crop]
-        agg = arr_cropped.reshape(nrows_crop//factor, factor,
-                                ncols_crop//factor, factor).sum(axis=(1,3))
-        return agg
+        return arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor).sum(axis=(1,3))
 
-    # Aggregate raster by factor (mean)
     def block_mean(arr, factor):
         nrows, ncols = arr.shape
         nrows_crop = nrows - nrows % factor
         ncols_crop = ncols - ncols % factor
         arr_cropped = arr[:nrows_crop, :ncols_crop]
-        mean = np.nanmean(
-            arr_cropped.reshape(nrows_crop//factor, factor,
-                                ncols_crop//factor, factor),
-            axis=(1, 3)
-        )
-        return mean
-    
-    # Count number of pixels >1 m per block
+        return np.nanmean(arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor), axis=(1,3))
+
     def block_count_threshold(arr, factor, threshold=1):
         nrows, ncols = arr.shape
         nrows_crop = nrows - nrows % factor
         ncols_crop = ncols - ncols % factor
         arr_cropped = arr[:nrows_crop, :ncols_crop]
-        count = (arr_cropped.reshape(nrows_crop//factor, factor,
-                                    ncols_crop//factor, factor) > threshold).sum(axis=(1,3))
-        return count
+        return (arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor) > threshold).sum(axis=(1,3))
 
+    # --- Aggregate population and flood ---
     total_agg = block_sum(total_pop_array, factor)
     exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
-
-    # Aggregate flood depth
     avg_flood_depth = block_mean(flood_raster, factor)
-
-    # Number of pixels above 1 m per block
     pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
 
-    # Coarse grid coordinates based on raster bounds
+    # --- Build coarse grid ---
     nrows_coarse, ncols_coarse = total_agg.shape
-    x0, y0 = transform * (0, 0)  # top-left pixel center
+    x0, y0 = transform * (0, 0)
     x_coords = x0 + np.arange(ncols_coarse) * cell_width
-    y_coords = y0 + np.arange(nrows_coarse) * -cell_height  # negative because raster Y decreases downward
+    y_coords = y0 + np.arange(nrows_coarse) * -cell_height
 
-    grid_cells = []
-    for j, y in enumerate(y_coords):
-        for i, x in enumerate(x_coords):
-            grid_cells.append(box(x, y - cell_height, x + cell_width, y))
+    grid_cells = [box(x, y - cell_height, x + cell_width, y) for y in y_coords for x in x_coords]
 
-    # Create GeoDataFrame
     gdf_grid = gpd.GeoDataFrame(
         {
             "total_population": total_agg.flatten(),
@@ -342,32 +326,25 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
         crs=crs
     )
 
-    # Clip to region/background
+    # --- Clip to region/background ---
     region_bg = gpd.overlay(region, background, how="intersection") if background is not None else region.copy()
-    
-    # Compute area-weighted intersection
+
+    # --- Redistribute population proportionally to area inside region ---
+    gdf_grid = gdf_grid.reset_index(names="cell_id")
     intersections = gpd.overlay(gdf_grid, region_bg, how="intersection")
+    intersections["intersect_area"] = intersections.geometry.area
+    area_sum = intersections.groupby("cell_id")["intersect_area"].transform("sum")
+    intersections["norm_fraction"] = intersections["intersect_area"] / area_sum
 
-    # Compute overlap area and fraction of each original coarse cell
-    intersections["overlap_area"] = intersections.geometry.area
-    gdf_grid["cell_area"] = gdf_grid.geometry.area
+    # Redistribute full population across pieces (sum per cell preserved)
+    for col in ["total_population", "exposed_population"]:
+        intersections[col] = intersections.groupby("cell_id")[col].transform("first") * intersections["norm_fraction"]
 
-    # Join overlap fraction back to grid cells
-    intersections = intersections.merge(
-        gdf_grid[["geometry", "cell_area", "total_population", "exposed_population", "avg_flood_depth", "pct_cells_higher_1m"]],
-        on="geometry", how="left"
-    )
-    intersections["area_fraction"] = intersections["overlap_area"] / intersections["cell_area"]
+    # Aggregate pieces back to one polygon per cell
+    gdf_grid_masked = intersections.dissolve(by="cell_id", aggfunc="sum")
+    gdf_grid_masked["geometry"] = intersections.dissolve(by="cell_id").geometry
 
-    # Scale population and exposure by overlap fraction
-    intersections["total_population"] *= intersections["area_fraction"]
-    intersections["exposed_population"] *= intersections["area_fraction"]
-
-    # Drop temporary columns and clean up
-    gdf_grid_masked = intersections.drop(columns=["overlap_area", "cell_area", "area_fraction"])
-
-
-    # Relative population
+    # Relative exposure
     gdf_grid_masked["relative_population"] = (
         gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
     )
@@ -375,112 +352,74 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
     print(f"Total pop (original): {np.nansum(total_pop_array):,.2f}")
     print(f"Total pop (aggregated): {gdf_grid_masked['total_population'].sum():,.2f}")
     print(f"Diff: {np.nansum(total_pop_array) - gdf_grid_masked['total_population'].sum():,.2f}")
-
+    print(f"Diff %: {((np.nansum(total_pop_array) - gdf_grid_masked['total_population'].sum()) / np.nansum(total_pop_array)) * 100:,.2f}")
 
     return gdf_grid_masked
 
-# #%%
-# from rasterio.features import rasterize
 
-# def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, background=None, factor=100):
-#     print("Aggregating population raster to coarser grid polygons...")
 
-#     # --- 1️⃣ Mask input rasters to the region before aggregation ---
-#     # if region is not None:
-#     #     print("Masking population and flood rasters to region extent...")
-#     #     mask = rasterize(
-#     #         [(region.geometry.unary_union, 1)],
-#     #         out_shape=total_pop_array.shape,
-#     #         transform=transform,
-#     #         fill=0,
-#     #         dtype=np.uint8
-#     #     )
-#     #     total_pop_array = np.where(mask == 1, total_pop_array, 0)
-#     #     flood_raster = np.where(mask == 1, flood_raster, np.nan)
+# %%
+# ============================================================================================= #
+# # More accurate aggregation function but very slow
+# def aggregate_pop_sjoin_slow(total_pop_array, flood_raster, transform, crs, region_utm, background_utm, cell_size=2500):
+#     # 1️⃣ Clip your region to ensure bounds match data extent
+#     clipped_region = gpd.overlay(region_utm, background_utm, how="intersection")
 
-#     # --- 2️⃣ Compute pixel & cell sizes ---
-#     pixel_width = transform.a
-#     pixel_height = -transform.e
-#     cell_width = factor * pixel_width
-#     cell_height = factor * pixel_height
+#     # 2️⃣ Define cell size in meters (since UTM)
+#     cell_size = 2500  # 2 km × 2 km grid cells
 
-#     # --- 3️⃣ Define aggregation helpers ---
-#     def block_sum(arr, factor):
-#         nrows, ncols = arr.shape
-#         nrows_crop = nrows - nrows % factor
-#         ncols_crop = ncols - ncols % factor
-#         arr_cropped = arr[:nrows_crop, :ncols_crop]
-#         agg = arr_cropped.reshape(nrows_crop//factor, factor,
-#                                   ncols_crop//factor, factor).sum(axis=(1, 3))
-#         return agg
+#     minx, miny, maxx, maxy = clipped_region.total_bounds
+#     cols = np.arange(minx, maxx, cell_size)
+#     rows = np.arange(miny, maxy, cell_size)
 
-#     def block_mean(arr, factor):
-#         nrows, ncols = arr.shape
-#         nrows_crop = nrows - nrows % factor
-#         ncols_crop = ncols - ncols % factor
-#         arr_cropped = arr[:nrows_crop, :ncols_crop]
-#         mean = np.nanmean(
-#             arr_cropped.reshape(nrows_crop//factor, factor,
-#                                 ncols_crop//factor, factor),
-#             axis=(1, 3)
-#         )
-#         return mean
+#     # 3️⃣ Build grid cells
+#     grid_cells = [box(x, y, x + cell_size, y + cell_size) for x in cols for y in rows]
+#     gdf_grid = gpd.GeoDataFrame(geometry=grid_cells, crs=clipped_region.crs)
 
-#     def block_count_threshold(arr, factor, threshold=1):
-#         nrows, ncols = arr.shape
-#         nrows_crop = nrows - nrows % factor
-#         ncols_crop = ncols - ncols % factor
-#         arr_cropped = arr[:nrows_crop, :ncols_crop]
-#         count = (arr_cropped.reshape(nrows_crop//factor, factor,
-#                                     ncols_crop//factor, factor) > threshold).sum(axis=(1, 3))
-#         return count
+#     # 4️⃣ Clip grid to region (only keep intersecting cells)
+#     gdf_grid_masked = gpd.overlay(gdf_grid, clipped_region, how="intersection")
 
-#     # --- 4️⃣ Aggregate population and flood ---
-#     total_agg = block_sum(total_pop_array, factor)
-#     exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
-#     avg_flood_depth = block_mean(flood_raster, factor)
-#     pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
-
-#     # --- 5️⃣ Build coarse grid polygons ---
-#     nrows_coarse, ncols_coarse = total_agg.shape
-#     x0, y0 = transform * (0, 0)
-#     x_coords = x0 + np.arange(ncols_coarse) * cell_width
-#     y_coords = y0 + np.arange(nrows_coarse) * -cell_height
-
-#     grid_cells = [
-#         box(x, y - cell_height, x + cell_width, y)
-#         for j, y in enumerate(y_coords)
-#         for i, x in enumerate(x_coords)
-#     ]
-
-#     gdf_grid = gpd.GeoDataFrame(
-#         {
-#             "total_population": total_agg.flatten(),
-#             "exposed_population": exposed_agg.flatten(),
-#             "avg_flood_depth": avg_flood_depth.flatten(),
-#             "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100,
-#         },
-#         geometry=grid_cells,
-#         crs=crs,
+#     # 5️⃣ Convert your fine-resolution raster data to points
+#     # Example: convert flood/pop arrays to GeoDataFrame of pixel centers
+#     rows, cols = np.where(~np.isnan(total_pop_array))
+#     xs, ys = rasterio.transform.xy(flood_grid_transform, rows, cols)
+#     gdf_points = gpd.GeoDataFrame(
+#         {"pop": total_pop_array[rows, cols],
+#         "flood": hmax_F[rows, cols]},
+#         geometry=gpd.points_from_xy(xs, ys),
+#         crs=flood_grid_crs
 #     )
 
-#     # --- 6️⃣ (Optional) Clip to background for clean plotting ---
-#     if background is not None:
-#         region_bg = gpd.overlay(region, background, how="intersection")
-#         gdf_grid_masked = gpd.overlay(gdf_grid, region_bg, how="intersection")
-#     else:
-#         gdf_grid_masked = gdf_grid
+#     # 6️⃣ Spatial join: assign each point to its coarse grid cell
+#     joined = gpd.sjoin(gdf_points, gdf_grid_masked, how="left", predicate="within")
 
-#     # --- 7️⃣ Relative population ---
+#     # 7️⃣ Aggregate statistics per grid cell
+#     agg_pop_total = joined.groupby("index_right")["pop"].sum()
+#     agg_pop_exposed = joined.loc[joined["flood"] > 0].groupby("index_right")["pop"].sum()
+#     agg_flood_mean = joined.groupby("index_right")["flood"].mean()
+#     agg_pct_above_1m = (
+#         joined.loc[joined["flood"] > 1].groupby("index_right").size() /
+#         joined.groupby("index_right").size()
+#     ) * 100
+
+#     # 8️⃣ Assign to grid GeoDataFrame
+#     gdf_grid_masked["total_population"] = agg_pop_total
+#     gdf_grid_masked["exposed_population"] = agg_pop_exposed
+#     gdf_grid_masked["avg_flood_depth"] = agg_flood_mean
+#     gdf_grid_masked["pct_cells_higher_1m"] = agg_pct_above_1m
+#     gdf_grid_masked = gdf_grid_masked.fillna(0)
+
+#     # 9️⃣ Relative exposure
 #     gdf_grid_masked["relative_population"] = (
 #         gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
-#     )
+#     ).replace(np.inf, 0)
 
-#     print(f"Total pop (original): {np.nansum(total_pop_array):,.2f}")
-#     print(f"Total pop (aggregated): {gdf_grid_masked['total_population'].sum():,.2f}")
-#     print(f"Diff: {np.nansum(total_pop_array) - gdf_grid_masked['total_population'].sum():,.2f}")
+#     print("✔ Aggregation finished")
+#     print(f"Total pop: {np.nansum(total_pop_array):,.0f}")
+#     print(f"Total pop: {gdf_grid_masked['total_population'].sum():,.0f}")
 
 #     return gdf_grid_masked
+
 
 
 #%%
