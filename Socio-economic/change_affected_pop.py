@@ -513,6 +513,113 @@ print(f"Exposed population attributable to population change (2020-1990): {int(n
 print(f"Exposed population attributable to population change (uniform growth): {int(np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_F_uniform)):,} {100 * (np.nansum(ra_exposed_pop_2020_F) - np.nansum(ra_exposed_pop_2020_F_uniform)) / np.nansum(ra_exposed_pop_2020_F):.2f}%")
 print(f"Population growth from 1990 to 2020 in the region: {int(np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])):,} {100 * (np.nansum(pop_arrays[2020]) - np.nansum(pop_arrays[1990])) / np.nansum(pop_arrays[2020]):.2f}%")
 
+
+# %%
+# # ============================================================================================ #
+# # ================== Plot comparison rasterized vs vectorized population ===================== #
+# # ============================================================================================ #
+
+# gdf_pop_2020_exposed_F_coarse_vector = aggregate_pop_sjoin_slow(pop_arrays[2020], hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm, factor=100)
+
+# gdf_2020_F_vector = gdf_pop_2020_exposed_F_coarse_vector.copy()
+# gdf_2020_F_vector.loc[gdf_2020_F_vector["total_population"] == 0] = np.nan
+
+# gdf_2020_F = gdf_pop_2020_exposed_F_coarse.copy()
+# gdf_2020_F.loc[gdf_2020_F["total_population"] == 0] = np.nan
+
+# # Ensure vector and raster GDFs have only the necessary columns
+# gdf_vector = gdf_2020_F_vector[['geometry', 'total_population']].copy()
+# gdf_raster = gdf_2020_F[['geometry', 'total_population']].copy()
+
+# # Add temporary IDs
+# gdf_vector['tmp_id'] = np.arange(len(gdf_vector))
+# gdf_raster['tmp_id'] = np.arange(len(gdf_raster))
+
+# # Spatial join using centroid matching for simplicity
+# gdf_vector['centroid'] = gdf_vector.geometry.centroid
+# gdf_raster['centroid'] = gdf_raster.geometry.centroid
+
+# # Merge on centroid coordinates (rounded to avoid floating point issues)
+# gdf_vector['cx'] = gdf_vector.centroid.x.round(2)
+# gdf_vector['cy'] = gdf_vector.centroid.y.round(2)
+# gdf_raster['cx'] = gdf_raster.centroid.x.round(2)
+# gdf_raster['cy'] = gdf_raster.centroid.y.round(2)
+
+# gdf_compare = gdf_vector.merge(
+#     gdf_raster[['cx','cy','total_population']],
+#     on=['cx','cy'],
+#     suffixes=('_vector','_raster')
+# )
+
+# # Compute difference
+# gdf_compare['change_in_population'] = (
+#     gdf_compare['total_population_vector'] - gdf_compare['total_population_raster']
+# )
+
+# # Plotting
+# fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+# gdf_2020_F_vector = gdf_pop_2020_exposed_F_coarse_vector.copy()
+# gdf_2020_F_vector.loc[gdf_2020_F_vector["total_population"] == 0] = np.nan
+
+# gdf_2020_F = gdf_pop_2020_exposed_F_coarse.copy()
+# gdf_2020_F.loc[gdf_2020_F["total_population"] == 0] = np.nan
+
+# gdf_2020_F['change_in_population_vect'] = gdf_2020_F_vector['total_population'] - gdf_2020_F['total_population']
+
+# # Define colormap: from white to #67CBE4
+# cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
+# norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_pop_2020_exposed_F_coarse_vector['total_population']))  
+# cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#BD2A2A"])
+# norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_compare['change_in_population']))
+
+# plot = gdf_2020_F_vector.plot(column="total_population", cmap=cmap, norm=norm ,
+#                        linewidth=0.1, edgecolor="grey", ax=axes[0], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+# plot = gdf_2020_F.plot(column="total_population", cmap=cmap, norm=norm,
+#                         linewidth=0.1, edgecolor="grey", ax=axes[1], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+# plot = gdf_compare.plot(column="change_in_population", cmap=cmap_change, norm=norm_change,
+#                        linewidth=0.1, edgecolor="grey", ax=axes[2], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+# for ax in axes:
+#     region.boundary.plot(ax=ax, color='black', linewidth=1)
+
+# xmin, xmax, ymin, ymax = flood_extent
+# for i, ax in enumerate(axes):
+#     background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+#     bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+#     region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+#     ax.set_xlim(xmin, xmax)
+#     ax.set_ylim(ymin, ymax)
+
+# for i, ax in enumerate(axes[:2]):
+#     sm = ScalarMappable(cmap=cmap, norm=norm)
+#     sm._A = []  
+#     cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+#     cbar.set_label("Population (people per cell)")
+
+# sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+# sm._A = []  
+# cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+# cbar.set_label("Difference in population (people per cell)")
+
+# axes[0].set_title("Factual 2020 vectorized", fontsize=10)
+# axes[1].set_title("Factual 2020 rasterized", fontsize=10)
+# axes[2].set_title("Vectorized - Rasterized", fontsize=10)
+
+# axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+# axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+# axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+# axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+# fig.suptitle("Total aggregated population in study region", fontsize=12)
+
+# plt.tight_layout()
+# plt.show()
+
+
+
 #%% ============================================================================================ # 
 # ================== Plot distribution of flood depth per exposed population =================== #
 # ============================================================================================== #
