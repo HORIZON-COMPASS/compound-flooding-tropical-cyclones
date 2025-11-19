@@ -17,8 +17,9 @@ import gzip
 
 # Filename .dat file.
 gdlcode = 'MOZr107' #example AFGr101. For all gdlcodes see Nr_individuals_data_availability.csv
-filename = 'synthpop_' + gdlcode + '.dat.gz' 
-filepath = Path('data', filename)
+filename = 'synthpop_' + gdlcode + '_grid.dat.gz' 
+# filepath = Path('data', filename)
+filepath = Path('data', 'GLOPOP-SG', filename)
 
 with gzip.open(filepath, 'rb') as f:
     # Read the binary content of the file
