@@ -389,3 +389,32 @@ axes.legend()
 
 
 # %%
+#############################################################################################
+############################### Calculate SLR in 1975 #######################################
+#############################################################################################
+SLR_hist_F_long  = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_obsclim_geocentricwaterlevel_global_monthly_1901_1978.nc", engine='netcdf4')
+SLR_hist_CF_long = xr.open_dataset(r"C:\Code\Paper_1\ISIMIP_SLR\hcc_counterclim_geocentricwaterlevel_global_monthly_1901_1978.nc", engine='netcdf4')
+
+SLR_hist_F_1975  = SLR_hist_F_long.sel(time=slice('1975-01-01', '1975-12-31'))
+SLR_hist_CF_1975 = SLR_hist_CF_long.sel(time=slice('1975-01-01', '1975-12-31'))
+
+# %%
+# Apply spatial mask to the long term monthly data
+SLR_hist_F_1975  = SLR_hist_F_1975.sel(stations=mask_DFM)
+SLR_hist_CF_1975 = SLR_hist_CF_1975.sel(stations=mask_DFM)
+
+# Select only five stations in the region
+sel_stations_F_1975  = SLR_hist_F_1975.sel(stations=combined_mask)
+sel_stations_CF_1975 = SLR_hist_CF_1975.sel(stations=combined_mask)
+
+sel_stations_DFM_1975 = [sel_stations_F_1975, sel_stations_CF_1975]
+
+# To be sure, reindex one dataset to the other for the stations of the whole of Mozambique (MZ)
+stations_DFM_CF_1975_aligned = sel_stations_DFM_1975[1]['geocentricwaterlevel'].sel(time=sel_stations_DFM_1975[0]['time'])
+
+# Subtract the CounterFactual (CF) from the Factual (F) dataset for the five selected stations in the whole of Mozambique
+water_level_difference_1975  = sel_stations_DFM_1975[0]['geocentricwaterlevel'] - stations_DFM_CF_1975_aligned
+
+# %%
+mean_SLR_1975 = water_level_difference_1975.mean()
+# %%
