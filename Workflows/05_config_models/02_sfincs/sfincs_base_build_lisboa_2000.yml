@@ -44,7 +44,7 @@ setup_subgrid:
   - elevtn: fabdem        
     zmin: 0.001              
   datasets_rgh:
-  - lulc: vito
+  - lulc: lisboa_2000
     reclass_table: vito_mapping
   nr_subgrid_pixels: 4  
   write_dep_tif: True           # save a cloud-optimized geotiff of the subgrid topography

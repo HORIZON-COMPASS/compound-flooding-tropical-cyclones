@@ -1,0 +1,68 @@
+setup_config:
+  stopdepth: 500
+  storecuminf: 1  #Store the cumulative infiltration
+  storecumprcp: 1 #Store the cumulative precip
+  
+setup_grid_from_region:
+  res: 100                     # model resolution
+  crs: utm                     # model CRS (must be UTM zone)
+  rotated: False               # allow a rotated grid
+
+setup_dep:
+  datasets_dep:
+  - elevtn: fabdem             # 1st elevation dataset
+    zmin: 0.001                # only use where values > 0.001
+
+setup_mask_active:
+  zmin: -10
+  fill_area: 50
+  include_mask: ocean_shape
+  reset_mask: True
+
+setup_mask_active2:
+  fill_area: 500
+  reset_mask: False
+
+setup_mask_active3:
+  fill_area: 500
+  reset_mask: False
+
+setup_mask_bounds:
+  btype: waterlevel             # Set waterlevel boundaries
+  zmin: -10
+  include_mask_buffer: 1000     # Changed to snap the mask boundary  
+  reset_bounds: True  
+
+setup_mask_bounds2:
+  btype: outflow                # Set waterlevel boundaries
+  zmin: 0
+  zmax: 10
+  reset_bounds: False 
+  
+setup_subgrid:
+  datasets_dep:
+  - elevtn: fabdem        
+    zmin: 0.001              
+  datasets_rgh:
+  - lulc: lisboa_2020
+    reclass_table: vito_mapping
+  nr_subgrid_pixels: 4  
+  write_dep_tif: True           # save a cloud-optimized geotiff of the subgrid topography
+  write_man_tif: True
+  nrmax: 5000                   # set tile size a bit larger speed up processing (default 2000)
+  
+setup_cn_infiltration:
+  cn: gcn250  
+  antecedent_moisture: dry      # dry, average, wet
+
+setup_river_inflow:
+  hydrography: merit_hydro
+  river_upa: 100
+  river_len: 5000
+  keep_rivers_geom: True
+
+setup_river_outflow:           # Should be same values as river inflow
+  hydrography: merit_hydro
+  river_upa: 100
+  river_len: 5000
+  keep_rivers_geom: True
