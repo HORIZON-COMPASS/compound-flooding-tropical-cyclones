@@ -170,6 +170,20 @@ gtsm_codec_future_tide_v1:
     source_url: https://doi.org/10.24381/cds.8c59054f
     source_version: v1
   crs: 4326
+lisboa_2000:
+  data_type: RasterDataset
+  path: 11210471-001-compass/MSc_internship/Poppy/LULC_data/merged_landuse_2000_region_5.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    paper_doi: 10.1016/j.jag.2024.103904
+    paper_ref: Lisboa et al (2024)
+    source_url: https://www.sciencedirect.com/science/article/pii/S1569843224002589?via%3Dihub
+  crs: 4326
 spw_IBTrACS_CF-10_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
