@@ -17,9 +17,9 @@ import gzip
 
 # Filename .dat file.
 gdlcode = 'MOZr107' #example AFGr101. For all gdlcodes see Nr_individuals_data_availability.csv
-filename = 'synthpop_' + gdlcode + '_grid.dat.gz' 
+filename = 'synthpop_' + gdlcode + 'dat.gz' 
 # filepath = Path('data', filename)
-filepath = Path('data', 'GLOPOP-SG', filename)
+filepath = Path('data', filename)
 
 with gzip.open(filepath, 'rb') as f:
     # Read the binary content of the file
@@ -27,14 +27,14 @@ with gzip.open(filepath, 'rb') as f:
 
     data_np = np.frombuffer(binary_content, dtype=np.int32)
 
-n_columns = 15
+n_columns = 16
 
 n_people = data_np.size// n_columns
 # reshapa data
 data_reshaped = np.reshape(data_np, (n_columns, n_people)).transpose()
 
 attribute_names = ['HID', 'RELATE_HEAD', 'INCOME', 'WEALTH', 'RURAL', 'AGE', 'GENDER', 'EDUC', 
-                   'HHTYPE', 'HHSIZE_CAT','AGRI_OWNERSHIP', 'FLOOR', 'WALL', 'ROOF', 'SOURCE']
+                   'HHTYPE', 'HHSIZE_CAT','AGRI_OWNERSHIP', 'FLOOR', 'WALL', 'ROOF', 'SOURCE', 'GRID_NR']
 
 df = pd.DataFrame(data_reshaped, columns=attribute_names)
 
