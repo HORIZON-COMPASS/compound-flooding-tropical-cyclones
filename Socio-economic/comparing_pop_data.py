@@ -51,11 +51,15 @@ sfincs_dir_CF = BASE_RUN_PATH / "sfincs" / SCENARIO_PATH_CF
 shapefile_fp = "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/gis/region.geojson"   # replace with your region shapefile
 background = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_region_background.geojson")
 
-# population in provided inthousand persons per grid cell
-population_raster_path_2020 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2020_30.tif")  
-population_raster_path_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_1990_30.tif")  
-population_raster_path_WP = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","moz_ppp_2020_UNadj_constrained.tif")
-
+# population in provided in thousand persons per grid cell
+pop_raster_path_HE_2020 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2020_30.tif")  
+pop_raster_path_HE_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_1990_30.tif")  
+pop_raster_path_WP_2020_100m = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2020_CN_100m_R2025A_v1.tif")
+pop_raster_path_WP_2020_1km = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2020_CN_1km_R2025A_UA_v1.tif")
+pop_raster_path_WP_2015_1km = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2015_CN_1km_R2025A_UA_v1.tif")
+pop_raster_path_WP_2019_1km = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2019_CN_1km_R2025A_UA_v1.tif")
+pop_raster_path_WP_2019_100m = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2019_CN_100m_R2025A_v1.tif")
+pop_df_path_GLOPOP_SG = Path("data/GLOPOP-SG/synthpop_MOZr107_grid_combined.csv")  # synthesized population data with coordinates
 # flood raster
 F_flooding = sfincs_dir_F / "floodmap.tif"
 CF_flooding = sfincs_dir_CF / "floodmap.tif"
