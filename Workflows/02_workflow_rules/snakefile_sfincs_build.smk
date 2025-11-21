@@ -2,6 +2,7 @@
 import os
 from snakemake.io import Wildcards
 from os.path import join
+from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
@@ -17,10 +18,6 @@ dir_runs   = config["dir_runs"]
 def get_bbox(wildcards):
     bbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     return bbox
-
-def get_config(wildcards):
-    config_sfincs_base = config["runname_ids"][wildcards.runname]['config_sfincs_base']
-    return join(curdir, '..', "05_config_models", "02_sfincs", config_sfincs_base)
 
 def get_bathy(wildcards):
     bathy = config["runname_ids"][wildcards.runname]["bathy"]
@@ -46,27 +43,37 @@ def get_datacatalog(wildcards):
             join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
         ]
 
-runname_ids = list(config['runname_ids'].keys())
-regions = [value['region'] for key, value in config['runname_ids'].items()]
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for lulc in value['CF_landuse']:
+        run_combinations.append({
+            "region": value['region'],
+            "runname": key,
+            "landuse": lulc
+        })
+
+regions     = [c["region"] for c in run_combinations]
+runname_ids = [c["runname"] for c in run_combinations]
+landuses    = [c["landuse"] for c in run_combinations]
 
 rule all_sfincs_build:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"), zip, region=regions, runname=runname_ids),
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"), zip, region=regions, runname=runname_ids)
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}", "sfincs.msk"), zip, region=regions, runname=runname_ids, landuse=landuses),
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}", "gis", "src.geojson"), zip, region=regions, runname=runname_ids, landuse=landuses)
 
 rule make_base_model_sfincs:
     params:
         arg_bbox = get_bbox,
-        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
+        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}"),
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
     input:
-        config_file = get_config,
+        config_file = join(curdir,'..', "05_config_models", "02_sfincs", "sfincs_base_build_{landuse}.yml"),
     output: 
-        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
-        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
-        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
+        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}")),
+        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}" , "sfincs.msk"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}", "gis", "src.geojson"),
+        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{landuse}", "gis", "region.geojson"),
     script:
         join("..","04_scripts", "model_building", "sfincs", "setup_sfincs_base.py")
