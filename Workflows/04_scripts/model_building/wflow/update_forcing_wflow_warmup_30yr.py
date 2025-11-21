@@ -17,10 +17,11 @@ if "snakemake" in locals():
     data_cat = snakemake.params.data_cat
 else:
     precip_forcing = "era5_hourly_zarr"
+    landuse = "lisboa_2000"
     CF_rain = 0
     CF_rain_txt = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
-    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_30yr"
+    wflow_root_noforcing = f"p:/11210471-001-compass/02_Models/sofala/Idai/wflow_{landuse}"
+    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}_30yr"
     start_time = "20190309 000000"
     end_time = "20190325 060000"
     data_cat = [
