@@ -167,6 +167,26 @@ era5_hourly_zarr:
     source_url: https://doi.org/10.24381/cds.adbb2d47
     source_version: ERA5 hourly data on single levels from 1940 to present
   crs: 4326
+era5_orography:
+  data_type: RasterDataset
+  path: wflow_global/hydromt/meteo/era5/meta/era5_orography_2018.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 120
+      longitude: 125
+  rename:
+    z: elevtn
+  unit_mult:
+    elevtn: 0.10197162129779283
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://apps.ecmwf.int/codes/grib/param-db?id=129
+  crs: 4326
 esa_worldcover:
   data_type: RasterDataset
   path: wflow_global/hydromt/landuse/esa_worldcover/esa-worldcover.vrt
