@@ -20,6 +20,9 @@ import gc
 import matplotlib.ticker as mticker
 import matplotlib.colors as mcolors
 import matplotlib.colorbar as mcolorbar
+from shapely.geometry import box
+from rasterio.features import rasterize
+from rasterio.enums import MergeAlg
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -45,7 +48,10 @@ def get_extent(transform, width, height):
     return [left, right, top, bottom]
 
 with rasterio.open(sfincs_subgrid) as src:
-    flood_grid_crs, flood_grid_transform, flood_grid_shape = src.crs, src.transform, (src.height, src.width)
+    flood_raster = src.read(1)                 # ← THIS is the flood array (2D numpy array)
+    flood_grid_crs = src.crs
+    flood_grid_transform = src.transform
+    flood_grid_shape = (src.height, src.width)
     
 flood_extent = get_extent(flood_grid_transform, flood_grid_shape[1], flood_grid_shape[0])
 
@@ -242,114 +248,182 @@ def fatality_curve_Boyd2005(h):
     h = np.asarray(h)
     return 0.34 / (1 + np.exp(20.37 - 6.18 * h))
 
+
 #%%
-import numpy as np
-import geopandas as gpd
-from shapely.geometry import box
+# Rasterize point dataframe
+def gdf_to_raster(gdf, value_col, out_shape, transform,
+                  dtype="float32", fill=0, all_touched=False):
+    shapes = ((geom, val) for geom, val in zip(gdf.geometry, gdf[value_col]))
 
-def aggregate_point_gdf(
-    gdf,
-    factor=100,
-    cell_size=None,
-    sum_cols=None,
-    mean_cols=None,
-    count=True
-):
-    """
-    Aggregates a point-based GeoDataFrame into coarse grid polygons.
+    result = rasterize(
+        shapes=shapes,
+        out_shape=out_shape,
+        fill=fill,
+        transform=transform,
+        dtype=dtype,
+        all_touched=all_touched,
+        merge_alg=MergeAlg.add   
+    )
 
-    Parameters
-    ----------
-    gdf : GeoDataFrame
-        Must contain geometry points or x/y columns.
-    factor : int
-        Coarsening factor relative to fine cell size.
-    cell_size : float or None
-        Size of native fine grid cell (meters). If None, is estimated.
-    sum_cols : list of str
-        Columns to sum in each coarse cell (e.g. population, fatalities).
-    mean_cols : list of str
-        Columns to average (e.g. flood depth).
-    count : bool
-        Whether to include count of points per coarse cell.
+    return result
 
-    Returns
-    -------
-    GeoDataFrame
-        Coarse grid polygons with aggregated values.
-    """
 
-    gdf = gdf.copy()
+def aggregate_fatalities(total_fatalities_array, flood_raster, transform, crs, region=None, background=None, factor=100):
+    print("Aggregating population raster to coarser grid polygons...")
 
-    # -------------------------------
-    # 1. Ensure geometry exists
-    # -------------------------------
-    if "geometry" not in gdf.columns:
-        if ("x" not in gdf.columns) or ("y" not in gdf.columns):
-            raise ValueError("GDF must have geometry or x/y columns.")
-        gdf["geometry"] = gpd.points_from_xy(gdf.x, gdf.y)
+    # Pixel size from transform
+    pixel_width = transform.a
+    pixel_height = -transform.e
 
-    # -------------------------------
-    # 2. Estimate fine cell size if needed
-    # -------------------------------
-    if cell_size is None:
-        # compute min spacing in x direction
-        xs = np.sort(gdf.geometry.x.unique())
-        diffs = np.diff(xs)
-        diffs = diffs[diffs > 0]
-        cell_size = np.median(diffs)
-        print(f"Estimated fine cell size = {cell_size:.2f} m")
+    # Block (coarse) size in meters
+    cell_width = factor * pixel_width
+    cell_height = factor * pixel_height
 
-    coarse_size = factor * cell_size
-    print(f"Coarse grid size = {coarse_size:.2f} m")
+    # --- Helper functions ---
+    def block_sum(arr, factor):
+        nrows, ncols = arr.shape
+        nrows_crop = nrows - nrows % factor
+        ncols_crop = ncols - ncols % factor
+        arr_cropped = arr[:nrows_crop, :ncols_crop]
+        return arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor).sum(axis=(1,3))
 
-    # -------------------------------
-    # 3. Build coarse grid
-    # -------------------------------
-    xmin, ymin, xmax, ymax = gdf.total_bounds
+    def block_mean(arr, factor):
+        nrows, ncols = arr.shape
+        nrows_crop = nrows - nrows % factor
+        ncols_crop = ncols - ncols % factor
+        arr_cropped = arr[:nrows_crop, :ncols_crop]
+        return np.nanmean(arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor), axis=(1,3))
 
-    xs = np.arange(xmin, xmax + coarse_size, coarse_size)
-    ys = np.arange(ymin, ymax + coarse_size, coarse_size)
+    # --- Aggregate population and flood ---
+    total_agg = block_sum(total_fatalities_array, factor)
+    avg_flood_depth = block_mean(flood_raster, factor)
 
-    grid_cells = [
-        box(x, y, x + coarse_size, y + coarse_size)
-        for x in xs[:-1]
-        for y in ys[:-1]
-    ]
+    # --- Build coarse grid ---
+    nrows_coarse, ncols_coarse = total_agg.shape
+    x0, y0 = transform * (0, 0)
+    x_coords = x0 + np.arange(ncols_coarse) * cell_width
+    y_coords = y0 + np.arange(nrows_coarse) * -cell_height
 
-    grid = gpd.GeoDataFrame({"geometry": grid_cells}, crs=gdf.crs)
-    grid["grid_id"] = np.arange(len(grid))
+    grid_cells = [box(x, y - cell_height, x + cell_width, y) for y in y_coords for x in x_coords]
 
-    # -------------------------------
-    # 4. Spatial join points -> grid
-    # -------------------------------
-    joined = gpd.sjoin(gdf, grid, predicate="within")
+    gdf_grid = gpd.GeoDataFrame(
+        {
+            "total_fatalities": total_agg.flatten(),
+            "avg_flood_depth": avg_flood_depth.flatten(),
+            # "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100
+        },
+        geometry=grid_cells,
+        crs=crs
+    )
 
-    # -------------------------------
-    # 5. Aggregation
-    # -------------------------------
-    agg_dict = {}
+    # --- Clip to region/background ---
+    region_bg = gpd.overlay(region, background, how="intersection") if background is not None else region.copy()
 
-    if sum_cols is not None:
-        for col in sum_cols:
-            agg_dict[col] = (col, "sum")
+    # --- Redistribute population proportionally to area inside region ---
+    gdf_grid = gdf_grid.reset_index(names="cell_id")
+    intersections = gpd.overlay(gdf_grid, region_bg, how="intersection")
+    intersections["intersect_area"] = intersections.geometry.area
+    area_sum = intersections.groupby("cell_id")["intersect_area"].transform("sum")
+    intersections["norm_fraction"] = intersections["intersect_area"] / area_sum
 
-    if mean_cols is not None:
-        for col in mean_cols:
-            agg_dict[col] = (col, "mean")
+    # Redistribute full population across pieces (sum per cell preserved)
+    for col in ["total_fatalities"]:
+        intersections[col] = intersections.groupby("cell_id")[col].transform("first") * intersections["norm_fraction"]
 
-    if count:
-        agg_dict["n_points"] = ("geometry", "count")
+    # Aggregate pieces back to one polygon per cell
+    gdf_grid_masked = intersections.dissolve(by="cell_id", aggfunc="sum")
+    gdf_grid_masked["geometry"] = intersections.dissolve(by="cell_id").geometry
 
-    aggregated = joined.groupby("grid_id").agg(**agg_dict)
+    # Relative exposure
+    # gdf_grid_masked["relative_fatalities"] = (
+    #     gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
+    # )
 
-    # -------------------------------
-    # 6. Reattach geometry
-    # -------------------------------
-    out = grid.join(aggregated, on="grid_id", how="left")
+    print(f"Total fatalities (original): {np.nansum(total_fatalities_array):,.2f}")
+    print(f"Total fatalities (aggregated): {gdf_grid_masked['total_fatalities'].sum():,.2f}")
+    print(f"Diff: {np.nansum(total_fatalities_array) - gdf_grid_masked['total_fatalities'].sum():,.2f}")
+    print(f"Diff %: {((np.nansum(total_fatalities_array) - gdf_grid_masked['total_fatalities'].sum()) / np.nansum(total_fatalities_array)) * 100:,.2f}")
+    
+    return gdf_grid_masked
 
-    return out
 
+def aggregate_affected(total_pop_array, flood_raster, transform, crs, region=None, background=None, factor=100):
+    print("Aggregating population raster to coarser grid polygons...")
+
+    # Pixel size from transform
+    pixel_width = transform.a
+    pixel_height = -transform.e
+
+    # Block (coarse) size in meters
+    cell_width = factor * pixel_width
+    cell_height = factor * pixel_height
+
+    # --- Helper functions ---
+    def block_sum(arr, factor):
+        nrows, ncols = arr.shape
+        nrows_crop = nrows - nrows % factor
+        ncols_crop = ncols - ncols % factor
+        arr_cropped = arr[:nrows_crop, :ncols_crop]
+        return arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor).sum(axis=(1,3))
+
+    def block_mean(arr, factor):
+        nrows, ncols = arr.shape
+        nrows_crop = nrows - nrows % factor
+        ncols_crop = ncols - ncols % factor
+        arr_cropped = arr[:nrows_crop, :ncols_crop]
+        return np.nanmean(arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor), axis=(1,3))
+
+    # --- Aggregate population and flood ---
+    affected_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
+    avg_flood_depth = block_mean(flood_raster, factor)
+
+    # --- Build coarse grid ---
+    nrows_coarse, ncols_coarse = affected_agg.shape
+    x0, y0 = transform * (0, 0)
+    x_coords = x0 + np.arange(ncols_coarse) * cell_width
+    y_coords = y0 + np.arange(nrows_coarse) * -cell_height
+
+    grid_cells = [box(x, y - cell_height, x + cell_width, y) for y in y_coords for x in x_coords]
+
+    gdf_grid = gpd.GeoDataFrame(
+        {
+            "affected_population": affected_agg.flatten(),
+            "avg_flood_depth": avg_flood_depth.flatten(),
+            # "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100
+        },
+        geometry=grid_cells,
+        crs=crs
+    )
+
+    # --- Clip to region/background ---
+    region_bg = gpd.overlay(region, background, how="intersection") if background is not None else region.copy()
+
+    # --- Redistribute population proportionally to area inside region ---
+    gdf_grid = gdf_grid.reset_index(names="cell_id")
+    intersections = gpd.overlay(gdf_grid, region_bg, how="intersection")
+    intersections["intersect_area"] = intersections.geometry.area
+    area_sum = intersections.groupby("cell_id")["intersect_area"].transform("sum")
+    intersections["norm_fraction"] = intersections["intersect_area"] / area_sum
+
+    # Redistribute full population across pieces (sum per cell preserved)
+    for col in ["affected_population"]:
+        intersections[col] = intersections.groupby("cell_id")[col].transform("first") * intersections["norm_fraction"]
+
+    # Aggregate pieces back to one polygon per cell
+    gdf_grid_masked = intersections.dissolve(by="cell_id", aggfunc="sum")
+    gdf_grid_masked["geometry"] = intersections.dissolve(by="cell_id").geometry
+
+    # Relative exposure
+    # gdf_grid_masked["relative_fatalities"] = (
+    #     gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
+    # )
+
+    print(f"Total affected (original): {np.nansum(total_pop_array):,.2f}")
+    print(f"Total affected (aggregated): {gdf_grid_masked['affected_population'].sum():,.2f}")
+    print(f"Diff: {np.nansum(total_pop_array) - gdf_grid_masked['affected_population'].sum():,.2f}")
+    print(f"Diff %: {((np.nansum(total_pop_array) - gdf_grid_masked['affected_population'].sum()) / np.nansum(total_pop_array)) * 100:,.2f}")
+    
+    return gdf_grid_masked
 
 
 #%%
@@ -395,10 +469,16 @@ print(f"Counterfactual climate 1990 population scenario:         {df_pop_1990_ex
 
 
 #%%
-# Aggregate to larger cells
+# Rasterize point data and aggregate to larger cells
 gdf_pop_2019_exposed_F['fatalities'] = gdf_pop_2019_exposed_F['population'] * fatality_curve_Boyd2005(gdf_pop_2019_exposed_F['flood_depth'])
-agg_pop_2019_exposed_F = aggregate_point_gdf(gdf_pop_2019_exposed_F, factor=100, sum_cols=["fatalities"])
+ra_pop_2019_fatalities_F = gdf_to_raster(gdf_pop_2019_exposed_F, "fatalities", flood_raster.shape, flood_grid_transform, 
+                                         fill=0, all_touched=False)
+ra_pop_2019_F = gdf_to_raster(gdf_pop_2019_exposed_F, "population", flood_raster.shape, flood_grid_transform, 
+                                         fill=0, all_touched=False)
 
+agg_pop_2019_fatalities_F_Boyd = aggregate_fatalities(ra_pop_2019_fatalities_F, flood_raster, flood_grid_transform, gdf_pop_2019_exposed_F.crs, region=region_utm, background=background_utm, factor=100)
+
+agg_pop_2019_affected = aggregate_affected(ra_pop_2019_F, flood_raster, flood_grid_transform, gdf_pop_2019_exposed_F.crs, region=region_utm, background=background_utm, factor=100)
 
 #%%
 # Load snakemake config file to construct the model paths
@@ -516,98 +596,11 @@ print(f"Counterfactual climate 2019 UNIFORM population scenario: {flood_fataliti
 print(f"Factual climate 1990 population scenario:                {flood_fatalities_F_1990.sum().values:.0f} people")
 print(f"Counterfactual climate 1990 population scenario:         {flood_fatalities_CF_1990.sum().values:.0f} people")
 
-#%%
-def aggregate_fatalities(total_fatalities_array, flood_raster, transform, crs, region=None, background=None, factor=100):
-    print("Aggregating population raster to coarser grid polygons...")
-
-    # Pixel size from transform
-    pixel_width = transform.a
-    pixel_height = -transform.e
-
-    # Block (coarse) size in meters
-    cell_width = factor * pixel_width
-    cell_height = factor * pixel_height
-
-    # --- Helper functions ---
-    def block_sum(arr, factor):
-        nrows, ncols = arr.shape
-        nrows_crop = nrows - nrows % factor
-        ncols_crop = ncols - ncols % factor
-        arr_cropped = arr[:nrows_crop, :ncols_crop]
-        return arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor).sum(axis=(1,3))
-
-    def block_mean(arr, factor):
-        nrows, ncols = arr.shape
-        nrows_crop = nrows - nrows % factor
-        ncols_crop = ncols - ncols % factor
-        arr_cropped = arr[:nrows_crop, :ncols_crop]
-        return np.nanmean(arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor), axis=(1,3))
-
-    # def block_count_threshold(arr, factor, threshold=1):
-    #     nrows, ncols = arr.shape
-    #     nrows_crop = nrows - nrows % factor
-    #     ncols_crop = ncols - ncols % factor
-    #     arr_cropped = arr[:nrows_crop, :ncols_crop]
-    #     return (arr_cropped.reshape(nrows_crop//factor, factor, ncols_crop//factor, factor) > threshold).sum(axis=(1,3))
-
-    # --- Aggregate population and flood ---
-    total_agg = block_sum(total_fatalities_array.values, factor)
-    # exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
-    avg_flood_depth = block_mean(flood_raster.values, factor)
-    # pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
-
-    # --- Build coarse grid ---
-    nrows_coarse, ncols_coarse = total_agg.shape
-    x0, y0 = transform * (0, 0)
-    x_coords = x0 + np.arange(ncols_coarse) * cell_width
-    y_coords = y0 + np.arange(nrows_coarse) * -cell_height
-
-    grid_cells = [box(x, y - cell_height, x + cell_width, y) for y in y_coords for x in x_coords]
-
-    gdf_grid = gpd.GeoDataFrame(
-        {
-            "total_fatalities": total_agg.flatten(),
-            # "exposed_population": exposed_agg.flatten(),
-            "avg_flood_depth": avg_flood_depth.flatten(),
-            # "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100
-        },
-        geometry=grid_cells,
-        crs=crs
-    )
-
-    # --- Clip to region/background ---
-    region_bg = gpd.overlay(region, background, how="intersection") if background is not None else region.copy()
-
-    # --- Redistribute population proportionally to area inside region ---
-    gdf_grid = gdf_grid.reset_index(names="cell_id")
-    intersections = gpd.overlay(gdf_grid, region_bg, how="intersection")
-    intersections["intersect_area"] = intersections.geometry.area
-    area_sum = intersections.groupby("cell_id")["intersect_area"].transform("sum")
-    intersections["norm_fraction"] = intersections["intersect_area"] / area_sum
-
-    # Redistribute full population across pieces (sum per cell preserved)
-    for col in ["total_fatalities"]:
-        intersections[col] = intersections.groupby("cell_id")[col].transform("first") * intersections["norm_fraction"]
-
-    # Aggregate pieces back to one polygon per cell
-    gdf_grid_masked = intersections.dissolve(by="cell_id", aggfunc="sum")
-    gdf_grid_masked["geometry"] = intersections.dissolve(by="cell_id").geometry
-
-    # Relative exposure
-    # gdf_grid_masked["relative_fatalities"] = (
-    #     gdf_grid_masked["exposed_population"] / gdf_grid_masked["total_population"] * 100
-    # )
-
-    print(f"Total fatalities (original): {np.nansum(total_fatalities_array):,.2f}")
-    print(f"Total fatalities (aggregated): {gdf_grid_masked['total_fatalities'].sum():,.2f}")
-    print(f"Diff: {np.nansum(total_fatalities_array) - gdf_grid_masked['total_fatalities'].sum():,.2f}")
-    print(f"Diff %: {((np.nansum(total_fatalities_array) - gdf_grid_masked['total_fatalities'].sum()) / np.nansum(total_fatalities_array)) * 100:,.2f}")
-    
-    return gdf_grid_masked
 
 #%%
-gdf_fatalities_2019_exposed_F_coarse  = aggregate_fatalities(flood_fatalities_F_2019, hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
-
+# Rasterize point data and aggregate to larger cells
+print("Aggregating flood fatalities to coarser grid...")
+agg_pop_2019_fatalities_F_Jonkman  = aggregate_fatalities(flood_fatalities_F_2019.values, flood_raster, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
 
 # %%
 #######################################################################
@@ -633,10 +626,10 @@ fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300, sharey=True
 im = axes[0].imshow(hmax_F, cmap='viridis', extent=flood_extent, origin='lower', 
                     vmin=0, vmax=3.5, zorder=2)
 
-agg_pop_2019_exposed_F[agg_pop_2019_exposed_F['fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_exposed_F['fatalities'].min(), vmax=agg_pop_2019_exposed_F['fatalities'].max())
+agg_pop_2019_fatalities_F_Boyd[agg_pop_2019_fatalities_F_Boyd['total_fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Boyd['total_fatalities'].min(), vmax=agg_pop_2019_fatalities_F_Boyd['total_fatalities'].max())
 
-plot = agg_pop_2019_exposed_F[agg_pop_2019_exposed_F['fatalities'] > 0].plot(column='fatalities', cmap='Greens', edgecolor='grey',
+plot = agg_pop_2019_fatalities_F_Boyd[agg_pop_2019_fatalities_F_Boyd['total_fatalities'] > 0].plot(column='total_fatalities', cmap='Greens', edgecolor='grey',
                                     linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm, rasterized=True)
 subplot_labels = ['(a)', '(b)']
 
@@ -667,7 +660,7 @@ cbar.set_label("Flood depth (m)")
 axes[0].set_title("Factual Flood Depth")
 
 # Continuous scale using actual min/max of your population column
-vmin, vmax = agg_pop_2019_exposed_F["fatalities"].min(), agg_pop_2019_exposed_F["fatalities"].max()
+vmin, vmax = agg_pop_2019_fatalities_F_Boyd["total_fatalities"].min(), agg_pop_2019_fatalities_F_Boyd["total_fatalities"].max()
 sm1 = ScalarMappable(cmap="Greens", norm=norm)
 sm1._A = []  # required for colorbar without passing data
 cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.8)
@@ -687,10 +680,10 @@ fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300, sharey=True
 im = axes[0].imshow(hmax_F, cmap='viridis', extent=flood_extent, origin='lower', 
                     vmin=0, vmax=3.5, zorder=2)
 
-gdf_fatalities_2019_exposed_F_coarse[gdf_fatalities_2019_exposed_F_coarse['total_fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-norm = PowerNorm(gamma=0.5, vmin=gdf_fatalities_2019_exposed_F_coarse['total_fatalities'].min(), vmax=gdf_fatalities_2019_exposed_F_coarse['total_fatalities'].max())
+agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].min(), vmax=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].max())
 
-plot = gdf_fatalities_2019_exposed_F_coarse[gdf_fatalities_2019_exposed_F_coarse['total_fatalities'] > 0].plot(column='total_fatalities', cmap='Greens', edgecolor='grey',
+plot = agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] > 0].plot(column='total_fatalities', cmap='Greens', edgecolor='grey',
                                     linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm, rasterized=True)
 subplot_labels = ['(a)', '(b)']
 
@@ -721,7 +714,7 @@ cbar.set_label("Flood depth (m)")
 axes[0].set_title("Factual Flood Depth")
 
 # Continuous scale using actual min/max of your population column
-vmin, vmax = agg_pop_2019_exposed_F["fatalities"].min(), agg_pop_2019_exposed_F["fatalities"].max()
+vmin, vmax = agg_pop_2019_fatalities_F_Jonkman["total_fatalities"].min(), agg_pop_2019_fatalities_F_Jonkman["total_fatalities"].max()
 sm1 = ScalarMappable(cmap="Greens", norm=norm)
 sm1._A = []  # required for colorbar without passing data
 cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.8)
@@ -731,6 +724,78 @@ cbar.ax.tick_params(labelsize=9)
 axes[0].set_title("Factual flooding", fontsize=11)
 axes[1].set_title("Factual fatalities acc. to Jonkman", fontsize=11)
 
+
+#%%
+# plot the total_damage, emphazizing lower values
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 7), dpi=300, sharey=True, constrained_layout=True,
+                       subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+# plotting flood depth
+im = axes[0].imshow(hmax_F, cmap='viridis', extent=flood_extent, origin='lower', 
+                    vmin=0, vmax=3.5, zorder=2)
+
+# plotting affected population
+agg_pop_2019_affected['affected_population_1000'] = agg_pop_2019_affected['affected_population'] / 1000
+agg_pop_2019_affected[agg_pop_2019_affected['affected_population_1000'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+norm_pop = PowerNorm(gamma=0.5, vmin=agg_pop_2019_affected['affected_population_1000'].min(), vmax=agg_pop_2019_affected['affected_population_1000'].max())
+
+plot = agg_pop_2019_affected[agg_pop_2019_affected['affected_population_1000'] > 0].plot(column='affected_population_1000', cmap='Blues', edgecolor='grey',
+                                    linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm_pop, rasterized=True)
+
+# plotting fatalities by taking the averga eof both approaches
+agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] = (agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] + agg_pop_2019_fatalities_F_Boyd['total_fatalities'])/2
+
+agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] == 0].plot(ax=axes[2], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'].min(), vmax=agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'].max())
+
+plot = agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] > 0].plot(column='total_fatalities_avgBoyd', cmap='Greens', edgecolor='grey',
+                                    linewidth=0.2, ax=axes[2], legend=False, zorder=2, norm=norm, rasterized=True)
+
+for i, ax in enumerate(axes):
+    region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+
+    # Add gridlines and format tick labels
+    ax.set_xticks([630000,650000, 670000, 690000, 710000])
+    ax.set_yticks(np.arange(miny, maxy, 20000))  # every 1 km
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.tick_params(labelsize=8)
+    ax.grid(True, which='major', linestyle='--', color='lightgray', linewidth=0.5)
+    ax.set_xlabel("x coordinate UTM zone 36S [×10⁶ m]", size=9)
+    ax.set_ylabel("y coordinate UTM zone 36S [×10⁶ m]", size=9)
+    ax.set_title("")
+    if i != 0:  
+        ax.left_labels = False  # disable y-axis labels
+        ax.set_ylabel("", size=8)
+    ax.text(0, 1.02, subplot_labels_3[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
+
+ # Colorbars
+cbar = fig.colorbar(im, ax=axes[0], shrink=0.3)
+cbar.set_label("Flood depth (m)", fontsize=9)
+cbar.ax.tick_params(labelsize=8)
+axes[0].set_title("Factual flood Depth", fontsize=10)
+
+# Continuous scale using actual min/max of your population column
+sm1 = ScalarMappable(cmap="Blues", norm=norm_pop)
+sm1._A = []  # required for colorbar without passing data
+cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.3)
+cbar.set_label("Aggregated affected population [# people ×10³]", fontsize=9)
+cbar.ax.tick_params(labelsize=8)
+
+vmin, vmax = agg_pop_2019_fatalities_F_Jonkman["total_fatalities_avgBoyd"].min(), agg_pop_2019_fatalities_F_Jonkman["total_fatalities_avgBoyd"].max()
+sm2 = ScalarMappable(cmap="Greens", norm=norm)
+sm2._A = []  # required for colorbar without passing data
+cbar = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.3)
+cbar.set_label("Aggregated fatalities (# people)", fontsize=9)
+cbar.ax.tick_params(labelsize=8)
+
+
+axes[0].set_title("Factual flooding", fontsize=10)
+axes[1].set_title("Factual affected population", fontsize=10)
+axes[2].set_title("Factual fatalities", fontsize=10)
 
 #%%
 #############################################################################
@@ -983,7 +1048,7 @@ bounds = [-1.5, -0.5, 0.5, 1.5]
 norm_fl_diff = mcolors.BoundaryNorm(bounds, cmap_fl_diff.N)
 
 
-# Setup figure and axes
+#%%# Setup figure and axes
 fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(9, 10), dpi=300, sharey=True, constrained_layout=True,
                        subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
 
@@ -1039,6 +1104,54 @@ for row in range(axes.shape[0]):
         ax.text(0.02, 0.95, subplot_labels_4[label_idx], transform=ax.transAxes,
                 fontsize=12, fontweight='bold', va='top', ha='left')
         label_idx += 1
+
+# Add manual axis for the vertical legend (colorbar)
+cax = fig.add_axes([1.01, 0.25, 0.02, 0.5])
+cb = mcolorbar.ColorbarBase(cax, cmap=cmap_fl_diff, norm=norm_fl_diff,
+                            boundaries=[-1.5, -0.5, 0.5, 1.5], ticks=[-1, 0, 1], orientation='vertical')
+cb.ax.set_yticklabels(['Decrease', 'No change', 'Increase'])
+cb.ax.tick_params(labelsize=10)
+cb.set_label("Changed fatality risk (F-CF)", fontsize=11, labelpad=10)
+
+for t in cb.ax.get_yticklabels():
+    t.set_rotation(90)      # vertical text
+    t.set_va("center")      # vertically centered
+    t.set_ha("center")      # horizontally centered
+
+plt.show()
+
+#%%
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 6), dpi=300, sharey=True, constrained_layout=True,
+                       subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+# Plot maps
+im1 = axes[0].imshow(hmax_threshold_diff, cmap=cmap_fl_diff, norm=norm_fl_diff, extent=[minx, maxx, miny, maxy],
+                     transform=ccrs.UTM(36, southern_hemisphere=True), origin='lower', zorder=2)
+axes[0].set_title('Flood depth > 2.1 m', size=11)
+
+im4 = axes[1].imshow(rise_threshold_diff, cmap=cmap_fl_diff, norm=norm_fl_diff, extent=[minx, maxx, miny, maxy],
+                     transform=ccrs.UTM(36, southern_hemisphere=True), origin='lower', zorder=2)
+axes[1].set_title('Rise rate > 0.5 m/h', size=11)
+
+for i, ax in enumerate(axes):
+    region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+
+    # Add gridlines and format tick labels
+    ax.set_xticks([630000,650000, 670000, 690000, 710000])
+    ax.set_yticks(np.arange(miny, maxy + 20000, 20000))  # every 1 km
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.tick_params(labelsize=8)
+    ax.grid(True, which='major', linestyle='--', color='lightgray', linewidth=0.5)
+    ax.set_xlabel("x coordinate UTM zone 36S [×10⁶ m]", size=9)
+    ax.set_ylabel("y coordinate UTM zone 36S [×10⁶ m]", size=9)
+    if i != 0:  
+        ax.left_labels = False  # disable y-axis labels
+        ax.set_ylabel("", size=8)
+    ax.text(0, 1.02, subplot_labels_3[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
+    ax.set_extent([minx, maxx, miny, maxy], crs= ccrs.UTM(36, southern_hemisphere=True))
 
 # Add manual axis for the vertical legend (colorbar)
 cax = fig.add_axes([1.01, 0.25, 0.02, 0.5])
