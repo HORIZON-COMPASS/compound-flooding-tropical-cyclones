@@ -454,7 +454,7 @@ def save_raster(array, out_path, transform, crs):
 # ============================================================================================ #
 # ====================== Process population directly into flood grid ========================= #
 # ============================================================================================ #
-export_path = "data/preprocessed/population"
+export_path = "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/"
 
 pop_arrays = {}
 pop_sofala_arrays = {}
@@ -498,10 +498,10 @@ gdf_pop_1990_exposed_CF_coarse = aggregate_pop(pop_arrays[1990], hmax_CF, flood_
 
 #%%
 # save raster for fatality analysis in other script
-# save_raster(ra_exposed_pop_2019_F,  "data/preprocessed/population/exposed_pop_2019_F.tif",  flood_grid_transform, flood_grid_crs)
-# save_raster(ra_exposed_pop_2019_CF, "data/preprocessed/population/exposed_pop_2019_CF.tif", flood_grid_transform, flood_grid_crs)
-# save_raster(ra_exposed_pop_1990_F,  "data/preprocessed/population/exposed_pop_1990_F.tif",  flood_grid_transform, flood_grid_crs)
-# save_raster(ra_exposed_pop_1990_CF, "data/preprocessed/population/exposed_pop_1990_CF.tif", flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_2019_F,  "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_F.tif",  flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_2019_CF, "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_CF.tif", flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_1990_F,  "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_1990_F.tif",  flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_1990_CF, "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_1990_CF.tif", flood_grid_transform, flood_grid_crs)
 
 #%%
 # Uniform population growth
@@ -528,9 +528,9 @@ gdf_pop_2019_exposed_CF_uniform = gdf_pop_2019_flood_depth_CF_uniform[gdf_pop_20
 # Aggregate to coarser cells
 gdf_pop_2019_exposed_F_uniform_coarse = aggregate_pop(pop_array_uniform_2019, hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
 
-# save_raster(ra_exposed_pop_2019_F_uniform,  "data/preprocessed/population/exposed_pop_2019_F_uniform.tif",  flood_grid_transform, flood_grid_crs)
-# save_raster(ra_exposed_pop_2019_CF_uniform, "data/preprocessed/population/exposed_pop_2019_CF_uniform.tif", flood_grid_transform, flood_grid_crs)
-# save_raster(pop_array_uniform_2019,         "data/preprocessed/population/population_2019_uniform.tif",      flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_2019_F_uniform,  "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_F_uniform.tif",  flood_grid_transform, flood_grid_crs)
+# save_raster(ra_exposed_pop_2019_CF_uniform, "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_CF_uniform.tif", flood_grid_transform, flood_grid_crs)
+# save_raster(pop_array_uniform_2019,         "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/population_2019_uniform.tif",      flood_grid_transform, flood_grid_crs)
 
 #%% ============================================================================================= #
 # ===================== Print summary statistics of exposed population ========================== #
@@ -892,12 +892,24 @@ fig, (ax_main, ax_zoom) = plt.subplots(2, 1, figsize=(9, 8), gridspec_kw={'heigh
 
 plt.sca(ax_main)
 
+# Define the boundaries
+x_bg = np.linspace(0, 3.5, 500)  # example x array
+
+low_mask = x_bg < 0.5                
+mid_mask = (x_bg >= 0.5) & (x_bg < 1.5)  
+high_mask = x_bg >= 1.5                
+
+# # Fill each region from 0 to the curve
+ax_main.fill_between(x_bg[low_mask], 0, max(y_CF_clim_pop)*1.05, color="#d9d9d9", alpha=0.3, step='post')
+ax_main.fill_between(x_bg[mid_mask], 0, max(y_CF_clim_pop)*1.05, color="#b3b3b3", alpha=0.3, step='post')
+ax_main.fill_between(x_bg[high_mask], 0, max(y_CF_clim_pop)*1.05, color="#808080", alpha=0.3, step='post')
+
 ax_main.plot(x, y_F, label=f"Factual ({np.nansum(pop_arrays[2019]):,.0f} people)", color=colours[0], linewidth=2)
 ax_main.plot(x, y_CF_clim, label=f"Counterfactual Climate ({np.nansum(pop_arrays[2019]):,.0f} people)", color=colours[1], linewidth=1)
 ax_main.plot(x, y_CF_pop, label=f"Counterfactual Population ({np.nansum(pop_arrays[1990]):,.0f} people)", color=colours[2], linewidth=1)
 ax_main.plot(x, y_CF_clim_pop, label=f"Counterfactual Climate & Population ({np.nansum(pop_arrays[1990]):,.0f} people)", color=colours[3], linewidth=1)
 
-ax_main.set_ylabel("Density-weighted population exposure")
+ax_main.set_ylabel("Density-weighted affected population")
 ax_main.grid(True, linestyle="--", alpha=0.5)
 ax_main.set_xlim(0, 3.5)
 
@@ -937,7 +949,9 @@ draw_peak_arrows(x, y_CF_pop, y_F, sorted_peaks_CF_pop, sorted_peaks_F,
                  arrow_offsets = {0: (0.0, -0.03), 1: (0.0, 0.00)},
                  color=colours[0], label_prefix="Population change")
 
-ax_main.legend(loc='upper right', fontsize=9)
+leg = ax_main.legend(loc='upper right', fontsize=9)
+leg.get_frame().set_facecolor('white')  # background color
+leg.get_frame().set_alpha(0.4)            # transparency
 
 ax_main.fill_between(x, y_F, y_CF_clim_pop, where=((y_CF_clim_pop > y_CF_clim) & (x < 0.5)),
                      alpha=0.15, color=colours[3])
@@ -948,26 +962,18 @@ ax_main.fill_between(x, y_F, y_CF_clim, where=(y_CF_clim > y_F),
 ax_main.fill_between(x, y_CF_pop, y_F, where=(y_F > y_CF_pop),
                      alpha=0.15, color=colours[0])
 
-# # Define the boundaries
-# low_mask = x < 0.5
-# mid_mask = (x >= 0.5) & (x < 1.5)
-# high_mask = x >= 1.5
+ax_main.text(0.25, max(y_F)*0.07, "Low", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
+ax_main.text(1.0, max(y_F)*0.07, "Medium", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
+ax_main.text(2.5, max(y_F)*0.07, "High", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
 
-# # Fill each region from 0 to the curve
-# ax_main.fill_between(x[low_mask], 0, y_F[low_mask], color="#d9d9d9", alpha=0.3, label="Low")
-# ax_main.fill_between(x[mid_mask], 0, y_F[mid_mask], color="#b3b3b3", alpha=0.3, label="Medium")
-# ax_main.fill_between(x[high_mask], 0, y_F[high_mask], color="#808080", alpha=0.3, label="High")
-
-
-# ax_main.text(0.25, max(y_F)*0.07, "Low", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
-# ax_main.text(1.0, max(y_F)*0.07, "Medium", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
-# ax_main.text(2.5, max(y_F)*0.07, "High", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
-
-# ax_main.set_ylim(0, y_CF_clim_pop.max() * 1.05)
+ax_main.set_ylim(0, y_CF_clim_pop.max() * 1.05)
 # -----------------
 # ZOOMED PLOT
 # -----------------
 plt.sca(ax_zoom)
+
+ax_zoom.fill_between(x_bg[high_mask], 0, max(y_CF_clim_pop)*1.05, color="#808080", alpha=0.3, step='post')
+ax_zoom.text(2.5, max(y_F)*0.05, "High", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
 
 ax_zoom.plot(x, y_F, color=colours[0], linewidth=2)
 ax_zoom.plot(x, y_CF_clim, color=colours[1], linewidth=1)
@@ -990,7 +996,6 @@ ax_zoom.fill_between(x, y_CF_clim, y_F, where=(y_F > y_CF_clim),
                      alpha=0.15, color=colours[0])
 ax_zoom.fill_between(x, y_CF_clim_pop, y_F, where=(y_F > y_CF_clim_pop),
                      alpha=0.15, color=colours[0])
-
 
 
 ax_zoom.annotate("", xy=(1.62, 0.10), xytext=(1.62, 0.057), ha="center", va="center", 
@@ -1125,7 +1130,7 @@ rows.append({"Depth Range": "Total population", "Label": "-",
 
 # Create DataFrame
 df_table = pd.DataFrame(rows)
-df_table.to_csv("results/flood_depth_impact_summary_table.csv", index=False)
+df_table.to_csv("c:/Code/Paper_2/Output/flood_depth_impact_summary_table.csv", index=False)
 # Display summary table
 pd.set_option('display.max_colwidth', None)
 print(df_table)
