@@ -32,6 +32,9 @@ Attribution_results/figures
 Workflows/04_scripts/model_building/fiat/cache
 DelftFIAT/scripts/cache
 
+# Socioeconomic data
+Socio-economic/data/.
+
 # Distribution / packaging
 .Python
 build/
