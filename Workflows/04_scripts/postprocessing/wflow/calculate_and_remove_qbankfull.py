@@ -24,16 +24,17 @@ else:
     region           = "sofala"
     TC_name          = "Idai"
     precip_forcing   = "era5_hourly_zarr"
-    CF_rain          = 0
-    CF_rain_txt      = "0"
-    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF0_30yr"
-    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    landuse          = "lisboa_2000"
+    CF_rain          = -8
+    CF_rain_txt      = "-8"
+    wflow_root_30yr  = f"/p/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}_30yr"
+    wflow_root_event = f"/p/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}"
     curdir           = '../../../'
     data_cats        = [
-        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
-        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
+        join(curdir, "03_data_catalogs", "datacatalog_general___linux.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
         ]
 
 #%%
@@ -173,8 +174,8 @@ ax.grid(True, linestyle="--", alpha=0.6)
 ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize=11)
 
 # Save
-fig.savefig("../../../../Attribution_results/figures/fS3.png", dpi=300, bbox_inches='tight')
-fig.savefig("../../../../Attribution_results/figures/fS3.pdf", dpi=300, bbox_inches='tight')
+# fig.savefig("../../../../Attribution_results/figures/fS3.png", dpi=300, bbox_inches='tight')
+# fig.savefig("../../../../Attribution_results/figures/fS3.pdf", dpi=300, bbox_inches='tight')
 
 # %%
 import matplotlib.pyplot as plt
@@ -226,8 +227,8 @@ for i, gauge in enumerate(gauges):
     axes[i].text(0.02, 1.06, f"({chr(97+i)})", transform=axes[i].transAxes,
                  fontsize=12, fontweight='bold', va='top')
     
-    fig.savefig(f"../../../../Attribution_results/figures/fS2.png", dpi=300, bbox_inches='tight')
-    fig.savefig(f"../../../../Attribution_results/figures/fS2.pdf", dpi=300, bbox_inches='tight')
+    # fig.savefig(f"../../../../Attribution_results/figures/fS2.png", dpi=300, bbox_inches='tight')
+    # fig.savefig(f"../../../../Attribution_results/figures/fS2.pdf", dpi=300, bbox_inches='tight')
 
 plt.tight_layout()
 plt.show()
