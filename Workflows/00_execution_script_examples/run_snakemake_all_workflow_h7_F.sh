@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs                                                      # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_wflow_sfincs_%j.log     # Standard output and error log
-#SBATCH --time=0-12:00:00                                                               # Job duration (hh:mm:ss)
-#SBATCH --partition 16vcpu
+#SBATCH --time=0-0:30:00                                                               # Job duration (hh:mm:ss)
+#SBATCH --partition test
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                                                                     # Number of tasks (analyses) to run
 
@@ -42,12 +42,12 @@ cd Workflows/02_workflow_rules || { echo "Failed to cd to workflow directory!"; 
 
 # Unlock Snakemake directory
 echo "Unlocking Snakemake directory..."
-snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
+snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_MZB_F.yml 
 
 # Dry-run of the workflow
 echo "Running Snakemake dry-run..."
 snakemake -s snakefile_all_wflow_sfincs.smk \
-  --configfile ../01_config_snakemake/config_general_MZB.yml \
+  --configfile ../01_config_snakemake/config_general_MZB_F.yml \
   --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete
 
 echo "=== Job finished on $(date) ==="

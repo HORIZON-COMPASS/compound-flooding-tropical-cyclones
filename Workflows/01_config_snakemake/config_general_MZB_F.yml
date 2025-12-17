@@ -1,0 +1,53 @@
+# Defining parameters to run the snakemake pipeline
+
+root_dir:    11210471-001-compass                           # root directory of your project, it is appended to the disk drive name specified in the smk files (e.g. c:/ or  p:/)
+dir_data:    01_Data                                        # Folder where some of the input data is stored
+dir_models:  02_Models                                      # Folder where the base models will be saved (without dynamic forcing data)
+dir_runs:    03_Runs                                        # Folder where model runs will be saved (with forcing)
+runname_ids: 
+    Idai:                                                   # name of the model run
+        # Settings of the workflow
+        tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
+        region: sofala                                      # name of the region will be used in naming folders 
+        sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+        # For all model setups
+        start_time: 20190309 000000                         # start time of the simulation (YYYYMMDD HHMMSS)
+        end_time: 20190325 000000                           # end time of the simulation (YYYYMMDD HHMMSS)
+        precip_forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wind_forcing: era5_hourly_spw_IBTrACS               # wind and pressure dataset (used for coastal surge modelling)
+        bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
+        ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period to align with total simulation period              
+
+        # Models selections
+        use_dfm: True                                       # use the coastal hydrodynamic model D-FM
+        use_wflow: True                                     # use the hydrological model wflow
+        use_waves: True                                     # use the wave output from SnapWave      
+         
+        # DFM model user-defined settings
+        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+        dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
+        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
+        dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
+        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        tidemodel: 'GTSMv41'                                # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
+        wave_output: SNAPWAVE_Idai_setup                    # Wave output from SnapWave to be added to the DFM output
+        
+        # SFINCS model user-defined settings
+        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"            # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        config_sfincs_base: sfincs_base_build_lisboa_2000.yml # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        sfincs_obs_file: obs_locs_sofala.geojson              # SFINCS timeseries output points, stored in 01_Data/sfincs_obs_points/
+        utmzone: 36s                                          # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+        coastal_ts: gtsm_codec_reanalysis                     # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        
+        # Delft-FIAT user-defined settings
+        continent: Africa                                   # name of the continent for Delft-FIAT
+        country: Mozambique                                 # name of the country for Delft-FIAT
+        config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+        # Counterfactual forcing settings
+        CF_value_rain: [0]                              # Factual specified as 0, and counterfactual values as a list (e.g. [-8] for -8% rainfall)
+        CF_value_wind: [0]                             # Factual specified as 0, and counterfactual values as a list (e.g. [-10] for -10% wind speed)
+        CF_value_SLR: [0]                            # Factual specified as 0, and counterfactual values as a list (e.g. [-0.14] for -0.14 m wind speed)
+        CF_landuse: [lisboa_2000, lisboa_2020]              # land use scenarios for wflow and SFINCS models

@@ -28,8 +28,8 @@ echo "Installing Julia packages (may be skipped if already installed)"
 julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 
 # Build the path to the input toml file
-INPUT_TOML="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF0_30yr_copy/warmup/wflow_sbm.toml"
-LOG_FILE="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF0_30yr_copy/warmup/run_default/log.txt"
+INPUT_TOML="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF0_lisboa_2000_30yr/warmup/wflow_sbm.toml"
+LOG_FILE="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF0_lisboa_2000_30yr/warmup/run_default/log.txt"
 
 # Run the Wflow CLI (this corresponds to the Snakemake shell command)
 echo "Running Wflow"

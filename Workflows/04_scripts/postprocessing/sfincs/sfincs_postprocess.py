@@ -22,6 +22,7 @@ else:
     wind_forcing         = 'era5_hourly_spw_IBTrACS'
     precip_forcing       = 'era5_hourly_zarr'
     tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    landuse              = 'lisboa_2000'
     datacat              = [
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
@@ -31,7 +32,7 @@ else:
     CF_SLR_txt           = "0"
     CF_wind_txt          = "0"
     CF_rain_txt          = "0"
-    model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_{landuse}"
     dir_run              = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
     mapfile              = f"{dir_run}/sfincs_map.nc"
     outfile              = f"{dir_run}/plot_output/sfincs_basemap.png"
