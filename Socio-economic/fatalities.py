@@ -607,17 +607,19 @@ agg_pop_2019_fatalities_F_Jonkman  = aggregate_fatalities(flood_fatalities_F_201
 ################################## PLOTTING ###########################
 #######################################################################
 # General settings for plotting
+from matplotlib.colors import PowerNorm
+from matplotlib.cm import ScalarMappable
+
 minx, miny, maxx, maxy = region_utm.bounds.minx.item(), region_utm.bounds.miny.item(), region_utm.bounds.maxx.item(), region_utm.bounds.maxy.item()
 utm_crs = ccrs.UTM(zone=36, southern_hemisphere=True)
 subplot_labels_2 = ['(a)', '(b)']
 subplot_labels_3 = ['(a)', '(b)', '(c)']
 subplot_labels_4 = ['(a)', '(b)', '(c)', '(d)']
 
+norm_fatal = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].min(), vmax=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].max())
+
 #%%
 print("Plotting spatially aggregated exposed population change")
-from matplotlib.colors import PowerNorm
-from matplotlib.cm import ScalarMappable
-
 # plot the total_damage, emphazizing lower values
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300, sharey=True, 
                          constrained_layout=True, subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
@@ -627,10 +629,9 @@ im = axes[0].imshow(hmax_F, cmap='viridis', extent=flood_extent, origin='lower',
                     vmin=0, vmax=3.5, zorder=2)
 
 agg_pop_2019_fatalities_F_Boyd[agg_pop_2019_fatalities_F_Boyd['total_fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Boyd['total_fatalities'].min(), vmax=agg_pop_2019_fatalities_F_Boyd['total_fatalities'].max())
 
 plot = agg_pop_2019_fatalities_F_Boyd[agg_pop_2019_fatalities_F_Boyd['total_fatalities'] > 0].plot(column='total_fatalities', cmap='Greens', edgecolor='grey',
-                                    linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm, rasterized=True)
+                                    linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm_fatal, rasterized=True)
 subplot_labels = ['(a)', '(b)']
 
 for i, ax in enumerate(axes):
@@ -660,8 +661,7 @@ cbar.set_label("Flood depth (m)")
 axes[0].set_title("Factual Flood Depth")
 
 # Continuous scale using actual min/max of your population column
-vmin, vmax = agg_pop_2019_fatalities_F_Boyd["total_fatalities"].min(), agg_pop_2019_fatalities_F_Boyd["total_fatalities"].max()
-sm1 = ScalarMappable(cmap="Greens", norm=norm)
+sm1 = ScalarMappable(cmap="Greens", norm=norm_fatal)
 sm1._A = []  # required for colorbar without passing data
 cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.8)
 cbar.set_label("Aggregated fatalities (# people)", fontsize=10)
@@ -681,10 +681,9 @@ im = axes[0].imshow(hmax_F, cmap='viridis', extent=flood_extent, origin='lower',
                     vmin=0, vmax=3.5, zorder=2)
 
 agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].min(), vmax=agg_pop_2019_fatalities_F_Jonkman['total_fatalities'].max())
 
 plot = agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] > 0].plot(column='total_fatalities', cmap='Greens', edgecolor='grey',
-                                    linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm, rasterized=True)
+                                    linewidth=0.2, ax=axes[1], legend=False, zorder=2, norm=norm_fatal, rasterized=True)
 subplot_labels = ['(a)', '(b)']
 
 for i, ax in enumerate(axes):
@@ -714,8 +713,7 @@ cbar.set_label("Flood depth (m)")
 axes[0].set_title("Factual Flood Depth")
 
 # Continuous scale using actual min/max of your population column
-vmin, vmax = agg_pop_2019_fatalities_F_Jonkman["total_fatalities"].min(), agg_pop_2019_fatalities_F_Jonkman["total_fatalities"].max()
-sm1 = ScalarMappable(cmap="Greens", norm=norm)
+sm1 = ScalarMappable(cmap="Greens", norm=norm_fatal)
 sm1._A = []  # required for colorbar without passing data
 cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.8)
 cbar.set_label("Aggregated fatalities (# people)", fontsize=10)
@@ -746,31 +744,45 @@ plot = agg_pop_2019_affected[agg_pop_2019_affected['affected_population_1000'] >
 agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] = (agg_pop_2019_fatalities_F_Jonkman['total_fatalities'] + agg_pop_2019_fatalities_F_Boyd['total_fatalities'])/2
 
 agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] == 0].plot(ax=axes[2], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-norm = PowerNorm(gamma=0.5, vmin=agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'].min(), vmax=agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'].max())
 
 plot = agg_pop_2019_fatalities_F_Jonkman[agg_pop_2019_fatalities_F_Jonkman['total_fatalities_avgBoyd'] > 0].plot(column='total_fatalities_avgBoyd', cmap='Greens', edgecolor='grey',
-                                    linewidth=0.2, ax=axes[2], legend=False, zorder=2, norm=norm, rasterized=True)
+                                    linewidth=0.2, ax=axes[2], legend=False, zorder=2, norm=norm_fatal, rasterized=True)
 
+xmin, xmax, ymin, ymax = flood_extent
 for i, ax in enumerate(axes):
     region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+
+    # # Add background and set extent (based on actual lat/lon coordinates)
     background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    minx, miny, maxx, maxy = region.bounds.minx.item(), region.bounds.miny.item(), region.bounds.maxx.item(), region.bounds.maxy.item()
     ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
 
     # Add gridlines and format tick labels
-    ax.set_xticks([630000,650000, 670000, 690000, 710000])
-    ax.set_yticks(np.arange(miny, maxy, 20000))  # every 1 km
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
-    ax.tick_params(labelsize=8)
-    ax.grid(True, which='major', linestyle='--', color='lightgray', linewidth=0.5)
-    ax.set_xlabel("x coordinate UTM zone 36S [×10⁶ m]", size=9)
-    ax.set_ylabel("y coordinate UTM zone 36S [×10⁶ m]", size=9)
-    ax.set_title("")
-    if i != 0:  
-        ax.left_labels = False  # disable y-axis labels
-        ax.set_ylabel("", size=8)
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+    gl.right_labels = False
+    gl.top_labels = False
+    gl.xlabel_style = {'size': 9}
+    gl.ylabel_style = {'size': 9}
+    if i != 0: 
+        gl.left_labels = False
+    
     ax.text(0, 1.02, subplot_labels_3[i], transform=ax.transAxes,
             fontsize=10, fontweight='bold', va='bottom', ha='left')
+    # Add gridlines and format tick labels
+    # ax.set_xticks([630000,650000, 670000, 690000, 710000], crs=ccrs.UTM(36, southern_hemisphere=True))
+    # ax.set_yticks(np.arange(miny, maxy, 20000), crs=ccrs.UTM(36, southern_hemisphere=True)) 
+    # ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    # ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    # ax.tick_params(labelsize=8)
+    # ax.grid(True, which='major', linestyle='--', color='lightgray', linewidth=0.5)
+    # ax.set_xlabel("x coordinate UTM zone 36S [×10⁶ m]", size=9)
+    # ax.set_ylabel("y coordinate UTM zone 36S [×10⁶ m]", size=9)
+    # ax.set_title("")
+    # if i != 0:  
+    #     ax.left_labels = False  # disable y-axis labels
+    #     ax.set_ylabel("", size=8)
+    # ax.text(0, 1.02, subplot_labels_3[i], transform=ax.transAxes,
+    #         fontsize=10, fontweight='bold', va='bottom', ha='left')
 
  # Colorbars
 cbar = fig.colorbar(im, ax=axes[0], shrink=0.3)
@@ -785,17 +797,15 @@ cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.3)
 cbar.set_label("Aggregated affected population [# people ×10³]", fontsize=9)
 cbar.ax.tick_params(labelsize=8)
 
-vmin, vmax = agg_pop_2019_fatalities_F_Jonkman["total_fatalities_avgBoyd"].min(), agg_pop_2019_fatalities_F_Jonkman["total_fatalities_avgBoyd"].max()
-sm2 = ScalarMappable(cmap="Greens", norm=norm)
+sm2 = ScalarMappable(cmap="Greens", norm=norm_fatal)
 sm2._A = []  # required for colorbar without passing data
 cbar = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.3)
 cbar.set_label("Aggregated fatalities (# people)", fontsize=9)
 cbar.ax.tick_params(labelsize=8)
 
-
 axes[0].set_title("Factual flooding", fontsize=10)
 axes[1].set_title("Factual affected population", fontsize=10)
-axes[2].set_title("Factual fatalities", fontsize=10)
+axes[2].set_title("Factual fatalities (avg-method)", fontsize=10)
 
 #%%
 #############################################################################
@@ -862,6 +872,81 @@ cbar2 = fig.colorbar(im3, ax=axes[2], orientation="vertical",
                      fraction=0.035, aspect=20, pad=0.02)
 cbar2.set_label("Maximum rising rate (m/h)", labelpad=5, fontsize=9)
 cbar2.ax.tick_params(labelsize=8)
+
+# fig.savefig("../figures/f03.png", bbox_inches='tight', dpi=300)
+# fig.savefig("../figures/f03.pdf", bbox_inches='tight', dpi=300)
+
+#%%
+from matplotlib import colors
+
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3), dpi=300, sharey=True, constrained_layout=True,
+                       subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+# Plot the flood depth
+hmax_F = model_velocity_F[0]['sfincs_results']['hmax_masked'].load()
+hmax_CF = model_velocity_CF[0]['sfincs_results']['hmax_masked'].load()
+hmax_diff = hmax_CF - hmax_F
+im1 = hmax_diff.plot.pcolormesh(ax=axes[0], cmap="Reds", vmin=np.nanquantile(hmax_diff, 0.01), vmax=0, add_colorbar=False, transform=utm_crs, rasterized=True)
+
+# Plot the maximum water velocity
+maxvel_F = model_velocity_F[0]['sfincs_results']['vmax_masked'].load()
+maxvel_CF = model_velocity_CF[0]['sfincs_results']['vmax_masked'].load()
+maxvel_diff = maxvel_CF - maxvel_F
+norm_vel = colors.TwoSlopeNorm(vmin=np.nanquantile(maxvel_diff, 0.01), vcenter=0.0, vmax=np.nanquantile(maxvel_diff, 0.99))
+im2 = maxvel_diff.plot.pcolormesh(ax=axes[1], cmap="RdBu_r", norm=norm_vel, add_colorbar=False, transform=utm_crs, rasterized=True)
+
+# Plot the maximum rise rate of water depth
+maxriserate_F = model_velocity_F[0]['sfincs_results']['max_rise_rate_h'].load()
+maxriserate_CF = model_velocity_CF[0]['sfincs_results']['max_rise_rate_h'].load()
+maxriserate_diff = maxriserate_CF - maxriserate_F
+norm_rr = colors.TwoSlopeNorm(vmin=np.nanquantile(maxriserate_diff, 0.01), vcenter=0.0, vmax=np.nanquantile(maxriserate_diff, 0.99))
+im3 = maxriserate_diff.plot.pcolormesh(ax=axes[2], cmap="RdBu_r", norm=norm_rr, add_colorbar=False, transform=utm_crs, rasterized=True)
+
+for i, ax in enumerate(axes):
+    # Add model region
+    region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
+
+    # Add background and set extent (based on actual lat/lon coordinates)
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+
+    # Add gridlines and format tick labels
+    ax.set_xticks([630000,650000, 670000, 690000, 710000])
+    ax.set_yticks(np.arange(miny, maxy + 20000, 20000))  # every 1 km
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, pos: f"{y/1e6:.2f}"))
+    ax.tick_params(labelsize=8)
+    ax.grid(True, which='major', linestyle='--', color='lightgray', linewidth=0.5)
+    ax.set_xlabel("x coordinate UTM zone 36S [×10⁶ m]", size=8)
+    ax.set_ylabel("y coordinate UTM zone 36S [×10⁶ m]", size=8)
+    ax.set_title("")
+    if i != 0:  
+        ax.left_labels = False  # disable y-axis labels
+        ax.set_ylabel("", size=8)
+    ax.text(0, 1.02, subplot_labels_3[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
+    
+for ax in axes:
+    ax.set_extent([minx, maxx, miny, maxy], crs= ccrs.UTM(36, southern_hemisphere=True))
+
+# ==== Colorbar for flood depth ====
+cbar1 = fig.colorbar(im1, ax=axes[0], orientation="vertical", 
+                     fraction=0.035, aspect=20, pad=0.02)
+cbar1.set_label("Difference in flood depth (m)", labelpad=5, fontsize=9)
+cbar1.ax.tick_params(labelsize=8)
+
+# ==== Colorbar for flood velocity ====
+cbar2 = fig.colorbar(im2, ax=axes[1], orientation="vertical", 
+                     fraction=0.035, aspect=20, pad=0.02)
+cbar2.set_label("Difference in maximum velocity (m/s)", labelpad=5, fontsize=9)
+cbar2.ax.tick_params(labelsize=8)
+
+# ==== Colorbar for rate of rising ====
+cbar2 = fig.colorbar(im3, ax=axes[2], orientation="vertical", 
+                     fraction=0.035, aspect=20, pad=0.02)
+cbar2.set_label("Difference in maximum rising rate (m/h)", labelpad=5, fontsize=9)
+cbar2.ax.tick_params(labelsize=8)
+
+fig.suptitle("Difference in flood variables contributing to fatalities (Counterfactual - Factual)", fontsize=10)
 
 # fig.savefig("../figures/f03.png", bbox_inches='tight', dpi=300)
 # fig.savefig("../figures/f03.pdf", bbox_inches='tight', dpi=300)
