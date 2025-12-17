@@ -39,6 +39,7 @@ Attribution_results/data.zip
 # Model data
 Workflows/04_scripts/model_building/fiat/cache
 DelftFIAT/scripts/cache
+Socio-economic
 
 # Distribution / packaging
 .Python
