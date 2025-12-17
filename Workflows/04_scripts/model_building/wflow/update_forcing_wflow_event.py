@@ -22,14 +22,15 @@ if "snakemake" in locals():
 else:
     tc_name              = "Idai"
     precip_forcing       = "era5_hourly_zarr"
-    CF_rain              = 0
+    landuse              = "lisboa_2000"
+    CF_rain              = -8
     CF_rain_txt          = f"{CF_rain}"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
-    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_f_"
+    wflow_root_noforcing = f"/p/11210471-001-compass/02_Models/sofala/Idai/wflow_{landuse}"
+    wflow_root_forcing   = f"/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}"
     start_time           = "20190309 000000"
     end_time             = "20190325 060000"
-    data_cat             = ['../../../03_data_catalogs/datacatalog_general.yml',
-                            '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+    data_cat             = ['../../../03_data_catalogs/datacatalog_general___linux.yml',
+                            '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
                             ] 
 
 # %% 

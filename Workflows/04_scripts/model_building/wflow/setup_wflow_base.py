@@ -14,15 +14,15 @@ if "snakemake" in locals():
     region_geom      = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
 else:
-    landuse           = "lisboa_2020"
-    model_dir        = f"p:/11210471-001-compass/02_Models/sofala/Idai/wflow_{landuse}"
+    landuse           = "lisboa_2000"
+    model_dir        = f"/p/11210471-001-compass/02_Models/sofala/Idai/wflow_{landuse}"
     config_file      = f"../../../05_config_models/01_wflow/config_wflow_{landuse}.yml"
     data_cat         = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_CF_forcing.yml'
+        '../../../03_data_catalogs/datacatalog_general___linux.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml'
         ] 
-    region_geom      = f'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_{landuse}/gis/region.geojson'
-    dir_sfincs_model = f'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_{landuse}'
+    region_geom      = f'/p/11210471-001-compass/02_Models/sofala/Idai/sfincs_{landuse}/gis/region.geojson'
+    dir_sfincs_model = f'/p/11210471-001-compass/02_Models/sofala/Idai/sfincs_{landuse}'
 
 #%%
 # Check whether model folder exists

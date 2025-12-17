@@ -23,17 +23,18 @@ else:
     precip_forcing      = "era5_hourly_zarr"
     wind_forcing        = 'era5_hourly_spw_IBTrACS'
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
-    CF_rain_txt         = "0"
-    CF_SLR_txt          = "0"
-    CF_wind_txt         = "0"
-    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
-    wflow_base          = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
-    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    landuse             = "lisboa_2020"
+    CF_rain_txt         = "-8"
+    CF_SLR_txt          = "-0.14"
+    CF_wind_txt         = "-10"
+    wflow_root          = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}"
+    wflow_base          = f"/p/11210471-001-compass/02_Models/{region}/{tc_name}/wflow_{landuse}"
+    sfincs_model_folder = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_{landuse}"
     data_cats           = [
-        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
-        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
+        join(curdir, "03_data_catalogs", "datacatalog_general___linux.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
         ]
     wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
 

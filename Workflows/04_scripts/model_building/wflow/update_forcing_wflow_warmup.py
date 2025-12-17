@@ -19,16 +19,17 @@ if "snakemake" in locals():
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
 else:
-    precip_forcing = "era5_hourly"
-    CF_rain = 0
-    CF_rain_txt = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
-    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    precip_forcing = "era5_hourly_zarr"
+    landuse = "lisboa_2000"
+    CF_rain = -8
+    CF_rain_txt = "-8"
+    wflow_root_noforcing = f"/p/11210471-001-compass/02_Models/sofala/Idai/wflow_{landuse}"
+    wflow_root_forcing = f"/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_{landuse}"
     start_time = "20190309 000000"
     end_time = "20190325 060000"
     data_cat = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
+        '../../../03_data_catalogs/datacatalog_general___linux.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing___linux.yml',
     ] 
 
 # %% Setup forcing Warmup
