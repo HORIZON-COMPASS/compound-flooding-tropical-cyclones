@@ -13,7 +13,7 @@ module load julia
 echo "Running Wflow model manually..."
 
 # Set run configuration
-RUN_DIR="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF0_f_soilthick"
+RUN_DIR="/p/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_era5_hourly_zarr_CF-8_lisboa_2000"
 
 EXE="/p/11210471-001-compass/01_Models/00_executables/wflow0.8.1/wflow_cli/bin/wflow_cli.exe"
 JULIA_ENV_FN="$HOME/.julia/environments/v1.9"
