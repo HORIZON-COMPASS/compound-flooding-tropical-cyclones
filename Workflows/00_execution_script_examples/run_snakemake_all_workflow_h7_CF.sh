@@ -48,7 +48,7 @@ snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_s
 echo "Running Snakemake dry-run..."
 snakemake -s snakefile_all_wflow_sfincs.smk \
   --configfile ../01_config_snakemake/config_general_MZB_CF.yml \
-  --cores 'all' --latency-wait 60 --wait-for-files --forceall
+  --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete
 
 echo "=== Job finished on $(date) ==="
 exit
