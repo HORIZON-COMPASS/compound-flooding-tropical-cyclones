@@ -1,5 +1,5 @@
 #%% 
-# Load modules
+# Load modules using pixi environment compass-wflow or compass-snake-sfincs
 import os
 import numpy as np
 import matplotlib.pyplot as plt
