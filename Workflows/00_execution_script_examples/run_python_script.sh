@@ -21,8 +21,8 @@ pixi shell-hook --environment compass-wflow > hook.sh
 source hook.sh
 
 # Run your script
-cd ../Attribution_results/scripts
+cd ../04_scripts/postprocessing/sfincs/
 
-python -u A_Attribution_figures.py
+python -u sfincs_postprocess.py
 
 echo "Finished at $(date)"
