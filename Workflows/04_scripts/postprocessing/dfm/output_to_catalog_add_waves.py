@@ -638,11 +638,11 @@ def plot_wave_overview_Beira(station_idx=52):
 
 
 
-if use_wave:
+# if use_wave:
     # plot_wave_impact()
     # plot_station_wave_components()
     # max_wave_ratio_Beira(ds_combined)
-    plot_wave_overview_Beira()
+    # plot_wave_overview_Beira()
 
 
 # %%
