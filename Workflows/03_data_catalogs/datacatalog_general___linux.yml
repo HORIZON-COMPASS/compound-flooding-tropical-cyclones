@@ -759,20 +759,20 @@ soilgrids:
     source_version: 2017
   crs: 4326
 vito:
-  data_type: RasterDataset
-  path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
-  driver: raster
-  driver_kwargs:
-    chunks:
-      x: 3600
-      y: 3600
-  meta:
-    category: landuse
-    paper_doi: 10.5281/zenodo.3939038
-    paper_ref: Buchhorn et al (2020)
-    source_url: https://land.copernicus.eu/global/products/lc
-    source_version: v2.0.2
-  crs: 4326
+  # data_type: RasterDataset
+  # path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
+  # driver: raster
+  # driver_kwargs:
+  #   chunks:
+  #     x: 3600
+  #     y: 3600
+  # meta:
+  #   category: landuse
+  #   paper_doi: 10.5281/zenodo.3939038
+  #   paper_ref: Buchhorn et al (2020)
+  #   source_url: https://land.copernicus.eu/global/products/lc
+  #   source_version: v2.0.2
+  # crs: 4326
   data_type: RasterDataset
   path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_global_v3.0.1_2019-nrt_discrete-classification-map_EPSG-4326.tif
   driver: raster

@@ -33,6 +33,6 @@ snakemake -s snakefile_dfm_cluster.smk --configfile ../01_config_snakemake/confi
 # snakemake -s snakefile_dfm_cluster.smk --configfile config_snakemake/config_general.yml --jobs 10 --executor slurm --default-resources "slurm_account='hot'"  "slurm_partition='4vcpu'" "runtime=30" "tasks=1" --set-resources "run_dfm:slurm_partition='16vcpu'" "run_dfm:time=180"
 
 # Snakemake using generic cluster functionality
-snakemake -s snakefile_dfm_cluster.smk  --configfile ../01_config_snakemake/config_general_MZB.yml --jobs 10 --executor cluster-generic --cluster-generic-submit-cmd "sbatch --job-name {resources.jobname} --time {resources.time} --partition {resources.partition} --ntasks-per-node={resources.taskspernode} --nodes=1 --parsable"
+snakemake -s snakefile_dfm_cluster.smk  --configfile ../01_config_snakemake/config_general_MZB.yml --jobs 10 --executor cluster-generic --scheduler greedy --cluster-generic-submit-cmd "sbatch --job-name {resources.jobname} --time {resources.time} --partition {resources.partition} --ntasks-per-node={resources.taskspernode} --nodes=1 --parsable"
 
 exit

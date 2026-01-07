@@ -159,4 +159,5 @@ rule postprocess_discharge:
         wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr")),
         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
         data_cat = get_datacatalog,
+        results = join(curdir, "..", "..", "Attribution_results"),
     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")

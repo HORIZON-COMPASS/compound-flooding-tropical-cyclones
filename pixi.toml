@@ -75,6 +75,7 @@ numpy = "<=2.1"
 [feature.dfm.pypi-dependencies]
 dfm-tools = "==0.35.0"
 copernicusmarine = "==2.0.0"
+hydrolib-core = ">=0.8.1,<0.9"
 
 [feature.snake_dfm.dependencies]
 python = ">=3.11"
