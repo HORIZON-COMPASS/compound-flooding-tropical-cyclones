@@ -105,26 +105,20 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0:
     category: ocean
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves:
-  crs: 4326
   data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
   driver_kwargs:
     chunks:
-      station: 10
       time: -1
+      station: 10
   rename:
-    station_y_coordinate: lat
     station_x_coordinate: lon
-  driver: netcdf
+    station_y_coordinate: lat
   meta:
-    category: ocean
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
-  variants:
-  - meta:
-      notes: DFM output combined with wave data from SnapWave provided by Fernaldi
-        Gradiyanto & Tim Leijnse
-  - meta:
-      notes: DFM output combined with wave data from SnapWave provided by Fernaldi
-        Gradyanto & Tim Leijnse
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
 era5_hourly_CF0_Idai:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF0_Idai.nc
