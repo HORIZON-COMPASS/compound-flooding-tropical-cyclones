@@ -8,6 +8,7 @@ import shutil
 import os
 from os.path import join
 from hydromt_sfincs import SfincsModel
+import geopandas as gpd
 
 # %%
 # model and data paths/
@@ -56,7 +57,7 @@ else:
     dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     dfm_output              = f"dfm_output_{dfm_model}"
     sfincs_mod_no_forcing   = os.path.join(f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
-    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_maxvel")
+    sfincs_mod_with_forcing = os.path.join(f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}")
     obs_points              = os.path.join("p:/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson")
 
 #%%
@@ -129,6 +130,17 @@ mod.update(
     forceful_overwrite=True,
     opt=opt
 )
+
+#%%
+# # Ensure correct water level boundary indexing
+# bnd = gpd.read_file(join(f"{sfincs_mod_with_forcing}","gis","bnd.geojson"), driver="GeoJSON")
+# wl = mod.forcing["waterlevel"]
+
+# bnd = bnd.reset_index(drop=True)
+# bnd = bnd.rename(columns={"index": "DFM_index"})
+# bnd.index = wl.index
+# bnd.index.name = "bnd_id"
+
 #%%
 mod.plot_forcing()
 
