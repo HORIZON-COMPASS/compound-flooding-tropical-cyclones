@@ -33,10 +33,10 @@ echo "Changing to workflows directory..."
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
+snakemake --unlock -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB_F.yml 
 
 # running workflow with snakemake
 # snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpdf > wflow_30yr.pdf
-snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --forceall  --printshellcmds --verbose | tee -a snakemake_live.log
+snakemake -s snakefile_wflow_30yr.smk --configfile ../01_config_snakemake/config_general_MZB_F.yml --cores 'all' --latency-wait 60 --wait-for-files --rerun-incomplete --printshellcmds --verbose | tee -a snakemake_live.log
 
 exit
