@@ -18,8 +18,8 @@ with open(config_file, "r") as f:
 
 # %%
 # Region of case study area in Mozambique
-lat_MZB = [-20.12, -19.30]
-lon_MZB = [34.33, 34.95]
+lat_MZB = [-27.4, -9.5]
+lon_MZB = [32.3, 42.5]
 
 # Time period for linear trend calculation
 years = range(1985, 2016)
@@ -36,13 +36,13 @@ datasets = {
 #%%
 # Download and subset ISIMIP SLR data for MZB region
 BASE_URL = "https://files.isimip.org/ISIMIP3a/InputData/climate/sealevel/"
-OUTDIR = os.path.join(prefix, "11210471-001-compass/01_Data/ISIMIP/SLR/MZB_subset")
+OUTDIR = os.path.join(prefix, "11210471-001-compass/01_Data/ISIMIP/SLR/DFM_MZ_subset")
 TMPDIR = os.path.join(prefix, "11210471-001-compass/01_Data/ISIMIP/SLR/tmp_global")
 
 os.makedirs(OUTDIR, exist_ok=True)
 os.makedirs(TMPDIR, exist_ok=True)
 
-years = (2013, 2014)  # only download until 2015 for trend calculation
+years = range(1985, 2016)  # only download until 2015 for trend calculation
 
 for key, prefix in datasets.items():
     # Determine clim for the URL path
