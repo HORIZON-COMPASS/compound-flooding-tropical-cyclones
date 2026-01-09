@@ -58,7 +58,7 @@ for key, value in config['runname_ids'].items():
 # Unpack into separate wildcard lists
 region, runname_ids, precip_forcing, CF_rain, CF_landuse = zip(*run_combinations)
 
-# Uncommend the first "expand" line, and commend the other two, when running the first rule 'make_base_model_wflow' only, which is necessary before runnign the snakefile_wflow_30yr.smk once.
+# Uncommend the first "expand" line, and commend the other two, when running the first rule 'make_base_model_wflow' only, which is necessary before running the snakefile_wflow_30yr.smk once.
 rule all_wflow:
     input:
         # expand(join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
@@ -153,11 +153,11 @@ rule run_wflow_event:
 rule postprocess_discharge:
     input:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_{landuse}", "events", "run_default", "output_scalar.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "run_default", "output_scalar.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"),
     output:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_{landuse}", "events", "run_default", "wflow_dis_no_qbankfull.csv")
     params:
-        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr")),
+        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr")),
         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}_{landuse}")),
         data_cat = get_datacatalog,
     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")
