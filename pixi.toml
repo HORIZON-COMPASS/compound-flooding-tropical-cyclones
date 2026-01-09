@@ -33,7 +33,7 @@ matplotlib = ">=3.8.4,<3.9"
 
 [feature.fiat.dependencies]
 gdal = "*"
-delft_fiat = "0.3.2"
+delft_fiat = "=0.3.2"
 matplotlib = "*"
 toml = "*"
 libnetcdf = "*"
