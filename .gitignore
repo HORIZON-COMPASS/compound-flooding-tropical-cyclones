@@ -27,6 +27,8 @@ Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
 Attribution_results/figures/*
+Attribution_results/data/*
+Socio-economic
 
 # Data files
 Attribution_results/data/validation/UNOSAT/*
