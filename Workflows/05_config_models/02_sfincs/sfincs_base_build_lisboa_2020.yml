@@ -45,7 +45,7 @@ setup_subgrid:
     zmin: 0.001              
   datasets_rgh:
   - lulc: lisboa_2020
-    reclass_table: vito_mapping
+    reclass_table: vito_mapping_sfincs
   nr_subgrid_pixels: 4  
   write_dep_tif: True           # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True

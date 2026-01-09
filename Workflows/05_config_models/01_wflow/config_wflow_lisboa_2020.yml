@@ -34,8 +34,8 @@ setup_glaciers:
   min_area: 1.0                    # minimum glacier area to consider [km2]
 
 setup_lulcmaps:
-  lulc_fn: lisboa_2020             # source for lulc maps: {globcover, vito, corine}
-  lulc_mapping_fn : vito_mapping   # source for mapping of lulc maps
+  lulc_fn: lisboa_2020                 # source for lulc maps: {globcover, vito, corine}
+  lulc_mapping_fn : vito_mapping_wflow # source for mapping of lulc maps
 
 setup_laimaps:
   lai_fn: modis_lai                # source for LAI: {modis_lai}
