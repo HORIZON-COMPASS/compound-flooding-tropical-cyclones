@@ -27,6 +27,12 @@ Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
 Attribution_results/figures/*
+Attribution_results/data/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_doris/*
+Attribution_results/data/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_lisboa_2020/*
+Attribution_results/data/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_lisboa_2000/*
+Attribution_results/data/sfincs/event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10_lisboa_2020/*
+Attribution_results/data/sfincs/event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10_lisboa_2000/*
+Attribution_results/data/wflow/*
 
 # Data files
 Attribution_results/data/validation/UNOSAT/*
