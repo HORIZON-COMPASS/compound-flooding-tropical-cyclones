@@ -200,12 +200,17 @@ ext_new.save(filepath=ext_new_path)
 
 #%% 
 # Add SLR using dfmt functionality
-if CF_value == 0:   # factual
+if CF_value == 0:   # counterfactual
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.06) # no SLR, corrected for 1990/2000 bathymetry ref
+elif CF_value == 0.05:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.01)
+elif CF_value == 0.10:
     dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.04)
-elif CF_value == -0.14:
-    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.1)
+elif CF_value == 0.15:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.09)
 else:
     dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0)
+
 
 ext_new.save(filepath=ext_new_path)
 
