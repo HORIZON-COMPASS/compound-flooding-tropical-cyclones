@@ -65,63 +65,43 @@ precip_data = data_catalog.get_rasterdataset(
 #%%
 # Adjust precipitation values acc to the CF_value expressed as a factor
 precip_data_CF = precip_data * ((100 + CF_value)/ 100)
-precip_data_CF.encoding.clear()
-precip_data_CF = precip_data_CF.chunk("auto")
+
 
 #%%
-# Saving CF precip dataset
-input_file = data_catalog.get_source(precip_name).path
+# Save the data in as NetCDF
+ds_out = precip_data_CF.to_dataset(name='precip')  # gives a Dataset with one variable
+ds_out = ds_out.drop_vars("spatial_ref")
 
-if input_file.endswith(".nc"):
-    input_format = "netcdf"
-elif input_file.endswith(".zarr"):
-    input_format = "zarr"
-else:
-    raise ValueError("Unsupported file format")
+ds_out.to_netcdf(output_CF_rainfall)
 
-#%%
-# Save the data in the same format as the input
-if input_format == "netcdf":
-    precip_data_CF.to_netcdf(output_CF_rainfall)
-elif input_format == "zarr":
-    #print dim and coord names
-    print(f"Dimensions: {precip_data_CF.dims}")
-    print(f"Coordinates: {precip_data_CF.coords}")
-    output_CF_rainfall = output_CF_rainfall.replace(".nc", ".zarr")
-    # This call will now succeed because there are no legacy settings.
-    # Zarr will use its modern defaults for compression.
-    ds_out = precip_data_CF.to_dataset()
-    ds_out.to_zarr(output_CF_rainfall, mode='w')
-    
+
 #%%
 # Adding modified rainfall dataset to the CF data catalog
 CF_datacatalog = hydromt.data_catalog.DataCatalog(data_libs=[CF_catalog_path])
 CF_dataset_name = f"{precip_name}_CF{CF_value_txt}_{tc_name}"
 
-# # Add the CF data to the CF data catalog
-if CF_dataset_name not in CF_datacatalog:
-    CF_datacatalog[CF_dataset_name] = copy.deepcopy(data_catalog[f"{precip_name}"])
-    CF_datacatalog[CF_dataset_name].path = os.path.abspath(output_CF_rainfall)
+ # Add the CF data to the CF data catalog
+CF_datacatalog[CF_dataset_name] = copy.deepcopy(data_catalog[f"{precip_name}"])
+CF_datacatalog[CF_dataset_name].path = os.path.abspath(output_CF_rainfall)
+CF_datacatalog[CF_dataset_name].driver = "netcdf"
 
-    # Check if the 'rename' attribute exists and delete it
-    if all(hasattr(CF_datacatalog[CF_dataset_name], attr) for attr in ['rename', 'unit_mult', 'unit_add']):
-        del CF_datacatalog[CF_dataset_name].rename
-        del CF_datacatalog[CF_dataset_name].unit_mult
-        del CF_datacatalog[CF_dataset_name].unit_add
+# Check if the 'rename' attribute exists and delete it
+if all(hasattr(CF_datacatalog[CF_dataset_name], attr) for attr in ['rename', 'unit_mult', 'unit_add']):
+    del CF_datacatalog[CF_dataset_name].rename
+    del CF_datacatalog[CF_dataset_name].unit_mult
+    del CF_datacatalog[CF_dataset_name].unit_add
 
-    # Check if 'meta' exists and is a dictionary
-    if hasattr(CF_datacatalog[CF_dataset_name], 'meta') and isinstance(CF_datacatalog[CF_dataset_name].meta, dict):
-        # Remove all metadata except for 'notes' and add CF info
-        notes = CF_datacatalog[CF_dataset_name].meta.pop('notes', None)  # Save the current 'notes' if exists
-        CF_datacatalog[CF_dataset_name].meta.clear()
+# Check if 'meta' exists and is a dictionary
+if hasattr(CF_datacatalog[CF_dataset_name], 'meta') and isinstance(CF_datacatalog[CF_dataset_name].meta, dict):
+    # Remove all metadata except for 'notes' and add CF info
+    notes = CF_datacatalog[CF_dataset_name].meta.pop('notes', None)  # Save the current 'notes' if exists
+    CF_datacatalog[CF_dataset_name].meta.clear()
 
-        if notes is not None:
-            CF_datacatalog[CF_dataset_name].meta['notes'] = f"Copied {precip_name} dataset and adjusted with CF value {CF_value_txt}%"
+    if notes is not None:
+        CF_datacatalog[CF_dataset_name].meta['notes'] = f"Copied {precip_name} dataset and adjusted with CF value {CF_value_txt}%"
     
-    # Save the updated catalog
-    CF_datacatalog.to_yml(CF_catalog_path)
+# Save the updated catalog
+CF_datacatalog.to_yml(CF_catalog_path)
 
-else:
-    print(f"Dataset '{CF_dataset_name}' is already in the catalog.")
 
 #%%

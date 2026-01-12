@@ -1,8 +1,8 @@
 meta:
-  root: p:\
+  root: c:\Code\COMPASS\Workflows\03_data_catalogs
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -16,7 +16,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10_waves:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his_WAVES.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10\output\settings_0000_his_WAVES.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -32,7 +32,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -46,7 +46,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0_waves:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0\output\settings_0000_his_WAVES.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -62,7 +62,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF0_w
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -76,7 +76,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10_waves:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his_WAVES.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10\output\settings_0000_his_WAVES.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -92,7 +92,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10_wav
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0\output\settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -106,7 +106,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0:
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  path: p:\11210471-001-compass\03_Runs\sofala\Idai\dfm\event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0\output\settings_0000_his_WAVES.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -121,7 +121,7 @@ dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves
   crs: 4326
 era5_hourly_CF0_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF0_Idai.nc
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_CF0_Idai.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -135,18 +135,36 @@ era5_hourly_CF0_Idai:
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value 0%
   crs: 4326
-era5_hourly_zarr_CF-8_Idai:
+era5_hourly_zarr_CF-16_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-8_Idai.zarr
-  driver: zarr
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-16_Idai.nc
+  driver: netcdf
   driver_kwargs:
     chunks: auto
   meta:
-    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -16%
   crs: 4326
+era5_hourly_zarr_CF-4_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-4_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -4%
+  crs: 4326
+era5_hourly_zarr_CF-8_Idai:
+  data_type: RasterDataset
+  path: p:\11210471-001-compass\01_Data\counterfactuals\precipitation\era5_hourly_zarr_CF-8_Idai.nc
+  crs: 4326
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto    
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
-  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/tide/future_tide_{year}_{month:02d}_v1.nc
+  path: p:\archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -166,7 +184,7 @@ gtsm_codec_future_tide_v1:
   crs: 4326
 spw_IBTrACS_CF-10_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
+  path: p:\11210471-001-compass\01_Data\SPW_forcing_files\tc_Idai_CF-10_2019063S18038_ext10d.spw
   driver: raster
   meta:
     category: meteo
@@ -174,7 +192,7 @@ spw_IBTrACS_CF-10_Idai:
       to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
 spw_IBTrACS_CF0_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
+  path: p:\11210471-001-compass\01_Data\SPW_forcing_files\tc_Idai_CF0_2019063S18038_ext9d.spw
   driver: raster
   meta:
     category: meteo
