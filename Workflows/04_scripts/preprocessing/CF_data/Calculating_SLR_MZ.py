@@ -216,9 +216,9 @@ plt.show()
 # Plot original and extrapolated
 fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 ax.plot(time_DFM, y_DFM_gc, label="ISIMIP SLR data (gc)", color='orange',linewidth=2)
-ax.fill_between(mean_SLR_MZB_gc['time'],
-                     mean_SLR_MZB_gc - std_SLR_MZB_gc,
-                     mean_SLR_MZB_gc + std_SLR_MZB_gc,
+ax.fill_between(mean_SLR_DFM_gc['time'],
+                     mean_SLR_DFM_gc - std_SLR_DFM_gc,
+                     mean_SLR_DFM_gc + std_SLR_DFM_gc,
                      color='orange', alpha=0.2)
 ax.plot(extended_time, df_extended['linear_gc'], label=f"Extrapolated linear trend (gc)", color='grey', linestyle='--')
 ax.plot(extended_time, df_extended['lowess_gc'], label=f"Extrapolated LOWESS trend (gc)", color='black', linestyle='--')
@@ -288,7 +288,8 @@ ax.set_title("Zoomed map with ISIMIP stations")
 ###################### Calculate the SLR for the Bathy ref ######################
 #################################################################################
 # use lowess fit and calculate mean SLR between 1990 and 2000
-bathy_mean_SLR_ref = df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_wl'].mean()
+bathy_mean_SLR_ref_wl = df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_wl'].mean()
+bathy_mean_SLR_ref_gc = df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_gc'].mean()
 mean_time = df_extended[df_extended["time"].dt.year.between(1990, 2000)]['time'].mean()
 
 
@@ -296,10 +297,13 @@ mean_time = df_extended[df_extended["time"].dt.year.between(1990, 2000)]['time']
 # Plot the mean SLR between 1990 and 2000 and its annotated average
 fig, axes = plt.subplots(1, 1, figsize=(8, 5))
 
-axes.plot(df_extended["time"][df_extended["time"].dt.year.between(1990, 2000)], df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_wl'], color='orange')
+axes.plot(df_extended["time"][df_extended["time"].dt.year.between(1990, 2000)], df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_gc'], color='orange', label='LOWESS SLR (gc)')
+axes.plot(df_extended["time"][df_extended["time"].dt.year.between(1990, 2000)], df_extended[df_extended["time"].dt.year.between(1990, 2000)]['lowess_wl'], color='blue', label='LOWESS SLR (wl)')
 
 # Annotate the line
-axes.annotate(f'{bathy_mean_SLR_ref:.2f}', xy=(mean_time, bathy_mean_SLR_ref), xytext=(mean_time, bathy_mean_SLR_ref - 1),
+axes.annotate(f'{bathy_mean_SLR_ref_wl:.2f}', xy=(mean_time, bathy_mean_SLR_ref_wl), xytext=(mean_time, bathy_mean_SLR_ref_wl - 5),
+            arrowprops=dict(arrowstyle='->'), fontsize=8)
+axes.annotate(f'{bathy_mean_SLR_ref_gc:.2f}', xy=(mean_time, bathy_mean_SLR_ref_gc), xytext=(mean_time, bathy_mean_SLR_ref_gc - 5),
             arrowprops=dict(arrowstyle='->'), fontsize=8)
 
 # Customize the first plot
@@ -311,13 +315,23 @@ axes.legend()
 
 
 #%%
-SLR_start_event = df_extended['lowess_wl'][df_extended['time'] == pd.to_datetime(start_date_event)].values[0]
-SLR_start_event_minstd = SLR_start_event - std_SLR_DFM_wl.mean()
-SLR_start_event_maxstd = SLR_start_event + std_SLR_DFM_wl.mean()
+SLR_start_event_wl = df_extended['lowess_wl'][df_extended['time'] == pd.to_datetime(start_date_event)].values[0]
+SLR_start_event_wl_minstd = SLR_start_event_wl - std_SLR_DFM_wl.mean()
+SLR_start_event_wl_maxstd = SLR_start_event_wl + std_SLR_DFM_wl.mean()
 
-print(f"SLR at start of event (2019-03-09): {SLR_start_event:.2f} mm")
-print(f"SLR at start of event minus 1 std: {SLR_start_event_minstd:.2f} mm")
-print(f"SLR at start of event plus 1 std: {SLR_start_event_maxstd:.2f} mm")
+SLR_start_event_gc = df_extended['lowess_gc'][df_extended['time'] == pd.to_datetime(start_date_event)].values[0]
+SLR_start_event_gc_minstd = SLR_start_event_gc - std_SLR_DFM_gc.mean()
+SLR_start_event_gc_maxstd = SLR_start_event_gc + std_SLR_DFM_gc.mean()
+
+print("ISIMIP geocentric water level ds, excl VLM")
+print(f"SLR at start of event (2019-03-09): {SLR_start_event_gc:.2f} mm")
+print(f"SLR at start of event -std: {SLR_start_event_gc_minstd:.2f} mm")
+print(f"SLR at start of event +std: {SLR_start_event_gc_maxstd:.2f} mm")
+
+print("\nISIMIP water level ds, incl VLM")
+print(f"SLR at start of event (2019-03-09): {SLR_start_event_wl:.2f} mm")
+print(f"SLR at start of event -std: {SLR_start_event_wl_minstd:.2f} mm")
+print(f"SLR at start of event +std: {SLR_start_event_wl_maxstd:.2f} mm")
 
 
 
