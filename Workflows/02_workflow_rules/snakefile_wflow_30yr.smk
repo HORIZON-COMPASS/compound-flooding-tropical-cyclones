@@ -43,7 +43,6 @@ runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
 precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
 CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
-CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -52,27 +51,27 @@ wildcard_constraints:
 
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for tp, lulc in product(value['CF_value_rain'], value['CF_landuse']):
-        run_combinations.append((value['region'], key, value['precip_forcing'], tp, lulc))
+    for tp in value['CF_value_rain']:
+        run_combinations.append((value['region'], key, value['precip_forcing'], tp))
 
 # Unpack into separate wildcard lists
-region, runname_ids, precip_forcing, CF_rain, CF_landuse = zip(*run_combinations)
+region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
 
 rule all_wflow:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, landuse=CF_landuse),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
 
 # update wflow forcing for warmup
 rule update_forcing_wflow_warmup:
     input: 
-        toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{landuse}", 'wflow_sbm.toml'),
-        staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{landuse}", 'staticmaps.nc'), 
+        toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow_lisboa_2020", 'wflow_sbm.toml'),
+        staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow_lisboa_2020", 'staticmaps.nc'), 
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "inmaps.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr", "warmup", "inmaps.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr", "warmup", "wflow_sbm.toml"),
     params:
-        wflow_root_noforcing = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{landuse}"),
-        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr"),
+        wflow_root_noforcing = join(root_dir, dir_models, "{region}", "{runname}", "wflow_lisboa_2020"),
+        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr"),
         start_time = get_start_time,
         end_time = get_end_time,
         data_cat = get_datacatalog,
@@ -81,10 +80,10 @@ rule update_forcing_wflow_warmup:
 
 rule run_wflow_warmup:
     input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "inmaps.nc"),
-        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr", "warmup", "inmaps.nc"),
+        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr", "warmup", "wflow_sbm.toml"),
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_{landuse}_30yr", "warmup", "run_default", "output_scalar.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_lisboa_2020_30yr", "warmup", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
         julia_env_fn = "~/.julia/environments/v1.9"

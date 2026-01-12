@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs                                                      # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_wflow_sfincs_%j.log     # Standard output and error log
-#SBATCH --time=0-0:30:00                                                               # Job duration (hh:mm:ss)
-#SBATCH --partition test
+#SBATCH --time=0-3:00:00                                                               # Job duration (hh:mm:ss)
+#SBATCH --partition 16vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                                                                     # Number of tasks (analyses) to run
 
