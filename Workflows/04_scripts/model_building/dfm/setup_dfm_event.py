@@ -350,14 +350,14 @@ if os.path.exists(pathfile_illegalcells):
 # add the grid (grid_network.nc, network file)
 mdu.geometry.netfile = netfile
 # Adjust initial water in case of SLR for Idai
-if CF_SLR == 0:
-    mdu.geometry.waterlevini = -0.06
-elif CF_SLR == 0.05:
-    mdu.geometry.waterlevini = -0.01
-elif CF_SLR == 0.10:
+if CF_SLR == 0: # factual
     mdu.geometry.waterlevini = 0.04
-elif CF_SLR == 0.15:
-    mdu.geometry.waterlevini = 0.09
+elif CF_SLR == -0.05:
+    mdu.geometry.waterlevini = -0.01
+elif CF_SLR == -0.10:
+    mdu.geometry.waterlevini = -0.06
+elif CF_SLR == -0.15:
+    mdu.geometry.waterlevini = -0.11
 else:
     pass
 

@@ -48,5 +48,5 @@ runname_ids:
 
         # Counterfactual forcing settings
         CF_value_rain: [0, -4, -8, -16]                     # Factual specified as 0, and counterfactual values as a list (e.g. [-8] for -8% rainfall)
-        CF_value_wind: [0, -0.5, -1, -5, -10]               # Factual specified as 0, and counterfactual values as a list (e.g. [-10] for -10% wind speed)
-        CF_value_SLR: [0, 0.05, 0.10, 0.15]                 # Factual specified as 0, and counterfactual values as a list (e.g. [-0.14] for -0.14 m wind speed)
+        CF_value_wind: [0]                                  # Factual specified as 0, and counterfactual values as a list (e.g. [-10] for -10% wind speed)
+        CF_value_SLR: [0, -0.05, -0.10, -0.15]                 # Factual specified as 0, and counterfactual values as a list (e.g. [-0.14] for -0.14 m wind speed)

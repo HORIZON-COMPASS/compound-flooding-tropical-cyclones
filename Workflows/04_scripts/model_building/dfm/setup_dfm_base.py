@@ -200,14 +200,14 @@ ext_new.save(filepath=ext_new_path)
 
 #%% 
 # Add SLR using dfmt functionality
-if CF_value == 0:   # counterfactual
-    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.06) # no SLR, corrected for 1990/2000 bathymetry ref
-elif CF_value == 0.05:
-    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.01)
-elif CF_value == 0.10:
-    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.04)
-elif CF_value == 0.15:
-    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.09)
+if CF_value == 0:   # factual incl 10 cm SLR
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0.04) # medium SLR, corrected for 1990/2000 bathymetry ref
+elif CF_value == -0.05:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.01) # low SLR removal 5 cm, corrected for 1990/2000 bathymetry ref
+elif CF_value == -0.10:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.06) # medium SLR removal 10 cm, corrected for 1990/2000 bathymetry ref
+elif CF_value == -0.15:
+    dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=-0.11) # high SLR removal 15 cm, corrected for 1990/2000 bathymetry ref
 else:
     dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=0)
 
