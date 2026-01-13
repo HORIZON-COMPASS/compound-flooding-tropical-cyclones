@@ -798,3 +798,5 @@ vito_mapping:
   driver: csv
   driver_kwargs:
     index_col: 0
+  meta:
+    notes: same data as in hydromt_sfincs package but copied for debug in workflow
