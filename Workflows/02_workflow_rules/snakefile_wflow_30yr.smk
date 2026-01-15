@@ -42,24 +42,14 @@ def get_datacatalog(wildcards):
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
 precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
-CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
     precip_forcing='|'.join([re.escape(x) for x in precip_forcing]),
-    CF_rain=r"-?\d*\.?\d+", # Matches integer and floating-point numbers (positive and negative)
-
-run_combinations = []
-for key, value in config['runname_ids'].items():
-    for tp in (value['CF_value_rain']):
-        run_combinations.append((value['region'], key, value['precip_forcing'], tp))
-
-# Unpack into separate wildcard lists
-region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
 
 rule all_wflow:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"), region=region, runname=runname_ids, precip_forcing=precip_forcing),
 
 # update wflow forcing for warmup
 rule update_forcing_wflow_warmup:

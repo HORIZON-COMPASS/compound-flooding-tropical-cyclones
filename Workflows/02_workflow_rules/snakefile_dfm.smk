@@ -90,32 +90,55 @@ def get_coast_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return join(curdir, '..', '03_data_catalogs', 'datacatalog_SFINCS_coastal_coupling___linux.yml')
 
-# Define wildcards for path names
-runname_ids = list(config['runname_ids'].keys())
-region = [value['region'] for key, value in config['runname_ids'].items()]
-dfm_res = [value['dfm_res'] for key, value in config['runname_ids'].items()]
-bathy = [value['bathy'] for key, value in config['runname_ids'].items()]
-tidemodel = [value['tidemodel'] for key, value in config['runname_ids'].items()]
-CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
-wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
-CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+# Generate all combinations of runs based on config parameters
+run_combinations = []
+
+for runname, value in config['runname_ids'].items():
+    region         = value['region']
+    dfm_res        = value['dfm_res']
+    bathy          = value['bathy']
+    tidemodel      = value['tidemodel']
+    wind_forcing   = value['wind_forcing']
+
+    # Extract CF values from config
+    wind_low,  wind_high  = value['CF_wind_uncert']
+    wind_med              = value['CF_value_wind'][1]
+
+    slr_low,   slr_high   = value['CF_SLR_uncert']
+    slr_med               = value['CF_value_SLR'][1]
+
+    # Factual
+    run_combinations.append((region, runname, dfm_res, bathy, tidemodel, wind_forcing, 0, 0))
+
+    # Wind only (low / medium / high)
+    run_combinations.extend([
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, 0, wind_low),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, 0, wind_med),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, 0, wind_high),
+    ])
+
+    # SLR only (low / medium / high)
+    run_combinations.extend([
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_low,  0),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_med,  0),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_high, 0),
+    ])
+
+    # Wind + SLR (low / medium / high)
+    run_combinations.extend([
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_low,  wind_low),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_med,  wind_med),
+        (region, runname, dfm_res, bathy, tidemodel, wind_forcing, slr_high, wind_high),
+    ])
+
+# Unpack into wildcard lists
+region, runname_ids, dfm_res, bathy, tidemodel, wind_forcing, CF_SLR, CF_wind = map(list, zip(*run_combinations))
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
     wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
     bathy='|'.join([re.escape(x) for x in bathy]),
     CF_wind=r"-?\d+"  # Ensures only numbers are captured (prevents '10_his.nc')
-
-
-# activate when having multiple CF values!!
-#  Generate all combinations of CF_SLR and CF_wind for each runname
-run_combinations = []
-for key, value in config['runname_ids'].items():
-    for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
-        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['tidemodel'], slr, value['wind_forcing'], wind))
-
-# Unpack into separate wildcard lists
-region, runname_ids, dfm_res, bathy, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
 
 # Define the script dynamically based on OS before the rule
 submit_script_system = "run_parallel.bat" if os.name == 'nt' else "run_singularity_h7.sh"

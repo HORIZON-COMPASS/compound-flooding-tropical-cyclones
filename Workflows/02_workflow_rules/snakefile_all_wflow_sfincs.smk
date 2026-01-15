@@ -16,30 +16,82 @@ elif os.name == "posix": #Running on linux
     root_dir = join("/p", config['root_dir'])
 dir_runs = config['dir_runs']
 
-runname_ids = list(config['runname_ids'].keys())
-region = [value['region'] for key, value in config['runname_ids'].items()]
-precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
-tidemodel = [value['tidemodel'] for key, value in config['runname_ids'].items()]
-wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
-CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
-CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
-CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+# Generate all combinations of runs based on config parameters
+run_combinations = []
 
-# To prevent unwanted wildcard underscore splitting
+for runname, value in config['runname_ids'].items():
+    region         = value['region']
+    precip_forcing = value['precip_forcing']
+    tidemodel      = value['tidemodel']
+    wind_forcing   = value['wind_forcing']
+
+    # Extract CF values from config
+    rain_low,  rain_high  = value['CF_rain_uncert']
+    rain_med              = value['CF_value_rain'][1]
+
+    wind_low,  wind_high  = value['CF_wind_uncert']
+    wind_med              = value['CF_value_wind'][1]
+
+    slr_low,   slr_high   = value['CF_SLR_uncert']
+    slr_med               = value['CF_value_SLR'][1]
+
+    # Factual
+    run_combinations.append(
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, 0, 0)
+    )
+
+    # All drivers (low / medium / high)
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_low,  slr_low,  wind_low),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_med,  slr_med,  wind_med),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_high, slr_high, wind_high),
+    ])
+
+    # Rain only (low / medium / high)
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_low,  0, 0),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_med,  0, 0),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_high, 0, 0),
+    ])
+
+    # Wind only (low / medium / high)
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, 0, wind_low),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, 0, wind_med),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, 0, wind_high),
+    ])
+
+    # SLR only (low / medium / high)
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_low,  0),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_med,  0),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_high, 0),
+    ])
+
+    # Wind + SLR (low / medium / high)
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_low,  wind_low),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_med,  wind_med),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, 0, slr_high, wind_high),
+    ])
+
+    # Medium mixed rain combinations only
+    run_combinations.extend([
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_med, 0, wind_med),
+        (region, runname, precip_forcing, tidemodel, wind_forcing, rain_med, slr_med,  0),
+    ])
+
+# Unpack into wildcard lists
+region, runname_ids, precip_forcing, tidemodel, wind_forcing, CF_rain, CF_SLR, CF_wind = map(
+    list, zip(*run_combinations)
+)
+
 wildcard_constraints:
-    precip_forcing='|'.join([re.escape(x) for x in precip_forcing]),
-    wind_forcing='|'.join([re.escape(x) for x in wind_forcing]),
-    CF_SLR=r"-?\d*\.?\d+",  # Matches integer and floating-point numbers (positive and negative)
+    precip_forcing='|'.join([re.escape(x) for x in set(precip_forcing)]),
+    wind_forcing='|'.join([re.escape(x) for x in set(wind_forcing)]),
+    CF_SLR=r"-?\d*\.?\d+",
     CF_wind=r"-?\d*\.?\d+",
     CF_rain=r"-?\d*\.?\d+",
-
-run_combinations = []
-for key, value in config['runname_ids'].items():
-    for tp, slr, wind in product(value['CF_value_rain'], value['CF_value_SLR'], value['CF_value_wind']):
-        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['precip_forcing'], tp, value['tidemodel'], slr, value['wind_forcing'], wind))
-
-# Unpack into separate wildcard lists
-region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
 
 rule all_general:
     input:
