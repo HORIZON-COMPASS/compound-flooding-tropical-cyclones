@@ -72,7 +72,7 @@ opt = {
         'dthisout': 3600,
         'storemeteo': 1,
         'utmzone':utmzone,
-        'storevelmax': 1,
+        # 'storevelmax': 1,
         }
 }
 
