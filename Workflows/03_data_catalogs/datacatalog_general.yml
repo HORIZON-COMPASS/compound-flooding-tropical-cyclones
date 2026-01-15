@@ -17,7 +17,7 @@ basin_atlas_level12_v10:
   crs: 4326
 era5_daily:
   data_type: RasterDataset
-  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}*_daily.nc
+  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}_daily.nc
   driver: netcdf
   driver_kwargs:
     chunks:
