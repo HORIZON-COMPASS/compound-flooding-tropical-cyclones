@@ -1,4 +1,4 @@
-#%% Import the necessary packages
+# %% Import the necessary packages
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import contextily as ctx
@@ -9,17 +9,25 @@ import xarray as xr
 import cartopy.crs as ccrs
 import seaborn as sns
 
-#%% Load TC track shapefiles as geopandas geodataframe
-shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
+# %% Load TC track shapefiles as geopandas geodataframe
+shapefile_path = (
+    "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_IDAI.shp"
+)
 tc_idai = gpd.read_file(shapefile_path)
 
-shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_KENNETH.shp"
+shapefile_path = (
+    "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_KENNETH.shp"
+)
 tc_kenneth = gpd.read_file(shapefile_path)
 
-shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_FREDDY_part1.shp"
+shapefile_path = (
+    "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_FREDDY_part1.shp"
+)
 tc_freddy1 = gpd.read_file(shapefile_path)
 
-shapefile_path = "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_FREDDY_part2.shp"
+shapefile_path = (
+    "p:/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS/IBTrACS_FREDDY_part2.shp"
+)
 tc_freddy2 = gpd.read_file(shapefile_path)
 
 # %%
@@ -42,11 +50,16 @@ tc_freddy2["size"] = (tc_freddy2["USA_WIND"] - tc_freddy2["USA_WIND"].min()) / (
     tc_freddy2["USA_WIND"].max() - tc_freddy2["USA_WIND"].min()
 ) * 138 + 19  # Scale between 20 and 145
 
-#%%
+# %%
 # Define bounding box for Mozambique region
 bbox = [31, -27, 50, -10]  # [min_lon, min_lat, max_lon, max_lat]
 
-colors = {"TC Idai": "darkred", "TC Kenneth": "darkorange", "TC Freddy - 1": "dodgerblue", "TC Freddy - 2": "dodgerblue"}
+colors = {
+    "TC Idai": "darkred",
+    "TC Kenneth": "darkorange",
+    "TC Freddy - 1": "dodgerblue",
+    "TC Freddy - 2": "dodgerblue",
+}
 
 # Maintain correct aspect ratio
 fig_width = 8  # Fixed width
@@ -62,40 +75,59 @@ cmap_freddy1 = cm.get_cmap("Blues")
 cmap_freddy2 = cm.get_cmap("Blues")
 
 # Normalize windspeed for color mapping
-norm_idai = plt.Normalize(vmin=tc_idai["USA_WIND"].min(), vmax=tc_idai["USA_WIND"].max())
-norm_kenneth = plt.Normalize(vmin=tc_kenneth["USA_WIND"].min(), vmax=tc_kenneth["USA_WIND"].max())
-norm_freddy1 = plt.Normalize(vmin=tc_freddy1["USA_WIND"].min(), vmax=tc_freddy1["USA_WIND"].max())
-norm_freddy2 = plt.Normalize(vmin=tc_freddy2["USA_WIND"].min(), vmax=tc_freddy2["USA_WIND"].max())
+norm_idai = plt.Normalize(
+    vmin=tc_idai["USA_WIND"].min(), vmax=tc_idai["USA_WIND"].max()
+)
+norm_kenneth = plt.Normalize(
+    vmin=tc_kenneth["USA_WIND"].min(), vmax=tc_kenneth["USA_WIND"].max()
+)
+norm_freddy1 = plt.Normalize(
+    vmin=tc_freddy1["USA_WIND"].min(), vmax=tc_freddy1["USA_WIND"].max()
+)
+norm_freddy2 = plt.Normalize(
+    vmin=tc_freddy2["USA_WIND"].min(), vmax=tc_freddy2["USA_WIND"].max()
+)
 
 # Plot grey track lines for each cyclone
 for tc in [tc_idai, tc_kenneth, tc_freddy1, tc_freddy2]:
     ax.plot(
-        tc.geometry.x, 
-        tc.geometry.y, 
-        color="grey",  
+        tc.geometry.x,
+        tc.geometry.y,
+        color="grey",
         linewidth=1,  # Adjust line thickness
         alpha=0.7,  # Make it slightly transparent
         linestyle="-",
-        zorder=1
+        zorder=1,
     )
 
 # Plot TC tracks with different colors and sizes
-for tc, name, cmap, norm in zip([tc_idai, tc_kenneth, tc_freddy1, tc_freddy2], colors.keys(), [cmap_idai, cmap_kenneth, cmap_freddy1, cmap_freddy2], [norm_idai, norm_kenneth, norm_freddy1, norm_freddy2]):
+for tc, name, cmap, norm in zip(
+    [tc_idai, tc_kenneth, tc_freddy1, tc_freddy2],
+    colors.keys(),
+    [cmap_idai, cmap_kenneth, cmap_freddy1, cmap_freddy2],
+    [norm_idai, norm_kenneth, norm_freddy1, norm_freddy2],
+):
     sc = ax.scatter(
-        tc.geometry.x, 
-        tc.geometry.y, 
+        tc.geometry.x,
+        tc.geometry.y,
         s=tc["size"],  # Size based on wind speed
         c=tc["USA_WIND"],  # Color based on wind speed
-        cmap=cmap, 
+        cmap=cmap,
         norm=norm,
         label=name,  # Add to legend
         edgecolor="black",
         alpha=0.7,
-        zorder=2
+        zorder=2,
     )
 
 # Add Google Maps-style basemap (add zoom=10, )
-ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=tc_idai.crs, attribution=False)
+ctx.add_basemap(
+    ax,
+    source=ctx.providers.Esri.WorldImagery,
+    zoom=7,
+    crs=tc_idai.crs,
+    attribution=False,
+)
 
 # Load the world shapefile (update the path to the downloaded shapefile)
 world_shapefile = "C:/Code/processing/naturalearthdata/ne_50m_admin_0_countries.shp"
@@ -125,11 +157,38 @@ handles = [
 ]
 
 # Manually create legend for windspeed categories (size categories)
-size_labels = ['0-50 km/h', '50-100 km/h', '>100 km/h']
+size_labels = ["0-50 km/h", "50-100 km/h", ">100 km/h"]
 size_handles = [
-    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', markeredgecolor='black', markersize=5, label=size_labels[0]),
-    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', markeredgecolor='black',markersize=7.5, label=size_labels[1]),
-    mlines.Line2D([], [], marker='o', color='w', markerfacecolor='white', markeredgecolor='black',markersize=10, label=size_labels[2])
+    mlines.Line2D(
+        [],
+        [],
+        marker="o",
+        color="w",
+        markerfacecolor="white",
+        markeredgecolor="black",
+        markersize=5,
+        label=size_labels[0],
+    ),
+    mlines.Line2D(
+        [],
+        [],
+        marker="o",
+        color="w",
+        markerfacecolor="white",
+        markeredgecolor="black",
+        markersize=7.5,
+        label=size_labels[1],
+    ),
+    mlines.Line2D(
+        [],
+        [],
+        marker="o",
+        color="w",
+        markerfacecolor="white",
+        markeredgecolor="black",
+        markersize=10,
+        label=size_labels[2],
+    ),
 ]
 
 # Add both legend entries to the plot
