@@ -4,7 +4,7 @@ setup_config:
   storecumprcp: 1 #Store the cumulative precip
   
 setup_grid_from_region:
-  res: 60                     # model resolution
+  res: 30                     # model resolution
   crs: utm                     # model CRS (must be UTM zone)
   rotated: False               # allow a rotated grid
 

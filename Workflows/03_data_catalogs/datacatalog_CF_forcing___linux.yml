@@ -120,6 +120,38 @@ era5_hourly_CF-8_Kenneth:
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value -8%
   crs: 4326
+era5_hourly_CF-9_EtaIota:
+  data_type: RasterDataset
+  provider: netcdf
+  path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_EtaIota.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  crs: 4326  
+era5_hourly_CF-9_Iota:
+  data_type: RasterDataset
+  provider: netcdf
+  path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_Iota.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  crs: 4326
 era5_hourly_zarr_CF-7_Idai:
   data_type: RasterDataset
   path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-7_Idai.zarr

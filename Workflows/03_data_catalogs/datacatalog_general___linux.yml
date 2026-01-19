@@ -224,7 +224,7 @@ chirps_global_daily_v2.0:
   crs: 4326
 copdem30:
   data_type: RasterDataset
-  path: wflow_global/hydromt/topography/copdem/copdem.vrt
+  path: 11210471-001-compass/01_Data/copdem/copdem30.vrt
   driver: raster
   driver_kwargs:
     chunks:
