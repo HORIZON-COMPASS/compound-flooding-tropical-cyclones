@@ -8,7 +8,7 @@ authors = [
     'Doris Vertegaal <doris.Vertegaal@deltares.nl>',
 ]
 channels = ["conda-forge","bioconda", "bioconda"]
-platforms = ["win-64","linux-64"]
+platforms = ["win-64"]
 readme = "README.md"
 license = "MIT"
 license-file = "LICENSE"
@@ -30,6 +30,7 @@ python = "3.11.*"
 ffmpeg = ">=7.0.0" 
 cartopy = ">=0.20.0" 
 matplotlib = ">=3.8.4,<3.9" 
+cdsapi = "*"
 
 [feature.fiat.dependencies]
 gdal = "*"
@@ -102,3 +103,4 @@ compass-fiat = { features = ["py311", "fiat"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
 compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
+compass-dataviz = { features = ["py311", "dataviz"]}
