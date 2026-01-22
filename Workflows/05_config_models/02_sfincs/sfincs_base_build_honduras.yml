@@ -10,7 +10,7 @@ setup_grid_from_region:
 
 setup_dep:
   datasets_dep:
-  - elevtn: copdem30        # 1st elevation dataset
+  - elevtn: fabdem_n10w080        # 1st elevation dataset
     zmin: 0.001                # only use where values > 0.001
 
 setup_mask_active:
@@ -30,7 +30,7 @@ setup_mask_bounds:
 
 setup_subgrid:
   datasets_dep:
-  - elevtn: copdem30       
+  - elevtn: fabdem_n10w080       
     zmin: 0.001              
   datasets_rgh:
   - lulc: vito  

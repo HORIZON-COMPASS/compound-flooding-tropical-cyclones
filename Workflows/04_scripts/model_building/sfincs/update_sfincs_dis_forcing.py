@@ -13,7 +13,7 @@ if "snakemake" in locals():
     sfincs_model_folder   = snakemake.params.dir_run_with_forcing
     wflow_root            = snakemake.params.wflow_root_forcing
     data_cats             = snakemake.params.data_cats
-    # wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
+    wflow_base            = snakemake.params.wflow_base
 else:
     curdir              = '../../../'
     region              = "sofala"
@@ -25,6 +25,7 @@ else:
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
     wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_base          = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
     sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
     data_cats           = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
@@ -32,10 +33,21 @@ else:
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
-    # wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
 
 #%%
-#%%
+
+# Read config rile from sfincs model with coastal and meteo forcing
+inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
+config = inp.to_dict()
+
+# Write dis file to sfincs event model folder
+reftime_object = config["tref"]
+
+# Read the original wflow gauge order to match that of sfincs
+mod_ini = WflowModel(root=join(wflow_base), mode="r+", config_fn=join(wflow_base, "wflow_sbm.toml"))
+q_locs = mod_ini.geoms["gauges_locs"]
+
+# Read model output (without removing bankfull discharge)
 mod = WflowModel(
     root=join(wflow_root, 'events'),
     data_libs=data_cats,
@@ -44,21 +56,15 @@ mod = WflowModel(
 )
 mod.read()
 
-# Read config rile from sfincs model with coastal and meteo forcing
-inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
-config = inp.to_dict()
-
-
-# Write dis file to sfincs event model folder
-reftime_object = config["tref"]
 df = mod.results['netcdf']['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
+
+df = df[q_locs['index'].astype(str).values] # adjust gauge order to match the gauge location in the sfincs.src file
 df.to_csv(
     join(sfincs_model_folder, "sfincs.dis"),
     sep=" ",
     header=False,
 )
-
 
 config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})

@@ -1716,48 +1716,6 @@ gswo_v2019:
     paper_ref: Pekel et al. (2016)
     source_url: https://global-surface-water.appspot.com/download
     source_version: v1_1_2019
-gtsm_reanalysis_waterlevel_hourly:
-  data_type: GeoDataset
-  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_hourly_{year}_{month:02d}_v2.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-    paper_doi: 10.3389/fmars.2020.00263
-    paper_ref: Muis at al (2020)
-    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.a6d42d60
-    source_version: v2
-  crs: 4326
-gtsm_codec_reanalysis_{freq}_v1:
-  crs: 4326
-  data_type: GeoDataset
-  driver: netcdf
-  kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  meta:
-    category: ocean
-    paper_doi: 
-    paper_ref: 
-    source_license: 
-    source_url: 
-    source_version: v2
-  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v2.nc
-  placeholders:
-    freq: [10min, hourly, dailymax]
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
 guf_bld_2012:
   data_type: RasterDataset
   path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
