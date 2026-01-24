@@ -3,24 +3,19 @@
 import os
 from os.path import join
 import yaml
-import itertools
 import gc
-import xarray as xr
 import pandas as pd
 import numpy as np
 import platform
 import gc
-
-from hydromt_sfincs import SfincsModel, utils
+from hydromt_sfincs import SfincsModel
 from hydromt import DataCatalog
-
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import cartopy.crs as ccrs
 from matplotlib.patches import Patch
 import matplotlib.ticker as mticker
 import matplotlib.dates as mdates
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.colors import LinearSegmentedColormap
 from shapely.geometry import box
 from rasterio.features import shapes
@@ -659,6 +654,9 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
 
 
 def plot_driver_combination_absolute(sfincs_models, fiat_models):
+    # Define conversion factor from 2010 euros to 2019 USD
+    usd_2010_to_2019 = 1.172 # Convert US-Dollars (2010) to US-Dollars (2019) - annual averages: 255.657 / 218.056 (https://www.bls.gov/cpi/tables/supplemental-files/)
+
     medium_runs = [
         {'rain': 0, 'wind': 0,  'SLR': 0},       # Factual
         {'rain': -8, 'wind': 0,  'SLR': 0},      # Rain only
@@ -681,9 +679,10 @@ def plot_driver_combination_absolute(sfincs_models, fiat_models):
             return {
                 'extent': float(sf['sfincs_results'].get("flood_extent_km2", 0)),
                 'volume': float(sf['sfincs_results'].get("flood_volume_m3", 0) / 1e6),  # M m³
-                'damage': float(fiat['fiat_results'].get("total_damage", 0).sum() / 1e6)  # M USD
+                'damage': float(fiat['fiat_results'].get("total_damage", 0).sum()/1e6 * usd_2010_to_2019),  # M USD
             }
 
+        # Get medium values
         medium_vals = get_abs_vals(medium_sf, medium_fiat)
 
         if not is_factual:
@@ -772,109 +771,6 @@ def plot_driver_combination_absolute(sfincs_models, fiat_models):
     plt.savefig("../figures/f05_abs.png", dpi=300, bbox_inches="tight")
     plt.savefig("../figures/f05_abs.pdf", dpi=300, bbox_inches="tight")
     plt.close()
-
-
-# def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
-    import pandas as pd
-    import matplotlib.pyplot as plt
-
-    usd_2010_to_2019 = 1.172
-    plot_data = []
-
-    # Define the scenarios you want in order
-    medium_runs = [
-        {'rain': 0, 'wind': 0,  'SLR': 0},       # Factual
-        {'rain': -8, 'wind': 0,  'SLR': 0},      # Rain only
-        {'rain': 0,  'wind': -5, 'SLR': -0.1},   # SLR & Wind
-        {'rain': -8, 'wind': -5, 'SLR': -0.1},   # All combined
-    ]
-    scenario_labels = ["Factual", "Rain", "SLR & Wind", "All"]
-
-    # Helper to extract absolute values
-    def get_vals(sf, fiat):
-        return {
-            'extent': float(sf['sfincs_results'].get("flood_extent_km2", 0)),
-            'volume': float(sf['sfincs_results'].get("flood_volume_m3", 0)/1e6),  # million m³
-            'damage': float(fiat['fiat_results'].get("total_damage", 0).sum()/1e6 * usd_2010_to_2019)
-        }
-
-    for cf in medium_runs:
-        is_factual = all(v == 0 for v in cf.values())
-        # Find medium run
-        medium_sf = next(sf for sf in sfincs_models if all(sf['CF_info'].get(k, 0) == v for k, v in cf.items()))
-        medium_fiat = next(f for f in fiat_models if f['model_name'] == medium_sf['model_name'])
-        medium_vals = get_vals(medium_sf, medium_fiat)
-
-        # Default low/high
-        low_vals = high_vals = None
-
-        if not is_factual:
-            # Identify drivers
-            driver_keys = [k for k, v in cf.items() if v != 0]
-
-            # Construct low/high CF dicts
-            low_cf = {k: 0 for k in ['rain', 'wind', 'SLR']}
-            high_cf = {k: 0 for k in ['rain', 'wind', 'SLR']}
-            for k in driver_keys:
-                if k == 'rain':
-                    low_cf[k], high_cf[k] = -16, -4
-                elif k == 'wind':
-                    low_cf[k], high_cf[k] = -10, -1
-                elif k == 'SLR':
-                    low_cf[k], high_cf[k] = -0.15, -0.05
-
-            # Find low/high runs
-            low_sf = next(sf for sf in sfincs_models if all(sf['CF_info'].get(k, 0) == v for k, v in low_cf.items()))
-            high_sf = next(sf for sf in sfincs_models if all(sf['CF_info'].get(k, 0) == v for k, v in high_cf.items()))
-            low_fiat = next(f for f in fiat_models if f['model_name'] == low_sf['model_name'])
-            high_fiat = next(f for f in fiat_models if f['model_name'] == high_sf['model_name'])
-
-            low_vals = get_vals(low_sf, low_fiat)
-            high_vals = get_vals(high_sf, high_fiat)
-
-        plot_data.append({
-            'medium': medium_vals,
-            'low': low_vals,
-            'high': high_vals,
-            'is_factual': is_factual
-        })
-
-    # --- Build table rows ---
-    table_rows = []
-    for d in plot_data:
-        row = []
-        for metric in ['volume', 'extent', 'damage']:
-            med = d['medium'][metric]
-            if d['low'] and d['high']:
-                low = min(d['low'][metric], d['high'][metric])
-                high = max(d['low'][metric], d['high'][metric])
-                row.append(f"{med:.0f} ({low:.0f} - {high:.0f})")
-            else:
-                row.append(f"{med:.0f}")
-        # For relative %, just show medium (if available)
-        for metric in ['volume', 'extent', 'damage']:
-            val = d['medium'][metric]  # replace with relative if you want
-            row.append("-")  # placeholder for Δ%
-        table_rows.append(row)
-
-    # --- Plot table ---
-    fig, ax = plt.subplots(figsize=(13, 0.7 + 0.45 * len(table_rows)))
-    ax.axis("off")
-    table = ax.table(
-        cellText=table_rows,
-        rowLabels=scenario_labels,
-        colLabels=["Flood Volume [10⁶ m³]", "Flood Extent [km²]", "Damage [10⁶ USD]",
-                   "Volume Δ [%]", "Extent Δ [%]", "Damage Δ [%]"],
-        cellLoc='center',
-        rowLoc='center',
-        loc='center'
-    )
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1.15, 1.4)
-    plt.tight_layout()
-    fig.savefig("../figures/TS2.png", dpi=300, bbox_inches="tight")
-    print("✅ Table saved as 'TS2.png'")
 
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
@@ -1000,13 +896,13 @@ def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
 
 def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
                            start="2019-03-14", end="2019-03-16",
-                           start_coast="2019-03-14 12:00:00", end_coast="2019-03-15 06:00:00",
+                           start_coast="2019-03-14 16:00:00", end_coast="2019-03-15 02:00:00",
                            start_dis="2019-03-17", end_dis="2019-03-22"):
     # Define drivers
     drivers = [
-        {"title": "SLR", "key": "SLR", "values": [-0.15, -0.1, -0.05]},
-        {"title": "Wind", "key": "wind", "values": [-10, -5, -1]},
-        {"title": "Rain", "key": "rain", "values": [-16, -8, -4]}
+        {"title": "SLR", "key": "SLR", "values": [-0.05, -0.1, -0.15]},
+        {"title": "Wind", "key": "wind", "values": [-1, -5, -10]},
+        {"title": "Rain", "key": "rain", "values": [-4, -8, -16]}
     ]
 
     # Colors for CF low, medium, high (same across all drivers)
@@ -1060,9 +956,10 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
 
         ax.legend(fontsize=8, loc='upper right')
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %Hh'))
+        ax.set_ylim(2,3.5)
         ax.tick_params(labelsize=9)
         ax.text(0.02, 0.9, f"({chr(97+i)})", transform=ax.transAxes, fontsize=10, fontweight="bold")
-
+            
     # -------------------
     # Plot Rain: discharge and precipitation
     rain_drv = drivers[2]
@@ -1083,7 +980,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
         ax_dis.plot(t_dis, dis, color=cf_colors[idx], linewidth=1.5, label=f"{rain_drv['title']} {v} %")
 
     ax_dis.legend(fontsize=8, loc='upper right')
-    ax_dis.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+    ax_dis.xaxis.set_major_formatter(mdates.DateFormatter('%d %Hh'))
     ax_dis.tick_params(labelsize=9)
     ax_dis.text(0.02, 0.9, "(c)", transform=ax_dis.transAxes, fontsize=10, fontweight="bold")
 
@@ -1091,7 +988,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
     ax_prec = axs[3]
     ax_prec.set_title(f"CF {rain_drv['title']}")
     ax_prec.set_ylabel("Accum. precipitation [mm/h]")
-    ax_prec.set_xlabel("Day in March 2019")
+    ax_prec.set_xlabel("Day and hour in March 2019")
     ax_prec.grid(True, linestyle="--", alpha=0.6)
 
     prec_factual = model_f['sfincs_model'].forcing['precip_2d'].sum(dim=['x','y']).sel(time=slice(start, end))
@@ -1106,7 +1003,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
 
     ax_prec.legend(fontsize=8, loc='upper right')
     ax_prec.tick_params(labelsize=9)
-    ax_prec.xaxis.set_major_formatter(mdates.DateFormatter('%d'))
+    ax_prec.xaxis.set_major_formatter(mdates.DateFormatter('%d %Hh'))
     ax_prec.text(0.02, 0.9, "(d)", transform=ax_prec.transAxes, fontsize=10, fontweight="bold")
 
     # -------------------
@@ -1161,18 +1058,33 @@ fiat_models = calculate_damage_differences(fiat_models)
 #%%
 # PLOTTING for paper
 # Figure 4
-plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
 # Figure 5
-plot_driver_combination_volume_extent_damage(models, fiat_models)
+# plot_driver_combination_volume_extent_damage(models, fiat_models)
 
 # Figure 5 - adapted for absolute values
-plot_driver_combination_absolute(models, fiat_models)
+# plot_driver_combination_absolute(models, fiat_models)
 
 # Table 2 & S2
-table_abs_and_rel_vol_ext_dam(models, fiat_models)
+# table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
-# # Figure S11
+# # Figure S12
 plot_cf_timeseries_all(models)
 
+
+
+# %%
+# Maximum flood difference for different scenarios
+rain_low = models[4]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+rain_med = models[5]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+rain_high = models[6]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+
+slrwind_low = models[13]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+slrwind_med = models[14]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+slrwind_high = models[15]['sfincs_results']['hmax_diff'].quantile(0.99).round(1).item()
+
+print("99th percentile of maximum flood depth difference (hmax_diff) for different scenarios:")
+print(f"Rain low/med/high: {rain_low} / {rain_med} / {rain_high} m")
+print(f"SLR & Wind low/med/high: {slrwind_low} / {slrwind_med} / {slrwind_high} m")
 # %%
