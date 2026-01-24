@@ -201,71 +201,6 @@ glofas_ds_v31["uparea"] = glofas_uparea_interp_v31
 
 
 
-# %% ##############################################################
-##################### SELECT GLOFAS GRID CELLS ####################
-###################################################################
-def select_glofas_stations(ds, gdf_sfincs, start_dt, end_dt, buffer_m=2000, min_dist_m=10000, max_n=None):
-    # 1. Sum discharge over event
-    da_event = ds['discharge'].sel(time=slice(start_dt, end_dt))
-    event_total = da_event.sum(dim="time").values  # <-- make sure it's an array
-
-    # 2. Flatten to 2D arrays
-    lat_grid, lon_grid = np.meshgrid(ds.latitude.values, ds.longitude.values, indexing="ij")
-    uparea = ds.uparea.values
-    event_discharge = event_total.ravel()
-
-    df = pd.DataFrame({
-        "latitude": lat_grid.ravel(),
-        "longitude": lon_grid.ravel(),
-        "uparea": uparea.ravel(),
-        "event_discharge": event_discharge
-    }).dropna(subset=["uparea", "event_discharge"])
-
-    gdf = gpd.GeoDataFrame(df, geometry=[Point(xy) for xy in zip(df["longitude"], df["latitude"])], crs="EPSG:4326")
-
-    # 3. Reproject and apply buffer
-    gdf_utm = gdf.to_crs("EPSG:32736")
-    gdf_sfincs_utm = gdf_sfincs.to_crs("EPSG:32736")
-    sfincs_boundary = gdf_sfincs_utm.unary_union.boundary
-    gdf_utm["dist_to_sfincs_m"] = gdf_utm.geometry.distance(sfincs_boundary)
-    gdf_near = gdf_utm[(gdf_utm["dist_to_sfincs_m"] <= buffer_m) & (~gdf_utm.within(gdf_sfincs_utm.unary_union))]
-
-    # 4. Sort by event discharge & uparea
-    gdf_near = gdf_near.sort_values(["event_discharge", "uparea"], ascending=[False, False])
-
-    # 5. Select top 5 ensuring min_dist_m between cells
-    selected = []
-    for idx, row in gdf_near.iterrows():
-        geom = row.geometry
-        too_close = False
-        for sel in selected:
-            if geom.distance(sel.geometry) < min_dist_m:
-                too_close = True
-                break
-        if not too_close:
-            selected.append(row)
-        if max_n is not None and len(selected) >= max_n:
-            break
-
-    gdf_top5 = gpd.GeoDataFrame(selected, crs=gdf_near.crs)
-
-    # Return in WGS84
-    return gdf_top5.to_crs("EPSG:4326")
-
-
-gdf_top5_v40 = select_glofas_stations(glofas_ds_v40, gdf_sfincs, start_dt, end_dt, buffer_m=5000, max_n=5)
-gdf_top5_v31 = select_glofas_stations(glofas_ds_v31, gdf_sfincs, start_dt, end_dt, buffer_m=10000, max_n=20)
-
-# Export if needed
-# gdf_top5_v40.to_file("c:/Code/Paper_1/QGIS/select_glofas_high_discharge_v40.geojson", driver="GeoJSON")
-# gdf_top5_v31.to_file("c:/Code/Paper_1/QGIS/select_glofas_high_discharge_v31.geojson", driver="GeoJSON")
-
-print("V40 Top 5:")
-print(gdf_top5_v40[["latitude", "longitude", "uparea", "event_discharge", "dist_to_sfincs_m"]])
-print("V31 Top 5:")
-print(gdf_top5_v31[["latitude", "longitude", "uparea", "event_discharge", "dist_to_sfincs_m"]])
-
-
 # %%
 print("Selecting discharge from wflow and add coordinates...")
 gauges = mod_ini.geoms["gauges_locs"]
@@ -364,7 +299,7 @@ Q_wflow_event_filt_combined = combine_by_cluster(Q_wflow_event_filtered, gdf_wfl
 
 gdf_rep = (gdf_wflow_gauges[gdf_wflow_gauges.Q_gauges_locs == gdf_wflow_gauges.rep_station].drop_duplicates("cluster"))
 
-gdf_rep = gdf_rep.head(3)
+gdf_rep = gdf_rep.head(2)
 # gdf_rep.to_file("C:/Code/Paper_1/QGIS/wflow_filt_combined_gauges_v3.geojson", driver="GeoJSON")
 
 # Only select the top three combined gauges
@@ -372,117 +307,60 @@ Q_wflow_30yr_filt_combined = Q_wflow_30yr_filt_combined.sel(Q_gauges_locs=gdf_re
 Q_wflow_event_filt_combined = Q_wflow_event_filt_combined.sel(Q_gauges_locs=gdf_rep.head(3).rep_station.values)
 
 
-#%%
-print("Selecting GloFAS station closest wflow selected gauges locations...")
-# Extract gauge IDs
-# Take the first time step just to get coordinates
-lons = Q_wflow_30yr_filt_combined.isel(time=0).lon.values
-lats = Q_wflow_30yr_filt_combined.isel(time=0).lat.values
-gauge_ids = Q_wflow_30yr_filt_combined.Q_gauges_locs.values
-
-gdf_wflow_top3 = gpd.GeoDataFrame(
-    {"Q_gauges_locs": gauge_ids},
-    geometry=[Point(x, y) for x, y in zip(lons, lats)],
-    crs="EPSG:4326"
-)
-
-# Reproject both to metric CRS for distance calculations
-gdf_top5_v40_utm = gdf_top5_v40.to_crs("EPSG:32736")
-gdf_top5_v31_utm = gdf_top5_v31.to_crs("EPSG:32736")
-gdf_wflow_top3_utm = gdf_wflow_top3.to_crs("EPSG:32736")
-
-#### v4.0 ####
-# For each WFLOW gauge, find the closest GloFAS gauge
-closest_indices = []
-closest_gauge_ids = []
-
-for wflow_geom, gauge_id in zip(gdf_wflow_top3_utm.geometry, gdf_wflow_top3_utm.Q_gauges_locs):
-    distances = gdf_top5_v40_utm.geometry.distance(wflow_geom)
-    closest_idx = distances.idxmin()           # index of closest GloFAS cell
-    closest_indices.append(closest_idx)
-    closest_gauge_ids.append(gauge_id)         # assign the WFLOW gauge ID
-
-# Keep only unique GloFAS cells (if multiple WFLOW gauges map to same cell, keep first)
-unique_idx, unique_pos = np.unique(closest_indices, return_index=True)
-gdf_closest = gdf_top5_v40.loc[unique_idx].copy()
-gdf_closest["Q_gauges_locs"] = np.array(closest_gauge_ids)[unique_pos]
-
-# Compute min distance for info
-gdf_closest_utm = gdf_closest.to_crs("EPSG:32736")
-gdf_closest["min_dist_to_wflow_m"] = [
-    min([geom.distance(wflow_geom) for wflow_geom in gdf_wflow_top3_utm.geometry])
-    for geom in gdf_closest_utm.geometry
-]
-
-# Return in WGS84
-gdf_closest_v40 = gdf_closest.to_crs("EPSG:4326")
-
-print(gdf_closest_v40[["latitude", "longitude", "uparea", "event_discharge", "min_dist_to_wflow_m"]])
-
-# gdf_closest.to_file("C:/Code/Paper_1/QGIS/glofas_filt_combined_gauges.geojson", driver="GeoJSON")
-
-
-#### v3.1 ####
-# For each WFLOW gauge, find the closest GloFAS gauge
-closest_indices = []
-closest_gauge_ids = []
-
-for wflow_geom, gauge_id in zip(gdf_wflow_top3_utm.geometry, gdf_wflow_top3_utm.Q_gauges_locs):
-    distances = gdf_top5_v31_utm.geometry.distance(wflow_geom)
-    closest_idx = distances.idxmin()           # index of closest GloFAS cell
-    closest_indices.append(closest_idx)
-    closest_gauge_ids.append(gauge_id)         # assign the WFLOW gauge ID
-
-# Keep only unique GloFAS cells (if multiple WFLOW gauges map to same cell, keep first)
-unique_idx, unique_pos = np.unique(closest_indices, return_index=True)
-gdf_closest = gdf_top5_v31.loc[unique_idx].copy()
-gdf_closest["Q_gauges_locs"] = np.array(closest_gauge_ids)[unique_pos]
-
-# Compute min distance for info
-gdf_closest_utm = gdf_closest.to_crs("EPSG:32736")
-gdf_closest["min_dist_to_wflow_m"] = [
-    min([geom.distance(wflow_geom) for wflow_geom in gdf_wflow_top3_utm.geometry])
-    for geom in gdf_closest_utm.geometry
-]
-
-# Return in WGS84
-gdf_closest_v31 = gdf_closest.to_crs("EPSG:4326")
-
-print(gdf_closest_v31[["latitude", "longitude", "uparea", "event_discharge", "min_dist_to_wflow_m"]])
 
 #%%
-# Select the top three GloFAS gauges/grid cells near the sfincs domain with the largest upstream area
-#### v4.0 ####
-glofas_v40_sel_list = []
+print("Selecting GloFAS stations closest to specified gauges...")
+gauges_v4 = pd.DataFrame({
+    "Q_gauges_locs": ["1", "2"],
+    "latitude": [-19.9318, -19.2229],
+    "longitude": [34.2329, 34.5354],
+    "uparea": [2.674231e10, 2.5425527e10],
+}).set_index("Q_gauges_locs")
 
-for lat, lon in zip(gdf_closest_v40["latitude"], gdf_closest_v40["longitude"]):
-    sel_point = glofas_ds_v40.sel(latitude=lat, longitude=lon, method="nearest")
-    glofas_v40_sel_list.append(sel_point)
+discharge_sel_v4 = []
+uparea_sel_v4 = []
 
-# Concatenate along a new 'points' dimension and assign Q_gauges_locs from WFLOW
-glofas_v40_sel = xr.concat(glofas_v40_sel_list, dim="points")
-glofas_v40_sel = glofas_v40_sel.assign_coords(Q_gauges_locs=("points", gdf_closest_v40["Q_gauges_locs"].values))
-glofas_v40_sel = glofas_v40_sel.swap_dims({"points": "Q_gauges_locs"})
+for gauge, row in gauges_v4.iterrows():
+    ds_point = glofas_ds_v40.sel(latitude=row.latitude, longitude=row.longitude, method="nearest")
+    discharge_sel_v4.append(ds_point["discharge"])
+    uparea_sel_v4.append(ds_point["uparea"])
 
-##### v3.1 ####
-glofas_v31_sel_list = []
+glofas_ds_v40_sel = xr.Dataset(data_vars={"discharge": (("Q_gauges_locs", "time"), xr.concat(discharge_sel_v4, dim="Q_gauges_locs").data),
+                                          "uparea": (("Q_gauges_locs",), xr.concat(uparea_sel_v4, dim="Q_gauges_locs").data),},
+                                          coords={"Q_gauges_locs": gauges_v4.index.values, "time": glofas_ds_v40.time,
+                                                  "latitude": ("Q_gauges_locs", gauges_v4.latitude.values), 
+                                                  "longitude": ("Q_gauges_locs", gauges_v4.longitude.values)})
 
-for lat, lon in zip(gdf_closest_v31["latitude"], gdf_closest_v31["longitude"]):
-    sel_point = glofas_ds_v31.sel(latitude=lat, longitude=lon, method="nearest")
-    glofas_v31_sel_list.append(sel_point)
 
-# Concatenate along a new 'points' dimension and assign Q_gauges_locs from WFLOW
-glofas_v31_sel = xr.concat(glofas_v31_sel_list, dim="points")
-glofas_v31_sel = glofas_v31_sel.assign_coords(Q_gauges_locs=("points", gdf_closest_v31["Q_gauges_locs"].values))
-glofas_v31_sel = glofas_v31_sel.swap_dims({"points": "Q_gauges_locs"})
+gauges_v31 = pd.DataFrame({
+    "Q_gauges_locs": ["1", "2", "3"],
+    "latitude": [-19.985, -19.143, -20.278],
+    "longitude": [34.24, 34.558, 34.544],
+    "uparea": [2.71818e10, 2.5136839e10, 2.8109243e9],
+}).set_index("Q_gauges_locs")
+
+discharge_sel_v31 = []
+uparea_sel_v31 = []
+
+for gauge, row in gauges_v31.iterrows():
+    ds_point = glofas_ds_v31.sel(latitude=row.latitude, longitude=row.longitude, method="nearest")
+    discharge_sel_v31.append(ds_point["discharge"])
+    uparea_sel_v31.append(ds_point["uparea"])
+
+glofas_ds_v31_sel = xr.Dataset(data_vars={"discharge": (("Q_gauges_locs", "time"), xr.concat(discharge_sel_v31, dim="Q_gauges_locs").data),
+                                          "uparea": (("Q_gauges_locs",), xr.concat([ua.squeeze() for ua in uparea_sel_v31], dim="Q_gauges_locs").data),},
+                                          coords={"Q_gauges_locs": gauges_v31.index.values, "time": glofas_ds_v31.time,
+                                                  "latitude": ("Q_gauges_locs", gauges_v31.latitude.values), 
+                                                  "longitude": ("Q_gauges_locs", gauges_v31.longitude.values)})
 
 
 # Align time series
-Q_wflow_30yr_aligned, glofas_30yr_aligned_v40 = xr.align(Q_wflow_30yr_filt_combined, glofas_v40_sel, join="inner")
-Q_wflow_event_aligned, glofas_event_aligned_v40 = xr.align(Q_wflow_event_filt_combined, glofas_v40_sel, join="inner")
+Q_wflow_30yr_aligned, glofas_30yr_aligned_v40 = xr.align(Q_wflow_30yr_filt_combined, glofas_ds_v40_sel, join="inner")
+Q_wflow_event_aligned, glofas_event_aligned_v40 = xr.align(Q_wflow_event_filt_combined, glofas_ds_v40_sel, join="inner")
 
-Q_wflow_30yr_aligned, glofas_30yr_aligned_v31 = xr.align(Q_wflow_30yr_filt_combined, glofas_v31_sel, join="inner")
-Q_wflow_event_aligned, glofas_event_aligned_v31 = xr.align(Q_wflow_event_filt_combined, glofas_v31_sel, join="inner")
+Q_wflow_30yr_aligned, glofas_30yr_aligned_v31 = xr.align(Q_wflow_30yr_filt_combined, glofas_ds_v31_sel, join="inner")
+Q_wflow_event_aligned, glofas_event_aligned_v31 = xr.align(Q_wflow_event_filt_combined, glofas_ds_v31_sel, join="inner")
+
 
 #%%
 # Plot all gauges time series for the event
@@ -498,7 +376,7 @@ df_stats = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflo
 n = len(gauge_ids)
 ncols = 2
 nrows = int(np.ceil(n / ncols))
-fig, axes = plt.subplots(nrows, ncols, figsize=(12, nrows*3), sharex=True, sharey=False)
+fig, axes = plt.subplots(nrows, ncols, figsize=(10, nrows*3), sharex=True, sharey=False)
 axes = axes.flatten()
 
 letters = list(string.ascii_lowercase)
@@ -529,13 +407,14 @@ for i, g in enumerate(gauge_ids):
     df_stats.loc[i] = [g, total_Q, total_G, total_Q / total_G * 100]
     
     # Plot styling
-    ax.set_title(f"Gauge {g}")
+    axes[0].set_title(f"Buzi river (gauge 1)")
+    axes[1].set_title(f"Pungwe river (gauge 2)")
     ax.set_ylabel("Discharge [m³/s]")
     ax.grid(alpha=0.3)
     if i == 0:
         ax.legend()
     # Letter annotation
-    ax.text(0.02, 1.08, f'({letters[i]})', transform=ax.transAxes,
+    ax.text(0.0, 1.1, f'({letters[i]})', transform=ax.transAxes,
             fontsize=12, fontweight='bold', va='top', ha='left')
     
     # Formatting x-axis as days in 2019
@@ -544,7 +423,7 @@ for i, g in enumerate(gauge_ids):
     ax.tick_params(axis='x')
     ax.set_xlabel(" Day in March 2019")
 
-fig.suptitle("Discharge Comparison at Gauges for GloFAS v4.0", fontsize=15, fontweight='bold')
+fig.suptitle("Discharge Comparison at Gauges for GloFAS v4.0", fontsize=13, fontweight='bold')
 
 # Hide empty axes
 for j in range(i+1, len(axes)):
@@ -642,13 +521,14 @@ print("Plotting time series comparison for all gauges...")
 gauge_ids = Q_wflow_event_aligned['Q_gauges_locs'].values
 
 # Prepare DataFrame to store stats
-df_stats = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]'])
+df_stats_31 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]'])
+df_stats_40 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]'])
 
 # Plotting setup
 n = len(gauge_ids)
 ncols = 2
 nrows = int(np.ceil(n / ncols))
-fig, axes = plt.subplots(nrows, ncols, figsize=(12, nrows*3), sharex=True, sharey=False)
+fig, axes = plt.subplots(nrows, ncols, figsize=(10, nrows*3), sharex=True, sharey=False)
 axes = axes.flatten()
 
 letters = list(string.ascii_lowercase)
@@ -658,34 +538,42 @@ for i, g in enumerate(gauge_ids):
     print(g)
     # Select timeseries
     wflow_ts = Q_wflow_event_aligned.sel(Q_gauges_locs=g, time=slice(start_dt, end_dt))
-    glofas_ts = glofas_event_aligned_v31.sel(Q_gauges_locs=g, time=slice(start_dt, end_dt))
+    glofas_ts_v40 = glofas_event_aligned_v40.sel(Q_gauges_locs=g, time=slice(start_dt, end_dt))
+    glofas_ts_v31 = glofas_event_aligned_v31.sel(Q_gauges_locs=g, time=slice(start_dt, end_dt))
     
     # Plot
-    ax.plot(wflow_ts.time, wflow_ts['Q'], label="WFLOW", lw=1.5)
-    ax.plot(glofas_ts.time, glofas_ts['discharge'], label="GloFAS", lw=1.5, alpha=0.7)
+    ax.plot(wflow_ts.time, wflow_ts['Q'], label="wflow", lw=1.5)
+    ax.plot(glofas_ts_v40.time, glofas_ts_v40['discharge'], label="GloFAS v4.0", lw=1.5, alpha=0.7)
+    ax.plot(glofas_ts_v31.time, glofas_ts_v31['discharge'], label="GloFAS v3.1", lw=1.5, alpha=0.7)
     
     # Time differences in seconds
     dt_wflow = np.diff(wflow_ts.time.values).astype("timedelta64[s]").astype(float)
     dt_wflow = np.append(dt_wflow, dt_wflow[-1])
     
-    dt_glofas = np.diff(glofas_ts.time.values).astype("timedelta64[s]").astype(float)
-    dt_glofas = np.append(dt_glofas, dt_glofas[-1])
+    dt_glofas_v40 = np.diff(glofas_ts_v40.time.values).astype("timedelta64[s]").astype(float)
+    dt_glofas_v40 = np.append(dt_glofas_v40, dt_glofas_v40[-1])
+    
+    dt_glofas_v31 = np.diff(glofas_ts_v31.time.values).astype("timedelta64[s]").astype(float)
+    dt_glofas_v31 = np.append(dt_glofas_v31, dt_glofas_v31[-1])
     
     # Total volume
     total_Q = (wflow_ts['Q'].values * dt_wflow).sum()
-    total_G = (glofas_ts['discharge'].values * dt_glofas).sum()
+    total_G_v40 = (glofas_ts_v40['discharge'].values * dt_glofas_v40).sum()
+    total_G_v31 = (glofas_ts_v31['discharge'].values * dt_glofas_v31).sum()
     
     # Save stats
-    df_stats.loc[i] = [g, total_Q, total_G, total_Q / total_G * 100]
+    df_stats_40.loc[i] = [g, total_Q, total_G_v40, total_Q / total_G_v40 * 100]
+    df_stats_31.loc[i] = [g, total_Q, total_G_v31, total_Q / total_G_v31 * 100]
     
     # Plot styling
-    ax.set_title(f"Gauge {g}")
+    axes[0].set_title(f"Buzi river (gauge 1)")
+    axes[1].set_title(f"Pungwe river (gauge 2)")
     ax.set_ylabel("Discharge [m³/s]")
     ax.grid(alpha=0.3)
     if i == 0:
         ax.legend()
     # Letter annotation
-    ax.text(0.02, 1.08, f'({letters[i]})', transform=ax.transAxes,
+    ax.text(0.0, 1.1, f'({letters[i]})', transform=ax.transAxes,
             fontsize=12, fontweight='bold', va='top', ha='left')
     
     # Formatting x-axis as days in 2019
@@ -694,7 +582,10 @@ for i, g in enumerate(gauge_ids):
     ax.tick_params(axis='x')
     ax.set_xlabel(" Day in March 2019")
 
-fig.suptitle("Discharge Comparison at Gauges for GloFAS v3.1", fontsize=15, fontweight='bold')
+axes[0].legend()
+
+fig.suptitle("Discharge Comparison at Gauges for GloFAS", fontsize=13, fontweight='bold')
+fig.savefig("../figures/fS5.png", dpi=300, bbox_inches="tight")
 
 # Hide empty axes
 for j in range(i+1, len(axes)):
@@ -703,11 +594,12 @@ for j in range(i+1, len(axes)):
 plt.tight_layout()
 plt.show()
 
-print(df_stats)
+print(df_stats_40)
+print(df_stats_31)
 
 
 
-#%%
+# %%
 # Compare historical 30 years of wflow run and GloFAS v3.1 data and calculate KGE
 print("Calculating KGE for 30-year comparison...")
 kge_all_v31 = skillstats.kge(
@@ -724,17 +616,70 @@ df_kge_v31 = pd.DataFrame({
 
 
 #%%
-# Plot function for gauges comparison of 30yr wflow and GloFAS v3.1 data 
-plot_gauges_comparison(gauges=["1", "2"], kge_all=kge_all_v31, glofas_ds=glofas_30yr_aligned_v31['discharge'])
+def plot_gauges_comparison_versions(gauges=["1", "2"], kge_all_v40=None, kge_all_v31=None, wflow_ds=Q_wflow_30yr_aligned['Q'], glofas_ds_v40=None, glofas_ds_v31=None):
+    # Prepare figure
+    fig, axes = plt.subplots(len(gauges), 1, figsize=(10, 6), sharex=True)
+    
+    if len(gauges) == 1:
+        axes = [axes]
+
+    for i, g in enumerate(gauges):
+        ax = axes[i]
+
+        # Compute gauge timeseries if needed
+        wflow_g = wflow_ds.sel(Q_gauges_locs=g).compute()
+        glofas_g_v40 = glofas_ds_v40.sel(Q_gauges_locs=g).compute()
+        glofas_g_v31 = glofas_ds_v31.sel(Q_gauges_locs=g).compute()
+
+        # Plot
+        ax.plot(wflow_g.time.values, wflow_g.values, label="wflow", lw=1.5, zorder=1)
+        ax.plot(glofas_g_v40.time.values, glofas_g_v40.values, label="GloFAS v4.0", lw=1.5, zorder=3)
+        ax.plot(glofas_g_v31.time.values, glofas_g_v31.values, label="GloFAS v3.1", lw=1.5, zorder=2)
+
+        # KGE value
+        if kge_all_v40 is not None and kge_all_v31 is not None:
+            kge_val_v40 = float(kge_all_v40["kge"].sel(Q_gauges_locs=g).compute().values)
+            kge_val_v31 = float(kge_all_v31["kge"].sel(Q_gauges_locs=g).compute().values)
+            title = f"Gauge {g} — KGE v4.0 = {kge_val_v40:.2f}, KGE v3.1 = {kge_val_v31:.2f}"
+        else:
+            title = f"Gauge {g}"
+        ax.set_title(title, fontsize=12)
+
+        # Label a/b
+        ax.text(-0.05, 1.05, f"({chr(97+i)})", transform=ax.transAxes,
+                fontsize=14, fontweight="bold")
+
+        ax.set_ylabel("Discharge [m³/s]")
+        ax.grid(alpha=0.3)
+    
+    axes[0].legend()
+
+    # X-axis as years
+    axes[-1].xaxis.set_major_locator(mdates.YearLocator(5))
+    axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+    axes[-1].set_xlabel("Year")
+
+    fig.tight_layout()
+    plt.show()
+
+# Usage
+plot_gauges_comparison_versions(gauges=["1", "2"], kge_all_v40=kge_all_v40, kge_all_v31=kge_all_v31, glofas_ds_v40=glofas_30yr_aligned_v40['discharge'], glofas_ds_v31=glofas_30yr_aligned_v31['discharge'])
 
 
-# %%
-# Overview DataFrame with KGE and event volume comparison
-print("Creating overview DataFrame with KGE and event volume comparison...")
-df_overview_glofas_v31 = df_kge_v31.copy(deep=True)
-df_overview_glofas_v31['wflow / glofas event discharge [%]'] = df_stats['wflow / GloFAS [%]']
-df_overview_glofas_v31['absolute difference [m³ * 1e8]'] = (df_stats['wflow [m³]'] - df_stats['GloFAS [m³]']) / 1e8
-df_overview_glofas_v31 = df_overview_glofas_v31.set_index('gauge')
+# #%%
+# # Plot function for gauges comparison of 30yr wflow and GloFAS v3.1 data 
+# plot_gauges_comparison(gauges=["1", "2"], kge_all=kge_all_v31, glofas_ds=glofas_30yr_aligned_v31['discharge'])
 
-df_overview_glofas_v31
+
+# # %%
+# # Overview DataFrame with KGE and event volume comparison
+# print("Creating overview DataFrame with KGE and event volume comparison...")
+# df_overview_glofas_v31 = df_kge_v31.copy(deep=True)
+# df_overview_glofas_v31['wflow / glofas event discharge [%]'] = df_stats['wflow / GloFAS [%]']
+# df_overview_glofas_v31['absolute difference [m³ * 1e8]'] = (df_stats['wflow [m³]'] - df_stats['GloFAS [m³]']) / 1e8
+# df_overview_glofas_v31 = df_overview_glofas_v31.set_index('gauge')
+
+# df_overview_glofas_v31
+# # %%
+
 # %%
