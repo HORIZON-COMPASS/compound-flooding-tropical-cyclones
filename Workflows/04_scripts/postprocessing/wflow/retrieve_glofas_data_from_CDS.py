@@ -3,7 +3,7 @@ import os
 import cdsapi
 import platform
 
-|#%% --------------------------------------------------
+#%% --------------------------------------------------
 # Settings
 bbox = [-17, 32, -21, 36]   # Mozambique region
 years = range(1988, 2020)
