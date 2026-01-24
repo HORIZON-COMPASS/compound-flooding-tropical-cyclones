@@ -332,6 +332,52 @@ gebco2024_MZB:
     source_version: 2024
     unit: m+MSL
   crs: 4326
+glofas_era5_v31:
+  data_type: RasterDataset
+  path: wflow_global/hydromt/hydro/glofas_era5/glofas_v31_{year}.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      time: 180
+      latitude: 150
+      longitude: 360
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    dis24: discharge
+  meta:
+    category: hydro
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.5194/essd-12-2043-2020
+    paper_ref: Harrigan et al. (2020)
+    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/cems-floods.pdf
+    source_url: https://doi.org/10.24381/cds.a4fdd6b9
+    source_version: v31
+  crs: 4326
+glofas_era5_v40:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/glofas_v4/glofas4_reanalysis_{year}.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      time: 180
+      latitude: 150
+      longitude: 360
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    dis24: discharge
+  meta:
+    category: hydro
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.5194/essd-12-2043-2020
+    paper_ref: Harrigan et al. (2020)
+    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/cems-floods.pdf
+    source_url: https://doi.org/10.24381/cds.a4fdd6b9
+    source_version: v4.0
+  crs: 4326
 grdc:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/hydro/grdc/GRDC_Stations.csv
