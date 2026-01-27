@@ -500,7 +500,8 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
         mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
         background_outside_box = background[~background.intersects(mask_box)] # removing errorneous lines outside model region
         background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
-        
+        background_outside_box.boundary.plot(ax=ax, color='#666666', linewidth=0.4, 
+                                             transform=ccrs.PlateCarree(), zorder=1)
         # Plot model region
         model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
 
@@ -721,6 +722,27 @@ def plot_driver_combination_absolute(sfincs_models, fiat_models):
 
         plot_data.append({'medium': medium_vals, 'yerr': yerr, 'is_factual': is_factual})
 
+    # === Build DataFrame of plotted values ===
+    rows = []
+    for label, d in zip(scenario_labels, plot_data):
+        row = {
+            "scenario": label,
+            "is_factual": d["is_factual"]
+        }
+
+        for k in ["extent", "volume", "damage"]:
+            row[f"{k}_medium"] = d["medium"][k]
+
+            if d["is_factual"] or d["yerr"][k] is None:
+                row[f"{k}_err_low"] = np.nan
+                row[f"{k}_err_high"] = np.nan
+            else:
+                row[f"{k}_err_low"]  = d["yerr"][k][0][0]
+                row[f"{k}_err_high"] = d["yerr"][k][1][0]
+
+        rows.append(row)
+
+    plot_df = pd.DataFrame(rows)
 
     # Plotting
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), dpi=300, sharex=True)
@@ -772,6 +794,8 @@ def plot_driver_combination_absolute(sfincs_models, fiat_models):
     plt.savefig("../figures/f05_abs.pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
+    # === Return plotted values ===
+    return plot_df
 
 def table_abs_and_rel_vol_ext_dam(sfincs_models, fiat_models):
     usd_2010_to_2019 = 1.172
@@ -1058,19 +1082,19 @@ fiat_models = calculate_damage_differences(fiat_models)
 #%%
 # PLOTTING for paper
 # Figure 4
-# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
 # Figure 5
 # plot_driver_combination_volume_extent_damage(models, fiat_models)
 
 # Figure 5 - adapted for absolute values
-# plot_driver_combination_absolute(models, fiat_models)
+# df_absolute_plotted_values = plot_driver_combination_absolute(models, fiat_models)
 
 # Table 2 & S2
 # table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # # Figure S12
-plot_cf_timeseries_all(models)
+# plot_cf_timeseries_all(models)
 
 
 
