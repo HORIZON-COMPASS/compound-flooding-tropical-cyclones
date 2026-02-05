@@ -9,23 +9,28 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from datetime import datetime
 from cht_cyclones.tropical_cyclone import TropicalCyclone
+import hydromt
 
 # Read snakemake values if run in workflow, 
 # otherwise use absolute values to test script
 if "snakemake" in locals():
     start_date = np.datetime64(snakemake.params.start_date) 
     end_date = np.datetime64(snakemake.params.end_date) 
-    tc_name = snakemake.wildcards.tc_name
-    CF_value = float(snakemake.wildcards.CF_value_wind)
-    CF_value_txt = snakemake.wildcards.CF_value_wind
-    output_CF_wind = os.path.abspath(snakemake.output.CF_wind)
+    tc_name = snakemake.params.tc_name
+    CF_value = float(snakemake.wildcards.CF_wind)
+    CF_value_txt = snakemake.wildcards.CF_wind
+    output_CF_wind = os.path.abspath(snakemake.output.path_CF_wind)
+    path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    root_dir = os.path.abspath(snakemake.params.root_dir)
 else:
     start_date = np.datetime64("2019-03-09") 
-    end_date = np.datetime64("2019-03-24") 
+    end_date = np.datetime64("2019-03-26") 
     tc_name = "Idai"
     CF_value = -10
     CF_value_txt = "-10"
-    output_CF_wind = f"p:/11210471-001-compass/01_Data/counterfactuals/wind/tc_{tc_name}_{CF_value_txt}.spw"
+    output_CF_wind = "p:/11210471-001-compass/01_Data/SPW_forcing_files"
+    path_data_cat = os.path.abspath("../../03_data_catalogs/datacatalog_general.yml")
+    root_dir = 'p:\\'
     
 #%%
 # extract TC year
@@ -116,6 +121,9 @@ if len(valid_times) > 0:
 else:
     print("No valid time values found in the dataset.")
 
+#%% Adjust the time to remove decimal seconds
+ds_tc['time'] = ds_tc['time'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+
 #%%
 #### CF calculations ####
 # Create counterfactual wind based on CF_value
@@ -125,7 +133,7 @@ ds_tc["usa_wind"] = ds_tc["usa_wind"] * ((100 + CF_value)/100)
 # The central pressure at each track position is increased by CF_value times 
 # the difference between central pressure and environmental/background pressure,
 # defined in cht-cyclones as self.background_pressure = 1012 Pa
-ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((100 - CF_value)/100) * (1012 - ds_tc["usa_pres"])
+ds_tc["usa_pres"] = ds_tc["usa_pres"] + ((-1 * CF_value)/100) * (1012 - ds_tc["usa_pres"])
 
 #%%
 # create spw file for this specific track
@@ -134,6 +142,37 @@ tc = create_track(ds_tc)
 #%%
 # export to spiderweb
 print('- Saving track...')
-tc.to_spiderweb(output_CF_wind)
+spw_file = os.path.join(output_CF_wind, f"tc_{tc_name}_CF{CF_value_txt}_{sid}_ext{extend_days+1}d.spw")
+tc.to_spiderweb(spw_file)
 
 del tc
+
+#%% Adding the new spw file to the data catalog
+# Loading the general data catalog & defining the spw handle
+datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
+spw_handle = f"spw_IBTrACS_CF{CF_value_txt}_{tc_name}"
+
+#%% Specifying the spw information for the data catalog entry
+adapter = hydromt.data_adapter.RasterDatasetAdapter(
+    path=os.path.abspath(spw_file),
+    meta={
+        "category": "meteo",
+        "notes": "IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method"
+    },
+    )
+
+#%% Add the spw file to the catalog and save
+if spw_handle not in datacatalog:
+    # Add new source if it doesn't exist
+    datacatalog.add_source(spw_handle, adapter)
+    print(f"Dataset '{spw_handle}' has been added to the catalog.")
+else:
+    # Update the existing source
+    datacatalog[spw_handle] = adapter
+    print(f"Dataset '{spw_handle}' has been updated in the catalog.")
+
+# Save the updated catalog
+datacatalog.to_yml(path_data_cat, root=root_dir)
+
+
+# %%

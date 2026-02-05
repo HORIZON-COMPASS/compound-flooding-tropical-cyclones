@@ -8,32 +8,36 @@ plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
 import xarray as xr
-import pandas as pd
-import geopandas as gpd
-import shutil
-from datetime import datetime, timedelta
-from hydromt import DataCatalog
-import numpy as np
+import hydromt
+import pyproj
 
 #%%
 if "snakemake" in locals():
-    dfm_res = float(snakemake.wildcards.dfm_res)
-    dxy_base = float(snakemake.params.dfm_dxy_base)
-    bathy = snakemake.wildcards.bathy
-    tidemodel = snakemake.wildcards.tidemodel
+    dfm_res         = float(snakemake.wildcards.dfm_res)
+    dxy_base        = float(snakemake.params.dfm_dxy_base)
+    bathy           = snakemake.wildcards.bathy
+    tidemodel       = snakemake.wildcards.tidemodel
     dir_output_main = os.path.abspath(snakemake.output.dir_model)
-    bbox_dfm = snakemake.params.dfm_bbox
-    path_data_cat = os.path.abspath(snakemake.params.data_cat)
+    bbox_dfm        = snakemake.params.dfm_bbox
+    path_data_cat   = snakemake.params.data_cat
+    CF_value        = float(snakemake.wildcards.CF_SLR)
+    CF_value_txt    = snakemake.wildcards.CF_SLR
 else:
     dfm_res_txt = "450"
     dfm_res = 450 # m
     dxy_base = 0.02 # degrees
     bathy = "gebco2024_MZB"
-    tidemodel = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}'
+    tidemodel = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    CF_value = 0
+    CF_value_txt = "0"
+    dir_output_main = f'p:/11210471-001-compass/02_Models/sofala/Idai/dfm/base_{dfm_res_txt}_{bathy}_{tidemodel}_CF{CF_value_txt}'
     bbox_dfm = "[32.3,42.5,-27.4,-9.5]"
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-
+    path_data_cat = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        ]
+    
 # Correct for the missing . in the snake that snakemake cannot read
 if tidemodel == "GTSMv41opendap":
     tidemodel = "GTSMv4.1_opendap"
@@ -46,7 +50,7 @@ else:
     pass
 #%%
 # Define hydromt datacatalog
-data_catalog = DataCatalog(data_libs = [path_data_cat])
+data_catalog = hydromt.data_catalog.DataCatalog(data_libs = path_data_cat)
 
 # needed to define wind_forcing and bathy paths
 #%%
@@ -191,6 +195,11 @@ ext_new = hcdfm.ExtModel()
 dfmt.interpolate_tide_to_bc(ext_new=ext_new, tidemodel=tidemodel, file_pli=poly_file, component_list=None)
 
 # Save new ext file
+ext_new.save(filepath=ext_new_path)
+
+#%% 
+# Add SLR using dfmt functionality
+dfmt.constant_to_bc(ext_new=ext_new, file_pli=poly_file, constant=CF_value)
 ext_new.save(filepath=ext_new_path)
 
 # Make the paths relative

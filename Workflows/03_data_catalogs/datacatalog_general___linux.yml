@@ -224,7 +224,7 @@ chirps_global_daily_v2.0:
   crs: 4326
 copdem30:
   data_type: RasterDataset
-  path: wflow_global/hydromt/topography/copdem/copdem.vrt
+  path: 11210471-001-compass/01_Data/copdem/copdem30.vrt
   driver: raster
   driver_kwargs:
     chunks:
@@ -884,11 +884,13 @@ esa_worldcover_2020_v100:
   crs: 4326
 esa_worldcover_mapping:
   data_type: DataFrame
-  provider: user
-  path: SFINCS_tutorial/02_hands-on/local_data/esa_worldcover_mapping.csv
+  path: 11210471-001-compass/01_Data/lulc/esa_worldcover_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
+  meta:
+    category: landuse
+    notes: Manning Roughness values for each ESA World Cover class
 fabdem:
   data_type: RasterDataset
   path: wflow_global/hydromt/topography/fabdem/fabdem.vrt
@@ -906,6 +908,24 @@ fabdem:
     source_license: CC BY-NC-SA 4.0
     source_url: https://data.bris.ac.uk/data/dataset/25wfy0f9ukoge2gs7a5mqpq2j7
     source_version: 1.0
+  crs: 4326
+fabdem_n10w080:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/fabdem/fabdem_N10W080.vrt
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    fabdem: elevtn
+  meta:
+    category: topography
+    paper_doi: CC BY-NC-SA 4.0
+    paper_ref: Hawker et al. (2022)
+    source_license: CC BY-NC-SA 4.0
+    source_url: https://data.bris.ac.uk/data/dataset/25wfy0f9ukoge2gs7a5mqpq2j7
+    source_version: 1.2
   crs: 4326
 gadm:
   data_type: GeoDataFrame
@@ -1756,7 +1776,7 @@ gtsm_codec_reanalysis:
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-gtsm_codec_reanalysis_{freq}_v2:
+gtsm_codec_reanalysis_{freq}_v3:
   crs: 4326
   data_type: GeoDataset
   driver: netcdf
@@ -1770,8 +1790,8 @@ gtsm_codec_reanalysis_{freq}_v2:
     paper_ref: 
     source_license: 
     source_url: 
-    source_version: v2
-  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v2.nc
+    source_version: v3
+  path: 11210471-001-compass/01_Data/GTSM-ERA5/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v3.nc
   placeholders:
     freq: [10min, hourly, dailymax]
   rename:
@@ -1793,28 +1813,21 @@ guf_bld_2012:
     source_license: https://www.dlr.de/eoc/en/PortalData/60/Resources/dokumente/guf/DLR-GUF_LicenseAgreement-and-OrderForm.pdf
     source_url: http://www.dlr.de/guf
   crs: 4326
-gtsm_codec_reanalysis_{freq}_v1:
-  crs: 4326
-  data_type: GeoDataset
-  driver: netcdf
-  kwargs:
+guf_bld_2012:
+  data_type: RasterDataset
+  path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
+  driver: raster
+  driver_kwargs:
     chunks:
-      stations: 10
-      time: -1
+      x: 1000
+      y: 1000
   meta:
-    category: ocean
-    paper_doi: 10.3389/fmars.2020.00263
-    paper_ref: Muis at al (2020)
-    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.8c59054f
-    source_version: v1
-  path: 11210471-001-compass/01_Data/GTSM-ERA5-E/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v1.nc
-  placeholders:
-    freq: [10min, hourly, dailymax]
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
+    category: socio-economic
+    paper_doi: 10.1016/j.isprsjprs.2017.10.012
+    paper_ref: Esch et al (2017)
+    source_license: https://www.dlr.de/eoc/en/PortalData/60/Resources/dokumente/guf/DLR-GUF_LicenseAgreement-and-OrderForm.pdf
+    source_url: http://www.dlr.de/guf
+  crs: 4326
 guf_bld_2012:
   data_type: RasterDataset
   path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
@@ -2399,6 +2412,13 @@ simard_v2011:
     paper_ref: Simard et al (2011)
     source_url: https://webmap.ornl.gov/ogc/dataset.jsp?ds_id=10023
   crs: 4326
+sofala_incl_polygon:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sofala_region_incl_polygon/Incl_polygon_sofala_region.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 soilgrids:
   data_type: RasterDataset
   path: wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
@@ -2793,6 +2813,14 @@ spw_IBTrACS_CF0_Idai:
   meta:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+spw_IBTrACS_CF-10_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
 spw_IBTrACS_CF0_Freddy2:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Freddy_CF0_2023061S22036_ext9d.spw

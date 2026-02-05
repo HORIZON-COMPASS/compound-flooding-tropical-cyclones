@@ -1,0 +1,54 @@
+# Defining parameters to run the snakemake pipeline - don't forget to load pixi first pixi shell -e compass-wflow
+root_dir:    11210471-001-compass # root directory of your project, it is appended to the disk drive name specified in the smk files (e.g. c:/ or  p:/)
+dir_data:    01_Data              # Folder where data to build the models is saved
+dir_models:  02_Models            # Folder where the base models will be saved (without dynamic forcing data)
+dir_runs:    03_Runs              # Folder where model runs will be saved (with forcing)
+
+runname_ids: 
+    Freddy:   
+        #Settings of the workflow                           # name of the model run
+        tc_name: Freddy                                # name of the storm. For tropical cyclones, this can be the name of the TC
+        region: test                                    # name of the region will be used in naming folders 
+        
+        #For all model setups
+        start_time: 20230310 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+        end_time: 20230314 000000                                # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
+        precip_forcing: era5_hourly                                                      # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wind_forcing: no_wind                          # wind and pressure dataset (used for coastal surge modelling)
+        bathy: gebco2024_MZB                                        # DataCatalog handle for the bathymetry dataset
+        #bathy: emodnet_bathy_E4_2018_msl                   # DataCatalog handle for the bathymetry dataset
+        river_upa: 30                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
+
+        #Models selections
+        use_dfm: False                                      # use the coastal hydrodynamic model D-FM
+        use_wflow: True                                     # use the hydrological model Wflow        
+        
+        #DFM model user-defined settings
+        bbox_dfm: "[-4.1849,-2.5063, 51,51.7]"               # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+        dfm_dxy_base: '0.2'                                # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)        
+        tidemodel: 'GTSMv41opendap'                         # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
+        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB  # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS
+        dfm_verification_points: dfm_verif_points_MZB      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
+
+        #Wflow model user-defined settings
+        config_wflow_base: wflow_base_build.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
+        
+        #SFINCS model user-defined settings
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  ## I think this should be removed?
+        sfincs_obs_file: obs_locs_Freddy2.geojson
+        bbox_sfincs: "[36.379, -18.062, 37.541, -17.12]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        dfm_coastal_mask: coastal_coupling_msk_MZB         # DataCatalog handle for the coastal coupling mask
+        coastal_ts: gtsm_codec_reanalysis_hourly_v3                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
+        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)      
+        
+        # Delft-FIAT user-defined settings
+        continent: Africa                                   # name of the continent for Delft-FIAT
+        country: Mozambique                                 # name of the country for Delft-FIAT
+        config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+        # Counterfactual forcing settings
+        CF_value_rain: [0] #[0, -8] # % change
+        CF_value_wind: [0] # % change
+        CF_value_SLR: [0]            # absolute change in sea level rise in meters                              

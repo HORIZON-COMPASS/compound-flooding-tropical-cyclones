@@ -2,6 +2,7 @@
 import os
 from snakemake.io import Wildcards
 from os.path import join
+from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
@@ -15,8 +16,8 @@ def get_region(wildcards):
     print(test)
     return config["runname_ids"][wildcards.runname]['region']
 
-def get_forcing(wildcards):
-    return config["runname_ids"][wildcards.runname]['forcing']
+def get_tcname(wildcards):
+    return config["runname_ids"][wildcards.runname]['tc_name']
 
 def get_start_time(wildcards):
     return config["runname_ids"][wildcards.runname]['start_time']
@@ -41,22 +42,38 @@ def get_river_upa(wildcards):
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
-        return "../03_data_catalogs/datacatalog_general.yml"
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing.yml")
+        ]
     elif os.name == "posix": #Running on linux
-        return "../03_data_catalogs/datacatalog_general___linux.yml"
+        return [
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
+        ]
 
 runname_ids = list(config['runname_ids'].keys())
-regions = [value['region'] for key, value in config['runname_ids'].items()]
-forcing = [value['forcing'] for key, value in config['runname_ids'].items()]
+region = [value['region'] for key, value in config['runname_ids'].items()]
+precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
+CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
-    forcing='|'.join([re.escape(x) for x in forcing]),
+    precip_forcing='|'.join([re.escape(x) for x in precip_forcing]),
+    CF_rain=r"-?\d*\.?\d+", # Matches integer and floating-point numbers (positive and negative)
+
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for tp in (value['CF_value_rain']):
+        run_combinations.append((value['region'], key, value['precip_forcing'], tp))
+
+# Unpack into separate wildcard lists
+region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
 
 rule all_wflow:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{forcing}", "events", "run_default", "output_scalar.nc"), zip, region=regions, runname=runname_ids, forcing=forcing),
-        
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
 
 rule make_base_model_wflow:
     input:
@@ -82,11 +99,11 @@ rule update_forcing_wflow_warmup:
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "inmaps.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
-        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}"),
+        wflow_root_forcing= join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}"),
         start_time = get_start_time,
         end_time = get_end_time,
         data_cat = get_datacatalog,
@@ -98,27 +115,29 @@ rule update_forcing_wflow_event:
     input: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 
-        #Creates a serial dependency with the previous rule to avoid error when running the workflow
-        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "inmaps.nc") 
+        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc")
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "inmaps.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "wflow_sbm.toml"),
     params:
         wflow_root_noforcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "wflow")),
-        wflow_root_forcing= directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}")),
+        wflow_root_forcing= directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
         start_time = get_start_time,
         end_time = get_end_time,
-        forcing = "{forcing}",
+        forcing = "{precip_forcing}",
         data_cat = get_datacatalog,
+        tc_name = get_tcname
     script:
         join(curdir, '..',  "04_scripts", "model_building", "wflow", "update_forcing_wflow_event.py")
 
 rule run_wflow_warmup:
+    threads: 16
     input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "inmaps.nc"),
-        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "warmup", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "inmaps.nc"),
+        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "warmup", "wflow_sbm.toml"),
+        previous_rule = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),  
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "instate", "instates.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
         julia_env_fn = "~/.julia/environments/v1.9"
@@ -128,12 +147,13 @@ rule run_wflow_warmup:
         """
 
 rule run_wflow_event:
+    threads: 16
     input:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "instate", "instates.nc"),
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "inmaps.nc"),
-        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "wflow_sbm.toml"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "inmaps.nc"),
+        toml = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "wflow_sbm.toml"),
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{forcing}", "events", "run_default", "output_scalar.nc"),
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
         julia_env_fn = "~/.julia/environments/v1.9",
@@ -141,3 +161,16 @@ rule run_wflow_event:
         """
         {params.exe} {input.toml} || julia +1.9 --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
+
+# # remove bankfull discharge 
+# rule postprocess_discharge:
+#     input:
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"),
+#     output:
+#         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv")
+#     params:
+#         wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF0_30yr")),
+#         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
+#         data_cat = get_datacatalog,
+#     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")

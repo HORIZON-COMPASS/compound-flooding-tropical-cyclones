@@ -4,18 +4,18 @@ setup_config:
   storecumprcp: 1 #Store the cumulative precip
   
 setup_grid_from_region:
-  res: 200                     # model resolution
+  res: 60                     # model resolution
   crs: utm                     # model CRS (must be UTM zone)
   rotated: False               # allow a rotated grid
 
 setup_dep:
   datasets_dep:
-  - elevtn: fabdem        # 1st elevation dataset
+  - elevtn: fabdem_n10w080        # 1st elevation dataset
     zmin: 0.001                # only use where values > 0.001
 
 setup_mask_active:
   zmin: -10
-  fill_area: 50
+  fill_area: 500
   include_mask: ocean_shape
   reset_mask: True
 
@@ -30,19 +30,19 @@ setup_mask_bounds:
 
 setup_subgrid:
   datasets_dep:
-  - elevtn: fabdem       
+  - elevtn: fabdem_n10w080       
     zmin: 0.001              
   datasets_rgh:
-  - lulc: vito
+  - lulc: vito  
     reclass_table: vito_mapping
-  nr_subgrid_pixels: 10  
+  nr_subgrid_pixels: 2  
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 2000  # set tile size a bit larger speed up processing (default 2000)
 
 setup_cn_infiltration:
   cn: gcn250  
-  antecedent_moisture: dry
+  antecedent_moisture: avg
 
 setup_river_inflow:
   hydrography: merit_hydro

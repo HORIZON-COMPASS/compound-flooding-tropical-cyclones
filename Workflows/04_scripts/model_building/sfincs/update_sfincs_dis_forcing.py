@@ -1,38 +1,53 @@
 # %%
 from datetime import datetime as datetime
-from datetime import timedelta
-from os.path import basename, join
-from shutil import copy
-
-import pandas as pd
-import xarray as xr
-from hydromt.config import configread
+from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
-from hydromt_sfincs import SfincsModel
 from hydromt_sfincs.sfincs_input import SfincsInput
+import pandas as pd
 
 # %%
 # model and data paths/
 logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
-    sfincs_model_folder = snakemake.params.dir_run_with_forcing
-    wflow_root = snakemake.params.wflow_root_forcing
-    data_cats = snakemake.params.data_cats
+    sfincs_model_folder   = snakemake.params.dir_run_with_forcing
+    wflow_root            = snakemake.params.wflow_root_forcing
+    data_cats             = snakemake.params.data_cats
+    wflow_base            = snakemake.params.wflow_base
 else:
-    curdir = r'c:\Git_repos\COMPASS\Workflows'
-    wflow_root = r"p:\11210471-001-compass\03_Runs\quelimane\Freddy2\era5_hourly\wflow"
-    event =  "freddy2"
-    sfincs_model_folder = r"p:\11210471-001-compass\03_Runs\quelimane\Freddy2\era5_hourly\sfincs"
-    data_cats = [
-            join(curdir, "data_catalogs", "datacatalog_general___linux.yml"), 
-            join(curdir, "data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, "data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+    curdir              = '../../../'
+    region              = "sofala"
+    tc_name             = "Idai"
+    precip_forcing      = "era5_hourly_zarr"
+    wind_forcing        = 'spw_IBTrACS'
+    tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    CF_rain_txt         = "0"
+    CF_SLR_txt          = "0"
+    CF_wind_txt         = "0"
+    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_base          = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
+    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
+    data_cats           = [
+        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
 
-
-
 #%%
+
+# Read config rile from sfincs model with coastal and meteo forcing
+inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
+config = inp.to_dict()
+
+# Write dis file to sfincs event model folder
+reftime_object = config["tref"]
+
+# Read the original wflow gauge order to match that of sfincs
+mod_ini = WflowModel(root=join(wflow_base), mode="r+", config_fn=join(wflow_base, "wflow_sbm.toml"))
+q_locs = mod_ini.geoms["gauges_locs"]
+
+# Read model output (without removing bankfull discharge)
 mod = WflowModel(
     root=join(wflow_root, 'events'),
     data_libs=data_cats,
@@ -40,45 +55,17 @@ mod = WflowModel(
     logger=logger,
 )
 mod.read()
-#%%
-# reftime_object = datetime.strptime(ref_time, "%Y-%m-%dT%H:%M:%S")
 
-inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
-config = inp.to_dict()
-
-
-# Write dis file to sfincs event model folder
-reftime_object = config["tref"]
 df = mod.results['netcdf']['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
+
+df = df[q_locs['index'].astype(str).values] # adjust gauge order to match the gauge location in the sfincs.src file
 df.to_csv(
     join(sfincs_model_folder, "sfincs.dis"),
     sep=" ",
     header=False,
 )
 
-
-    # precip = mod.data_catalog.get_rasterdataset(
-    #     'era5_hourly',
-    #     geom = mod.region,
-    #     buffer = 5,
-    #     variables = 'precip',
-    #     time_tuple = (config['tstart'], config['tstop']),                     
-    # ).to_dataset().rename({
-    #     'precip' : 'Precipitation',
-    #     'longitude' : 'x',
-    #     'latitude' : 'y'
-    #     })
-
-    # #Convert time units to minutes
-    # encoding = dict(
-    #             time={"units": f"minutes since 1900-01-01", "dtype": "float64", '_FillValue': None}
-    #         )
-
-    # precip.to_netcdf(join(sfincs_model_folder,"precip.nc"), encoding = encoding)
-    # Update inp file
-    # config.pop('amprfile', None)
-# config.update({'netamprfile': "precip.nc"})
 config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})
 inp = SfincsInput.from_dict(config)

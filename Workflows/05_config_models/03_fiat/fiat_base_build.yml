@@ -1,0 +1,29 @@
+setup_output:
+  output_dir: "output"
+  output_csv_name: "output.csv"
+  output_vector_name: "spatial.gpkg"
+
+setup_vulnerability:
+  vulnerability_fn: "jrc_vulnerability_curves"
+  vulnerability_identifiers_and_linking_fn: "jrc_vulnerability_curves_linking"
+  continent: "Europe"  # Example value; you can change it in the script
+  unit: "meters"
+
+setup_exposure_buildings:
+  asset_locations: "OSM"
+  occupancy_type: "OSM"
+  max_potential_damage: "jrc_damage_values"
+  ground_floor_height: 0
+  unit: "meters"
+  dst_crs: "EPSG:4326"
+  damage_types:
+    - "total"
+  country: "Mozambique"  # Example value; you can change it in the script
+
+setup_hazard:
+  map_fn: "path_to_floodmap"  # Provide the actual floodmap path; you can change it in the script
+  map_type: "max_depth"
+  crs: "EPSG:32736"  # Example CRS for floodmap; you can change it in the script
+
+setup_global_settings:
+  crs: 4326

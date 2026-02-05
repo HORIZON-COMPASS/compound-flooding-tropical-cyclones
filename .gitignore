@@ -36,7 +36,6 @@ SFINCS/results
 **/*.png
 
 DelftFIAT/scripts/cache
-DelftFIAT/computations
 
 # Distribution / packaging
 .Python

@@ -198,6 +198,37 @@ This workflow updates the SFINCS model by adding forcing data and running the mo
   - sfincs_his.nc
 - **Output**: 
   - sfincs_basemap.png
-- **Description**: This rule generates the final flood map visualization from the model outputs (`sfincs_map.nc` and `sfincs_his.nc`). The postprocessing script is used to produce the flood map as well as some other images.
+  - floodmap.tif
+- **Description**: This rule generates the final flood map visualization from the model outputs (`sfincs_map.nc` and `sfincs_his.nc`). The postprocessing script is used to produce the flood map (necessary for fiat) as well as some other images.
+
+
+
+## Workflow --- snakefile_fiat.smk ---
+
+This workflow build and runs a Delft-FIAT model using hydromt-fiat and a config file. This workflow can be run using the pixi environment compass-fiat. After activating the environment, make sure to add hydromt-fiat using the command: `pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"`, or simply use the 00_execution_examples/run_snakemake_fiat_workflow_h7.sh bbatch file.
+
+#### Rule: `build_fiat_model`
+- **Script**: `04_scripts/model_building/fiat/setup_fiat.py`
+- **Input**: 
+  - `floodmap.tif `   
+- **Params**:
+  - `dir_run_with_forcing` (sfincs model directory)
+  - `datacat_fiat` (data catalog for fiat: `03_data_catalogs/datacatalog_fiat.yml`)
+  - `model_folder` (folder to store the fiat model)
+  - `continent` (continent of case study area as defined in `01_config_snakemake/config_general_{region}.yml`)
+  - `country` (continent of case study area as defined in `01_config_snakemake/config_general_{region}.yml`)
+  - `config` (fiat config file as stated in the `01_config_snakemake/config_general_{region}.yml`)
+- **Output**: 
+  - `settings.toml` (setting file for fiat)
+- **Description**: This rule builds the Delft-FIAT model based on the floodmap from SFINCS and the data from the datacatalog_fiat.yml. 
+
+#### Rule: `run_fiat_model`
+- **Script**: N/A (The model is executed via a subprocess or Docker)
+- **Input**: 
+  - `settings.toml` (setting file for fiat)
+- **Output**: 
+  - `spatial.fgb` (fiat output after running the model)
+- **Description**: This rule runs the Delft'FIAT model with the `settings.toml` file. Depending on the operating system, the model is executed either via a subprocess (on Windows) or through Docker (on Linux).
+
 
 ---

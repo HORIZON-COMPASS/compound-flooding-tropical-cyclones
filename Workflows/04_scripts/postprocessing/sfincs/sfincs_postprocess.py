@@ -1,3 +1,4 @@
+#%% 
 # Load modules
 import os
 import numpy as np
@@ -6,31 +7,52 @@ import xarray as xr
 from os.path import join
 from hydromt_sfincs import SfincsModel, utils
 
+#%%
 # We read the snakemake parameters
-mapfile = snakemake.input.mapout
-outfile = snakemake.output.figure
-dir_model_no_forcing = snakemake.params.dir_model_no_forcing
-dir_run = snakemake.params.dir_run
-datacat = snakemake.params.datacat
+if "snakemake" in locals():
+    mapfile              = snakemake.input.mapout
+    outfile              = snakemake.output.figure
+    floodmap             = snakemake.output.floodmap
+    dir_model_no_forcing = snakemake.params.dir_model_no_forcing
+    dir_run              = snakemake.params.dir_run
+    datacat              = snakemake.params.datacat
+else:
+    region               = "sofala"
+    tc_name              = "Idai"
+    wind_forcing         = 'spw_IBTrACS'
+    precip_forcing       = 'era5_hourly'
+    tidemodel            = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    datacat              = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml'
+        ]
+    CF_SLR_txt           = "0"
+    CF_wind_txt          = "-10"
+    CF_rain_txt          = "0"
+    model_name           = f"event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
+    dir_run            = f"p:/11210471-001-compass/03_runs/{region}/{tc_name}/sfincs/{model_name}"
+    mapfile              = f"{dir_run}/sfincs_map.nc"
+    outfile              = f"{dir_run}/plot_output/sfincs_basemap.png"
+    floodmap             = f"{dir_run}/plot_output/floodmap.tif"
 
-# mapfile = r'../../sfincs_sofala/computations/sfincs_Idai_v1/sfincs_map.nc'
-# dir_run = r'../../sfincs_sofala/computations/sfincs_Idai_v1'
-# datacat = r'../../datacatalog_general.yml'
-# outfile = r'../../sfincs_sofala/computations/sfincs_Idai_v1/output/figure.png'
-
+#%%
 print("------- Checking what we got ------")
 print("Model run directory: ", dir_run)
 print("mapfile: ", mapfile)
 print("Output figure basemap: ", outfile)
-
+#%%
 # select the model and datacatalog
 sfincs_root = dir_run
 mod = SfincsModel(sfincs_root, data_libs=datacat, mode="r")
 
+#%%
+# mod.data_catalog.from_yml(datacat)
 #mod.data_catalog.from_yml(datacat,root='p:/') # ---> FOR WINDOWS
-
+#%%
 # select our highest-resolution elevation dataset
-depfile = join(dir_model_no_forcing, "subgrid", "dep_subgrid.tif")
+depfile = join(dir_run, "subgrid", "dep_subgrid.tif")
 da_dep = mod.data_catalog.get_rasterdataset(depfile)
 
 # read global surface water occurance (GSWO) data to mask permanent water
@@ -39,16 +61,19 @@ gswo = mod.data_catalog.get_rasterdataset("gswo", geom=mod.region, buffer=1000)
 # reading in the model results
 mod.read_results()
 
+#%%
 ### PLOT BASEMAP
 fig, ax = mod.plot_basemap(
     fn_out=os.path.join(os.path.abspath(os.path.dirname(outfile)),os.path.basename(outfile)), 
     plot_geoms=True, 
     figsize=(8, 6))
 
+#%%
 ### PLOT FORCING
 _ = mod.plot_forcing(
     fn_out = os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_forcing.png'))
 
+#%%
 ### PLOT MAX INUNDATION
 # compute the maximum water level over all time steps
 da_zsmax = mod.results["zsmax"].max(dim="timemax")
@@ -60,8 +85,9 @@ hmin = 0.05
 da_hmax = utils.downscale_floodmap(
     zsmax=da_zsmax,
     dep=da_dep,
-    hmin=hmin, 
-    reproj_method ="bilinear")
+    hmin=hmin,
+    floodmap_fn=floodmap,  # Keep this for Snakemake
+    reproj_method="bilinear")  # And add this for better quality
 
 # we use the GSWO dataset to mask permanent water by first reprojecting it to the subgrid of hmax
 gswo_mask = gswo.raster.reproject_like(da_hmax, method="max")
@@ -91,7 +117,7 @@ del da_zsmax
 
 # save as raster
 da_hmax_masked.raster.to_raster(os.path.join(os.path.abspath(os.path.dirname(outfile)),'sfincs_output_hmax_AllTime.tif'))
-
+da_hmax_masked.raster.to_raster(floodmap)  # This creates the expected floodmap.tif
 
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
@@ -147,5 +173,5 @@ if os.path.exists(join(dir_run,"sfincs_his.nc")):
         ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
         ax.set_ylabel("Inundation height [m]")
         fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
-else:
-    print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+    else:
+        print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")

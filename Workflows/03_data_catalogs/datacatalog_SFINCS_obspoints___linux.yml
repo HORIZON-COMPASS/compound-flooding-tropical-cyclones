@@ -48,3 +48,15 @@ obs_points_Kenneth:
     source_url: none
     source_version: 1.0
   crs: 3036
+obs_points_EtaIota:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_EtaIota.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the EtaIota model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 3036  

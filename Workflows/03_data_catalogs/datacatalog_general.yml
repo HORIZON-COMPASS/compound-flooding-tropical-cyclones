@@ -1,29 +1,6 @@
 meta:
-  root: p:/
-# roots:      # specifying options for root folders is possible in hydromt_v1, when hydromt_sfincs is updated to be compatible with this package
-#    - /p/  
-#    - p:/
-TAMSAT_Idai:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 160
-      longitude: 150
-      time: 30
-    combine: by_coords
-    decode_times: true
-    parallel: true
-  rename:
-    rfe_filled: precip 
-    lat: latitude
-    lon: longitude   
-  meta:
-    category: meteo
-    notes: TAMSAT data 
-  crs: 4326
-ERA5land_Idai:
+  root: p:\
+ERA5land_Idai_CF0:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/ERA5_land/units_corrected/era5land_tp_long.nc
   driver: netcdf
@@ -81,6 +58,21 @@ SM2RAIN_ASCAT_monthly_05_v1.4:
     paper_ref: Brocca et al. (2019)
     source_license: https://creativecommons.org/licenses/by/4.0/legalcode
     source_url: https://zenodo.org/record/4570192#.YueKJWNByUl
+  crs: 4326
+TAMSAT_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
+  driver: netcdf
+  rename:
+    rfe_filled: precip
+  meta:
+    category: meteo
+    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled
+      as 'rfe'
+    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
+    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
+    source_license: https://creativecommons.org/licenses/by/4.0/
+    source_url: https://research.reading.ac.uk/tamsat/data-access/
   crs: 4326
 basin_atlas_level12_v10:
   data_type: GeoDataFrame
@@ -746,17 +738,24 @@ era5_daily_zarr:
     source_version: ERA5 daily data on pressure levels
   crs: 4326
 era5_hourly:
+  crs: 4326
   data_type: RasterDataset
-  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}*_hourly.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 125
-      longitude: 120
-      time: 50
-    combine: by_coords
-    decode_times: true
-    parallel: true
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_temporal_extent:
+      start: '1950-01-01'
+      end: '2023-03-01'
+    source_spatial_extent:
+      West: -0.125
+      South: -90.125
+      East: 359.875
+      North: 90.125
+  path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}_hourly.nc
   rename:
     d2m: temp_dew
     msl: press_msl
@@ -766,24 +765,27 @@ era5_hourly:
     tp: precip
     u10: wind10_u
     v10: wind10_v
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
   unit_mult:
     kin: 0.000277778
     kout: 0.000277778
     ssr: 0.000277778
     precip: 1000
     press_msl: 0.01
-  unit_add:
-    temp: -273.15
-    temp_dew: -273.15
-  meta:
-    category: meteo
-    notes: Extracted from Copernicus Climate Data Store
-    paper_doi: 10.1002/qj.3803
-    paper_ref: Hersbach et al. (2019)
-    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
-    source_url: https://doi.org/10.24381/cds.adbb2d47
-    source_version: ERA5 hourly data on single levels from 1940 to present
-  crs: 4326
+  variants:
+    - provider: netcdf
+      driver: netcdf
+      kwargs:
+        chunks:
+          latitude: 125
+          longitude: 120
+          time: 50
+        combine: by_coords
+        decode_times: true
+        parallel: true
+      path: wflow_global/hydromt/meteo/era5/{variable}/era5_{variable}_{year}_hourly.nc
 era5_hourly_zarr:
   data_type: RasterDataset
   path: wflow_global/hydromt/meteo/era5.zarr
@@ -887,11 +889,13 @@ esa_worldcover_2020_v100:
   crs: 4326
 esa_worldcover_mapping:
   data_type: DataFrame
-  provider: user
-  path: SFINCS_tutorial/02_hands-on/local_data/esa_worldcover_mapping.csv
+  path: 11210471-001-compass/01_Data/lulc/esa_worldcover_mapping.csv
   driver: csv
   driver_kwargs:
     index_col: 0
+  meta:
+    category: landuse
+    notes: Manning Roughness values for each ESA World Cover class
 fabdem:
   data_type: RasterDataset
   path: wflow_global/hydromt/topography/fabdem/fabdem.vrt
@@ -1031,13 +1035,6 @@ gdp_world:
     source_license: CC BY-4.0
     source_version: 1.0
   crs: 4326
-ocean_shape:
-  data_type: GeoDataFrame
-  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
-  driver: vector
-  meta:
-    category: hydrography
-  crs: 4326
 gdp_world_v1:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/socio_economic/gdp_world/World_countries_GDPpcPPP.fgb
@@ -1092,25 +1089,6 @@ gebco2020:
     source_version: 2020
     unit: m+MSL
   crs: 4326
-gebco2024_MZB:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
-  driver: raster
-  driver_kwargs:
-    chunks:
-      x: 3600
-      y: 3600
-  rename:
-    gebco: elevtn
-  meta:
-    category: topography
-    paper_doi: 
-    paper_ref: 
-    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
-    source_url: 
-    source_version: 2024
-    unit: m+MSL
-  crs: 4326
 gebco2024_HND:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n19.0_s14.7_w-89.4_e-80.0.nc
@@ -1123,16 +1101,29 @@ gebco2024_HND:
     gebco: elevtn
   meta:
     category: topography
-    paper_doi: 
-    paper_ref: 
     source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
-    source_url: 
     source_version: 2024
     unit: m+MSL
   crs: 4326
-emodnet_bathy_E4_2022:
+gebco2024_MZB:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/EMODnet_bathymetry/E4_2022.nc
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  rename:
+    gebco: elevtn
+  meta:
+    category: topography
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_version: 2024
+    unit: m+MSL
+  crs: 4326
+gebco2024_MZB:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/Gebco/gebco_2024_n-8.0_s-30.0_w30.0_e50.0.nc
   driver: raster
   driver_kwargs:
     chunks:
@@ -1142,30 +1133,8 @@ emodnet_bathy_E4_2022:
     elevation: elevtn
   meta:
     category: topography
-    paper_doi: 
-    paper_ref: 
-    source_license: https://emodnet.ec.europa.eu/en/bathymetry#bathymetry-services
-    source_url: https://emodnet.ec.europa.eu/geoviewer/
-    source_version: 2022
-    unit: m+LAT
-  crs: 4326
-emodnet_bathy_E4_2018_msl:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/EMODnet_bathymetry/E4_depth_msl_2018.nc
-  driver: raster
-  driver_kwargs:
-    chunks:
-      x: 3600
-      y: 3600
-  rename:
-    DEPTH: elevtn
-  meta:
-    category: topography
-    paper_doi: 
-    paper_ref: 
-    source_license: https://www.emodnet-bathymetry.eu/internal_html/data-products/8
-    source_url: 
-    source_version: 2018
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_version: 2024
     unit: m+MSL
   crs: 4326
 ghs_pop:
@@ -1747,28 +1716,6 @@ gswo_v2019:
     paper_ref: Pekel et al. (2016)
     source_url: https://global-surface-water.appspot.com/download
     source_version: v1_1_2019
-gtsm_codec_reanalysis_{freq}_v2:
-  crs: 4326
-  data_type: GeoDataset
-  driver: netcdf
-  kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  meta:
-    category: ocean
-    paper_doi: 
-    paper_ref: 
-    source_license: 
-    source_url: 
-    source_version: v2
-  path: 11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v2.nc
-  placeholders:
-    freq: [10min, hourly, dailymax]
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
 guf_bld_2012:
   data_type: RasterDataset
   path: wflow_global/hydromt/infrastructure/guf/GUF04_DLR_v02.vrt
@@ -1888,9 +1835,9 @@ isimip_TC_rain_er11_Idai:
   path: 11210471-001-compass/01_Data/ISIMIP/TC_rain/Idai/er11_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
-    rain: precip 
+    rain: precip
     lat: latitude
-    lon: longitude   
+    lon: longitude
   meta:
     category: meteo
     notes: cut to the region and corrected latitudes
@@ -1904,12 +1851,12 @@ isimip_TC_rain_h08_Idai:
   path: 11210471-001-compass/01_Data/ISIMIP/TC_rain/Idai/h08_obsclim_historical_rain_idai_region.nc
   driver: netcdf
   rename:
-    rain: precip 
+    rain: precip
     lat: latitude
-    lon: longitude   
+    lon: longitude
   meta:
     category: meteo
-    notes: cut to the region and corrected latitudes 
+    notes: cut to the region and corrected latitudes
     paper_doi: https://doi.org/10.48364/ISIMIP.605192; https://doi.org/10.5194/gmd-17-1-2024
     paper_ref: Vogt (2024); Frieler et al. (2024)
     source_license: https://www.isimip.org/gettingstarted/terms-of-use/#general-terms-of-use-for-all-isimip-data-on-the-esg-server
@@ -2225,6 +2172,13 @@ modis_mcd15a3h_v006:
     source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
     source_version: MCD15A3H V006
   crs: 4326
+ocean_shape:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 osm_coastlines:
   data_type: GeoDataFrame
   path: wflow_global/hydromt/geography/osm/osm_coastlines-db.fgb
@@ -2282,34 +2236,34 @@ osm_landareas_v20200109:
     source_version: 1.0
   crs: 4326
 pcr_globwb:
-  data_type: RasterDataset
-  driver: zarr
-  unit_mult:
-    lsk_gross: 1000
-    dom_gross: 1000
-    ind_gross: 1000
-    lsk_net: 1000
-    ind_net: 1000
-    dom_net: 1000
-  meta:
-    processing_script: hydro/pcr_globwb/prep_glob.py
-    paper_ref: Sutanudjaja, E. H., et al (2017)
-    notes: last downloaded 2023-11-23
-    source_version: 2017.11b1
-    paper_doi: 10.5281/zenodo.1045339
-    source_url: https://zenodo.org/records/1045339#.XWUr7E2P5aR
-    category: water demand
-  rename:
-    livestockGrossDemand: lsk_gross
-    domesticGrossDemand: dom_gross
-    industryNettoDemand: ind_net
-    industryGrossDemand: ind_gross
-    livestockNettoDemand: lsk_net
-    domesticNettoDemand: dom_net
+  crs: 4326
   driver_kwargs:
     chunks: auto
-  crs: 4326
   nodata: -9999
+  rename:
+    domesticGrossDemand: dom_gross
+    livestockGrossDemand: lsk_gross
+    industryGrossDemand: ind_gross
+    domesticNettoDemand: dom_net
+    industryNettoDemand: ind_net
+    livestockNettoDemand: lsk_net
+  data_type: RasterDataset
+  meta:
+    notes: last downloaded 2023-11-23
+    source_url: https://zenodo.org/records/1045339#.XWUr7E2P5aR
+    category: water demand
+    paper_doi: 10.5281/zenodo.1045339
+    paper_ref: Sutanudjaja, E. H., et al (2017)
+    processing_script: hydro/pcr_globwb/prep_glob.py
+    source_version: 2017.11b1
+  unit_mult:
+    ind_net: 1000
+    lsk_gross: 1000
+    lsk_net: 1000
+    dom_gross: 1000
+    dom_net: 1000
+    ind_gross: 1000
+  driver: zarr
   variants:
   - version: '1990'
     path: wflow_global/hydromt/hydro/pcr_globwb/glob_1990.zarr
@@ -2412,6 +2366,13 @@ simard_v2011:
     paper_ref: Simard et al (2011)
     source_url: https://webmap.ornl.gov/ogc/dataset.jsp?ds_id=10023
   crs: 4326
+sofala_incl_polygon:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sofala_region_incl_polygon/Incl_polygon_sofala_region.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
 soilgrids:
   data_type: RasterDataset
   path: wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
@@ -2489,13 +2450,13 @@ soilgrids:
     ph_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
       / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
       / distribution version 2.0, european commission and the European soil bureau/n/
       / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
       / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
       / Response to european policy support  and public data requirements. Land Use/
-      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
     paper_doi: 10.1371/journal.pone.0169748
     paper_ref: Hengl et al. (2017)
     source_license: ODbL
@@ -2594,13 +2555,13 @@ soilgrids_2020:
     sndppt_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
       / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
       / distribution version 2.0, european commission and the European soil bureau/
       / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
       / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
       / Response to european policy support  and public data requirements. Land Use/
-      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
     paper_doi: https://doi.org/10.5194/soil-2020-65
     paper_ref: de Sousa et al. (2020)
     source_license: CC BY 4.0
@@ -2683,13 +2644,13 @@ soilgrids_v1.0:
     ph_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
       / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
       / distribution version 2.0, european commission and the European soil bureau/n/
       / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
       / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
       / Response to european policy support  and public data requirements. Land Use/
-      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
     paper_doi: 10.1371/journal.pone.0169748
     paper_ref: Hengl et al. (2017)
     source_license: ODbL
@@ -2788,56 +2749,58 @@ soilgrids_v2.0:
     sndppt_sl7: 0.1
   meta:
     category: soil
-    notes: "soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
       / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
       / distribution version 2.0, european commission and the European soil bureau/
       / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
       / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
       / Response to european policy support  and public data requirements. Land Use/
-      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n"
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
     paper_doi: https://doi.org/10.5194/soil-2020-65
     paper_ref: de Sousa et al. (2020)
     source_license: CC BY 4.0
     source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids
     source_version: 2020
-spw_IBTrACS_CF0_Idai:
+spw_IBTrACS_CF-10_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
+  driver: raster
   meta:
     category: meteo
-    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
-spw_IBTrACS_CF0_Freddy2:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Freddy_CF0_2023061S22036_ext9d.spw
-  meta:
-    category: meteo
-    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
 spw_IBTrACS_CF0_Eta:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Eta_CF0_2020306N15288_ext2d.spw
+  driver: raster
   meta:
     category: meteo
-    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time
+spw_IBTrACS_CF0_Freddy2:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Freddy_CF0_2023061S22036_ext9d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time
+spw_IBTrACS_CF0_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time
 spw_IBTrACS_CF0_Iota:
   data_type: RasterDataset
   path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Iota_CF0_2020318N16289_ext9d.spw
+  driver: raster
   meta:
     category: meteo
-    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended to match simulation time
-TAMSAT_Idai:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/TAMSAT/Idai/01-tamsatDaily.v3.1-20190301-20190331-20241002_34.0_35.0_-21.0_-19.0.nc
-  driver: netcdf
-  rename:
-    rfe_filled: precip
-  meta:
-    category: meteo
-    notes: Extracted from Universit of Reading; rainfall is also avilable non-filled as 'rfe' 
-    paper_doi: 10.1038/sdata.2017.63; 10.1175/JAMC-D-14-0016.1; 10.1002/2014JD021927
-    paper_ref: Maidment et al. (2017), Tarnavsky et al. (2014), Maidment et al. (2014)
-    source_license: https://creativecommons.org/licenses/by/4.0/
-    source_url: https://research.reading.ac.uk/tamsat/data-access/
-  crs: 4326
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time
 vito:
   data_type: RasterDataset
   path: wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif

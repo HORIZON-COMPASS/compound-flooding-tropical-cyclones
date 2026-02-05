@@ -14,57 +14,69 @@ import shutil
 from datetime import datetime, timedelta
 import hydromt
 import ast
+import pyproj
 
 #%%
 if "snakemake" in locals():
-    region = snakemake.wildcards.region
-    tc_name = snakemake.params.tc_name
-    dfm_res = snakemake.wildcards.dfm_res
-    bathy = snakemake.wildcards.bathy
-    tidemodel = snakemake.wildcards.tidemodel
-    bathy = snakemake.wildcards.wind_forcing
-    wind_forcing = snakemake.wildcards.wind_forcing
-    start_time = snakemake.params.start_time
-    end_time = snakemake.params.end_time
-    bbox_dfm = ast.literal_eval(snakemake.params.dfm_bbox)
-    output_bbox = ast.literal_eval(snakemake.params.output_bbox)
-    dfm_obs_file = snakemake.params.dfm_obs_file
-    verification_points = snakemake.params.verif_points
-    path_data_cat = os.path.abspath(snakemake.params.data_cat)
-    path_data_cat_sfincs = os.path.abspath(snakemake.params.sfincs_data_cat)
-    path_data_cat_sfincs2 = os.path.abspath(snakemake.params.sfincs_data_cat2)
-    model_name = snakemake.params.model_name
-    dir_base_model = os.path.abspath(snakemake.params.dir_base_model)
-    dir_output_main = os.path.abspath(snakemake.output.dir_event_model)
-    dimrset_folder = os.path.abspath(snakemake.params.dimrset)
-    submit_script_file = os.path.abspath(snakemake.params.submit_script_file)
+    region               = snakemake.wildcards.region
+    tc_name              = snakemake.params.tc_name
+    dfm_res              = snakemake.wildcards.dfm_res
+    bathy                = snakemake.wildcards.bathy
+    tidemodel            = snakemake.wildcards.tidemodel
+    bathy                = snakemake.wildcards.wind_forcing
+    wind_forcing         = snakemake.wildcards.wind_forcing
+    start_time           = snakemake.params.start_time
+    end_time             = snakemake.params.end_time
+    bbox_dfm             = ast.literal_eval(snakemake.params.dfm_bbox)
+    sfincs_region        = os.path.abspath(snakemake.params.sfincs_region)
+    # output_bbox          = ast.literal_eval(snakemake.params.output_bbox)
+    dfm_obs_file         = snakemake.params.dfm_obs_file
+    verification_points  = snakemake.params.verif_points
+    path_data_cat        = snakemake.params.data_cat
+    model_name           = snakemake.params.model_name
+    dir_base_model       = os.path.abspath(snakemake.params.dir_base_model)
+    dir_output_main      = os.path.abspath(snakemake.params.dir_event_model)
+    dimrset_folder       = os.path.abspath(snakemake.params.dimrset)
+    uniformwind_filename = os.path.abspath(snakemake.params.uniformwind)
+    submit_script_file   = os.path.abspath(snakemake.output.submit_script)
+    CF_SLR               = float(snakemake.wildcards.CF_SLR)
+    CF_SLR_txt           = snakemake.wildcards.CF_SLR
+    CF_wind              = float(snakemake.wildcards.CF_wind)
+    CF_wind_txt          = snakemake.wildcards.CF_wind
 else:
-    region = "sofala"
-    tc_name = "Idai"
-    dfm_res = "450"
-    bathy = "gebco2024_MZB"
-    tidemodel = 'FES2014' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap
-    wind_forcing = "spw_IBTrACS_ext_Idai_factual"
-    bbox_dfm = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
-    output_bbox = ast.literal_eval("[34, -20.5, 35.6, -19.5]")
-    start_time = "20190309 000000"
-    end_time = "20190325 060000"
-    dfm_obs_file = "coastal_coupling_DFM_obs_points_MZB"
-    verification_points = "p:/11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn"
-    path_data_cat = os.path.abspath("../../../data_catalogs/datacatalog_general.yml")
-    path_data_cat_sfincs = os.path.abspath("../../../data_catalogs/datacatalog_SFINCS_coastal_coupling.yml")
-    #Add path_data_cat_sfincs2
-    model_name = f'event_{dfm_res}_{bathy}_{tidemodel}_{wind_forcing}'
-    base_model = f'base_{dfm_res}_{bathy}_{tidemodel}'
-    dir_base_model = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
-    dir_output_main = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
-    dimrset_folder = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
-    submit_script_file = 'run_parallel.bat'
+    region               = "sofala"
+    tc_name              = "Idai"
+    dfm_res              = "450"
+    bathy                = "gebco2024_MZB"
+    tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
+    wind_forcing         = "era5_hourly"
+    CF_SLR               = 0
+    CF_SLR_txt           = f"{CF_SLR}"
+    CF_wind              = 0
+    CF_wind_txt          = f"{CF_wind}"
+    bbox_dfm             = ast.literal_eval("[32.3,42.5,-27.4,-9.5]")   
+    sfincs_region        = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs/gis/region.geojson"
+    start_time           = "20190309 000000"
+    end_time             = "20190325 060000"
+    dfm_obs_file         = "coastal_coupling_DFM_obs_points_MZB"
+    verification_points  = "dfm_verif_points_MZB"
+    path_data_cat        = [
+        '../../../03_data_catalogs/datacatalog_general.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        ]
+    model_name           = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
+    base_model           = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
+    dir_base_model       = f'p:/11210471-001-compass/02_Models/{region}/{tc_name}/dfm/{base_model}'
+    dir_output_main      = f'p:/11210471-001-compass/03_Runs/{region}/{tc_name}/dfm/{model_name}'
+    dimrset_folder       = "p:/d-hydro/dimrset/weekly/2.28.06/" # alternatively r"c:\Program Files\Deltares\Delft3D FM Suite 2023.03 HMWQ\plugins\DeltaShell.Dimr\kernels" #alternatively r"p:\d-hydro\dimrset\weekly\2.25.17.78708"
+    submit_script_file   = 'run_parallel.bat'
+    
 
 #%%
 # Define hydromt datacatalog
 #data_catalog = hydromt.data_catalog.DataCatalog(path_data_cat)
-data_catalog = hydromt.data_catalog.DataCatalog([path_data_cat,path_data_cat_sfincs, path_data_cat_sfincs2])
+data_catalog = hydromt.data_catalog.DataCatalog(data_libs=path_data_cat)
 
 # Get base mdu and batchfile
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -159,18 +171,94 @@ ext_old = hcdfm.ExtOldModel()
 
 
 # Define model forcing
-if 'spw' in wind_forcing:
+if 'spw' in wind_forcing and 'era5' in wind_forcing:
+    meteo_type = 'spiderweb_era5_merged'
+    spw = 1 
+    spw_input = data_catalog[f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"].path
+    spw_file_origin = spw_input # change to path from datacatalog
+elif 'spw' in wind_forcing:
     meteo_type = 'spiderweb'
     spw = 1 
-    spw_input = data_catalog[wind_forcing].path
+    spw_input = data_catalog[f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"].path
     spw_file_origin = spw_input # change to path from datacatalog
 else:
     meteo_type = wind_forcing
     spw = 0
 # Can we add option for spiderweb+ERA5? Could not make it work yet. -> Natalia: as far as I know that is not possible
 
-# To be adjusted to fit both windows and linux
-if 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
+# Create the forcing file (ext_old) depending on the wind data
+if meteo_type == 'spiderweb_era5_merged':
+    spw_file = os.path.basename(spw_file_origin)
+    spw_copy = os.path.join(dir_output_main,spw_file)
+    shutil.copyfile(spw_file_origin, spw_copy)
+
+    # Add uniform wind file to set background wind speed to 0 and enable blending of the spw file with the background wind
+    preprocess_era5_Idai_path = os.path.join("p:/11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_chnk_20190306to20190325_ERA5.nc")
+    preprocess_era5_Idai_file = os.path.basename(preprocess_era5_Idai_path)
+    preprocess_era5_Idai_dest = os.path.join(dir_output_main, preprocess_era5_Idai_file)
+    shutil.copyfile(preprocess_era5_Idai_path, preprocess_era5_Idai_dest)
+
+    # Create forcing with only file names for Linux
+    ext_old.forcing.append(hcdfm.ExtOldForcing(quantity='airpressure_windx_windy_charnock',
+                                                filename=preprocess_era5_Idai_file,
+                                                varname='msl u10n v10n chnk',
+                                                filetype=hcdfm.ExtOldFileType.NetCDFGridData, #11
+                                                method=hcdfm.ExtOldMethod.InterpolateTimeAndSpaceSaveWeights, #3
+                                                operand=hcdfm.Operand.override, #O
+                                                ))
+    ext_old.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
+                                          hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override, use_basename=True))
+    ext_old.save(filepath=ext_file_old) # save the file
+
+    # Modify ext_file_old to new dfm setting that allow era5+spw merging
+    with open(ext_old, "r") as f:
+        lines = f.readlines()
+
+        replacements = {
+        "QUANTITY=": "quantity=",
+        "FILENAME=": "forcingFile=",
+        "VARNAME=": "forcingVariableName=",
+        "FILETYPE=11": "forcingFileType=netcdf",
+        "FILETYPE=5": "forcingFileType=spiderWeb",
+        "METHOD=3": "interpolationMethod=linearSpaceTime",
+        "METHOD=1": "interpolationMethod=linearSpaceTime",
+        "OPERAND=": "operand=",
+        }
+
+        updated_lines = []
+        for line in lines:
+            for old, new in replacements.items():
+                if old in line:
+                    line = line.replace(old, new)
+            updated_lines.append(line)
+
+        with open(ext_old, "w") as f:
+            f.writelines(updated_lines)
+
+        print(f"Rewritten file saved to: {ext_old}")
+
+    # Add setting to spw to be merge with era5 at the radius of 0.75
+    with open(spw_copy, "r") as f:
+        lines = f.readlines()
+
+    has_merge_frac = any(line.strip().startswith("spw_merge_frac") for line in lines)
+    new_lines = []
+
+    for i, line in enumerate(lines):
+        new_lines.append(line)
+        if line.strip().startswith("spw_radius") and not has_merge_frac:
+            # Add the line right after spw_radius
+            new_lines.append("spw_merge_frac = 0.75\n")
+            has_merge_frac = True  # To avoid adding multiple times
+
+    # Write to new file or overwrite original
+    with open(spw_copy, "w") as f:
+        f.writelines(new_lines)
+
+    print(f"Added spw_merge_frac to: {spw_copy}")
+
+
+elif 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, wind speeds and Charnock coefficient
     dir_output_data_era5 = os.path.join(dir_output_bc,'meteo', 'ERA5')
     os.makedirs(dir_output_data_era5, exist_ok=True)
         
@@ -189,6 +277,8 @@ if 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, wind 
                                                     dir_data=dir_output_data_era5,
                                                     dir_output=dir_output_main,
                                                     time_slice=slice(date_min, date_max))
+    ext_old.save(filepath=ext_file_old) # save the file
+
 elif meteo_type == 'spiderweb':
     spw_file = os.path.basename(spw_file_origin)
     spw_copy = os.path.join(dir_output_main,spw_file)
@@ -212,17 +302,24 @@ elif meteo_type == 'spiderweb':
 # The D-Flow FM model wil have mapoutput and hisoutput. 
 # A file with coordinates of obs stations will be generated.
 
-# Read shp file of points along the MZB coastline
+# Read shp file of points along the coastline and the sfincs region
 gdfp = gpd.read_file(data_catalog[dfm_obs_file].path)
+region_poly = gpd.read_file(sfincs_region)
 
-# crop output points to the area where output is needed for the flood model
-gdfp = gdfp.cx[output_bbox[0]:output_bbox[2],output_bbox[1]:output_bbox[3]]
+# Ensure both have the same CRS
+gdfp = gdfp.to_crs(region_poly.crs)
 
-# Convert points to the xyn file format
-xcor = gdfp['geometry'][:].x; xcor.name = 'x'
-ycor = gdfp['geometry'][:].y; ycor.name = 'y'
-tmp = pd.concat([xcor,ycor],axis=1)
-tmp = tmp.dropna()
+# Buffer the region_poly and clip the points along the coastline by the buffered region
+buffer_size = 100  # Set buffer distance (adjust as needed)
+region_poly_buffered = region_poly.buffer(buffer_size)
+gdfp_clipped = gpd.clip(gdfp, region_poly_buffered)
+
+# Extract x and y coordinates
+xcor = gdfp_clipped.geometry.x; xcor.name = 'x'
+ycor = gdfp_clipped.geometry.y; ycor.name = 'y'
+
+# Combine into a DataFrame
+tmp = pd.concat([xcor, ycor], axis=1).dropna()
 tmp['names'] = tmp.index
 
 try:
@@ -261,7 +358,8 @@ fig.savefig(output_path, dpi=300, bbox_inches='tight')
 # In order for the model to run, we need a model definition file, i.e., a *.mdu file
 
 # initialize mdu file and update settings
-mdu_file = os.path.join(dir_output_main, f'{model_name}.mdu')
+mdu_file = os.path.join(dir_output_main, f'settings.mdu')
+
 
 # use mdu file from GTSM
 base_mdu = base_mdu
@@ -273,10 +371,11 @@ if os.path.exists(pathfile_illegalcells):
 
 # add the grid (grid_network.nc, network file)
 mdu.geometry.netfile = netfile
+# Adjust initial water in case of SLR
+mdu.geometry.waterlevini = CF_SLR
 
 # add the external forcing files (.ext)
-if meteo_type == 'spiderweb':
-    mdu.external_forcing.extforcefile = ext_file_old
+mdu.external_forcing.extforcefile = ext_file_old
 mdu.external_forcing.extforcefilenew = ext_file_new
 
 # Define drag coefficient 
@@ -305,39 +404,11 @@ mdu.output.wrimap_wind = 1
 # save .mdu file
 mdu.save(mdu_file) 
 
-#%% Modify the ext_new file for Linux simulation (only containing file names and not full paths)
+#%% 
+# Modify the ext_new file for Linux simulation (only containing file names and not full paths)
 
 # make all paths relative (might be properly implemented in https://github.com/Deltares/HYDROLIB-core/issues/532)
 dfmt.make_paths_relative(mdu_file)
-
-with open(mdu_file, 'r') as file:
-    lines = file.readlines()
-    
-# Modify the lines that contain file paths
-modified_lines = []
-for line in lines:
-    if 'extForceFile' in line or 'extForceFileNew' in line or 'dryPointsFile' in line:
-        # Split the line by the first '=' and get the key and path
-        key, path = line.split('=', 1)
-        # Check if there is a comment (after '#')
-        if '#' in path:
-            path, comment = path.split('#', 1)
-            comment = f" #{comment.strip()}"
-        else:
-            comment = ""
-        # Remove leading/trailing spaces from the path and get just the file name
-        path = path.strip()
-        file_name = os.path.basename(path)
-        # Replace the path with just the file name and retain the comment
-        modified_line = f'{key.strip()} = {file_name}{comment}\n'
-        modified_lines.append(modified_line)
-    else:
-        modified_lines.append(line)
-
-# Write the modified lines to the output file
-with open(mdu_file, 'w') as file:
-    file.writelines(modified_lines)
-print(f'Modified file saved to: {mdu_file}')
 
 #%%####################################################
 ############# Generate DIMR and bat file ##############
@@ -364,7 +435,7 @@ if os.path.exists(bat_file_path):
     with open(bat_file_path, "w") as outfile:
         # Add the working directory as the first line
         outfile.write(f'Rem Set working directory\n')
-        outfile.write(f'cd /d "{dir_output_main.replace('/', '\\')}"\n')
+        outfile.write(f'cd /d "{os.path.normpath(dir_output_main)}"\n')
         outfile.write(f'\n')
 
         dimr_config_line_added = False  # Flag to check if the dimr_config line is added

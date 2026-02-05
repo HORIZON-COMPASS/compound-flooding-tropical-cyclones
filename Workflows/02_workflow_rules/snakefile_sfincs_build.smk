@@ -38,13 +38,15 @@ def get_datacatalog(wildcards):
         return [
             join(curdir, '..', "03_data_catalogs", "datacatalog_general.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
     elif os.name == "posix": #Running on linux
         return [
             join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
         ]
 
 runname_ids = list(config['runname_ids'].keys())
@@ -52,7 +54,7 @@ regions = [value['region'] for key, value in config['runname_ids'].items()]
 
 rule all_sfincs_build:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"), zip, region=regions, runname=runname_ids),
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"), zip, region=regions, runname=runname_ids),
         expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"), zip, region=regions, runname=runname_ids)
 
 rule make_base_model_sfincs:
