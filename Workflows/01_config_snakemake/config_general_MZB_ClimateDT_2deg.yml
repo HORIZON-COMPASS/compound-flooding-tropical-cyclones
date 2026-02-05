@@ -1,0 +1,149 @@
+# Defining parameters to run the snakemake pipeline
+
+root_dir:    11210471-001-compass   # root directory of your project, it is appended to the disk drive name specified in the smk files (e.g. c:/ or  p:/)
+dir_data:    01_Data
+dir_models:  02_Models              # Folder where the base models will be saved (without dynamic forcing data)
+dir_runs:    03_Runs                # Folder where model runs will be saved (with forcing)
+runname_ids: 
+    # Idai_ClimateDT_hist:                                         # name of the model run
+    #     # Settings of the workflow
+    #     tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
+    #     region: sofala                                      # name of the region will be used in naming folders 
+    #     sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+    #     # For all model setups
+    #     start_time: 20190309 000000
+    #     end_time: 20190325 060000      
+    #     precip_forcing: ClimateDT_hist                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+    #     wind_forcing: ClimateDT_hist   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
+    #     bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
+    #     river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]           
+
+    #     # Models selections
+    #     use_dfm: False                                       # use the coastal hydrodynamic model D-FM
+    #     use_wflow: True   
+    #     use_waves: False                                     # use the hydrological model Wflow      
+         
+    #     # DFM model user-defined settings
+    #     bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+    #     dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+    #     dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
+    #     dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
+    #     dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
+    #     dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+    #     tidemodel: 'GTSMv41'                                # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
+        
+    #     #Wflow model user-defined settings
+    #     config_wflow_base: wflow_base_build_general.yml     # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
+        
+    #     # SFINCS model user-defined settings
+    #     bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+    #     config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+    #     sfincs_obs_file: obs_locs_sofala.geojson
+    #     utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+    #     coastal_ts: dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        
+    #     # Delft-FIAT user-defined settings
+    #     #continent: Africa                                   # name of the continent for Delft-FIAT
+    #     #country: Mozambique                                 # name of the country for Delft-FIAT
+    #     #config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+    #     # Counterfactual forcing settings
+    #     CF_value_rain: [0]
+    #     CF_value_wind: [0]
+    #     CF_value_SLR: [0]
+    Idai_ClimateDT_Tplus2K:                                         # name of the model run
+        # Settings of the workflow
+        tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
+        region: sofala                                      # name of the region will be used in naming folders 
+        sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+        # For all model setups
+        start_time: 20190309 000000
+        end_time: 20190325 060000      
+        precip_forcing: ClimateDT_Tplus2K                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wind_forcing: ClimateDT_Tplus2K   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
+        bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
+        river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]           
+
+        # Models selections
+        use_dfm: False                                       # use the coastal hydrodynamic model D-FM
+        use_wflow: True   
+        use_waves: False                                     # use the hydrological model Wflow      
+         
+        # DFM model user-defined settings
+        bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+        dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+        dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
+        dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
+        dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
+        dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+        tidemodel: 'GTSMv41'                                # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
+        
+        #Wflow model user-defined settings
+        config_wflow_base: wflow_base_build_general.yml     # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
+        use_bankfull_corr: True
+        
+        # SFINCS model user-defined settings
+        bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        sfincs_obs_file: obs_locs_sofala.geojson
+        utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+        coastal_ts: dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        
+        # Delft-FIAT user-defined settings
+        #continent: Africa                                   # name of the continent for Delft-FIAT
+        #country: Mozambique                                 # name of the country for Delft-FIAT
+        #config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+        # Counterfactual forcing settings
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
+    # Idai_ClimateDT_cont:                                         # name of the model run
+    #     # Settings of the workflow
+    #     tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
+    #     region: sofala                                      # name of the region will be used in naming folders 
+    #     sid: 2019063S18038                                  # Storm id from IBTrACS
+            
+    #     # For all model setups
+    #     start_time: 20190309 000000
+    #     end_time: 20190325 060000      
+    #     precip_forcing: ClimateDT_cont                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+    #     wind_forcing: ClimateDT_cont   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
+    #     bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
+    #     river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]           
+
+    #     # Models selections
+    #     use_dfm: False                                       # use the coastal hydrodynamic model D-FM
+    #     use_wflow: True   
+    #     use_waves: False                                     # use the hydrological model Wflow      
+         
+    #     # DFM model user-defined settings
+    #     bbox_dfm: "[32.3,42.5,-27.4,-9.5]"                  # Bounding box for the coastal hydrodynamic model in format: [lon_min, lon_max, lat_min, lat_max]
+    #     dfm_res: '450'                                      # coastal hydrodynamic model maximum (finest) resolution in meters (resolution at the coast)
+    #     dfm_dxy_base: '0.2'                                 # coastal hydrodynamic model base grid resolution in degrees (this is the width of the largest grid cells)         
+    #     dfm_obs_file: coastal_coupling_DFM_obs_points_MZB   # DataCatalog handle for the coastal points used to couple coastal hydro model D-FM and the flood model SFINCS 
+    #     dfm_coastal_mask: coastal_coupling_msk_MZB          # DataCatalog handle for the coastal coupling mask 
+    #     dfm_verification_points: dfm_verif_points_MZB       # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes     
+    #     tidemodel: 'GTSMv41'                                # tidal model for boundary conditions as can be read by dfm_tools: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap 
+        
+    #     #Wflow model user-defined settings
+    #     config_wflow_base: wflow_base_build_general.yml     # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
+        
+    #     # SFINCS model user-defined settings
+    #     bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
+    #     config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+    #     sfincs_obs_file: obs_locs_sofala.geojson
+    #     utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
+    #     coastal_ts: dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        
+    #     # Delft-FIAT user-defined settings
+    #     #continent: Africa                                   # name of the continent for Delft-FIAT
+    #     #country: Mozambique                                 # name of the country for Delft-FIAT
+    #     #config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
+
+    #     # Counterfactual forcing settings
+    #     CF_value_rain: [0]
+    #     CF_value_wind: [0]
+    #     CF_value_SLR: [0]

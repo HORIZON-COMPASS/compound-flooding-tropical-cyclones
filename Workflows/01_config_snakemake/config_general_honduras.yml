@@ -110,7 +110,7 @@ runname_ids:
         dfm_verification_points:  test                     # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes - check this  
         
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
+        config_wflow_base: wflow_base_build_HND.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
         
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build_honduras.yml # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
@@ -121,6 +121,6 @@ runname_ids:
         dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask  
 
         # Counterfactual forcing settings
-        CF_value_rain: [0] #[0, -8] # % change
+        CF_value_rain: [0, -9] #[0, -8] # % change
         CF_value_wind: [0] # % change
         CF_value_SLR: [0]  # absolute change in sea level rise in meters                              
