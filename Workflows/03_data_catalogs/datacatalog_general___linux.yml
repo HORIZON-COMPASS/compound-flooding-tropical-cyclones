@@ -814,6 +814,63 @@ era5_hourly_zarr:
     source_url: https://doi.org/10.24381/cds.adbb2d47
     source_version: ERA5 hourly data on single levels from 1940 to present
   crs: 4326
+gpm_imerg_durban:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/gpm_imerg/Durban/gpm_nc_subset/3B-HHR.MS.MRG.3IMERG.*.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 20
+      lon: 22
+      time: 48
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  meta:
+    category: meteo
+    notes: GPM IMERG V07B half-hourly precipitation for Durban April 2022 flood event
+    source_url: https://gpm.nasa.gov/data/imerg
+  crs: 4326
+mswep_v280_3h:
+  data_type: RasterDataset
+  path: wflow_global/forcing/MSWEP_V280/NRT/3hourly/{year}*.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 180
+      lon: 360
+      time: 8
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  meta:
+    category: meteo
+    notes: MSWEP V2.8.0 NRT 3-hourly precipitation (0.1 degree global). File naming is {year}{day_of_year}.{hour}.nc. Units are mm/3h (cumulative) - HydroMT converts to mm/hr automatically. WARNING - loads all files for the year, use event-specific entries for faster loading.
+    source_url: https://www.gloh2o.org/mswep/
+  crs: 4326
+mswep_v280_3h_durban_apr2022:
+  data_type: RasterDataset
+  path: wflow_global/forcing/MSWEP_V280/NRT/3hourly/202210[0-3].*.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 180
+      lon: 360
+      time: 8
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  meta:
+    category: meteo
+    notes: MSWEP V2.8.0 NRT 3-hourly precipitation for Durban April 2022 (DOY 100-103 = April 10-13). Only 32 files instead of 2920. Units are mm/3h (cumulative) - HydroMT converts to mm/hr automatically with cumulative_input=True.
+    source_url: https://www.gloh2o.org/mswep/
+  crs: 4326
 era5_ocean:
   data_type: RasterDataset
   path: wflow_global/hydromt/ocean/era5/{variable}/era5_{variable}_{year}_hourly.nc
@@ -1329,6 +1386,21 @@ glofas_era5_v31:
     source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/cems-floods.pdf
     source_url: https://doi.org/10.24381/cds.a4fdd6b9
     source_version: v31
+  crs: 4326
+glofas_v4_durban_apr2022:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/glofas_v4/durban/glofas_v4_2022_durban.nc
+  driver: netcdf
+  driver_kwargs:
+    decode_times: true
+  rename:
+    dis24: discharge
+    valid_time: time
+  meta:
+    category: hydro
+    notes: GloFAS v4.0 daily discharge (dis24) for Durban region, April 2022. Downloaded from Copernicus Climate Data Store. Units are m3/s (mean discharge over 24h).
+    source_url: https://cds.climate.copernicus.eu/cdsapp#!/dataset/cems-glofas-historical
+    source_version: v4.0
   crs: 4326
 glofas_uparea:
   data_type: RasterDataset

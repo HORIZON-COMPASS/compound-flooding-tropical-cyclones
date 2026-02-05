@@ -170,6 +170,20 @@ era5_hourly_zarr_CF-8_Kenneth:
   meta:
     notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
   crs: 4326
+era5_hourly_CF-8_Durban_April2022:
+  data_type: RasterDataset
+  path: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Durban_April2022.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      time: 24
+      latitude: 10
+      longitude: 10
+    decode_times: true
+  meta:
+    category: meteo
+    notes: ERA5 hourly precipitation with -8% counterfactual adjustment for Durban April 2022 (climate attribution analysis)
+  crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
   path: /p/archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc

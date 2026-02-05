@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", "Idai"
 
 # Choose population column to analyze
 POPULATION_COLUMN = "population"  # Main population column to analyze
@@ -36,8 +36,37 @@ INUNDATION_THRESHOLD = 0.2  # Only consider areas with >0.2m flooding
 GRID_RESOLUTION = 0.025  # degrees (~2.5 km at equator)
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
+
+# ===== EVENT-SPECIFIC CONFIGURATION =====
+# Maps event names to their specific folder paths and base directories
+EVENT_CONFIG = {
+    "Freddy": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Kenneth": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Idai": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/sofala"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
+    },
+}
+
+# Validate event name
+if EVENT_NAME not in EVENT_CONFIG:
+    raise ValueError(
+        f"Unknown event: {EVENT_NAME}. Valid options: {list(EVENT_CONFIG.keys())}"
+    )
+
+# Get event-specific configuration
+event_cfg = EVENT_CONFIG[EVENT_NAME]
+BASE_RUN_PATH = event_cfg["base_path"]
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
@@ -45,7 +74,7 @@ file_cf0 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "fiat"
-    / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["factual"]
     / "output"
     / "spatial_with_pop_and_flood.fgb"
 )
@@ -53,7 +82,7 @@ file_cf8 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "fiat"
-    / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["counterfactual"]
     / "output"
     / "spatial_with_pop_and_flood.fgb"
 )

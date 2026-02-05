@@ -24,11 +24,7 @@ warnings.filterwarnings("ignore")
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
-
-# Scenario to animate (factual or counterfactual)
-SCENARIO = "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0"  # Factual
-# SCENARIO = "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0"  # Counterfactual
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", "Idai"
 
 # Animation settings
 HMIN = 0.05  # Minimum water depth threshold (m)
@@ -36,14 +32,58 @@ VMIN = 0  # Colorbar minimum (m)
 VMAX = 3  # Colorbar maximum (m)
 STEP = 1  # One frame every <step> timesteps (increase to speed up)
 INTERVAL = 250  # Milliseconds between frames
-FPS = 4  # Frames per second for saved video
+FPS = 8  # Frames per second for saved video
 DPI = 200  # Resolution of saved video
 ZOOM = 11  # Basemap zoom level (higher = more detail, lower for zoomed out view)
 EXTENT_BUFFER = 0.30  # Buffer around data extent (0.30 = 30% zoom out)
 
+# Optional time filtering (set to None to use full time range)
+# Format: "YYYY-MM-DD HH:MM:SS" or None
+TIME_START = "2019-03-12 12:00:00"  # None  # e.g., "2019-03-12 12:00:00" for Idai, # 2019-04-26 04:00:00 for Kenneth
+TIME_END = "2019-03-23 12:00:00"  # None  # e.g., "2019-03-23 12:00:00" for Idai
+
+# Optional CRS override (set to None for auto-detection)
+# Use this if the basemap doesn't align with the flood data
+# Examples: "EPSG:32736" (UTM 36S), "EPSG:32737" (UTM 37S), "EPSG:4326" (WGS84)
+DATA_CRS_OVERRIDE = None  # e.g., "EPSG:32736" for Idai
+
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
+
+# ===== EVENT-SPECIFIC CONFIGURATION =====
+# Maps event names to their specific folder paths and base directories
+EVENT_CONFIG = {
+    "Freddy": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Kenneth": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Idai": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/sofala"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
+    },
+}
+
+# Validate event name
+if EVENT_NAME not in EVENT_CONFIG:
+    raise ValueError(
+        f"Unknown event: {EVENT_NAME}. Valid options: {list(EVENT_CONFIG.keys())}"
+    )
+
+# Get event-specific configuration
+event_cfg = EVENT_CONFIG[EVENT_NAME]
+BASE_RUN_PATH = event_cfg["base_path"]
+
+# Scenario to animate (factual or counterfactual)
+# Set SCENARIO_TYPE to "factual" or "counterfactual"
+SCENARIO_TYPE = "factual"  # Change this to: "factual" or "counterfactual"
+SCENARIO = event_cfg[SCENARIO_TYPE]
 
 # TC Track paths
 TC_TRACKS_BASE = Path("/p/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS")
@@ -109,6 +149,26 @@ if "time" not in da_h.dims:
 
 print(f"Time steps available: {da_h.time.size}")
 print(f"Time range: {da_h.time.values[0]} to {da_h.time.values[-1]}")
+
+# ===== APPLY OPTIONAL TIME FILTERING =====
+if TIME_START is not None or TIME_END is not None:
+    print("\nApplying time filtering...")
+    if TIME_START is not None:
+        time_start = pd.to_datetime(TIME_START)
+        print(f"  Start time: {time_start}")
+    else:
+        time_start = pd.to_datetime(da_h.time.values[0])
+
+    if TIME_END is not None:
+        time_end = pd.to_datetime(TIME_END)
+        print(f"  End time: {time_end}")
+    else:
+        time_end = pd.to_datetime(da_h.time.values[-1])
+
+    # Slice the data to the specified time range
+    da_h = da_h.sel(time=slice(time_start, time_end))
+    print(f"  Filtered time steps: {da_h.time.size}")
+    print(f"  Filtered time range: {da_h.time.values[0]} to {da_h.time.values[-1]}")
 
 # ===== LOAD TC TRACK DATA =====
 tc_track_gdf = None
@@ -192,25 +252,58 @@ if x_coord is None or y_coord is None:
 print(f"Using coordinates: x={x_coord}, y={y_coord}")
 
 # ===== GET CRS FOR BASEMAP =====
-try:
-    if "crs" in ds.attrs:
-        data_crs = ds.attrs["crs"]
-    elif "spatial_ref" in ds:
-        data_crs = ds["spatial_ref"].attrs.get("crs_wkt", None)
-    else:
-        # Assume UTM based on coordinate values
-        center_x = float(da_h[x_coord].mean())
-        center_y = float(da_h[y_coord].mean())
-        if center_x > 100000:  # Likely UTM
-            # Try to infer EPSG from coordinate range
-            data_crs = "EPSG:32737"  # Default to UTM 37S for Mozambique region
-            print(f"Assuming CRS: {data_crs}")
-        else:
-            data_crs = "EPSG:4326"  # WGS84
-    print(f"Data CRS: {data_crs}")
-except Exception as e:
-    print(f"Could not determine CRS: {e}")
-    data_crs = "EPSG:32737"  # Default
+# Print coordinate ranges for debugging
+center_x = float(da_h[x_coord].mean())
+center_y = float(da_h[y_coord].mean())
+print(f"Coordinate center: x={center_x:.2f}, y={center_y:.2f}")
+
+# Check if user provided a CRS override
+if DATA_CRS_OVERRIDE is not None:
+    data_crs = DATA_CRS_OVERRIDE
+    print(f"Using CRS override: {data_crs}")
+else:
+    data_crs = None
+    try:
+        # Check various places where CRS might be stored
+        # First check the 'crs' data variable (SFINCS standard)
+        if "crs" in ds.data_vars:
+            if "epsg_code" in ds["crs"].attrs:
+                data_crs = ds["crs"].attrs["epsg_code"]
+                print(f"CRS from crs data variable: {data_crs}")
+        elif "crs" in ds.attrs:
+            data_crs = ds.attrs["crs"]
+            print(f"CRS from dataset attrs: {data_crs}")
+        elif "spatial_ref" in ds:
+            if "crs_wkt" in ds["spatial_ref"].attrs:
+                data_crs = ds["spatial_ref"].attrs["crs_wkt"]
+            elif "epsg_code" in ds["spatial_ref"].attrs:
+                data_crs = f"EPSG:{ds['spatial_ref'].attrs['epsg_code']}"
+            print(f"CRS from spatial_ref: {data_crs}")
+        elif hasattr(da_h, "rio") and da_h.rio.crs is not None:
+            data_crs = str(da_h.rio.crs)
+            print(f"CRS from rioxarray: {data_crs}")
+
+        # If still no CRS, infer from coordinate values
+        if data_crs is None:
+            if abs(center_x) <= 180 and abs(center_y) <= 90:
+                # Coordinates look like lat/lon
+                data_crs = "EPSG:4326"
+                print(f"Inferred CRS (lat/lon range): {data_crs}")
+            else:
+                # Coordinates look like projected (UTM)
+                # Default to UTM zone 37S for Kenneth/Mozambique region
+                data_crs = "EPSG:32737"
+                print(f"Inferred CRS (projected coordinates): {data_crs}")
+
+    except Exception as e:
+        print(f"Error determining CRS: {e}")
+
+    # Final fallback
+    if data_crs is None:
+        data_crs = "EPSG:32737"  # Default to UTM 37S for Mozambique region
+        print(f"Using fallback CRS: {data_crs}")
+
+print(f"Final Data CRS: {data_crs}")
 
 # ===== CREATE ANIMATION =====
 print("Creating animation...")
@@ -403,9 +496,7 @@ ani = animation.FuncAnimation(
 )
 
 # ===== SAVE ANIMATION =====
-output_file = (
-    OUTPUT_DIR / f"sfincs_{EVENT_NAME.lower()}_{SCENARIO}_flood_animation2.mp4"
-)
+output_file = OUTPUT_DIR / f"sfincs_{EVENT_NAME.lower()}_{SCENARIO}_flood_animation.mp4"
 print(f"Saving animation to: {output_file}")
 print("This may take a few minutes...")
 

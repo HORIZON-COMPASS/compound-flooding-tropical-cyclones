@@ -22,13 +22,18 @@ if "snakemake" in locals():
     end_time                = snakemake.params.end_time
     precip_forcing          = snakemake.wildcards.precip_forcing
     use_dfm                 = snakemake.params.use_dfm
+    use_waves               = snakemake.params.get('use_waves', False)
     coastal_ts              = snakemake.params.coastal_ts
     dfm_output              = snakemake.params.dfm_output
     utmzone                 = snakemake.params.utmzone
     obs_points              = snakemake.params.sfincs_obs_points
-    CF_wind_txt             = snakemake.wildcards.CF_wind
+    skip_coastal_forcing    = snakemake.params.get('skip_coastal_forcing', False)
+    skip_discharge_forcing  = snakemake.params.get('skip_discharge_forcing', False)
+    # Optional wildcards for counterfactual scenarios (may not exist in simplified workflows)
+    CF_wind_txt             = getattr(snakemake.wildcards, 'CF_wind', '0')
     CF_rain                 = float(snakemake.wildcards.CF_rain)
     CF_rain_txt             = snakemake.wildcards.CF_rain
+    CF_SLR_txt              = getattr(snakemake.wildcards, 'CF_SLR', '0')
 else:
     region                  = "test"
     utmzone                 = '36s'
@@ -48,10 +53,12 @@ else:
     CF_rain_txt             = f"{CF_rain}"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
-    start_time = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
-    end_time = "20190430 000000"     
+    start_time = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS
+    end_time = "20190430 000000"
     use_dfm                 = False
     use_waves               = False
+    skip_coastal_forcing    = False
+    skip_discharge_forcing  = False
     # dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
     # dfm_output              = f"dfm_output_{dfm_model}"
     sfincs_mod_no_forcing   = os.path.join(f"/p/11210471-001-compass/02_Models/{region}/{tc_name}/sfincs")
@@ -90,18 +97,38 @@ else:
 
 
 #Add coastal water level forcing - either from DFM or from an existing time series such as GTSM
-if use_dfm and use_waves:
-    # Add coastal water level forcing from Delft3D-FM model
-    opt['setup_waterlevel_forcing'] = dict(geodataset=f'{dfm_output}_waves',buffer=1000,merge=False)
-elif use_dfm:
-    # Add coastal water level forcing from Delft3D-FM model
-    opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
+if not skip_coastal_forcing:
+    if use_dfm and use_waves:
+        # Add coastal water level forcing from Delft3D-FM model
+        logger.info(f"Adding coastal water level forcing from D-FM with waves: {dfm_output}_waves")
+        opt['setup_waterlevel_forcing'] = dict(geodataset=f'{dfm_output}_waves',buffer=1000,merge=False)
+    elif use_dfm:
+        # Add coastal water level forcing from Delft3D-FM model
+        logger.info(f"Adding coastal water level forcing from D-FM: {dfm_output}")
+        opt['setup_waterlevel_forcing'] = dict(geodataset=dfm_output,buffer=1000,merge=False)
+    else:
+        # Add coastal water level forcing from an existing time series
+        logger.info(f"Adding coastal water level forcing from time series: {coastal_ts}")
+        opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
 else:
-    # Add coastal water level forcing from an existing time series
-    opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
+    logger.info("Skipping coastal water level forcing (skip_coastal_forcing=True)")
 
-# Add observation points for timeserie output
-opt['setup_observation_points'] = dict(locations=obs_points, merge=False)
+# Add observation points for timeserie output (skip if file doesn't exist or is empty)
+if exists(obs_points):
+    try:
+        import json
+        with open(obs_points, 'r') as f:
+            obs_data = json.load(f)
+        # Only add if there are actual features in the GeoJSON
+        if obs_data.get('features') and len(obs_data['features']) > 0:
+            opt['setup_observation_points'] = dict(locations=obs_points, merge=False)
+            logger.info(f"Adding {len(obs_data['features'])} observation points from {obs_points}")
+        else:
+            logger.info(f"Skipping observation points (empty GeoJSON file: {obs_points})")
+    except Exception as e:
+        logger.warning(f"Could not read observation points file {obs_points}: {e}")
+else:
+    logger.info(f"Skipping observation points (file not found: {obs_points})")
 
 #%%
 mod = SfincsModel(
@@ -133,6 +160,32 @@ if wind_forcing_str not in SKIP_WIND_KEYWORDS:
         opt["setup_wind_forcing_from_grid"] = dict(wind=wind_forcing)
 else:
     logger.info(f"Skipping wind forcing based on configuration value: '{wind_forcing}'")
+
+# Add discharge forcing from gridded data (e.g., GloFAS)
+if not skip_discharge_forcing:
+    # Get discharge forcing configuration from snakemake params or use default
+    if "snakemake" in locals():
+        discharge_forcing = snakemake.params.get('discharge_forcing', None)
+        discharge_uparea = snakemake.params.get('discharge_uparea', 'glofas_uparea')
+    else:
+        discharge_forcing = 'glofas_v4_durban_apr2022'  # Default for testing
+        discharge_uparea = 'glofas_uparea'
+
+    if discharge_forcing:
+        logger.info(f"Adding discharge forcing from gridded data: {discharge_forcing}")
+        # setup_discharge_forcing_from_grid requires the model to have river inflow points
+        # These are set up in the base model build via setup_river_inflow
+        opt['setup_discharge_forcing_from_grid'] = dict(
+            discharge=discharge_forcing,
+            uparea=discharge_uparea,
+            wdw=1,  # Window size for snapping
+            rel_error=0.1,  # Allow 10% relative error in upstream area matching
+            abs_error=100,  # Allow 100 km2 absolute error
+        )
+    else:
+        logger.info("No discharge_forcing specified, skipping discharge forcing")
+else:
+    logger.info("Skipping discharge forcing (skip_discharge_forcing=True)")
 
 mod.update(
     model_out = sfincs_mod_with_forcing,

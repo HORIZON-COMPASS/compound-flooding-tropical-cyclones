@@ -18,14 +18,46 @@ from pathlib import Path
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", "Idai"
 
 # Choose damage column to plot: "total_damage" or "relative_damage"
 DAMAGE_COLUMN = "total_damage"  # Change this to "total_damage" if preferred
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
+
+# ===== EVENT-SPECIFIC CONFIGURATION =====
+# Maps event names to their specific folder paths and base directories
+EVENT_CONFIG = {
+    "Freddy": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+        "damage_file": "output_relative_damage.fgb",
+    },
+    "Kenneth": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+        "damage_file": "output_relative_damage.fgb",
+    },
+    "Idai": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/sofala"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
+        "damage_file": "spatial.fgb",
+    },
+}
+
+# Validate event name
+if EVENT_NAME not in EVENT_CONFIG:
+    raise ValueError(
+        f"Unknown event: {EVENT_NAME}. Valid options: {list(EVENT_CONFIG.keys())}"
+    )
+
+# Get event-specific configuration
+event_cfg = EVENT_CONFIG[EVENT_NAME]
+BASE_RUN_PATH = event_cfg["base_path"]
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
@@ -33,17 +65,17 @@ file_cf0 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "fiat"
-    / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["factual"]
     / "output"
-    / "output_relative_damage.fgb"
+    / event_cfg["damage_file"]
 )
 file_cf8 = (
     BASE_RUN_PATH
     / EVENT_NAME
     / "fiat"
-    / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["counterfactual"]
     / "output"
-    / "output_relative_damage.fgb"
+    / event_cfg["damage_file"]
 )
 
 # Create output directory if it doesn't exist
@@ -249,13 +281,20 @@ else:
     vmin, vmax = 0, max_val
 
 # Difference colormap with discrete intervals
-diff_max = damage_diff.quantile(0.6)
+diff_max = damage_diff.quantile(0.9)
+diff_min = damage_diff.quantile(0.1)
+diff_abs_max = max(abs(diff_max), abs(diff_min))
+
+# Ensure we have a non-zero range for the colorbar
+if diff_abs_max == 0 or np.isnan(diff_abs_max):
+    diff_abs_max = 1  # Fallback to prevent all-zero boundaries
+
 if DAMAGE_COLUMN == "relative_damage":
     # For relative damage differences, use smaller intervals
     diff_boundaries = np.linspace(-20, 20, 11)  # intervals from -20% to +20%
 else:
     # For absolute damage differences
-    diff_boundaries = np.linspace(-diff_max, diff_max, 11)
+    diff_boundaries = np.linspace(-diff_abs_max, diff_abs_max, 11)
 
 diff_norm = BoundaryNorm(diff_boundaries, ncolors=256, clip=True)
 diff_cmap = plt.get_cmap("RdBu_r")  # Red for increases, Blue for decreases
