@@ -27,10 +27,9 @@ warnings.filterwarnings("ignore")
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Freddy"  # Change this to: "Kenneth", "Freddy", "Idai", etc.
+EVENT_NAME = "Idai"  # Change this to: "Kenneth", "Freddy", "Idai"
 
 # Base paths - update these as needed
-BASE_SFINCS_PATH = Path("/p/11210471-001-compass/03_Runs")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
 
 # Map styling options
@@ -41,14 +40,38 @@ REGION_EDGE_COLOR = "darkred"  # Edge color of region polygon
 REGION_EDGE_WIDTH = 2  # Edge width of region polygon
 BASEMAP_ZOOM = 10  # Basemap zoom level (lower = more zoomed out)
 
-# ===== DYNAMIC FILE PATHS =====
-# Map event names to their SFINCS run folders
-# Update this dictionary as needed for your events
-EVENT_TO_SFINCS_FOLDER = {
-    "Freddy": "sfincs_Freddy2",
-    "Kenneth": "sfincs_Kenneth",
-    "Idai": "sfincs_Idai",
+# ===== EVENT-SPECIFIC CONFIGURATION =====
+# Maps event names to their specific folder paths and base directories
+EVENT_CONFIG = {
+    "Freddy": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "sfincs_folder": "sfincs_Freddy2",
+        "factual": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Kenneth": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "sfincs_folder": "sfincs_Kenneth",
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+    },
+    "Idai": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/sofala"),
+        "sfincs_folder": "sfincs_Idai",
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
+    },
 }
+
+# Validate event name
+if EVENT_NAME not in EVENT_CONFIG:
+    raise ValueError(
+        f"Unknown event: {EVENT_NAME}. Valid options: {list(EVENT_CONFIG.keys())}"
+    )
+
+# Get event-specific configuration
+event_cfg = EVENT_CONFIG[EVENT_NAME]
+BASE_RUN_PATH = event_cfg["base_path"]
 
 # Map event names to their TC track files
 TC_TRACKS_BASE = Path("/p/11210471-001-compass/01_Data/IBTrACS/SELECTED_TRACKS")
@@ -61,12 +84,11 @@ EVENT_TO_TC_TRACKS = {
     "Idai": [TC_TRACKS_BASE / "IBTrACS_IDAI.shp"],
 }
 
-# Get SFINCS folder name (use mapping or default to sfincs_{EVENT_NAME})
-sfincs_folder = EVENT_TO_SFINCS_FOLDER.get(EVENT_NAME, f"sfincs_{EVENT_NAME}")
+# Get SFINCS folder name from event config
+sfincs_folder = event_cfg["sfincs_folder"]
 
 # Construct path to staticmaps.nc from wflow
 # Use the staticmaps.nc file from wflow to define the region extent
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
 staticmaps_file = (
     BASE_RUN_PATH
     / EVENT_NAME

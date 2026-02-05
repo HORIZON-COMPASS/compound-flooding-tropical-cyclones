@@ -1,0 +1,54 @@
+# Configuration for Durban, South Africa precipitation-only flooding event (April 2022)
+# This config runs SFINCS with ERA5 precipitation forcing only
+# No Wflow coupling, no coastal forcing, no wind forcing
+# For precipitation + discharge runs, use config_durban_floods_2022_discharge.yml
+
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    Durban2022:
+        # Workflow settings
+        tc_name: Durban_April2022                        # Event name
+        region: durban                                   # Region identifier for folder structure
+
+        # Temporal extent
+        start_time: 20220410 000000                      # April 10, 2022 00:00:00
+        end_time: 20220413 000000                        # April 13, 2022 00:00:00 (covers through end of April 12)
+
+        # Forcing configuration
+        precip_forcing: era5_hourly                      # ERA5 hourly precipitation (for CF comparison)
+        wind_forcing: no_wind                            # Explicitly disable wind
+
+        # Bathymetry
+        bathy: gebco2024_MZB                            # Use GEBCO 2024 global dataset
+        river_upa: 30                                    # Minimum upstream area [km2]
+
+        # Model selection flags
+        use_dfm: False                                   # No coastal hydrodynamic model
+        use_wflow: False                                 # No hydrological model
+
+        # NEW FLAGS for precipitation-only mode
+        skip_coastal_forcing: True                       # Skip coastal water level forcing (GTSM/D-FM)
+        skip_discharge_forcing: True                     # Skip river discharge forcing
+
+        # SFINCS model settings
+        config_sfincs_base: sfincs_base_build.yml       # Base configuration
+        sfincs_obs_file: obs_locs_durban.geojson        # Observation points (empty placeholder for now)
+        bbox_sfincs: "[30.659688,-29.978273,31.076825,-29.740075]"  # [lon_min, lat_min, lon_max, lat_max] - Durban area
+        dfm_coastal_mask: coastal_coupling_msk_MZB      # Placeholder (not used but may be referenced)
+        utmzone: 36s                                     # UTM Zone 36 South
+
+        # Counterfactual settings - factual (0%) and counterfactual (-8% for climate attribution)
+        CF_value_rain: [0, -8]                           # Factual and pre-industrial proxy
+        CF_value_wind: [0]                               # Placeholder (not used)
+        CF_value_SLR: [0]                                # Placeholder (not used)
+
+        # Placeholder values (not used in precipitation-only mode but may be referenced by scripts)
+        tidemodel: GTSMv41opendap                        # Placeholder
+        coastal_ts: gtsm_codec_reanalysis_hourly_v3     # Placeholder
+        dfm_res: '450'                                   # Placeholder
+        continent: Africa                                # For potential FIAT impact assessment
+        country: South_Africa                            # For potential FIAT impact assessment

@@ -9,13 +9,34 @@ import rioxarray as rxr  # Required for reading TIFF files
 import contextily as ctx  # For adding basemap tiles
 import warnings
 from pathlib import Path
-from mozambique_cities import mozambique_cities
 
 warnings.filterwarnings("ignore")
 
+# City markers for different regions
+try:
+    from mozambique_cities import mozambique_cities
+except ImportError:
+    mozambique_cities = []
+
+# South Africa cities (Durban area)
+south_africa_cities = [
+    {"name": "Durban", "lat": -29.8587, "lon": 31.0218},
+    # {"name": "Pinetown", "lat": -29.8167, "lon": 30.8667},
+    # {"name": "Umlazi", "lat": -29.9667, "lon": 30.8833},
+    # {"name": "Amanzimtoti", "lat": -30.0500, "lon": 30.8833},
+]
+
+# Map events to their city lists
+EVENT_CITIES = {
+    "Freddy": mozambique_cities,
+    "Kenneth": mozambique_cities,
+    "Idai": mozambique_cities,
+    "Durban_April2022": south_africa_cities,
+}
+
 
 # ===== HELPER FUNCTIONS =====
-def add_city_markers(ax, extent, fontsize=8, markersize=50):
+def add_city_markers(ax, extent, cities, fontsize=8, markersize=50):
     """
     Add city markers to a map if they fall within the plot extent.
 
@@ -25,6 +46,8 @@ def add_city_markers(ax, extent, fontsize=8, markersize=50):
         The axis to plot on
     extent : tuple
         (minx, maxx, miny, maxy) extent of the plot in EPSG:4326
+    cities : list
+        List of city dictionaries with 'name', 'lat', 'lon' keys
     fontsize : int
         Font size for city labels
     markersize : int
@@ -33,7 +56,7 @@ def add_city_markers(ax, extent, fontsize=8, markersize=50):
     minx, maxx, miny, maxy = extent
 
     cities_in_extent = []
-    for city in mozambique_cities:
+    for city in cities:
         if minx <= city["lon"] <= maxx and miny <= city["lat"] <= maxy:
             cities_in_extent.append(city)
 
@@ -80,27 +103,69 @@ def add_city_markers(ax, extent, fontsize=8, markersize=50):
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Kenneth"  # Change this to: "Kenneth", "Freddy", etc.
+EVENT_NAME = "Durban_April2022"  # Change this to: "Kenneth", "Freddy", "Idai", "Durban_April2022"
 
 # Base paths - update these as needed
-BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs/test")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
+
+# ===== EVENT-SPECIFIC CONFIGURATION =====
+# Maps event names to their specific folder paths and base directories
+EVENT_CONFIG = {
+    "Freddy": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+        "folder_name": "Freddy",  # Folder name in base_path
+    },
+    "Kenneth": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/test"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0",
+        "folder_name": "Kenneth",  # Folder name in base_path
+    },
+    "Idai": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/sofala"),
+        "factual": "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0",
+        "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
+        "folder_name": "Idai",  # Folder name in base_path
+    },
+    "Durban_April2022": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/durban"),
+        "factual": "event_precip_era5_hourly_CF0_no_wind",
+        "counterfactual": "event_precip_era5_hourly_CF-8_no_wind",
+        "folder_name": "Durban2022",  # Folder name in base_path
+    },
+}
+
+# Validate event name
+if EVENT_NAME not in EVENT_CONFIG:
+    raise ValueError(
+        f"Unknown event: {EVENT_NAME}. Valid options: {list(EVENT_CONFIG.keys())}"
+    )
+
+# Get event-specific configuration
+event_cfg = EVENT_CONFIG[EVENT_NAME]
+BASE_RUN_PATH = event_cfg["base_path"]
+FOLDER_NAME = event_cfg.get(
+    "folder_name", EVENT_NAME
+)  # Use folder_name if provided, else EVENT_NAME
+EVENT_CITY_LIST = EVENT_CITIES.get(EVENT_NAME, [])  # Get cities for this event
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
 file_cf0 = (
     BASE_RUN_PATH
-    / EVENT_NAME
+    / FOLDER_NAME
     / "sfincs"
-    / "event_tp_era5_hourly_zarr_CF0_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["factual"]
     / "plot_output"
     / "sfincs_output_hmax_AllTime.tif"
 )
 file_cf8 = (
     BASE_RUN_PATH
-    / EVENT_NAME
+    / FOLDER_NAME
     / "sfincs"
-    / "event_tp_era5_hourly_zarr_CF-8_GTSMv41opendap_CF0_no_wind_CF0"
+    / event_cfg["counterfactual"]
     / "plot_output"
     / "sfincs_output_hmax_AllTime.tif"
 )
@@ -121,46 +186,41 @@ if "band" in zsmax_cf0.dims:
 if "band" in zsmax_cf8.dims:
     zsmax_cf8 = zsmax_cf8.squeeze("band", drop=True)
 
-# ===== CONVERT TO LAT/LON =====
-print(f"Original CRS: {zsmax_cf0.rio.crs}")
-if zsmax_cf0.rio.crs != "EPSG:4326":
-    print("Reprojecting to EPSG:4326 (lat/lon)...")
-    zsmax_cf0 = zsmax_cf0.rio.reproject("EPSG:4326")
-    zsmax_cf8 = zsmax_cf8.rio.reproject("EPSG:4326")
-    print("Reprojection complete")
-else:
-    print("Already in EPSG:4326")
+# Store original CRS for reference
+original_crs = zsmax_cf0.rio.crs
+print(f"Original CRS: {original_crs}")
 
-# ===== HANDLE NAN VALUES FOR DIFFERENCE CALCULATION =====
-print("Handling NaN values for difference calculation...")
-# Create masks for where each dataset has valid values
+# ===== CALCULATE METRICS IN ORIGINAL CRS (meters) =====
+# This ensures accurate area/volume calculations before any reprojection
+print("Calculating flood metrics in original projected CRS...")
+
+# Handle NaN values for difference calculation (in original CRS)
 mask_cf0_valid = ~np.isnan(zsmax_cf0)
 mask_cf8_valid = ~np.isnan(zsmax_cf8)
 
 # For CF0: where CF0 is NaN but CF8 has a value, set CF0 to 0
-zsmax_cf0 = zsmax_cf0.where(mask_cf0_valid | ~mask_cf8_valid, 0)
+zsmax_cf0_calc = zsmax_cf0.where(mask_cf0_valid | ~mask_cf8_valid, 0)
 # For CF8: where CF8 is NaN but CF0 has a value, set CF8 to 0
-zsmax_cf8 = zsmax_cf8.where(mask_cf8_valid | ~mask_cf0_valid, 0)
+zsmax_cf8_calc = zsmax_cf8.where(mask_cf8_valid | ~mask_cf0_valid, 0)
 
-# ===== CALCULATE DIFFERENCE =====
-print("Calculating differences...")
-diff = zsmax_cf0 - zsmax_cf8  # Difference in maximum flood depth (CF0 - CF-8)
+# Calculate difference in original CRS
+diff_calc = zsmax_cf0_calc - zsmax_cf8_calc
 
-# ---- Percent difference (relative change) ----
-# (Factual - Counterfactual) / Counterfactual * 100
-# Mask where counterfactual depth is zero or NaN to avoid misleading huge %.
-percent_diff = xr.where(zsmax_cf8 > 0, (diff / zsmax_cf8) * 100.0, np.nan)
-
-# Flood extent (area) change (using same threshold as plots)
+# Flood extent (area) change - calculated in original projected CRS (meters)
 flood_threshold = 0.05  # meters
-flood_mask_cf0 = zsmax_cf0 > flood_threshold
-flood_mask_cf8 = zsmax_cf8 > flood_threshold
+flood_mask_cf0 = zsmax_cf0_calc > flood_threshold
+flood_mask_cf8 = zsmax_cf8_calc > flood_threshold
+
+# Get cell size in meters from the original projected CRS
 try:
     dx = float(np.abs(zsmax_cf0.x.diff("x").median()))
     dy = float(np.abs(zsmax_cf0.y.diff("y").median()))
     cell_area_m2 = dx * dy
+    print(f"Cell size: {dx:.2f} x {dy:.2f} m = {cell_area_m2:.2f} m²")
 except Exception:
     cell_area_m2 = np.nan
+    print("Warning: Could not determine cell size")
+
 area_cf0_m2 = flood_mask_cf0.sum().values * cell_area_m2
 area_cf8_m2 = flood_mask_cf8.sum().values * cell_area_m2
 extent_area_diff_m2 = area_cf0_m2 - area_cf8_m2
@@ -168,13 +228,13 @@ extent_area_pct = (
     (extent_area_diff_m2 / area_cf8_m2 * 100.0) if area_cf8_m2 > 0 else np.nan
 )
 
-# Flood volume (sum depth * cell area over flooded cells)
+# Flood volume (sum depth * cell area over flooded cells) - in original CRS
 if not np.isnan(cell_area_m2):
     volume_cf0_m3 = float(
-        zsmax_cf0.where(flood_mask_cf0).sum(skipna=True) * cell_area_m2
+        zsmax_cf0_calc.where(flood_mask_cf0).sum(skipna=True) * cell_area_m2
     )
     volume_cf8_m3 = float(
-        zsmax_cf8.where(flood_mask_cf8).sum(skipna=True) * cell_area_m2
+        zsmax_cf8_calc.where(flood_mask_cf8).sum(skipna=True) * cell_area_m2
     )
     volume_diff_m3 = volume_cf0_m3 - volume_cf8_m3
     volume_pct = (
@@ -183,24 +243,37 @@ if not np.isnan(cell_area_m2):
 else:
     volume_cf0_m3 = volume_cf8_m3 = volume_diff_m3 = volume_pct = np.nan
 
-# Only show areas with positive water depth (above ground)
+# Mean differences restricted to flooded cells (using same threshold)
+flood_mask_union = (zsmax_cf0_calc > flood_threshold) | (
+    zsmax_cf8_calc > flood_threshold
+)
+flood_mask_intersection = (zsmax_cf0_calc > flood_threshold) & (
+    zsmax_cf8_calc > flood_threshold
+)
+mean_diff_flooded_union = diff_calc.where(flood_mask_union).mean(skipna=True)
+
+# Percent difference (relative change) - calculated before reprojection
+percent_diff = xr.where(
+    zsmax_cf8_calc > 0, (diff_calc / zsmax_cf8_calc) * 100.0, np.nan
+)
+
+# ===== REPROJECT TO LAT/LON FOR PLOTTING =====
+# Only reproject AFTER metrics are calculated
+if original_crs != "EPSG:4326":
+    print("Reprojecting to EPSG:4326 (lat/lon) for plotting...")
+    zsmax_cf0 = zsmax_cf0_calc.rio.reproject("EPSG:4326")
+    zsmax_cf8 = zsmax_cf8_calc.rio.reproject("EPSG:4326")
+    diff = diff_calc.rio.reproject("EPSG:4326")
+    print("Reprojection complete")
+else:
+    print("Already in EPSG:4326")
+    zsmax_cf0 = zsmax_cf0_calc
+    zsmax_cf8 = zsmax_cf8_calc
+    diff = diff_calc
+
+# Only show areas with positive water depth (above ground) - for plotting
 zsmax_cf0_plot = zsmax_cf0.where(zsmax_cf0 > 0.05)
 zsmax_cf8_plot = zsmax_cf8.where(zsmax_cf8 > 0.05)
-
-# Optional: only show differences where there's significant flooding
-# diff = diff.where((zsmax_cf0 > 0.01) | (zsmax_cf8 > 0.01))
-
-# ===== PRINT STATISTICS (REDUCED) =====
-# Remove previous verbose block
-# print(f"\nStatistics for {EVENT_NAME}:")
-# ...previous detailed prints removed...
-
-# Mean differences restricted to flooded cells (using same threshold)
-flood_mask_union = (zsmax_cf0 > flood_threshold) | (zsmax_cf8 > flood_threshold)
-flood_mask_intersection = (zsmax_cf0 > flood_threshold) & (zsmax_cf8 > flood_threshold)
-mean_diff_flooded_union = diff.where(flood_mask_union).mean(skipna=True)
-# (intersection retained if needed later, but not printed)
-# mean_diff_flooded_intersection = diff.where(flood_mask_intersection).mean(skipna=True)
 
 # Summary metrics
 max_depth_cf0 = float(zsmax_cf0.max())
@@ -353,7 +426,9 @@ print(
 )
 
 for ax in axes:
-    num_cities = add_city_markers(ax, extent, fontsize=7, markersize=40)
+    num_cities = add_city_markers(
+        ax, extent, EVENT_CITY_LIST, fontsize=7, markersize=40
+    )
 
 if num_cities > 0:
     print(f"Added {num_cities} city markers to plots")
@@ -463,18 +538,25 @@ def create_bar_chart_with_annotation(
 
     # Add text annotation
     text_x = line_x_position + (bar_positions[1] - bar_positions[0]) * 0.1
-    text_y = ((bar_heights[lower_bar_idx] + bar_heights[higher_bar_idx]) / 2) * 0.97
+
+    # Calculate midpoint between the two bar heights
+    midpoint_y = (bar_heights[lower_bar_idx] + bar_heights[higher_bar_idx]) / 2
+
+    # Calculate spacing based on the difference between bars (with a minimum)
+    bar_diff = bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]
+    text_spacing = max(bar_diff * 0.15, max(totals) * 0.03)  # Ensure minimum spacing
 
     # Format the difference text
     diff_text = f"{unit_prefix}{difference:.2f}{unit_suffix} ({percentage_diff:.0f}%)"
 
-    ax.text(text_x, text_y, diff_text, ha="left", va="center", fontsize=10, rotation=0)
+    # Place the value text slightly below midpoint
+    ax.text(text_x, midpoint_y - text_spacing, diff_text, ha="left", va="center", fontsize=10, rotation=0)
 
-    text_offset = (bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]) * 0.35
+    # Place the label text slightly above midpoint
     ax.text(
         text_x,
-        text_y + text_offset,
-        "Climate change \n attribution:",
+        midpoint_y + text_spacing,
+        "Climate change\nattribution:",
         ha="left",
         va="center",
         fontsize=9,
@@ -483,7 +565,7 @@ def create_bar_chart_with_annotation(
     )
 
     # Set y-axis to start from 0 with appropriate margin
-    ax.set_ylim(0, max(totals) * 1.1)
+    ax.set_ylim(0, max(totals) * 1.15)
 
     # Remove top and right spines for cleaner look
     ax.spines["top"].set_visible(False)
@@ -605,7 +687,7 @@ except Exception as e:
     print(f"Could not add basemap: {e}")
 
 # Add city markers
-add_city_markers(ax, extent, fontsize=9, markersize=60)
+add_city_markers(ax, extent, EVENT_CITY_LIST, fontsize=9, markersize=60)
 
 # Format axis labels as lat/lon
 ax.set_xlabel("Longitude [°]", fontsize=12)
@@ -658,7 +740,7 @@ except Exception as e:
     print(f"Could not add basemap: {e}")
 
 # Add city markers
-add_city_markers(ax_f, extent, fontsize=9, markersize=60)
+add_city_markers(ax_f, extent, EVENT_CITY_LIST, fontsize=9, markersize=60)
 
 # Format axis labels as lat/lon
 ax_f.set_xlabel("Longitude [°]", fontsize=12)
@@ -711,7 +793,7 @@ except Exception as e:
     print(f"Could not add basemap: {e}")
 
 # Add city markers
-add_city_markers(ax_cf, extent, fontsize=9, markersize=60)
+add_city_markers(ax_cf, extent, EVENT_CITY_LIST, fontsize=9, markersize=60)
 
 # Format axis labels as lat/lon
 ax_cf.set_xlabel("Longitude [°]", fontsize=12)

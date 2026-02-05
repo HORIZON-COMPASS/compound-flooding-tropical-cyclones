@@ -1,0 +1,55 @@
+# Configuration for Durban, South Africa flooding event (April 2022)
+# Precipitation + Discharge forcing (GloFAS v4.0)
+
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    # ========== Precipitation + Discharge Run ==========
+    Durban2022_dis:
+        # Workflow settings
+        tc_name: Durban_April2022                        # Event name
+        region: durban                                   # Region identifier for folder structure
+
+        # Temporal extent
+        start_time: 20220410 000000                      # April 10, 2022 00:00:00
+        end_time: 20220413 000000                        # April 13, 2022 00:00:00
+
+        # Forcing configuration
+        precip_forcing: era5_hourly                      # ERA5 hourly precipitation
+        wind_forcing: no_wind                            # Explicitly disable wind
+        discharge_forcing: glofas_v4_durban_apr2022      # GloFAS v4.0 daily discharge
+        discharge_uparea: glofas_uparea                  # Upstream area grid for snapping
+
+        # Bathymetry
+        bathy: gebco2024_MZB
+        river_upa: 30
+
+        # Model selection flags
+        use_dfm: False
+        use_wflow: False
+
+        # Forcing flags
+        skip_coastal_forcing: True                       # Skip coastal water level forcing
+        skip_discharge_forcing: False                    # ENABLE discharge forcing from GloFAS
+
+        # SFINCS model settings
+        config_sfincs_base: sfincs_base_build.yml
+        sfincs_obs_file: obs_locs_durban.geojson
+        bbox_sfincs: "[30.659688,-29.978273,31.076825,-29.740075]"
+        dfm_coastal_mask: coastal_coupling_msk_MZB
+        utmzone: 36s
+
+        # Counterfactual settings
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
+
+        # Placeholder values
+        tidemodel: GTSMv41opendap
+        coastal_ts: gtsm_codec_reanalysis_hourly_v3
+        dfm_res: '450'
+        continent: Africa
+        country: South_Africa
