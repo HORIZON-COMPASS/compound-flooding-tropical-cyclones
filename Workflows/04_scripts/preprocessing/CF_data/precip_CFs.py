@@ -26,7 +26,7 @@ if "snakemake" in locals():
     CF_data_cat = os.path.abspath(snakemake.params.CF_data_cat) 
 else:
     tc_name = "Idai"
-    start_date = "20190309 000000"
+    start_date = "20190306 000000" # Ensure at least 2 days prior for wflow warm up
     end_date = "20190325 060000"
     wflow_region = f"p:/11210471-001-compass/02_Models/sofala/{tc_name}/wflow/staticgeoms/region.geojson"
     data_cat = [
@@ -34,7 +34,7 @@ else:
         '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
     ] 
     precip_name = "era5_hourly_zarr"
-    CF_value = -8
+    CF_value = -16
     CF_value_txt = f"{CF_value}"
     output_CF_rainfall = f"p:/11210471-001-compass/01_Data/counterfactuals/precipitation/{precip_name}_CF{CF_value}_{tc_name}.nc"
     CF_catalog_path = "../../../03_data_catalogs/datacatalog_CF_forcing.yml"
