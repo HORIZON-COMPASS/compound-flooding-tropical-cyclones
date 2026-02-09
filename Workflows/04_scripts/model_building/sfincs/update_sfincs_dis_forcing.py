@@ -5,6 +5,7 @@ import os
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
 from hydromt_sfincs.sfincs_input import SfincsInput
+from hydromt_sfincs import SfincsModel
 import pandas as pd
 
 # %%
@@ -46,22 +47,6 @@ config = inp.to_dict()
 # Write dis file to sfincs event model folder
 reftime_object = config["tref"]
 
-#%%
-# mod = WflowModel(
-#     root=join(wflow_root, 'events'),
-#     data_libs=data_cats,
-#     mode="r",
-#     logger=logger,
-# )
-# mod.read()
-# #%%
-# df_check = mod.results['netcdf']['Q'].to_pandas()
-# df_check.index = (df_check.index - reftime_object).total_seconds()
-# df_check.to_csv(
-#     join(sfincs_model_folder, "sfincs_compare.dis"),
-#     sep=" ",
-#     header=False,
-# )
 
 # Read the original wflow gauge order to match that of sfincs
 mod_ini = WflowModel(root=os.path.join(wflow_base), mode="r+", config_fn=os.path.join(wflow_base, "wflow_sbm.toml"))
@@ -85,5 +70,16 @@ config.update({"disfile": "sfincs.dis"})
 config.update({"srcfile": "sfincs.src"})
 inp = SfincsInput.from_dict(config)
 inp.write(inp_fn=join(sfincs_model_folder, "sfincs.inp"))
+
+# %%
+# Plot the updated forcing
+mod = SfincsModel(
+    root=sfincs_model_folder,
+    data_libs=data_cats,
+    mode="r",
+    logger=logger,
+)
+
+mod.plot_forcing()
 
 # %%
