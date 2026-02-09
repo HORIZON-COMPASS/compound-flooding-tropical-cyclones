@@ -6,6 +6,8 @@ import ast
 from hydromt.log import setuplog
 import hydromt
 from hydromt_sfincs import SfincsModel
+import os
+
 #%%
 def get_local_vector_data(file, bbox, data_cat):
     dataCat = hydromt.data_catalog.DataCatalog(data_cat)
