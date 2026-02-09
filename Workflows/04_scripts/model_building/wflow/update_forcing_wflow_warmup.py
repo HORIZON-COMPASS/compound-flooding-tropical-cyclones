@@ -22,7 +22,7 @@ else:
     precip_forcing = "era5_hourly"
     CF_rain = 0
     CF_rain_txt = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
+    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
     wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     start_time = "20190309 000000"
     end_time = "20190325 060000"
