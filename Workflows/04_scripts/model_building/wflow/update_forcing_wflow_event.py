@@ -25,7 +25,7 @@ else:
     CF_rain              = 0
     CF_rain_txt          = f"{CF_rain}"
     wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
-    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}_f_"
+    wflow_root_forcing   = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     start_time           = "20190309 000000"
     end_time             = "20190325 060000"
     data_cat             = ['../../../03_data_catalogs/datacatalog_general.yml',
