@@ -306,7 +306,8 @@ gdf_rep = gdf_rep.head(2)
 Q_wflow_30yr_filt_combined = Q_wflow_30yr_filt_combined.sel(Q_gauges_locs=gdf_rep.head(3).rep_station.values)
 Q_wflow_event_filt_combined = Q_wflow_event_filt_combined.sel(Q_gauges_locs=gdf_rep.head(3).rep_station.values)
 
-
+# Resample to daily means to match GloFAS temporal resolution
+Q_wflow_event_filt_resampled = Q_wflow_event_filt_combined.resample(time="1D").mean()
 
 #%%
 print("Selecting GloFAS stations closest to specified gauges...")
@@ -356,11 +357,10 @@ glofas_ds_v31_sel = xr.Dataset(data_vars={"discharge": (("Q_gauges_locs", "time"
 
 # Align time series
 Q_wflow_30yr_aligned, glofas_30yr_aligned_v40 = xr.align(Q_wflow_30yr_filt_combined, glofas_ds_v40_sel, join="inner")
-Q_wflow_event_aligned, glofas_event_aligned_v40 = xr.align(Q_wflow_event_filt_combined, glofas_ds_v40_sel, join="inner")
+Q_wflow_event_aligned, glofas_event_aligned_v40 = xr.align(Q_wflow_event_filt_resampled, glofas_ds_v40_sel, join="inner")
 
 Q_wflow_30yr_aligned, glofas_30yr_aligned_v31 = xr.align(Q_wflow_30yr_filt_combined, glofas_ds_v31_sel, join="inner")
-Q_wflow_event_aligned, glofas_event_aligned_v31 = xr.align(Q_wflow_event_filt_combined, glofas_ds_v31_sel, join="inner")
-
+Q_wflow_event_aligned, glofas_event_aligned_v31 = xr.align(Q_wflow_event_filt_resampled, glofas_ds_v31_sel, join="inner")
 
 #%%
 # Plot all gauges time series for the event
@@ -512,7 +512,7 @@ df_overview_glofas_v40
 
 
 # %%
-#### same but for GloFAS v3.1 ####
+#### same but for GloFAS v3.1 compared to GloFAS v4.0 ####
 
 # Plot all gauges time series for the event
 print("Plotting time series comparison for all gauges...")
@@ -521,8 +521,8 @@ print("Plotting time series comparison for all gauges...")
 gauge_ids = Q_wflow_event_aligned['Q_gauges_locs'].values
 
 # Prepare DataFrame to store stats
-df_stats_31 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]'])
-df_stats_40 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]'])
+df_stats_31 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]', 'GloFAS / wflow [%]', '(GloFAS - wflow) / wflow [%]'])
+df_stats_40 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'wflow / GloFAS [%]', 'GloFAS / wflow [%]', '(GloFAS - wflow) / wflow [%]'])
 
 # Plotting setup
 n = len(gauge_ids)
@@ -562,8 +562,8 @@ for i, g in enumerate(gauge_ids):
     total_G_v31 = (glofas_ts_v31['discharge'].values * dt_glofas_v31).sum()
     
     # Save stats
-    df_stats_40.loc[i] = [g, total_Q, total_G_v40, total_Q / total_G_v40 * 100]
-    df_stats_31.loc[i] = [g, total_Q, total_G_v31, total_Q / total_G_v31 * 100]
+    df_stats_40.loc[i] = [g, total_Q, total_G_v40, total_Q / total_G_v40 * 100, total_G_v40 / total_Q * 100, (total_G_v40 - total_Q) / total_Q * 100]
+    df_stats_31.loc[i] = [g, total_Q, total_G_v31, total_Q / total_G_v31 * 100, total_G_v31 / total_Q * 100, (total_G_v31 - total_Q) / total_Q * 100]
     
     # Plot styling
     axes[0].set_title(f"Buzi river (gauge 1)")
@@ -581,10 +581,11 @@ for i, g in enumerate(gauge_ids):
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d"))
     ax.tick_params(axis='x')
     ax.set_xlabel(" Day in March 2019")
+    ax.set_xlim(start_dt, end_dt)
 
 axes[0].legend()
 
-fig.suptitle("Discharge Comparison at Gauges for GloFAS", fontsize=13, fontweight='bold')
+fig.suptitle("Discharge comparison of wflow with GloFAS during TC Idai", fontsize=13, fontweight='bold')
 fig.savefig("../figures/fS5.png", dpi=300, bbox_inches="tight")
 
 # Hide empty axes
