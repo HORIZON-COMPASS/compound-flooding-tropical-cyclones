@@ -77,7 +77,8 @@ if not os.path.exists(wflow_bankfull):
 
         # We fit the extreme value models
         model_bm.fit_model(model="Emcee")
-
+        print(model_bm.model.distribution)
+        
         # Estimate of return periods
         rp = [2] # 2-year return period for bankfull discharge
         summary = model_bm.get_summary(return_period=rp, alpha=0.95)
@@ -122,11 +123,14 @@ df_F
 
 # %%
 # We select the first discharge location
-data_F = df_F["1"]
+gauge_nr = 9
+data_F = df_F[str(gauge_nr)]
 # And have a look at the data
 plt.figure()
 ax = data_F.plot()
 plt.ylabel("Discharge (m³/s)")
+plt.title(f"Gauge {gauge_nr}")
+# plt.savefig(join(results_dir, "figures", f"wflow_F_gauge{gauge_nr}.png"), dpi=300, bbox_inches='tight')
 
 # %%
 # Remove the qbankfull from all discharge values and set to zero if discharge is below 0
@@ -149,12 +153,12 @@ for gauge in df_F_no_bankfull.columns:
 fig, ax = plt.subplots(figsize=(12, 6))
 
 # Plot both time series
-df_F['1'].plot(ax=ax, label='Raw WFLOW output', color='steelblue', linewidth=1.8)
-df_F_no_bankfull['1'].plot(ax=ax, label='Effective discharge', color='darkorange', linewidth=1.8)
+df_F['9'].plot(ax=ax, label='Raw WFLOW output', color='steelblue', linewidth=1.8)
+df_F_no_bankfull['9'].plot(ax=ax, label='Effective discharge', color='darkorange', linewidth=1.8)
 
 # Add horizontal bankfull line
 ax.axhline(
-    qbankfull_df.loc['1', 'return value'],
+    qbankfull_df.loc['9', 'return value'],
     color='crimson', linestyle='--', linewidth=2,
     label='Estimated bankfull Q'
 )
@@ -162,7 +166,7 @@ ax.axhline(
 # Labels and title
 ax.set_xlabel("Time", fontsize=13)       # X-axis label
 ax.set_ylabel("Discharge [m³/s]", fontsize=13)
-ax.set_title("Gauge 1: Discharge with bankfull threshold removed", fontsize=14)
+ax.set_title("Gauge 9: Discharge with bankfull threshold removed", fontsize=14)
 
 # Tick label sizes
 ax.tick_params(axis='x', labelsize=12)
