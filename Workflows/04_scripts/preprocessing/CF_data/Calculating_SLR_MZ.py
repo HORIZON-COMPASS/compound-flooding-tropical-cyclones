@@ -133,6 +133,7 @@ interp_lowess_wl = interp1d(x_daily_wl, lowess_daily_wl, kind="linear", fill_val
 
 
 # Create new time range up to 2019
+# mean_date_event = pd.to_datetime(start/_date_event) + (pd.to_datetime(end_date_event) - pd.to_datetime(start_date_event)) / 2
 start_date = time_DFM[0]
 end_date = pd.Timestamp(end_date_event) # defined in the beginning
 extended_time = pd.date_range(start=start_date, end=end_date, freq='D')
@@ -215,13 +216,13 @@ plt.show()
 ############################### PLOT EXTRAPOLATED TRENDS ################################
 # Plot original and extrapolated
 fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
-ax.plot(time_DFM, y_DFM_gc, label="ISIMIP SLR data (gc)", color='orange',linewidth=2)
-ax.fill_between(mean_SLR_DFM_gc['time'],
-                     mean_SLR_DFM_gc - std_SLR_DFM_gc,
-                     mean_SLR_DFM_gc + std_SLR_DFM_gc,
-                     color='orange', alpha=0.2)
-ax.plot(extended_time, df_extended['linear_gc'], label=f"Extrapolated linear trend (gc)", color='grey', linestyle='--')
-ax.plot(extended_time, df_extended['lowess_gc'], label=f"Extrapolated LOWESS trend (gc)", color='black', linestyle='--')
+# ax.plot(time_DFM, y_DFM_gc, label="ISIMIP SLR data (gc)", color='orange',linewidth=2)
+# ax.fill_between(mean_SLR_DFM_gc['time'],
+#                      mean_SLR_DFM_gc - std_SLR_DFM_gc,
+#                      mean_SLR_DFM_gc + std_SLR_DFM_gc,
+#                      color='orange', alpha=0.2)
+# ax.plot(extended_time, df_extended['linear_gc'], label=f"Extrapolated linear trend (gc)", color='grey', linestyle='--')
+# ax.plot(extended_time, df_extended['lowess_gc'], label=f"Extrapolated LOWESS trend (gc)", color='black', linestyle='--')
 
 ax.plot(time_DFM, y_DFM_wl, label="ISIMIP SLR data (wl)", color='blue',linewidth=2)
 ax.fill_between(mean_SLR_DFM_wl['time'],
@@ -231,8 +232,8 @@ ax.fill_between(mean_SLR_DFM_wl['time'],
 ax.plot(extended_time, df_extended['linear_wl'], label=f"Extrapolated linear trend (wl)", color='grey', linestyle='--')
 ax.plot(extended_time, df_extended['lowess_wl'], label=f"Extrapolated LOWESS trend (wl)", color='black', linestyle='--')
 
-ax.set_title(f"Extrapolated ISIMIP SLR trend to {end_date.date()} for stations within DFM domain")
-ax.set_xlabel("Time")
+ax.set_title(f"Extrapolated ISIMIP SLR trend for stations within D-Flow FM domain")
+ax.set_xlabel("Year")
 ax.set_ylabel("Sea level rise (mm)")
 ax.legend(fontsize=8)
 ax.grid()
@@ -315,25 +316,25 @@ axes.legend()
 
 
 #%%
-SLR_start_event_wl = df_extended['lowess_wl'][df_extended['time'] == pd.to_datetime(start_date_event)].values[0]
-SLR_start_event_wl_minstd = SLR_start_event_wl - std_SLR_DFM_wl.mean()
-SLR_start_event_wl_maxstd = SLR_start_event_wl + std_SLR_DFM_wl.mean()
+SLR_mean_event_wl_lws = df_extended['lowess_wl'][df_extended['time'] == pd.to_datetime(end_date_event)].values[0]
+SLR_mean_event_wl_lin = df_extended['linear_wl'][df_extended['time'] == pd.to_datetime(end_date_event)].values[0]
+SLR_mean_event_wl_minstd = SLR_mean_event_wl_lws - std_SLR_DFM_wl.mean()
+SLR_mean_event_wl_maxstd = SLR_mean_event_wl_lws + std_SLR_DFM_wl.mean()
 
-SLR_start_event_gc = df_extended['lowess_gc'][df_extended['time'] == pd.to_datetime(start_date_event)].values[0]
-SLR_start_event_gc_minstd = SLR_start_event_gc - std_SLR_DFM_gc.mean()
-SLR_start_event_gc_maxstd = SLR_start_event_gc + std_SLR_DFM_gc.mean()
+SLR_mean_event_gc = df_extended['lowess_gc'][df_extended['time'] == pd.to_datetime(end_date_event)].values[0]
+SLR_mean_event_gc_minstd = SLR_mean_event_gc - std_SLR_DFM_gc.mean()
+SLR_mean_event_gc_maxstd = SLR_mean_event_gc + std_SLR_DFM_gc.mean()   
 
 print("ISIMIP geocentric water level ds, excl VLM")
-print(f"SLR at start of event (2019-03-09): {SLR_start_event_gc:.2f} mm")
-print(f"SLR at start of event -std: {SLR_start_event_gc_minstd:.2f} mm")
-print(f"SLR at start of event +std: {SLR_start_event_gc_maxstd:.2f} mm")
+print(f"SLR at start of event (2019-03-09): {SLR_mean_event_gc:.2f} mm")
+print(f"SLR at start of event -std: {SLR_mean_event_gc_minstd:.2f} mm")
+print(f"SLR at start of event +std: {SLR_mean_event_gc_maxstd:.2f} mm")
 
 print("\nISIMIP water level ds, incl VLM")
-print(f"SLR at start of event (2019-03-09): {SLR_start_event_wl:.2f} mm")
-print(f"SLR at start of event -std: {SLR_start_event_wl_minstd:.2f} mm")
-print(f"SLR at start of event +std: {SLR_start_event_wl_maxstd:.2f} mm")
-
-
+print(f"SLR at start of event (2019-03-09) - lowess: {SLR_mean_event_wl_lws:.2f} mm")
+print(f"SLR at start of event (2019-03-09) - linear: {SLR_mean_event_wl_lin:.2f} mm")
+print(f"SLR at start of event -std: {SLR_mean_event_wl_minstd:.2f} mm")
+print(f"SLR at start of event +std: {SLR_mean_event_wl_maxstd:.2f} mm")
 
 
 
@@ -341,9 +342,17 @@ print(f"SLR at start of event +std: {SLR_start_event_wl_maxstd:.2f} mm")
 #################################################################################
 ###################### Validate with PSMSL RLR data ##############################  
 #################################################################################
+# Convert decimal year to datetime
+def decimal_year_to_datetime(dec_year):
+    year = np.floor(dec_year).astype(int)
+    rem = dec_year - year
+    dt = pd.to_datetime(year, format="%Y") + pd.to_timedelta(rem*365.25, unit='D')
+    return dt
+
 # Function to calculate linear and LOWESS trends and plot
-def lin_lowess_trend_plot(data, date_col=None, waterlevel_col='sla',
-                          remove_mean=True, figure_plotting=True, lowess_frac=1):
+def lin_lowess_trend_plot_fixed(data, date_col=None, waterlevel_col='sla',
+                                remove_mean=True, figure_plotting=True, lowess_frac=0.3):
+    import matplotlib.dates as mdates
     # -----------------------------
     # Prepare series
     # -----------------------------
@@ -367,38 +376,69 @@ def lin_lowess_trend_plot(data, date_col=None, waterlevel_col='sla',
     slope_lin_per_year = slope_lin * 365.25
 
     # -----------------------------
-    # LOWESS trend
+    # LOWESS trend directly on original data
     # -----------------------------
-    # Resample daily to reduce noise if needed
-    y_daily = y_series.resample('D').mean().interpolate()
-    x_daily = (y_daily.index - y_series.index[0]).days
+    lowess_fit = sm.nonparametric.lowess(
+        endog=y[not_nan],
+        exog=x_days[not_nan],
+        frac=lowess_frac,
+        return_sorted=False
+    )
 
-    lowess_fit = sm.nonparametric.lowess(y_daily.values, x_daily, frac=lowess_frac, return_sorted=False)
-    # Interpolate back to original dates
-    interp_lowess = interp1d(x_daily, lowess_fit, kind='linear', fill_value='extrapolate')
-    lowess_original = interp_lowess(x_days)
+    # Place LOWESS values back into full array
+    lowess_original = np.full_like(y, np.nan)
+    lowess_original[not_nan] = lowess_fit
 
+    # Full grid for plotting (daily)
+    full_days = np.arange(x_days[0], x_days[-1]+1)  # daily grid
+    from scipy.interpolate import interp1d
+    interp_lowess = interp1d(x_days[not_nan], lowess_fit, kind='linear', fill_value='extrapolate')
+    lowess_full = interp_lowess(full_days)
+
+    # -----------------------------
     # Slope of LOWESS trend (per year)
-    slope_lowess, _, _, _, _ = linregress(x_days, lowess_original)
+    # -----------------------------
+    slope_lowess, _, _, _, _ = linregress(full_days, lowess_full)
     slope_lowess_per_year = slope_lowess * 365.25
 
     # -----------------------------
     # Plotting
     # -----------------------------
     if figure_plotting:
-        plt.figure(figsize=(12,5))
-        plt.plot(x_days, y, label='Original data', alpha=0.5)
-        plt.plot(y_series.index, linear_fit, '--', color='green', label=f'Linear Trend ({slope_lin_per_year:.2f}/yr)')
-        plt.plot(y_series.index, lowess_original, '-', color='red', label=f'LOWESS Trend ({slope_lowess_per_year:.2f}/yr)')
-        plt.xlabel('Time (monthly)')
-        plt.ylabel('Sea level (mm)')
-        plt.title('Monthly PSMSL tide gauge data for Durban (SA)')
-        plt.legend()
-        plt.show()
+        plt.figure(figsize=(8,5))
 
-    # -----------------------------
-    # Return results
-    # -----------------------------
+        # Plot using datetime index
+        plt.plot(y_series.index, y, label='Original data', alpha=0.5)
+
+        # Convert LOWESS x (days) back to datetime
+        start_date = y_series.index[0]
+        full_dates = start_date + pd.to_timedelta(full_days, unit="D")
+
+        plt.plot(full_dates, lowess_full, '-', color='red',
+                label=f'LOWESS fit')
+
+        ax = plt.gca()
+        ax.xaxis.set_major_locator(mdates.YearLocator(5))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+        plt.xlabel('Year', fontsize=12)
+        plt.ylabel('Sea level (mm)', fontsize=12)
+        plt.title('Monthly PSMSL tide gauge data for Durban (SA) with LOWESS trend', fontsize=14)
+        plt.xticks(fontsize=11)
+        plt.yticks(fontsize=11)
+        plt.xlim([y_series.index[0], y_series.index[-1]])
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig("../../../../Attribution_results/figures/fS11.png", dpi=300)
+        plt.savefig("../../../../Attribution_results/figures/fS11.pdf", dpi=300)    
+        plt.show()
+    
+    # Create a DataFrame for daily LOWESS
+    df_lowess = pd.DataFrame({
+        'date': full_dates,
+        'lowess_sla': lowess_full
+    })
+
     return {
         'slope_linear_per_year': slope_lin_per_year,
         'slope_lowess_per_year': slope_lowess_per_year,
@@ -406,15 +446,11 @@ def lin_lowess_trend_plot(data, date_col=None, waterlevel_col='sla',
         'lowess_fit': lowess_original,
         'y': y,
         'x_days': x_days,
-        'time_index': y_series.index
-    }
+        'time_index': y_series.index,
+        'x_full_days': full_days,
+        'lowess_full': lowess_full
+    }, df_lowess
 
-# Convert decimal year to datetime
-def decimal_year_to_datetime(dec_year):
-    year = np.floor(dec_year).astype(int)
-    rem = dec_year - year
-    dt = pd.to_datetime(year, format="%Y") + pd.to_timedelta(rem*365.25, unit='D')
-    return dt
 
 #%%
 # Load PSMSL RLR data for Durban (station ID 284)
@@ -433,9 +469,69 @@ df_psmsl_durban['sla'].replace(-99999, np.nan, inplace=True)
 df_psmsl_durban['time'] = decimal_year_to_datetime(df_psmsl_durban['dec_year'])
 
 # Run the trend plotting function
-results = lin_lowess_trend_plot(df_psmsl_durban, date_col='time', waterlevel_col='sla')
-print("Linear slope (mm/yr):", results['slope_linear_per_year'])
-print("LOWESS slope (mm/yr):", results['slope_lowess_per_year'])
+results, df_lowess = lin_lowess_trend_plot_fixed(df_psmsl_durban, date_col='time', waterlevel_col='sla', lowess_frac=0.7)
+# print("Linear slope (mm/yr):", results['slope_linear_per_year'])
+# print("LOWESS slope (mm/yr):", results['slope_lowess_per_year'])
+
+# To allow comaprison, shift the lowess fit to be equal to the ISIMIP SLT at the start of the 30-year time period (1985-01-01)
+start_lowess = results['time_index'][0]
+results['lowess_time'] = start_lowess + pd.to_timedelta(results['x_full_days'], unit="D")
+
+target_time = df_extended.time[0]
+y_lowess = np.interp(target_time.value, results['lowess_time'].view("int64"), results['lowess_full'])
+
+y_target = df_extended['lowess_wl'].iloc[0]
+offset = y_target - y_lowess
+results['lowess_aligned'] = results['lowess_full'] + offset
+
+
+#%%#################################################################################
+# Plot extended SLR trand for water level dataset with annotate SLR value at the time of the event and bathymetry ref
+fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
+ax.plot(time_DFM, y_DFM_wl, label="ISIMIP SLR data (wl)", color='blue',linewidth=2)
+ax.fill_between(mean_SLR_DFM_wl['time'],
+                     mean_SLR_DFM_wl - std_SLR_DFM_wl,
+                     mean_SLR_DFM_wl + std_SLR_DFM_wl,
+                     color='blue', alpha=0.2)
+
+
+# ax.plot(extended_time, df_extended['linear_wl'], label=f"Extrapolated linear trend (wl)", color='grey', linestyle='--')
+ax.plot(extended_time, df_extended['lowess_wl'], label=f"Extrapolated LOWESS trend (wl)", color='grey', linestyle='--', linewidth=1)
+ax.plot(results['lowess_time'][(results['lowess_time'] >= start_date) & (results['lowess_time'] <= end_date_event)], 
+        results['lowess_aligned'][(results['lowess_time'] >= start_date) & (results['lowess_time'] <= end_date_event)],
+        label=f"LOWESS trend of PSMSL tide gauge data", color='red', linestyle='--', linewidth=1)
+
+ax.annotate(f'{bathy_mean_SLR_ref_wl:.0f}', xy=(mean_time, bathy_mean_SLR_ref_wl), 
+              xytext=(mean_time, bathy_mean_SLR_ref_wl - 6),
+              arrowprops=dict(arrowstyle='->'), fontsize=8)
+
+ax.annotate(f'(bathymetry reference)', xy=(mean_time + pd.Timedelta(days=350), bathy_mean_SLR_ref_wl), 
+              xytext=(mean_time + pd.Timedelta(days=350), bathy_mean_SLR_ref_wl - 6), fontsize=8)
+
+# ax.annotate(f'{SLR_mean_event_wl_lin:.0f}', xy=(df_extended.iloc[-1]["time"], SLR_mean_event_wl_lin), 
+#               xytext=(df_extended.iloc[-1]["time"], SLR_mean_event_wl_lin - 6),
+#               arrowprops=dict(arrowstyle='->'), fontsize=8)
+
+ax.annotate(f'{SLR_mean_event_wl_lws:.0f}', xy=(df_extended.iloc[-1]["time"], SLR_mean_event_wl_lws), 
+              xytext=(df_extended.iloc[-100]["time"], SLR_mean_event_wl_lws + 5),
+              arrowprops=dict(arrowstyle='->'), fontsize=8)
+
+ax.annotate(f'{results['lowess_aligned'][(results['lowess_time'] >= start_date) & (results['lowess_time'] <= end_date_event)][-1]:.0f}', 
+            xy=(df_extended.iloc[-1]["time"], results['lowess_aligned'][(results['lowess_time'] >= start_date) & (results['lowess_time'] <= end_date_event)][-1]), 
+              xytext=(df_extended.iloc[-200]["time"], results['lowess_aligned'][(results['lowess_time'] >= start_date) & (results['lowess_time'] <= end_date_event)][-1] + -7),
+              arrowprops=dict(arrowstyle='->'), fontsize=8)
+
+ax.set_title(f"Extrapolated ISIMIP SLR trend for stations within D-Flow FM domain")
+ax.set_xlabel("Year")
+ax.set_ylabel("Sea level rise (mm)")
+ax.set_xlim([pd.Timestamp('1985-01-01'), pd.Timestamp('2020-01-01')])
+ax.legend(fontsize=8)
+ax.grid()
+
+fig.savefig("../../../../Attribution_results/figures/S10.png", dpi=300)
+
+plt.tight_layout()
+plt.show()
 
 
 # %%
@@ -447,15 +543,15 @@ print(f"Geocentric trend: {slope_gc_per_year:.3f} units/year")
 print(f"Water level trend: {slope_wl_per_year:.3f} units/year")
 
 
+# NOTE incorrect! calculation of LOWESS trend slopes
+# slope_lowess_gc, intercept_lowess_gc, r_val, p_val, std_err = linregress(x_extended, df_extended['lowess_gc'])
+# slope_lowess_gc_per_year = slope_lowess_gc * 365.25  # convert from per day to per year
 
-slope_lowess_gc, intercept_lowess_gc, r_val, p_val, std_err = linregress(x_extended, df_extended['lowess_gc'])
-slope_lowess_gc_per_year = slope_lowess_gc * 365.25  # convert from per day to per year
+# slope_lowess_wl, intercept_lowess_wl, r_val, p_val, std_err = linregress(x_extended, df_extended['lowess_wl'])
+# slope_lowess_wl_per_year = slope_lowess_wl * 365.25
 
-slope_lowess_wl, intercept_lowess_wl, r_val, p_val, std_err = linregress(x_extended, df_extended['lowess_wl'])
-slope_lowess_wl_per_year = slope_lowess_wl * 365.25
-
-print(f"LOWESS trend geocentric: {slope_lowess_gc_per_year:.3f} units/year")
-print(f"LOWESS trend waterlevel: {slope_lowess_wl_per_year:.3f} units/year")
+# print(f"LOWESS trend geocentric: {slope_lowess_gc_per_year:.3f} units/year")
+# print(f"LOWESS trend waterlevel: {slope_lowess_wl_per_year:.3f} units/year")
 
 
 
