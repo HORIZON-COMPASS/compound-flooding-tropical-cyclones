@@ -500,7 +500,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
         mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
         background_outside_box = background[~background.intersects(mask_box)] # removing errorneous lines outside model region
         background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
-        background_outside_box.boundary.plot(ax=ax, color='#666666', linewidth=0.4, 
+        background_outside_box.boundary.plot(ax=ax, color="#818181", linewidth=0.2, 
                                              transform=ccrs.PlateCarree(), zorder=1)
         # Plot model region
         model_region_gdf.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3, transform=ccrs.PlateCarree())
@@ -1082,7 +1082,7 @@ fiat_models = calculate_damage_differences(fiat_models)
 #%%
 # PLOTTING for paper
 # Figure 4
-plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
+# plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 
 # Figure 5
 # plot_driver_combination_volume_extent_damage(models, fiat_models)
@@ -1091,7 +1091,7 @@ plot_hmax_diff_rain_slrwind_all(models, model_region, gdf_valid)
 # df_absolute_plotted_values = plot_driver_combination_absolute(models, fiat_models)
 
 # Table 2 & S2
-# table_abs_and_rel_vol_ext_dam(models, fiat_models)
+table_abs_and_rel_vol_ext_dam(models, fiat_models)
 
 # # Figure S12
 # plot_cf_timeseries_all(models)
@@ -1111,4 +1111,16 @@ slrwind_high = models[15]['sfincs_results']['hmax_diff'].quantile(0.99).round(1)
 print("99th percentile of maximum flood depth difference (hmax_diff) for different scenarios:")
 print(f"Rain low/med/high: {rain_low} / {rain_med} / {rain_high} m")
 print(f"SLR & Wind low/med/high: {slrwind_low} / {slrwind_med} / {slrwind_high} m")
+
+# %%
+# Buildings affects
+buildings_factual = fiat_models[0]['fiat_results'][fiat_models[0]['fiat_results']['total_damage'] > 0]
+buildings_all_low = fiat_models[1]['fiat_results'][fiat_models[1]['fiat_results']['total_damage'] > 0]
+buildings_all_medium = fiat_models[2]['fiat_results'][fiat_models[2]['fiat_results']['total_damage'] > 0]
+buildings_all_high = fiat_models[3]['fiat_results'][fiat_models[3]['fiat_results']['total_damage'] > 0]
+
+print(f"Number of affected buildings in factual scenario: {len(buildings_factual)}")
+print(f"Number of affected buildings in all drivers low scenario: {(len(buildings_factual) - len(buildings_all_low))}")
+print(f"Number of affected buildings in all drivers medium scenario: {(len(buildings_factual) - len(buildings_all_medium))}")
+print(f"Number of affected buildings in all drivers high scenario: {(len(buildings_factual) - len(buildings_all_high))}")
 # %%
