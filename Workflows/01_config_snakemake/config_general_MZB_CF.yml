@@ -47,7 +47,7 @@ runname_ids:
         config_fiat_base: fiat_base_build.yml               # name of the Delft-FIAT configuration file (default: fiat_base_build.yml)
 
         # Counterfactual forcing settings
-        CF_value_rain: [-8]                              # Factual specified as 0, and counterfactual values as a list (e.g. [-8] for -8% rainfall)
-        CF_value_wind: [-10]                             # Factual specified as 0, and counterfactual values as a list (e.g. [-10] for -10% wind speed)
-        CF_value_SLR: [-0.14]                            # Factual specified as 0, and counterfactual values as a list (e.g. [-0.14] for -0.14 m wind speed)
+        CF_value_rain: [-8]                                 # Factual specified as 0, and counterfactual values as a list (e.g. [-8] for -8% rainfall)
+        CF_value_wind: [-5]                                 # Factual specified as 0, and counterfactual values as a list (e.g. [-10] for -10% wind speed)
+        CF_value_SLR: [-0.1]                                # Factual specified as 0, and counterfactual values as a list (e.g. [-0.14] for -0.14 m wind speed)
         CF_landuse: [lisboa_2000, lisboa_2020]              # land use scenarios for wflow and SFINCS models
