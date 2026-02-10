@@ -38,6 +38,7 @@ else:
 tc_year = start_date.astype('datetime64[ms]').astype(datetime).year
 
 #%%
+# Load TC track shapefiles as geopandas geodataframe - obtain from https://www.ncei.noaa.gov/products/international-best-track-archive (v4r01 SI points)
 # directory where the IBTRACS database is stored
 ibtracs_path = 'p:/11210471-001-compass/01_Data/IBTrACS/IBTrACS.ALL.v04r01.nc'
 ds_ibtracs = xr.open_dataset(ibtracs_path)
