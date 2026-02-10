@@ -30,7 +30,8 @@ def lon_formatter(x, pos):
 #%%
 print("Loading Factual model")
 # define model and data catalog file paths
-factual_model_dir = os.path.join("..","data","sfincs","event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
+base = join("..","data","sfincs")
+factual_model_dir = join(base,"event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0")
 
 datacat = ['../../Workflows/03_data_catalogs/datacatalog_general.yml']
 data_catalog = DataCatalog(data_libs = datacat)
@@ -211,11 +212,9 @@ ax0.text(0.02, 0.85, '(b)', transform=ax0.transAxes, bbox=props, fontsize=10, fo
 ax1.text(0.02, 0.85, '(c)', transform=ax1.transAxes, bbox=props, fontsize=10, fontweight='bold')
 ax2.text(0.02, 0.85, '(d)', transform=ax2.transAxes, bbox=props, fontsize=10, fontweight='bold')
 
-
-fig.savefig("../figures/fS13.png", bbox_inches='tight', dpi=300)
-fig.savefig("../figures/fS13.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS11.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS11.pdf", bbox_inches='tight', dpi=300)
 plt.show()
-
 
 
 # %%
@@ -238,4 +237,5 @@ max_storm_surge_S5 = max_S5 - max_tide_S5
 
 print(f"Max coastal water level at S5: {max_S5:.1f} m")
 print(f"Max storm surge at S5: {max_storm_surge_S5:.1f} m")
+
 # %%
