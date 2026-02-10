@@ -1,4 +1,4 @@
-# %% In this script the regional SLR is calculate by using ISIMIP data from Treu et al. (2023): https://data.isimip.org/search/query/10.48364/ISIMIP.749905.1/
+# %% In this script the regional sea level data is downloaded and combined from ISIMIP data from Treu et al. (2023): https://data.isimip.org/search/query/10.48364/ISIMIP.749905.1/
 # Use the 'compass-snake-dfm' python environment
 # Import the necessary packages
 import numpy as np
@@ -26,8 +26,6 @@ years = range(1985, 2016)
 
 #%%
 datasets = {
-    "obsclim_geo": "hcc_obsclim_geocentricwaterlevel_global_hourly",
-    "counterclim_geo": "hcc_counterclim_geocentricwaterlevel_global_hourly",
     "obsclim_wl": "hcc_obsclim_waterlevel_global_hourly",
     "counterclim_wl": "hcc_counterclim_waterlevel_global_hourly",
 }
@@ -36,6 +34,7 @@ datasets = {
 #%%
 # Download and subset ISIMIP SLR data for MZB region
 BASE_URL = "https://files.isimip.org/ISIMIP3a/InputData/climate/sealevel/"
+# Change these to your own paths where you want to save the data
 OUTDIR = os.path.join(prefix, "11210471-001-compass/01_Data/ISIMIP/SLR/DFM_MZ_subset")
 TMPDIR = os.path.join(prefix, "11210471-001-compass/01_Data/ISIMIP/SLR/tmp_global")
 
