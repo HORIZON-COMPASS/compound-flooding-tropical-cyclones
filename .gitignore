@@ -26,7 +26,6 @@ Workflows/*.svg
 Workflows/02_workflow_rules/.snakemake
 Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
-Workflows/04_scripts/postprocessing/fiat
 Attribution_results/figures/*
 Attribution_results/data/*
 Socio-economic
