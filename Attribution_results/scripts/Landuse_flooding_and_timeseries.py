@@ -31,12 +31,12 @@ doris_factual_model_dir        = join(models_dir, "event_tp_era5_hourly_zarr_CF0
 # New factual model with updated landuse for 2020
 factual_model_dir            = join(models_dir, "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_lisboa_2020")
 # Counterfactual climate model with 8% of precipitation removed acc. to Clausius Clapeyron at 1.1 degree of warming, 
-# 14 cm of sea level rise (SLR) removed and with 10% reduced maximum tropical cyclone wind speeds
-CF_climate_model_dir         = join(models_dir, "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10_lisboa_2020")
+# 10 cm of sea level rise (SLR) removed and with 5% reduced maximum tropical cyclone wind speeds
+CF_climate_model_dir         = join(models_dir, "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5_lisboa_2020")
 # Counterfactual landuse model
 CF_landuse_model_dir         = join(models_dir, "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_lisboa_2000")
 # Counterfactual climate and landuse model
-CF_climate_landuse_model_dir = join(models_dir, "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10_lisboa_2000")
+CF_climate_landuse_model_dir = join(models_dir, "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5_lisboa_2000")
 
 #%%
 # Load in models and model region
