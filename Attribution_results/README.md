@@ -26,31 +26,29 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 |                                                                                                |
 | *Supplement*                                                                                   |
 | FS1                   | Attribution_results\scripts\SFINCS_basemap.py                          |
-| FS2 (request data)    | Attribution_results\scripts\Wflow_bankfull_removal                     |
-| FS3 (request data)    | Attribution_results\scripts\Wflow_bankfull_removal                     |
-| FS4 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
-| FS5 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
-| FS6 (request data)    | Attribution_results\scripts\Wflow_GRDC_comparison.py                   |
+| FS2                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
+| FS3                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
+| FS4                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
+| FS5                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
+| FS6                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
 | FS7                   | Workflows\04_scripts\postprocessing\dfm\output_to_catalog_add_waves.py |
 | FS8                   | Attribution_results\scripts\Validation_floodmaps_EO_data.py            |
-| FS9                   | Attribution_results\scripts\Calculating_SLR.py                         |
-| FS10                  | Attribution_results\scripts\Calculating_SLR.py                         |
-| FS11                  | Attribution_results\scripts\Calculating_SLR.py                         |
-| FS12                  | Attribution_results\scripts\Attribution_driver_combinations.py         |
-| FS13                  | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
-| FS14                  | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| Table S1 (request data) | Attribution_results\scripts\Wflow_bankfull_removal.py                  |
+| FS9                   | Attribution_results\scripts\Calculating_SLR.py                         |                       |
+| FS10                  | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| FS11                  | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
+| FS12                  | Attribution_results\scripts\Flood_damage_and_attribution.py            |
+| Table S1              | Attribution_results\scripts\Wflow_bankfull_removal.py                  |
 | Table S2              | Attribution_results\scripts\Attribution_driver_combinations.py         |
 |                                                                                                |
 | *In-text numbers*                                                                              |
 | Fact flood extent     | Table 2                                                                |
 | Fact discharge        | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
-| Discharge normal      | Table S2                                                               |
+| Discharge normal      | Table S1                                                               |
 | Mean accum rain       | Attribution_results\scripts\Rainfall_forcing_stats.py                  |
 | Max coast water level | Attribution_results\scripts\Factual_flooding_and_timeseries.py         |
 | Wave setup            | Workflows\04_scripts\postprocessing\dfm\output_to_catalog_add_waves.py |
 | Flooded buildings     | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Total damage          | Attribution_results\scripts\Flood_damage_and_attribution.py            |
 | Damage in Beira       | Attribution_results\scripts\Flood_damage_and_attribution.py            |
-| Affected CF SLR & Wind area | Attribution_results\scripts\Attribution_driver_combinations.py         |
+| Affected CF SLR & Wind area | Attribution_results\scripts\Attribution_driver_combinations.py   |
 | Affected CF Rain area | Attribution_results\scripts\Attribution_driver_combinations.py         |
