@@ -22,11 +22,10 @@ import rioxarray
 
 #%%
 # Set directories
-BASE        = Path("p:/11210471-001-compass/")
-BASE_RUNS   = BASE / "03_Runs/sofala/Idai/wflow"
-BASE_SFINCS = BASE / "02_Models/sofala/Idai/sfincs" 
-BASE_MODELS = Path("p:/11210471-001-compass/02_Models/sofala/Idai/wflow")
-BASE_DATA   = Path("p:/11210471-001-compass/01_Data/GRDC")
+BASE        = Path("../data")
+BASE_RUNS   = BASE / "wflow"
+BASE_SFINCS = BASE / "sfincs" 
+BASE_MODELS = BASE_RUNS / "base_model"
 
 # Load base model for shapefiles
 mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS / "wflow_sbm.toml"))
@@ -35,14 +34,12 @@ mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS
 gdf_wflow = gpd.read_file(BASE_MODELS / "staticgeoms" / "basins.geojson").to_crs("EPSG:4326")
 gdf_sfincs = gpd.read_file(BASE_SFINCS / "gis" / "region.geojson", driver="GeoJSON").to_crs("EPSG:4326")
 
-# Make sure to change "C:/Code/COMPASS/" to directory where to github repo is stored
 print("Initializing 30-year WFLOW model...")
 def make_model_warmup(subfolder: str):
     root = (Path(BASE_RUNS) / subfolder / "warmup").resolve()
     cfg = (Path(BASE_RUNS) / subfolder / "warmup" / "wflow_sbm.toml").resolve()
     return WflowModel(root=str(root), mode="r", config_fn=str(cfg))
 
-wflow_30yr_hist = make_model_warmup("event_precip_era5_daily_CF0_30yr_1954")
 wflow_30yr = make_model_warmup("event_precip_era5_hourly_zarr_CF0_30yr")
 
 #%%
@@ -132,7 +129,6 @@ fig, ax = plot_gauges_with_basins_and_sfincs(
 )
 
 
-
 # %% ##############################################################
 ################# COMPARE WFLOW VS. GLOFAS DATA ###################
 ###################################################################
@@ -146,7 +142,8 @@ end_date = "20190325 000000"
 start_dt = datetime.strptime(start_date, "%Y%m%d %H%M%S")
 end_dt = datetime.strptime(end_date, "%Y%m%d %H%M%S")
 
-# Load GloFAS datasets
+# Load GloFAS datasets; download data using "Workflows\04_scripts\postprocessing\wflow\retrieve_glofas_data_from_CDS.py" 
+# from https://ewds.climate.copernicus.eu/datasets/cems-glofas-historical?tab=download
 glofas_ds_v31 = data_cat.get_rasterdataset('glofas_era5_v31', geom=gdf_wflow)
 glofas_ds_v40 = data_cat.get_rasterdataset('glofas_era5_v40', geom=gdf_wflow)
 glofas_ds_v40 = glofas_ds_v40.rename({"valid_time": "time"})
@@ -587,6 +584,7 @@ axes[0].legend()
 
 fig.suptitle("Discharge comparison of wflow with GloFAS during TC Idai", fontsize=13, fontweight='bold')
 fig.savefig("../figures/fS5.png", dpi=300, bbox_inches="tight")
+fig.savefig("../figures/fS5.pdf", dpi=300, bbox_inches="tight")
 
 # Hide empty axes
 for j in range(i+1, len(axes)):
@@ -661,26 +659,13 @@ def plot_gauges_comparison_versions(gauges=["1", "2"], kge_all_v40=None, kge_all
     axes[-1].set_xlabel("Year")
 
     fig.tight_layout()
+    fig.savefig("../figures/fS6.png", dpi=300, bbox_inches="tight")
+    fig.savefig("../figures/fS6.pdf", dpi=300, bbox_inches="tight")
     plt.show()
 
 # Usage
 plot_gauges_comparison_versions(gauges=["1", "2"], kge_all_v40=kge_all_v40, kge_all_v31=kge_all_v31, glofas_ds_v40=glofas_30yr_aligned_v40['discharge'], glofas_ds_v31=glofas_30yr_aligned_v31['discharge'])
 
 
-# #%%
-# # Plot function for gauges comparison of 30yr wflow and GloFAS v3.1 data 
-# plot_gauges_comparison(gauges=["1", "2"], kge_all=kge_all_v31, glofas_ds=glofas_30yr_aligned_v31['discharge'])
-
-
-# # %%
-# # Overview DataFrame with KGE and event volume comparison
-# print("Creating overview DataFrame with KGE and event volume comparison...")
-# df_overview_glofas_v31 = df_kge_v31.copy(deep=True)
-# df_overview_glofas_v31['wflow / glofas event discharge [%]'] = df_stats['wflow / GloFAS [%]']
-# df_overview_glofas_v31['absolute difference [m³ * 1e8]'] = (df_stats['wflow [m³]'] - df_stats['GloFAS [m³]']) / 1e8
-# df_overview_glofas_v31 = df_overview_glofas_v31.set_index('gauge')
-
-# df_overview_glofas_v31
-# # %%
 
 # %%
