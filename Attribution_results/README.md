@@ -28,9 +28,9 @@ The script sin the folder *scripts* can be used to reproduce the figures and num
 | FS1                   | Attribution_results\scripts\SFINCS_basemap.py                          |
 | FS2                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
 | FS3                   | Attribution_results\scripts\Wflow_bankfull_removal                     |
-| FS4                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
-| FS5                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
-| FS6                   | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
+| FS4 (request data)    | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
+| FS5 (request data)    | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
+| FS6 (request data)    | Attribution_results\scripts\Wflow_GloFAS_comparison.py                 |
 | FS7                   | Workflows\04_scripts\postprocessing\dfm\output_to_catalog_add_waves.py |
 | FS8                   | Attribution_results\scripts\Validation_floodmaps_EO_data.py            |
 | FS9                   | Attribution_results\scripts\Calculating_SLR.py                         |                       |
