@@ -91,7 +91,7 @@ BASE_RUN_PATH = Path(join("..","data"))
 OUTPUT_DIR = Path("../figures")
 
 FACTUAL_EVENT = "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0"
-COUNTERFACTUAL_EVENT = "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10"
+COUNTERFACTUAL_EVENT = "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5"
 
 # ===== FILE PATHS =====
 # CF0 refers to Factual and CFall to Counterfactual with climate trends removed from rain, SLR & wind
@@ -473,8 +473,8 @@ axes[1].set_title("Counterfactual", fontsize=10)
 axes[2].set_title("Factual - Counterfactual", fontsize=10)
 
 # fig.suptitle("Total Aggregated Flood Damage", fontsize=12)
-fig.savefig("../figures/fS14.png", bbox_inches='tight', dpi=300)
-fig.savefig("../figures/fS14.pdf", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS12.png", bbox_inches='tight', dpi=300)
+fig.savefig("../figures/fS12.pdf", bbox_inches='tight', dpi=300)
 
 # %%
 gdf_cf_grid_masked['rel_dam_diff'] = (gdf_grid_masked['relative_aggr_damage'] - gdf_cf_grid_masked['relative_aggr_damage']) / gdf_grid_masked['relative_aggr_damage'] * 100
