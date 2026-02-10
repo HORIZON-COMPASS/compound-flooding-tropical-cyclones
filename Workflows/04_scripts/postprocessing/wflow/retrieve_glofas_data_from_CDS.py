@@ -1,4 +1,4 @@
-#%%
+#%% Use pixi environment compass-dataviz
 import os
 import cdsapi
 import platform
