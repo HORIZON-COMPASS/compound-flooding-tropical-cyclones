@@ -135,20 +135,13 @@ for gauge in df_F_no_bankfull.columns:
 
 
 # %%
-# Read the model
-mod = WflowModel(
-    root=join(wflow_root_30yr, "warmup"),
-    data_libs=data_cats,
-    mode="r",
-    logger=logger,
-)
-mod.read()
-
-# Read in the wflow discharge 
-df = mod.results['netcdf']['Q'].to_pandas()
+# Read in the 30yr wflow discharge and set time as index
+df_wflow_30yr = pd.read_csv(join(wflow_root_30yr, "warmup", "wflow_output_Q.csv"))
+df_wflow_30yr["time"] = pd.to_datetime(df_wflow_30yr["time"])
+df_wflow_30yr = df_wflow_30yr.set_index("time")
 
 # Select first two gauges
-gauges = df[['1', '2']]
+gauges = df_wflow_30yr[['1', '2']]
 rivers = ["Buzi", "Pungwe"]
 
 # Create subplots for two gauges
@@ -157,7 +150,7 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 qbankfull = []
 
 for i, gauge in enumerate(gauges):
-    data = df[gauge]
+    data = df_wflow_30yr[gauge]
     model_bm = EVA(data=data)
 
     peaks = model_bm.get_extremes(
