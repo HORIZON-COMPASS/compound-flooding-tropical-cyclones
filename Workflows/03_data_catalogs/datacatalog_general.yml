@@ -17,7 +17,7 @@ basin_atlas_level12_v10:
   crs: 4326
 era5_daily:
   data_type: RasterDataset
-  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}*_daily.nc
+  path: wflow_global/hydromt/meteo/era5_daily/nc_merged/era5_{year}_daily.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -811,7 +811,7 @@ vito_mapping_sfincs:
 vito_mapping_wflow:
   data_type: DataFrame
   provider: user
-  path: 11210471-001-compass/01_Data/lulc/vito_mapping_mod.csv
+  path: 11210471-001-compass/01_Data/lulc/vito_mapping_hydromtwflow.csv
   driver: csv
   driver_kwargs:
     index_col: 0
