@@ -15,7 +15,7 @@ import cartopy.io.shapereader as shpreader
 from matplotlib.patches import ConnectionPatch
 
 #%% Load TC track shapefiles as geopandas geodataframe - obtain from https://www.ncei.noaa.gov/products/international-best-track-archive (v4r01 SI points)
-data_base = "C:/Code/Paper_1/Data_submission"
+data_base = "../data/"
 
 shapefile_path = os.path.join(data_base, "ibtracs/IBTrACS.SI.list.v04r01.points.shp")
 gdf = gpd.read_file(shapefile_path)
@@ -204,7 +204,7 @@ con_bottom = ConnectionPatch(
 fig.add_artist(con_top)
 fig.add_artist(con_bottom)
 
-fig.savefig("../figures/f02_none.png", dpi=300, bbox_inches="tight", transparent=False)
-# fig.savefig("../figures/f02.pdf", dpi=300, bbox_inches="tight", transparent=False)
+fig.savefig("../figures/f02.png", dpi=300, bbox_inches="tight", transparent=False)
+fig.savefig("../figures/f02.pdf", dpi=300, bbox_inches="tight", transparent=False)
 plt.show()
 # %%
