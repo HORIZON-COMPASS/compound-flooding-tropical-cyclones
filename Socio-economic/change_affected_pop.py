@@ -45,9 +45,9 @@ prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 # ===== CONFIGURATION =====
 EVENT_NAME = "Idai"
-BASE_RUN_PATH = Path("C:/Code/Paper_1/Data_submission")
+BASE_RUN_PATH = Path("p:/11210471-001-compass/03_Runs/sofala/Idai")
 SCENARIO_PATH_F = "event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0" # factual
-SCENARIO_PATH_CF = "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10" # counterfactual
+SCENARIO_PATH_CF = "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5" # counterfactual
 
 # ===== FILE PATHS =====
 # Base directory for the specific event and scenario
@@ -65,9 +65,8 @@ data_catalog = DataCatalog(data_libs = [datacat_path])
 
 #%%
 # ===== Input files ==== #
-shapefile_fp = "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/gis/region.geojson"   # replace with your region shapefile
+region = gpd.read_file("p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5_hourly_zarr_CF0_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/gis/region.geojson")
 background = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_region_background.geojson", driver="GeoJSON")
-region = gpd.read_file(shapefile_fp)
 shapefile_sofala = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_province.shp")
 
 # Load the admin3 district in the case study region to validate exposed people
@@ -79,11 +78,11 @@ population_raster_path_2019 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Popula
 population_raster_path_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_1990_30.tif")  
 
 # flood raster
-F_flooding = sfincs_dir_F / "floodmap.tif"
-CF_flooding = sfincs_dir_CF / "floodmap.tif"
+F_flooding = sfincs_dir_F / "plot_output" / "floodmap.tif"
+CF_flooding = sfincs_dir_CF / "plot_output" / "floodmap.tif"
 
 # Flood model subgrid
-sfincs_subgrid = BASE_RUN_PATH / "sfincs" / "subgrid" / "dep_subgrid.tif"
+sfincs_subgrid = join(sfincs_dir_F, "subgrid", "dep_subgrid.tif")
 
 
 #%% Read flood data and background polygons
@@ -749,7 +748,7 @@ plt.xlim(0, 3.5)
 plt.show()
 
 
-# --- PLot absolute line plot ---
+#%% --- PLot absolute line plot ---
 bin_centers = bins_fine[:-1] + np.diff(bins_fine) / 2
 plt.figure(figsize=(8,5))
 plt.plot(bin_centers, pop_2019_by_depth_F_fine.values, label="Factual")
@@ -757,8 +756,44 @@ plt.plot(bin_centers, pop_2019_by_depth_CF_fine.values, label="Counterfactual Cl
 plt.plot(bin_centers, pop_1990_by_depth_F_fine.values, label="Counterfactual Population")
 plt.plot(bin_centers, pop_1990_by_depth_CF_fine.values, label="Counterfactual Climate & Population")
 plt.xlabel("Flood depth (m)")  
-plt.ylabel("Exposed population")
+plt.ylabel("Exposed population per 0.1 m bin")
 plt.title("Population exposed by flood depth bins") 
+plt.legend()
+plt.xlim(0.05, 3.5)
+plt.grid(True, linestyle="--", alpha=0.5)
+
+
+#%%
+Change_per_flood_depth = pd.DataFrame({
+    "Factual": pop_2019_by_depth_F_fine,
+    "CF_climate": pop_2019_by_depth_CF_fine,
+    "CF_population": pop_1990_by_depth_F_fine,
+    "CF_climate_population": pop_1990_by_depth_CF_fine
+})
+
+Change_per_flood_depth["Rel_change_CF_climate"] = (Change_per_flood_depth["Factual"] - Change_per_flood_depth["CF_climate"]) / Change_per_flood_depth["Factual"] * 100
+Change_per_flood_depth["Rel_change_CF_population"] = (Change_per_flood_depth["Factual"] - Change_per_flood_depth["CF_population"]) / Change_per_flood_depth["Factual"] * 100
+Change_per_flood_depth["Rel_change_CF_climate_population"] = (Change_per_flood_depth["Factual"] - Change_per_flood_depth["CF_climate_population"]) / Change_per_flood_depth["Factual"] * 100
+Change_per_flood_depth["Dominant_driver"] = Change_per_flood_depth["Rel_change_CF_climate"] / Change_per_flood_depth["Rel_change_CF_population"]
+
+plt.figure(figsize=(8,5))
+plt.plot(bin_centers, Change_per_flood_depth["Rel_change_CF_climate"], label="Climate change")
+plt.plot(bin_centers, Change_per_flood_depth["Rel_change_CF_population"], label="Population change")
+plt.plot(bin_centers, Change_per_flood_depth["Rel_change_CF_climate_population"], label="Climate & Population change")
+plt.axhline(y=0, linestyle="--", color="black", alpha=0.7)
+plt.xlabel("Flood depth (m)")  
+plt.ylabel("Attributable exposed population (%)")
+plt.title("Attributable population exposed by flood depth bins") 
+plt.legend()
+plt.xlim(0, 3.5)
+plt.grid(True, linestyle="--", alpha=0.5)
+
+plt.figure(figsize=(8,5))
+plt.plot(bin_centers, Change_per_flood_depth["Dominant_driver"])
+plt.axhline(y=0, linestyle="--", color="black", alpha=0.7)
+plt.xlabel("Flood depth (m)")  
+plt.ylabel("Dominant driver (Climate change / Population change)")
+plt.title("Attributable population exposed by flood depth bins") 
 plt.legend()
 plt.xlim(0, 3.5)
 plt.grid(True, linestyle="--", alpha=0.5)
@@ -888,9 +923,7 @@ def draw_peak_arrows(x, yA, yB, peaksA, peaksB, color, label_prefix, label_offse
 # Colours based on conceptual figure
 colours = ['#00B050', '#1E2E57', "#28C2E9", '#9B59B6']
 
-fig, (ax_main, ax_zoom) = plt.subplots(2, 1, figsize=(9, 8), gridspec_kw={'height_ratios': [3, 1]}, dpi=300)
-
-plt.sca(ax_main)
+fig, ax_main = plt.subplots(1, 1, figsize=(10, 6), dpi=300)
 
 # Define the boundaries
 x_bg = np.linspace(0, 3.5, 500)  # example x array
@@ -967,54 +1000,194 @@ ax_main.text(1.0, max(y_F)*0.07, "Medium", ha="center", va="center", fontsize=9,
 ax_main.text(2.5, max(y_F)*0.07, "High", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
 
 ax_main.set_ylim(0, y_CF_clim_pop.max() * 1.05)
-# -----------------
-# ZOOMED PLOT
-# -----------------
-plt.sca(ax_zoom)
-
-ax_zoom.fill_between(x_bg[high_mask], 0, max(y_CF_clim_pop)*1.05, color="#808080", alpha=0.3, step='post')
-ax_zoom.text(2.5, max(y_F)*0.05, "High", ha="center", va="center", fontsize=9, color="#5C5C5C", fontweight="bold")
-
-ax_zoom.plot(x, y_F, color=colours[0], linewidth=2)
-ax_zoom.plot(x, y_CF_clim, color=colours[1], linewidth=1)
-ax_zoom.plot(x, y_CF_pop, color=colours[2], linewidth=1)
-ax_zoom.plot(x, y_CF_clim_pop, color=colours[3], linewidth=1)
-
-ax_zoom.set_xlim(1.5, x.max())
-ax_zoom.set_ylim(0, 0.15)
-ax_zoom.set_xlabel("Flood depth (m)")
-ax_zoom.set_ylabel("")
-ax_zoom.set_title("Zoomed-in to tail")
-ax_zoom.grid(True, linestyle="--", alpha=0.5)
 
 
-ax_zoom.fill_between(x, y_CF_pop, y_F, where=(y_CF_pop > y_F),
-                     alpha=0.15, color=colours[2])
-ax_zoom.fill_between(x, y_F, y_CF_clim_pop, where=(y_CF_clim_pop > y_F),
-                     alpha=0.15, color=colours[3])
-ax_zoom.fill_between(x, y_CF_clim, y_F, where=(y_F > y_CF_clim),
-                     alpha=0.15, color=colours[0])
-ax_zoom.fill_between(x, y_CF_clim_pop, y_F, where=(y_F > y_CF_clim_pop),
-                     alpha=0.15, color=colours[0])
+
+#%%
+# Plotting absolute change in exposed population per water depth
+
+fig, ax = plt.subplots(figsize=(8,5))
+
+x = bin_centers
+y_F = pop_2019_by_depth_F_fine.values
+y_CF_clim = pop_2019_by_depth_CF_fine.values
+y_CF_pop = pop_1990_by_depth_F_fine.values
+y_CF_clim_pop = pop_1990_by_depth_CF_fine.values
+
+ymax = max(y_F.max(), y_CF_clim.max(), y_CF_pop.max(), y_CF_clim_pop.max()) * 1.05
+
+x_bg = np.linspace(0, 3.5, 500)  # example x array
+low_mask = x_bg < 0.5
+mid_mask = (x_bg >= 0.5) & (x_bg < 1.5)
+high_mask = x_bg >= 1.5
+
+ax.fill_between(x_bg[low_mask], 0, ymax, color="#d9d9d9", alpha=0.3)
+ax.fill_between(x_bg[mid_mask], 0, ymax, color="#b3b3b3", alpha=0.3)
+ax.fill_between(x_bg[high_mask], 0, ymax, color="#808080", alpha=0.3)
+
+ax.plot(x, y_F, label=f"Factual ({np.nansum(ra_exposed_pop_2019_F).astype(int):,.0f} people)", color=colours[0], linewidth=2)
+ax.plot(x, y_CF_clim, label=f"Counterfactual Climate ({np.nansum(ra_exposed_pop_2019_CF).astype(int):,.0f} people)", color=colours[1], linewidth=1)
+ax.plot(x, y_CF_pop, label=f"Counterfactual Population ({np.nansum(ra_exposed_pop_1990_F).astype(int):,.0f} people)", color=colours[2], linewidth=1)
+ax.plot(x, y_CF_clim_pop, label=f"Counterfactual Climate & Population ({np.nansum(ra_exposed_pop_1990_CF).astype(int):,.0f} people)", color=colours[3], linewidth=1)
+
+# For plotting background fills, we need to interpolate the y-values to match the finer x-grid
+# x_fine = np.linspace(x.min(), x.max(), 500)
+# y_F_fine = np.interp(x_fine, x, y_F)
+# y_CF_clim_fine = np.interp(x_fine, x, y_CF_clim)
+# y_CF_pop_fine = np.interp(x_fine, x, y_CF_pop)
+# y_CF_clim_pop_fine = np.interp(x_fine, x, y_CF_clim_pop)
+# ax.fill_between(x_fine, y_F_fine, y_CF_clim_fine, where=(y_CF_clim_fine > y_F_fine),
+#                 alpha=0.5, color=colours[1])
+# ax.fill_between(x_fine, y_CF_pop_fine, y_F_fine, where=(y_F_fine > y_CF_pop_fine),
+#                 alpha=0.5, color=colours[2])
+# ax.fill_between(x_fine, y_CF_clim_pop_fine, y_F_fine, where=(y_F_fine > y_CF_clim_pop_fine),
+#                 alpha=0.5, color=colours[3])
+
+# peaks_F, _ = find_peaks(y_F)
+
+# if len(peaks_F) > 0:
+#     idx = peaks_F[np.argmax(y_F[peaks_F])]  # highest peak
+#     ax.annotate(f"{x[idx]:.2f} m",
+#                 xy=(x[idx], y_F[idx]),
+#                 xytext=(x[idx] + 0.2, y_F[idx] * 0.9),
+#                 arrowprops=dict(arrowstyle="->"))
 
 
-ax_zoom.annotate("", xy=(1.62, 0.10), xytext=(1.62, 0.057), ha="center", va="center", 
-                 arrowprops=dict(arrowstyle="->", lw=1.2, color=colours[0], shrinkA=0, shrinkB=0))
-ax_zoom.annotate("", xy=(2.67, 0.032), xytext=(2.65, 0.022), ha="center", va="center", 
-                 arrowprops=dict(arrowstyle="->", lw=1.2, color=colours[0], shrinkA=0, shrinkB=0))
-ax_zoom.annotate("", xy=(2.15, 0.073), xytext=(2.15, 0.05), ha="center", va="center", 
-                 arrowprops=dict(arrowstyle="->", lw=1.2, color=colours[3], shrinkA=0, shrinkB=0))
-ax_zoom.annotate("", xy=(1.66, 0.115), xytext=(1.65, 0.1), ha="center", va="center", 
-                 arrowprops=dict(arrowstyle="->", lw=1.2, color=colours[2], shrinkA=0, shrinkB=0))
+# Find peaks and sort by height
+peaks, _ = find_peaks(y_F)
+sorted_peaks_F = peaks[np.argsort(y_F[peaks])[::-1]]
+peaks, _ = find_peaks(y_CF_clim)
+sorted_peaks_CF_clim = peaks[np.argsort(y_CF_clim[peaks])[::-1]]
+peaks, _ = find_peaks(y_CF_pop)
+sorted_peaks_CF_pop = peaks[np.argsort(y_CF_pop[peaks])[::-1]]
 
-ax_zoom.text(1.67, 0.04, f"Climate change", ha="center", va="center", fontsize=8, color=colours[0], fontweight="bold",
-             bbox=dict(boxstyle="round",pad=0.15, facecolor="lightgrey", edgecolor="none", alpha=0.5))
-ax_zoom.text(2.67, 0.04, f"Climate change", ha="left", va="center", fontsize=8, color=colours[0], fontweight="bold",
-             bbox=dict(boxstyle="round",pad=0.15, facecolor="lightgrey", edgecolor="none", alpha=0.5))
-ax_zoom.text(2.15, 0.087, f"Relative population change", ha="center", va="center", fontsize=8, color=colours[3], fontweight="bold",
-             bbox=dict(boxstyle="round",pad=0.15, facecolor="lightgrey", edgecolor="none", alpha=0.5))
-ax_zoom.text(1.68, 0.125, f"Relative population change \n         + climate change", ha="left", va="center", fontsize=8, color=colours[2], 
-             fontweight="bold", bbox=dict(boxstyle="round",pad=0.15, facecolor="lightgrey", edgecolor="none", alpha=0.5))
+# peak annotations 
+if len(sorted_peaks_F) > 1:
+    second_peak_x = x[sorted_peaks_F[1]]
+    plt.annotate(f"{x[sorted_peaks_F[0]]:.2f} m",
+                 xy=(x[sorted_peaks_F[0]]+0.02, y_F[sorted_peaks_F[0]]),
+                 xytext=(x[sorted_peaks_F[0]]+0.15, y_F[sorted_peaks_F[0]]-0.05), color=colours[0], fontsize=8,
+                 arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[0], linestyle='--'))
+    plt.annotate(f"{x[sorted_peaks_F[1]]:.2f} m", 
+                 xy=(x[sorted_peaks_F[1]]+0.02, y_F[sorted_peaks_F[1]]),
+                 xytext=(x[sorted_peaks_F[1]]+0.15, y_F[sorted_peaks_F[1]]), color=colours[0], fontsize=8,
+                 arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[0], linestyle='--'))
+
+if len(sorted_peaks_CF_clim) > 1:
+    second_peak_x = x[sorted_peaks_CF_clim[1]]
+for i, idx in enumerate(sorted_peaks_CF_clim[:2]): 
+    plt.annotate(f"{x[idx]:.2f} m",
+                 xy=(x[idx]+0.02, y_CF_clim[idx]),
+                 xytext=(x[idx]+0.15, y_CF_clim[idx]+0.05), color=colours[1], fontsize=8,
+                 arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[1], linestyle='--'))
+
+for i, idx in enumerate(sorted_peaks_CF_pop[:2]): 
+    plt.annotate(f"{x[idx]:.2f} m",
+                 xy=(x[idx]+0.01, y_CF_pop[idx]),
+                 xytext=(x[idx]+0.15, y_CF_pop[idx]+0.03), color=colours[2], fontsize=8,
+                 arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[2], linestyle='--'))
+    
+ax.text(0.25, ymax*0.03, "Low", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+ax.text(1.0, ymax*0.03, "Medium", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+ax.text(2.5, ymax*0.03, "High", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+
+ax.set_xlabel("Flood depth (m)")
+ax.set_ylabel("Exposed population")
+ax.set_xlim(0.05, 3.5)
+ax.set_ylim(0, ymax)
+ax.grid(True, linestyle="--", alpha=0.5)
+ax.legend()
+
+
+#%%
+# --- Plot absolute line plot COMPARED TO FACTUAL ---
+fig, ax = plt.subplots(figsize=(8,5))
+
+perct_attr_clim = (np.nansum(ra_exposed_pop_2019_F) - np.nansum(ra_exposed_pop_2019_CF)) / np.nansum(ra_exposed_pop_2019_F) * 100
+perct_attr_pop = (np.nansum(ra_exposed_pop_2019_F) - np.nansum(ra_exposed_pop_1990_F)) / np.nansum(ra_exposed_pop_2019_F) * 100
+perct_attr_clim_pop = (np.nansum(ra_exposed_pop_2019_F) - np.nansum(ra_exposed_pop_1990_CF)) / np.nansum(ra_exposed_pop_2019_F) * 100
+
+diff_clim = (pop_2019_by_depth_F_fine.values - pop_2019_by_depth_CF_fine.values)
+diff_pop = (pop_2019_by_depth_F_fine.values - pop_1990_by_depth_F_fine.values)
+diff_clim_pop = (pop_2019_by_depth_F_fine.values - pop_1990_by_depth_CF_fine.values)
+
+ax.plot(bin_centers, diff_clim, label=f"Climate change ({int(np.round(perct_attr_clim))} %)", color=colours[1])
+ax.plot(bin_centers, diff_pop, label=f"Population change ({int(np.round(perct_attr_pop))} %)", color=colours[2])
+ax.plot(bin_centers, diff_clim_pop, label=f"Climate & Population change ({int(np.round(perct_attr_clim_pop))} %)", color=colours[3])
+ax.set_xlabel("Flood depth (m)")  
+ax.set_ylabel("Absolute change in exposed population")
+ax.axhline(y=0, linestyle="--", color="black", alpha=0.7)
+ax.legend(loc='upper right', fontsize=9)
+ax.set_xlim(0.05, 3.5)
+ax.set_ylim(-8000, 30000)
+ax.grid(True, linestyle="--", alpha=0.5)
+
+ax.fill_between(x_bg[low_mask], -8000, 30000, color="#d9d9d9", alpha=0.3)
+ax.fill_between(x_bg[mid_mask], -8000, 30000, color="#b3b3b3", alpha=0.3)
+ax.fill_between(x_bg[high_mask], -8000, 30000, color="#808080", alpha=0.3)
+ax.text(0.25, (pop_2019_by_depth_F_fine.values - pop_1990_by_depth_CF_fine.values).max()*0.2, "Low", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+ax.text(1.0, (pop_2019_by_depth_F_fine.values - pop_1990_by_depth_CF_fine.values).max()*0.2, "Medium", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+ax.text(2.5, (pop_2019_by_depth_F_fine.values - pop_1990_by_depth_CF_fine.values).max()*0.2, "High", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
+
+
+#%%
+x = bin_centers
+
+low_mask = x < 0.5
+mid_mask = (x >= 0.5) & (x < 1.5)
+high_mask = x >= 1.5
+
+
+low_vals = [
+    diff_clim[low_mask].sum(),
+    diff_pop[low_mask].sum(),
+    diff_clim_pop[low_mask].sum()
+]
+
+mid_vals = [
+    diff_clim[mid_mask].sum(),
+    diff_pop[mid_mask].sum(),
+    diff_clim_pop[mid_mask].sum()
+]
+
+high_vals = [
+    diff_clim[high_mask].sum(),
+    diff_pop[high_mask].sum(),
+    diff_clim_pop[high_mask].sum()
+]
+
+data = np.array([low_vals, mid_vals, high_vals])
+
+fig, ax = plt.subplots(figsize=(8,5))
+
+bar_width = 0.25
+x_pos = np.arange(3)  # Low, Medium, High
+
+labels = ["Low", "Medium", "High"]
+
+ax.bar(x_pos - bar_width, data[:,0], width=bar_width, 
+       label=f"Climate change ({int(np.round(perct_attr_clim))} %)", 
+       color=colours[1])
+
+ax.bar(x_pos, data[:,1], width=bar_width, 
+       label=f"Population change ({int(np.round(perct_attr_pop))} %)", 
+       color=colours[2])
+
+ax.bar(x_pos + bar_width, data[:,2], width=bar_width, 
+       label=f"Climate & Population change ({int(np.round(perct_attr_clim_pop))} %)", 
+       color=colours[3])
+
+ax.set_xticks(x_pos)
+ax.set_xticklabels(labels, fontdict={'fontweight': 'bold', 'color': '#5C5C5C'})
+
+ax.set_ylabel("Absolute change in exposed population")
+ax.set_xlabel("Flood depth")
+ax.axhline(0, linestyle="--", color="black", alpha=0.7)
+ax.legend(fontsize=9, loc='upper right')
+ax.grid(True, linestyle="--", alpha=0.5)
+
+plt.tight_layout()
+plt.show()
 
 #%%
 # Check whether population count varies per cell
