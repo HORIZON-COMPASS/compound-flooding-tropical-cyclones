@@ -39,6 +39,7 @@ from scipy.signal import find_peaks
 from matplotlib.colors import PowerNorm, TwoSlopeNorm
 from rasterio.transform import rowcol
 from scipy.ndimage import gaussian_filter1d
+from matplotlib.colors import TwoSlopeNorm
 
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
@@ -76,6 +77,25 @@ districts_adm2 = data_catalog.get_geodataframe("gadm_level2", geom=region, buffe
 population_raster_path_2019 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2019_30.tif")  
 population_raster_path_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_1990_30.tif")  
 
+settlement_type_path = Path("C:/Code/COMPASS/Socio-economic/results/gis/avg_rural_per_grid.tif")
+
+with rasterio.open(settlement_type_path) as src:
+        settlement_type_grid = src.read(1, masked=True)
+        settlement_type_grid_affine = src.transform
+        settlement_type_grid_crs = src.crs
+
+# Open original 1 km population rasters
+with rasterio.open(population_raster_path_2019) as src_2019:
+    region_proj = region.to_crs(src_2019.crs)
+    pop_2019_1km, transform_pop_2019_1km = mask(src_2019, region_proj.geometry, crop=True)
+    print("No-data value Population 2019:", src_2019.nodata)
+
+with rasterio.open(population_raster_path_1990) as src_1990:
+    region_proj = region.to_crs(src_1990.crs)
+    pop_1990_1km, transform_pop_1990_1km = mask(src_1990, region_proj.geometry, crop=True)
+    print("No-data value Population 1990:", src_1990.nodata)
+
+
 # flood raster
 F_flooding = sfincs_dir_F / "plot_output" / "floodmap.tif"
 CF_flooding = sfincs_dir_CF / "plot_output" / "floodmap.tif"
@@ -91,6 +111,7 @@ with rasterio.open(sfincs_subgrid) as src:
 
 # --- Setup region ---
 region = region.to_crs(flood_grid_crs)
+region_wsg84 = region.to_crs("EPSG:4326")
 region_geom = [json.loads(region.to_json())["features"][0]["geometry"]]
 
 # --- Read flood rasters ---
@@ -98,6 +119,7 @@ hmax_F_da = rxr.open_rasterio(F_flooding).squeeze("band", drop=True)  # if singl
 hmax_CF_da = rxr.open_rasterio(CF_flooding).squeeze("band", drop=True)  # if single-band
 hmax_F = hmax_F_da.values
 hmax_CF = hmax_CF_da.values
+hmax_diff = hmax_F - hmax_CF
 
 # get extent from raster transform
 def get_extent(transform, width, height):
@@ -247,7 +269,7 @@ def reproject_and_redistribute_population_over_land(pop_path, land_gdf, flood_cr
     diff = abs(total_output_pop - total_input_pop)
     rel_diff = diff / total_input_pop * 100
 
-    # --- 7️⃣ Validation printout ---
+    # --- Validation printout ---
     print("  ✔ Redistribution done.")
     print(f"  🔹 Input population:  {total_input_pop:,.0f}")
     print(f"  🔹 Output population: {total_output_pop:,.0f}")
@@ -299,23 +321,25 @@ def reproject_and_redistribute_population_over_land(pop_path, land_gdf, flood_cr
     return pop_fine, pop_sofala, transform_sofala, pop_districts_adm3, pop_affine_districts_adm3, pop_districts_adm2, pop_affine_districts_adm2
 
 # --- Function to link population raster to flood depth as DataFrame ---
-def pop_raster_to_gdf(pop_array, flood_array, transform, year, climate, export_df=True, export_path=None):
+def pop_raster_to_gdf(pop_array, flood_array, settlement_type_array, transform, year, climate, export_df=True, export_path=None):
     print("Linking population raster to flood depth as DataFrame...")
 
     # Check if shapes match
-    if pop_array.shape == flood_array.shape:
+    if pop_array.shape == flood_array.shape == settlement_type_array.shape:
         print("✔ Shapes match")
     else:
-        print("✖ Shapes do NOT match!", pop_array.shape, flood_array.shape)
+        print("✖ Shapes do NOT match!", pop_array.shape, flood_array.shape, settlement_type_array.shape)
 
     # Flatten arrays
     pop_flat = pop_array.ravel()
     flood_flat = flood_array.ravel()
+    settlement_type_flat = settlement_type_array.ravel()
 
     # Mask zero-pop cells
     mask = (pop_flat > 0) & (flood_flat > 0)
     pop_vals = pop_flat[mask]
     flood_vals = flood_flat[mask]
+    settlement_type_vals = settlement_type_flat[mask]
 
     # Pixel coordinates (centers)
     rows, cols = np.indices(pop_array.shape)
@@ -324,6 +348,7 @@ def pop_raster_to_gdf(pop_array, flood_array, transform, year, climate, export_d
     df = pd.DataFrame({
         "population": pop_vals,
         "flood_depth": flood_vals,
+        "settlement_type": settlement_type_vals,
         "x": xs,
         "y": ys
     })
@@ -374,7 +399,9 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
     total_agg = block_sum(total_pop_array, factor)
     exposed_agg = block_sum(np.where(flood_raster > 0, total_pop_array, 0), factor)
     avg_flood_depth = block_mean(flood_raster, factor)
+    cells_flooded = block_count_threshold(flood_raster, factor=factor, threshold=0)
     pixels_high = block_count_threshold(flood_raster, factor=factor, threshold=1)
+    pixels_higher = block_count_threshold(flood_raster, factor=factor, threshold=1.5)
 
     # --- Build coarse grid ---
     nrows_coarse, ncols_coarse = total_agg.shape
@@ -389,7 +416,9 @@ def aggregate_pop(total_pop_array, flood_raster, transform, crs, region=None, ba
             "total_population": total_agg.flatten(),
             "exposed_population": exposed_agg.flatten(),
             "avg_flood_depth": avg_flood_depth.flatten(),
-            "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100
+            "pct_cells_flooded": (cells_flooded.flatten() / (factor**2)) * 100,
+            "pct_cells_higher_1m": (pixels_high.flatten() / (factor**2)) * 100,
+            "pct_cells_higher_1.5m": (pixels_higher.flatten() / (factor**2)) * 100
         },
         geometry=grid_cells,
         crs=crs
@@ -472,10 +501,10 @@ for year, path in [(1990, population_raster_path_1990),
     ) 
 
 # --- Compute exposed population GeoDataFrames ---
-gdf_pop_2019_flood_depth_F  = pop_raster_to_gdf(pop_arrays[2019], hmax_F, flood_grid_transform, year=2019, climate="F", export_df=True, export_path=export_path)
-gdf_pop_2019_flood_depth_CF = pop_raster_to_gdf(pop_arrays[2019], hmax_CF, flood_grid_transform, year=2019, climate="CF", export_df=True, export_path=export_path)
-gdf_pop_1990_flood_depth_F  = pop_raster_to_gdf(pop_arrays[1990], hmax_F, flood_grid_transform, year=1990, climate="F", export_df=True, export_path=export_path)
-gdf_pop_1990_flood_depth_CF = pop_raster_to_gdf(pop_arrays[1990], hmax_CF, flood_grid_transform, year=1990, climate="CF", export_df=True, export_path=export_path)
+gdf_pop_2019_flood_depth_F  = pop_raster_to_gdf(pop_arrays[2019], hmax_F, settlement_type_grid, flood_grid_transform, year=2019, climate="F", export_df=True, export_path=export_path)
+gdf_pop_2019_flood_depth_CF = pop_raster_to_gdf(pop_arrays[2019], hmax_CF, settlement_type_grid, flood_grid_transform, year=2019, climate="CF", export_df=True, export_path=export_path)
+gdf_pop_1990_flood_depth_F  = pop_raster_to_gdf(pop_arrays[1990], hmax_F, settlement_type_grid, flood_grid_transform, year=1990, climate="F", export_df=True, export_path=export_path)
+gdf_pop_1990_flood_depth_CF = pop_raster_to_gdf(pop_arrays[1990], hmax_CF, settlement_type_grid, flood_grid_transform, year=1990, climate="CF", export_df=True, export_path=export_path)
 
 # simple rasters for fast plotting
 ra_exposed_pop_2019_F  = np.where(hmax_F > 0, pop_arrays[2019], 0)
@@ -520,10 +549,11 @@ gdf_pop_2019_exposed_CF_uniform = gdf_pop_2019_flood_depth_CF_uniform[gdf_pop_20
 
 # Aggregate to coarser cells
 gdf_pop_2019_exposed_F_uniform_coarse = aggregate_pop(pop_array_uniform_2019, hmax_F, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
-
+gdf_pop_2019_exposed_CF_uniform_coarse = aggregate_pop(pop_array_uniform_2019, hmax_CF, flood_grid_transform, flood_grid_crs, region_utm, background_utm)
 # save_raster(ra_exposed_pop_2019_F_uniform,  "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_F_uniform.tif",  flood_grid_transform, flood_grid_crs)
 # save_raster(ra_exposed_pop_2019_CF_uniform, "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/exposed_pop_2019_CF_uniform.tif", flood_grid_transform, flood_grid_crs)
 # save_raster(pop_array_uniform_2019,         "p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population/population_2019_uniform.tif",      flood_grid_transform, flood_grid_crs)
+
 
 #%% ============================================================================================= #
 # ===================== Print summary statistics of exposed population ========================== #
@@ -568,6 +598,73 @@ print(f"Population growth from 1990 to 2019 in the region: {int(np.nansum(pop_ar
 
 
 
+#%% ======================================================================================= #
+# ============= Compare estimated and reported totala nd exposed popuation ================ #
+# ========================================================================================= #
+# def get_extent(transform, width, height):
+#     left = transform[2]
+#     right = left + width * transform[0]
+#     top = transform[5]
+#     bottom = top + height * transform[4]
+#     return [left, right, bottom, top]
+
+# # Mask raster outside region (already cropped with rasterio.mask.mask)
+# # pop_WP_masked = np.where(pop_WP_2020_coarse[0] == 0, np.nan, pop_WP_2020_coarse[0])
+# pop_2019_1km_masked = np.where(pop_2019_1km[0] == 0, np.nan, pop_2019_1km[0])
+# extent_2019_1km = get_extent(transform_pop_2019_1km, pop_2019_1km.shape[2], pop_2019_1km.shape[1])
+# vmax_pop_2019_1km = np.percentile(pop_2019_1km_masked[~np.isnan(pop_2019_1km_masked)], 99.9)
+
+
+# fig, axes = plt.subplots(1, 1, figsize=(6, 6))
+# ax = axes
+
+# # Increase extent
+# xmin, ymin, xmax, ymax = region.total_bounds
+
+# background.plot(ax=ax, color="#E0E0E0", zorder=0)
+# bg_filtered.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+# region.boundary.plot(ax=ax, color='black', linewidth=1, zorder=2)
+# districts_adm2_utm.boundary.plot(ax=ax, color='red', linewidth=0.5, zorder=5)
+# districts_adm3_filtered.boundary.plot(ax=ax, color='blue', linewidth=0.5, zorder=4)
+# ax.set_xlim(xmin - 0.2, xmax + 0.2)
+# ax.set_ylim(ymin - 0.2, ymax + 0.2)
+
+# for idx, row in districts_adm3_filtered.iterrows():
+#     x = row.geometry.centroid.x
+#     y = row.geometry.centroid.y
+        
+# ax.text(
+#     x, y,
+#     row["NAME_3"],
+#     fontsize=7,
+#     ha="center",
+#     color="darkblue",
+#     zorder=10,
+#     fontweight="bold"
+# )
+
+# for idx, row in districts_adm2_utm.iterrows():
+#     x = row.geometry.centroid.x
+#     y = row.geometry.centroid.y
+        
+# ax.text(
+#     x-0.15, y,
+#     row["NAME_2"],
+#     fontsize=7,
+#     ha="center",
+#     color="red",
+#     zorder=10,
+#     fontweight="bold"
+# )
+
+# # Plot Historical Exposure data 2020
+# im = ax.imshow(pop_2019_1km_masked, cmap="Blues", extent=extent_2019_1km,  
+#                     origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_pop_2019_1km)) 
+# cbar = plt.colorbar(im, ax=ax, shrink=0.8)
+# cbar.set_label("Population (people per cell)")
+# ax.set_title("Hist. Exposure 2020 \n[~1 km grid]")
+
+
 #%% ============================================================================================ # 
 # ================== Plot distribution of flood depth per exposed population =================== #
 # ============================================================================================== #
@@ -586,6 +683,9 @@ def compute_cdf_and_bins(gdf, bins, depth_col="flood_depth", pop_col="population
     return pop_by_depth
     
 bins_fine = np.arange(0, 3.5 + 0.02, 0.01)
+low_mask = bins_fine[:-1] < 0.5
+mid_mask = (bins_fine[:-1] >= 0.5) & (bins_fine[:-1] < 1.5)
+high_mask = bins_fine[:-1] >= 1.5
 pop_2019_by_depth_F_fine  = compute_cdf_and_bins(gdf_pop_2019_exposed_F, bins_fine)
 pop_2019_by_depth_CF_fine  = compute_cdf_and_bins(gdf_pop_2019_exposed_CF, bins_fine)
 pop_1990_by_depth_F_fine   = compute_cdf_and_bins(gdf_pop_1990_exposed_F, bins_fine)
@@ -607,9 +707,9 @@ bin_centers_coarse = bins_coarse[:-1] + np.diff(bins_coarse) / 2
 
 # Plotting masks for different flood depth ranges (low, medium, high)
 x_bg = np.linspace(0, 3.5, 500)  # example x array
-low_mask = x_bg < 0.5
-mid_mask = (x_bg >= 0.5) & (x_bg < 1.5)
-high_mask = x_bg >= 1.5
+low_mask_bg = x_bg < 0.5
+mid_mask_bg = (x_bg >= 0.5) & (x_bg < 1.5)
+high_mask_bg = x_bg >= 1.5
 
 
 
@@ -635,9 +735,9 @@ ax.plot(bin_centers_coarse, Change_per_flood_depth["Rel_change_CF_climate_popula
 
 ymax = max(Change_per_flood_depth["Rel_change_CF_climate"].max(), Change_per_flood_depth["Rel_change_CF_population"].max(), Change_per_flood_depth["Rel_change_CF_climate_population"].max()) * 1.05
 ymin = min(Change_per_flood_depth["Rel_change_CF_climate"].min(), Change_per_flood_depth["Rel_change_CF_population"].min(), Change_per_flood_depth["Rel_change_CF_climate_population"].min()) * 1.05
-ax.fill_between(x_bg[low_mask], ymin, ymax, color="#d9d9d9", alpha=0.3)
-ax.fill_between(x_bg[mid_mask], ymin, ymax, color="#b3b3b3", alpha=0.3)
-ax.fill_between(x_bg[high_mask], ymin, ymax, color="#808080", alpha=0.3)
+ax.fill_between(x_bg[low_mask_bg], ymin, ymax, color="#d9d9d9", alpha=0.3)
+ax.fill_between(x_bg[mid_mask_bg], ymin, ymax, color="#b3b3b3", alpha=0.3)
+ax.fill_between(x_bg[high_mask_bg], ymin, ymax, color="#808080", alpha=0.3)
 
 ax.text(0.25, ymax*0.12, "Low", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
 ax.text(1.0, ymax*0.12, "Medium", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
@@ -781,9 +881,9 @@ y_CF_clim_pop = pop_1990_by_depth_CF_fine.values
 
 ymax = max(y_F.max(), y_CF_clim.max(), y_CF_pop.max(), y_CF_clim_pop.max()) * 1.05
 
-ax.fill_between(x_bg[low_mask], 0, ymax, color="#d9d9d9", alpha=0.3)
-ax.fill_between(x_bg[mid_mask], 0, ymax, color="#b3b3b3", alpha=0.3)
-ax.fill_between(x_bg[high_mask], 0, ymax, color="#808080", alpha=0.3)
+ax.fill_between(x_bg[low_mask_bg], 0, ymax, color="#d9d9d9", alpha=0.3)
+ax.fill_between(x_bg[mid_mask_bg], 0, ymax, color="#b3b3b3", alpha=0.3)
+ax.fill_between(x_bg[high_mask_bg], 0, ymax, color="#808080", alpha=0.3)
 
 ax.plot(x, y_F, label=f"Factual ({np.nansum(ra_exposed_pop_2019_F).astype(int):,.0f} people)", color=colours[0], linewidth=2)
 ax.plot(x, y_CF_clim, label=f"Counterfactual Climate ({np.nansum(ra_exposed_pop_2019_CF).astype(int):,.0f} people)", color=colours[1], linewidth=1)
@@ -814,12 +914,17 @@ ax.plot(x, y_CF_clim_pop, label=f"Counterfactual Climate & Population ({np.nansu
 
 
 # Find peaks and sort by height
-peaks, _ = find_peaks(y_F)
-sorted_peaks_F = peaks[np.argsort(y_F[peaks])[::-1]]
-peaks, _ = find_peaks(y_CF_clim)
-sorted_peaks_CF_clim = peaks[np.argsort(y_CF_clim[peaks])[::-1]]
-peaks, _ = find_peaks(y_CF_pop)
-sorted_peaks_CF_pop = peaks[np.argsort(y_CF_pop[peaks])[::-1]]
+peaks_F, props_F = find_peaks(y_F, prominence=0.02, distance=5) 
+sorted_peaks_F = peaks_F[np.argsort(props_F["prominences"])[::-1]]
+peaks_CF_clim, props_CF_clim = find_peaks(y_CF_clim, prominence=0.02, distance=5)
+sorted_peaks_CF_clim = peaks_CF_clim[np.argsort(props_CF_clim["prominences"])[::-1]]
+peaks_CF_pop, props_CF_pop = find_peaks(y_CF_pop, prominence=0.02, distance=10)
+sorted_peaks_CF_pop = peaks_CF_pop[np.argsort(props_CF_pop["prominences"])[::-1]]
+# find second peak for CF_pop manually due to slowrise
+mask = (x >= 1.0) & (x <= 1.5) # peak is located between 1 and 1.5 m flood depth
+if np.any(mask):
+    idx_peak_2nd_CF_pop = np.argmax(y_CF_pop[mask])
+    idx_peak_2nd_CF_pop = np.where(mask)[0][idx_peak_2nd_CF_pop]
 
 # peak annotations 
 if len(sorted_peaks_F) > 1:
@@ -841,10 +946,16 @@ for i, idx in enumerate(sorted_peaks_CF_clim[:2]):
                  xytext=(x[idx]+0.15, y_CF_clim[idx]+0.05), color=colours[1], fontsize=8,
                  arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[1], linestyle='--'))
 
-for i, idx in enumerate(sorted_peaks_CF_pop[:2]): 
+for i, idx in enumerate(sorted_peaks_CF_pop[:1]): 
     plt.annotate(f"{x[idx]:.2f} m",
                  xy=(x[idx]+0.01, y_CF_pop[idx]),
                  xytext=(x[idx]+0.15, y_CF_pop[idx]+0.03), color=colours[2], fontsize=8,
+                 arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[2], linestyle='--'))
+
+plt.annotate(f"{x[idx_peak_2nd_CF_pop]:.2f} m",
+                 xy=(x[idx_peak_2nd_CF_pop]+0.01, y_CF_pop[idx_peak_2nd_CF_pop]),
+                 xytext=(x[idx_peak_2nd_CF_pop]+0.15, y_CF_pop[idx_peak_2nd_CF_pop]+0.03),
+                 color=colours[2], fontsize=8,
                  arrowprops=dict(arrowstyle="->", lw=0.8, color=colours[2], linestyle='--'))
     
 ax.text(0.25, ymax*0.03, "Low", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10)
@@ -882,9 +993,9 @@ ax.set_xlim(0.05, 3.5)
 ax.set_ylim(diff_clim.min()*1.1, diff_clim_pop.max()*1.1)
 ax.grid(True, linestyle="--", alpha=0.5)
 
-ax.fill_between(x_bg[low_mask], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#d9d9d9", alpha=0.3)
-ax.fill_between(x_bg[mid_mask], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#b3b3b3", alpha=0.3)
-ax.fill_between(x_bg[high_mask], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#808080", alpha=0.3)
+ax.fill_between(x_bg[low_mask_bg], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#d9d9d9", alpha=0.3)
+ax.fill_between(x_bg[mid_mask_bg], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#b3b3b3", alpha=0.3)
+ax.fill_between(x_bg[high_mask_bg], diff_clim.min()*1.1, diff_clim_pop.max()*1.1, color="#808080", alpha=0.3)
 ax.text(0.25, diff_clim_pop.max()*0.1, "Low", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10,
         bbox=dict(boxstyle="round",pad=0.15, facecolor="white", edgecolor="none", alpha=0.7))
 ax.text(1.0, diff_clim_pop.max()*0.1, "Medium", ha="center", fontweight="bold", color="#5C5C5C", fontsize=10,
@@ -895,53 +1006,137 @@ ax.text(2.5, diff_clim_pop.max()*0.1, "High", ha="center", fontweight="bold", co
 
 #%%
 # Plotting bar plot of absolute change in exposed population per water depth category
-low_vals = [
-    diff_clim[low_mask].sum(),
-    diff_pop[low_mask].sum(),
-    diff_clim_pop[low_mask].sum()
-]
+def compute_attr_per_flood_depth_mask(diff, baseline, mask):
+    return np.nansum(diff[mask]) / np.nansum(baseline[mask]) * 100
 
-mid_vals = [
-    diff_clim[mid_mask].sum(),
-    diff_pop[mid_mask].sum(),
-    diff_clim_pop[mid_mask].sum()
-]
+# Absolute change in exposed population per flood depth category
+low_vals_abs_diff = [diff_clim[low_mask].sum(), diff_pop[low_mask].sum(), diff_clim_pop[low_mask].sum()]
+mid_vals_abs_diff = [diff_clim[mid_mask].sum(), diff_pop[mid_mask].sum(), diff_clim_pop[mid_mask].sum()]
+high_vals_abs_diff = [diff_clim[high_mask].sum(), diff_pop[high_mask].sum(), diff_clim_pop[high_mask].sum()]
 
-high_vals = [
-    diff_clim[high_mask].sum(),
-    diff_pop[high_mask].sum(),
-    diff_clim_pop[high_mask].sum()
-]
+# Relative attributable change in exposed population per flood depth category
+low_vals_attr  = [compute_attr_per_flood_depth_mask(diff_clim, pop_2019_by_depth_F_fine, low_mask),
+                  compute_attr_per_flood_depth_mask(diff_pop, pop_2019_by_depth_F_fine, low_mask),
+                  compute_attr_per_flood_depth_mask(diff_clim_pop, pop_2019_by_depth_F_fine, low_mask)]
+mid_vals_attr  = [compute_attr_per_flood_depth_mask(diff_clim, pop_2019_by_depth_F_fine, mid_mask),
+                  compute_attr_per_flood_depth_mask(diff_pop, pop_2019_by_depth_F_fine, mid_mask),
+                  compute_attr_per_flood_depth_mask(diff_clim_pop, pop_2019_by_depth_F_fine, mid_mask)]
+high_vals_attr = [compute_attr_per_flood_depth_mask(diff_clim, pop_2019_by_depth_F_fine, high_mask), 
+                  compute_attr_per_flood_depth_mask(diff_pop, pop_2019_by_depth_F_fine, high_mask), 
+                  compute_attr_per_flood_depth_mask(diff_clim_pop, pop_2019_by_depth_F_fine, high_mask)]
 
-data = np.array([low_vals, mid_vals, high_vals])
+data_abs_diff = np.array([low_vals_abs_diff, mid_vals_abs_diff, high_vals_abs_diff])
+data_attr = np.array([low_vals_attr, mid_vals_attr, high_vals_attr])
 
-fig, ax = plt.subplots(figsize=(8,5))
+
+fig, axes = plt.subplots(1, 2, figsize=(10,5), sharex=True)
 
 bar_width = 0.25
 x_pos = np.arange(3)  # Low, Medium, High
 
 labels = ["Low", "Medium", "High"]
+subplot_labels_2 = ["(a)", "(b)"]
 
-ax.bar(x_pos - bar_width, data[:,0], width=bar_width, 
+axes[0].bar(x_pos - bar_width, data_abs_diff[:,0], width=bar_width, 
        label=f"Climate change ({int(np.round(perct_attr_clim))} %)", 
        color=colours[1])
-
-ax.bar(x_pos, data[:,1], width=bar_width, 
+axes[0].bar(x_pos, data_abs_diff[:,1], width=bar_width, 
        label=f"Population change ({int(np.round(perct_attr_pop))} %)", 
        color=colours[2])
-
-ax.bar(x_pos + bar_width, data[:,2], width=bar_width, 
+axes[0].bar(x_pos + bar_width, data_abs_diff[:,2], width=bar_width, 
        label=f"Climate & Population change ({int(np.round(perct_attr_clim_pop))} %)", 
        color=colours[3])
 
+axes[1].bar(x_pos - bar_width, data_attr[:,0], width=bar_width, 
+       label=f"Climate change ({int(np.round(perct_attr_clim))} %)", 
+       color=colours[1])
+axes[1].bar(x_pos, data_attr[:,1], width=bar_width, 
+       label=f"Population change ({int(np.round(perct_attr_pop))} %)", 
+       color=colours[2])
+axes[1].bar(x_pos + bar_width, data_attr[:,2], width=bar_width, 
+       label=f"Climate & population change ({int(np.round(perct_attr_clim_pop))} %)", 
+       color=colours[3])
+
+for i, ax in enumerate(axes):
+    ax.axhline(0, linestyle="--", color="black", alpha=0.7)
+    ax.set_axisbelow(True)
+    ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+    ax.set_xlabel("Flood depth", fontsize=9)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(labels, fontdict={'fontweight': 'bold', 'color': '#5C5C5C'})
+    ax.text(0, 1.02, subplot_labels_2[i],
+            transform=ax.transAxes,
+            fontsize=10, fontweight="bold",
+            va="bottom", ha="left")
+    
+
+axes[0].set_ylabel("Absolute change in exposed population (people)", fontsize=9)
+axes[1].set_ylabel("Attributable exposed population (%)", fontsize=9)
+axes[1].legend(fontsize=9, loc='upper right', bbox_to_anchor=(1, 1.2))
+
+plt.tight_layout()
+plt.show()
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(11,5), sharex=True, dpi=300)
+
+bar_width = 0.25
+x_pos = np.arange(3)  # Low, Medium, High
+
+labels = ["Low \n(<0.5 m)", "Medium \n(0.5–1.5 m)", "High \n(>1.5 m)"]
+
+ax.bar(x_pos - bar_width, data_abs_diff[:,0], width=bar_width, 
+       label=f"Climate change ({int(np.round(perct_attr_clim))} %)", 
+       color=colours[1])
+ax.bar(x_pos, data_abs_diff[:,1], width=bar_width, 
+       label=f"Population change ({int(np.round(perct_attr_pop))} %)", 
+       color=colours[2])
+ax.bar(x_pos + bar_width, data_abs_diff[:,2], width=bar_width, 
+       label=f"Climate & Population change ({int(np.round(perct_attr_clim_pop))} %)", 
+       color=colours[3])
+
+ax.axhline(0, linestyle="--", color="black", alpha=0.7)
+ax.set_axisbelow(True)
+ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+ax.set_xlabel("Flood depth", fontsize=9)
 ax.set_xticks(x_pos)
 ax.set_xticklabels(labels, fontdict={'fontweight': 'bold', 'color': '#5C5C5C'})
+    
+ax.set_ylabel("Absolute change in exposed population (people)", fontsize=9)
+ax.legend(fontsize=9, loc='upper right', bbox_to_anchor=(1.5, 1))
 
-ax.set_ylabel("Absolute change in exposed population")
-ax.set_xlabel("Flood depth")
-ax.axhline(0, linestyle="--", color="black", alpha=0.7)
-ax.legend(fontsize=9, loc='upper right')
-ax.grid(True, linestyle="--", alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+
+#%%
+fig, ax = plt.subplots(1, 1, figsize=(12,5), sharex=True, dpi=300)
+
+bar_width = 0.25
+x_pos = np.arange(3)  # Low, Medium, High
+
+labels = ["Low \n(<0.5 m)", "Medium \n(0.5–1.5 m)", "High \n(>1.5 m)"]
+
+ax.bar(x_pos - bar_width, data_attr[:,0], width=bar_width, 
+       label=f"Climate change ({int(np.round(perct_attr_clim))} %)", 
+       color=colours[1], edgecolor='grey', linewidth=0.3)
+ax.bar(x_pos, data_attr[:,1], width=bar_width, 
+       label=f"Population change ({int(np.round(perct_attr_pop))} %)", 
+       color=colours[2], edgecolor='grey', linewidth=0.3)
+ax.bar(x_pos + bar_width, data_attr[:,2], width=bar_width, 
+       label=f"Climate & population change ({int(np.round(perct_attr_clim_pop))} %)", 
+       color=colours[3], edgecolor='grey', linewidth=0.3)
+
+
+ax.axhline(0, linestyle="-", color="black", alpha=0.7)
+ax.set_axisbelow(True)
+ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+ax.set_xlabel("Flood depth", fontsize=12)
+ax.set_xticks(x_pos)
+ax.set_xticklabels(labels, fontdict={'fontsize': 12, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    
+ax.set_ylabel("Attributable exposed population (%)", fontsize=12)
+ax.legend(fontsize=11, loc='upper right', bbox_to_anchor=(1.6, 1), frameon=False)
 
 plt.tight_layout()
 plt.show()
@@ -1085,22 +1280,22 @@ for i, (title, gdf) in enumerate(datasets):
     background_utm.plot(ax=ax, color="#E0E0E0", zorder=0)
     region_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.3)
     ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
-    beira_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.5, zorder=3)
+    beira_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.5, zorder=3, alpha=0.7)
 
     # Plot city and river locations and names
-    ax.plot(34.848, -19.832, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
-    text = ax.text(34.852, -19.81, "Beira", transform=ccrs.PlateCarree(),
-                        fontsize=8, color='black', zorder=5)
+    ax.plot(34.862, -19.833, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text = ax.text(34.852, -19.89, "Beira", transform=ccrs.PlateCarree(), fontsize=8, color='black', zorder=5)
     text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
-    ax.text(34.848, -19.65, "Beira District", fontsize=8, ha="center", va="center", style="italic", zorder=4)
-
+    ax.text(34.975, -19.66, "Beira District", fontsize=8, ha="center", va="center", style="italic", 
+            transform = ccrs.PlateCarree(), zorder=4, color="#5C5C5C")
+    
     # Buzi River marker and label
-    ax.plot(34.43, -19.89, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    ax.plot(34.43, -19.89, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
     text2 = ax.text(34.44, -19.87, "Buzi River", transform=ccrs.PlateCarree(),
                     fontsize=8, color='black', zorder=5)
     text2.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
     # Pungwe River marker and label
-    ax.plot(34.543, -19.545, marker='o', color='black', markersize=4, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    ax.plot(34.543, -19.545, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
     text3 = ax.text(34.554, -19.52, "Pungwe River", transform=ccrs.PlateCarree(),
                     fontsize=8, color='black', zorder=5)
     text3.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
@@ -1120,7 +1315,7 @@ for i, (title, gdf) in enumerate(datasets):
     rel_change = (gdf["diff"].sum() / total_factual * 100)
     ax.text(
         0.98, 0.98,
-        f"~{round(gdf['diff'].sum(), -3):.0f} × 10³ people\n({rel_change:.0f} %)",
+        f"~{round(gdf['diff'].sum(), -3):,.0f} people\n({rel_change:.0f} %)",
         transform=ax.transAxes,
         ha="right",
         va="top",
@@ -1135,8 +1330,125 @@ cbar = fig.colorbar(sm, ax=axes, orientation="vertical", shrink=0.6, pad=0.02)
 cbar.set_label("Attributable exposed population [# people]", fontsize=10)
 cbar.ax.tick_params(labelsize=9)
 
-fig.show()
 
+# --- Stats of exposed population change in Beira district ---
+# Select only cells that intersect Beira District
+beira_cells_clim = gpd.overlay(gdf_CF_clim, beira_utm, how="intersection")
+beira_cells_pop = gpd.overlay(gdf_CF_pop, beira_utm, how="intersection")
+beira_cells_clim_pop = gpd.overlay(gdf_CF_clim_pop, beira_utm, how="intersection")
+
+# Sum exposed population
+print(f"Total exposed population change in Beira District (CF Clim): {round(beira_cells_clim['diff'].sum(), -3):,.0f}")
+print(f"Total exposed population change in Beira District (CF Pop): {round(beira_cells_pop['diff'].sum(), -3):,.0f}")
+print(f"Total exposed population change in Beira District (CF Clim & Pop): {round(beira_cells_clim_pop['diff'].sum(), -3):,.0f}")
+
+
+
+# %%
+print("Plotting attributable exposed population (three drivers)")
+
+# --- Compute differences ---
+gdf_CF_pop = gdf_pop_1990_exposed_F_coarse.copy()
+gdf_CF_clim = gdf_pop_2019_exposed_CF_coarse.copy()
+gdf_CF_clim_pop = gdf_pop_1990_exposed_CF_coarse.copy()
+
+total_factual = gdf_pop_2019_exposed_F_coarse["exposed_population"].sum()
+gdf_CF_clim["pct_attr"] = (gdf_pop_2019_exposed_F_coarse["exposed_population"] - gdf_CF_clim["exposed_population"]) / gdf_pop_2019_exposed_F_coarse["exposed_population"] * 100
+gdf_CF_pop["pct_attr"] = (gdf_pop_2019_exposed_F_coarse["exposed_population"] - gdf_CF_pop["exposed_population"]) / gdf_pop_2019_exposed_F_coarse["exposed_population"] * 100
+gdf_CF_clim_pop["pct_attr"] = (gdf_pop_2019_exposed_F_coarse["exposed_population"] - gdf_CF_clim_pop["exposed_population"]) / gdf_pop_2019_exposed_F_coarse["exposed_population"] * 100
+
+datasets = [
+    ("Climate change", gdf_CF_clim),
+    ("Population change", gdf_CF_pop),
+    ("Climate & population change", gdf_CF_clim_pop)]
+
+# --- Figure ---
+fig, axes = plt.subplots(1, 3, figsize=(11, 5), dpi=300, constrained_layout=True,
+                         subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+# Shared normalization
+vmax = max(ds["pct_attr"].max() for _, ds in datasets)
+vmin = min(ds["pct_attr"].min() for _, ds in datasets)
+norm_diff = TwoSlopeNorm(vmin=-100, vcenter=0, vmax=100)
+cmap_diff = plt.cm.RdBu_r
+subplot_labels = ["(a)", "(b)", "(c)"]
+
+# --- Plot loop ---
+for i, (title, gdf) in enumerate(datasets):
+    ax = axes[i]
+
+    # Plot zero/negative as white
+    gdf[gdf["pct_attr"] <= 0].plot(ax=ax, color="white", edgecolor="grey", linewidth=0.2, zorder=1)
+
+    # Plot positive difference
+    gdf[gdf["pct_attr"] > 0].plot(column="pct_attr", cmap=cmap_diff, norm=norm_diff, edgecolor="grey",
+                              linewidth=0.2, ax=ax, legend=False, zorder=2, rasterized=True)
+
+    # Region + background
+    background_utm.plot(ax=ax, color="#E0E0E0", zorder=0)
+    region_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.3)
+    ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+    beira_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.5, zorder=3, alpha=0.7)
+
+    # Plot city and river locations and names
+    ax.plot(34.862, -19.833, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text = ax.text(34.852, -19.89, "Beira", transform=ccrs.PlateCarree(), fontsize=8, color='black', zorder=5)
+    text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+    ax.text(34.975, -19.66, "Beira District", fontsize=8, ha="center", va="center", style="italic", 
+            transform = ccrs.PlateCarree(), zorder=4, color="#5C5C5C")
+    
+    # Buzi River marker and label
+    ax.plot(34.43, -19.89, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text2 = ax.text(34.44, -19.87, "Buzi River", transform=ccrs.PlateCarree(),
+                    fontsize=8, color='black', zorder=5)
+    text2.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+    # Pungwe River marker and label
+    ax.plot(34.543, -19.545, marker='o', color='black', markersize=3, markeredgecolor='white', transform=ccrs.PlateCarree(), zorder=5)
+    text3 = ax.text(34.554, -19.52, "Pungwe River", transform=ccrs.PlateCarree(),
+                    fontsize=8, color='black', zorder=5)
+    text3.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+
+    # Gridlines
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.5, linestyle="--")
+    gl.right_labels = False
+    gl.top_labels = False
+    if i != 0:
+        gl.left_labels = False
+    ax.set_title(title, fontsize=10)
+    ax.text(0, 1.02, subplot_labels[i],
+            transform=ax.transAxes,
+            fontsize=10, fontweight="bold",
+            va="bottom", ha="left")
+    
+    # rel_change = (gdf["pct_attr"].sum() / total_factual * 100)
+    # ax.text(
+    #     0.98, 0.98,
+    #     f"~{round(gdf['pct_attr'].sum(), -3):,.0f} people\n({rel_change:.0f} %)",
+    #     transform=ax.transAxes,
+    #     ha="right",
+    #     va="top",
+    #     fontsize=9,
+    #     bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.8)
+    # )
+
+# --- Shared colorbar ---
+sm = ScalarMappable(cmap=cmap_diff, norm=norm_diff)
+sm.set_array([])
+cbar = fig.colorbar(sm, ax=axes, orientation="vertical", shrink=0.6, pad=0.02)
+cbar.set_label("Attributable exposed population [%]", fontsize=10)
+cbar.ax.tick_params(labelsize=9)
+
+
+# --- Stats of exposed population change in Beira district ---
+# Select only cells that intersect Beira District
+beira_cells_clim = gpd.overlay(gdf_CF_clim, beira_utm, how="intersection")
+beira_cells_pop = gpd.overlay(gdf_CF_pop, beira_utm, how="intersection")
+beira_cells_clim_pop = gpd.overlay(gdf_CF_clim_pop, beira_utm, how="intersection")
+
+# Sum exposed population
+# print(f"Total exposed population change in Beira District (CF Clim): {round(beira_cells_clim['diff'].sum(), -3):,.0f}")
+# print(f"Total exposed population change in Beira District (CF Pop): {round(beira_cells_pop['diff'].sum(), -3):,.0f}")
+# print(f"Total exposed population change in Beira District (CF Clim & Pop): {round(beira_cells_clim_pop['diff'].sum(), -3):,.0f}")
 
 
 #%%
@@ -1217,6 +1529,7 @@ cbar2.ax.tick_params(labelsize=8)
 # ============================================================================= #
 ######## Calculate and plot attributable exposed population per district ########
 # ============================================================================= #
+# Fig 5
 dataset_dict = {"F": {"exposed": ra_exposed_pop_2019_F,
                       "total": pop_arrays[2019]},
                 "CF_clim": {"exposed": ra_exposed_pop_2019_CF,
@@ -1268,8 +1581,9 @@ all_attr = np.concatenate([districts_adm3_filtered["attr_clim"].values,
 
 all_attr = all_attr[~np.isnan(all_attr)]
 vabs = np.nanpercentile(np.abs(all_attr), 99)
-norm_attr = TwoSlopeNorm(vmin=-vabs, vcenter=0, vmax=vabs)
-cmap_attr = plt.get_cmap("RdBu_r")
+# norm_attr = Normalize(vmin=0, vmax=vabs)
+norm_attr = PowerNorm(gamma=0.5, vmin=0, vmax=vabs)
+cmap_attr = LinearSegmentedColormap.from_list("reds_from_rdbu", plt.cm.RdBu_r(np.linspace(0.5, 1, 256)))
 columns = ["attr_clim", "attr_pop", "attr_clim_pop"]
 titles = ["Climate change", "Population change", "Climate and population change"]
 
@@ -1458,6 +1772,7 @@ gdf_1990_F.loc[gdf_1990_F["total_population"] == 0] = np.nan
 
 gdf_1990_F['change_in_population'] = gdf_2019_F['total_population'] - gdf_1990_F['total_population']
 
+subplot_labels = ['(a)', '(b)', '(c)']
 # Define colormap: from white to #67CBE4
 cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
 norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_pop_2019_exposed_F_coarse['total_population']))  
@@ -1483,6 +1798,8 @@ for i, ax in enumerate(axes):
     region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
+    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
+            fontsize=10, fontweight='bold', va='bottom', ha='left')
 
 for i, ax in enumerate(axes[:2]):
     sm = ScalarMappable(cmap=cmap, norm=norm)
@@ -1718,18 +2035,83 @@ fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
 
 # Plot average flood depth among exposed population
 gdf_2019_F = gdf_pop_2019_exposed_F_coarse.copy()
-gdf_2019_F.loc[gdf_2019_F["exposed_population"] <= 1, "avg_flood_depth"] = np.nan
+gdf_2019_F.loc[gdf_2019_F["relative_population"] <= 1.5, "avg_flood_depth"] = np.nan
 
 gdf_2019_CF = gdf_pop_2019_exposed_CF_coarse.copy()
-gdf_2019_CF.loc[gdf_2019_CF["exposed_population"] <= 1, "avg_flood_depth"] = np.nan
+gdf_2019_CF.loc[gdf_2019_CF["relative_population"] <= 1.5, "avg_flood_depth"] = np.nan
 
-gdf_2019_CF['change_in_exposed_population_>1m'] = gdf_2019_F['exposed_population'] - gdf_2019_CF['exposed_population']
+gdf_2019_CF['change_in_relative_population_>1m'] = gdf_2019_F['relative_population'] - gdf_2019_CF['relative_population']
 
+# Define colormap: from white to #67CBE4
+cmap = 'Blues'
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_F['relative_population']))
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_CF['change_in_relative_population_>1m']))
+
+plot = gdf_2019_F.plot(column="relative_population", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[0], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2019_CF.plot(column="relative_population", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[1], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2019_CF.plot(column="change_in_relative_population_>1m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+                edgecolor="grey", ax=axes[2], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("Exposed population > 1.5 m flood depth")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in relative xposed population > 1.5 m flood depth")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No Climate Change", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("Population exposed to > 1.5 m flood depth", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+
+#%% ============================================================================================ # 
+# ===================== Plotting attributable % exposed to flood depth > 1.5 m ================= #
+# ============================================================================================== #
+# Plot average flood depth per exposed population cell
+fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True) # 10,6
+
+# Plot average flood depth among exposed population
+gdf_2019_F = gdf_pop_2019_exposed_F_coarse.copy()
+gdf_2019_F.loc[gdf_2019_F["avg_flood_depth"] == 0, "exposed_population"] = 0
+
+gdf_2019_CF = gdf_pop_2019_exposed_CF_coarse.copy()
+gdf_2019_CF.loc[gdf_2019_CF["avg_flood_depth"] == 0, "exposed_population"] = 0
+
+gdf_2019_CF['pect_change_in_exposed_population_>1.5m'] = (gdf_2019_F['exposed_population'] - gdf_2019_CF['exposed_population']) / gdf_2019_F['exposed_population'] * 100
 # Define colormap: from white to #67CBE4
 cmap = 'Blues'
 norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_F['exposed_population']))
 cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
-norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_CF['change_in_exposed_population_>1m']))
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_CF['pect_change_in_exposed_population_>1.5m']))
 
 plot = gdf_2019_F.plot(column="exposed_population", cmap=cmap, norm=norm, linewidth=0.1, 
                 edgecolor="grey", ax=axes[0], zorder=2,
@@ -1739,7 +2121,7 @@ plot = gdf_2019_CF.plot(column="exposed_population", cmap=cmap, norm=norm, linew
                 edgecolor="grey", ax=axes[1], zorder=2,
                 missing_kwds={"color": "none", "edgecolor": "none"})
 
-plot = gdf_2019_CF.plot(column="change_in_exposed_population_>1m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+plot = gdf_2019_CF.plot(column="pect_change_in_exposed_population_>1.5m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
                 edgecolor="grey", ax=axes[2], zorder=2,
                 missing_kwds={"color": "none", "edgecolor": "none"})
 
@@ -1755,29 +2137,30 @@ for i, ax in enumerate(axes[:2]):
     sm = ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []  
     cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
-    cbar.set_label("Exposed population > 1 m flood depth")
+    cbar.set_label("Exposed population")
 
 sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
 sm._A = []  
 cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
-cbar.set_label("Difference in Exposed population > 1 m flood depth")
+cbar.set_label("Attributable exposed population")
 
 axes[0].set_title("Factual", fontsize=10)
 axes[1].set_title("No Climate Change", fontsize=10)
-axes[2].set_title("Factual - Counterfactual", fontsize=10)
+axes[2].set_title("(F - CF) / F * 100%", fontsize=10)
 
 axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
 axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
 axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
 axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
 
-fig.suptitle("Population exposed to > 1 m flood depth", fontsize=12)
+fig.suptitle("Total exposed population", fontsize=12)
 
 plt.tight_layout()
 plt.show()
 
+
 #%% ============================================================================================ # 
-# ============================= Plot % cells with flood depth > 1 m ============================ #
+# ============================= Plot % cells with flood depth > 1.5 m ============================ #
 # ============================================================================================== #
 fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
@@ -1785,23 +2168,23 @@ fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 gdf_2019_F = gdf_pop_2019_exposed_F_coarse.copy()
 gdf_2019_CF = gdf_pop_2019_exposed_CF_coarse.copy()
 
-gdf_2019_CF['change_in_%more_1m'] = gdf_2019_F['pct_cells_higher_1m'] - gdf_2019_CF['pct_cells_higher_1m']
+gdf_2019_CF['change_in_%more_1.5m'] = gdf_2019_F['pct_cells_higher_1.5m'] - gdf_2019_CF['pct_cells_higher_1.5m']
 
 # Define colormap: from white to #67CBE4
 cmap = 'Blues'
-norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_F['pct_cells_higher_1m']))
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_F['pct_cells_higher_1.5m']))
 cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
-norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_CF['change_in_%more_1m']))
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=(gdf_2019_CF['change_in_%more_1.5m']).quantile(0.99))
 
-plot = gdf_2019_F.plot(column="pct_cells_higher_1m", cmap=cmap, norm=norm, linewidth=0.1, 
+plot = gdf_2019_F.plot(column="pct_cells_higher_1.5m", cmap=cmap, norm=norm, linewidth=0.1, 
                 edgecolor="grey", ax=axes[0], zorder=2,
                 missing_kwds={"color": "none", "edgecolor": "none"})
 
-plot = gdf_2019_CF.plot(column="pct_cells_higher_1m", cmap=cmap, norm=norm, linewidth=0.1, 
+plot = gdf_2019_CF.plot(column="pct_cells_higher_1.5m", cmap=cmap, norm=norm, linewidth=0.1, 
                 edgecolor="grey", ax=axes[1], zorder=2,
                 missing_kwds={"color": "none", "edgecolor": "none"})
 
-plot = gdf_2019_CF.plot(column="change_in_%more_1m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+plot = gdf_2019_CF.plot(column="change_in_%more_1.5m", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
                 edgecolor="grey", ax=axes[2], zorder=2,
                 missing_kwds={"color": "none", "edgecolor": "none"})
 
@@ -1817,12 +2200,12 @@ for i, ax in enumerate(axes[:2]):
     sm = ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []  
     cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
-    cbar.set_label("% cells > 1 m flood depth")
+    cbar.set_label("% cells > 1.5 m flood depth")
 
 sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
 sm._A = []  
 cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
-cbar.set_label("Difference in % cells > 1 m flood depth")
+cbar.set_label("Difference in % cells > 1.5 m flood depth")
 
 axes[0].set_title("Factual", fontsize=10)
 axes[1].set_title("No Climate Change", fontsize=10)
@@ -1833,7 +2216,71 @@ axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
 axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
 axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
 
-fig.suptitle("% cells > 1 m flood depth", fontsize=12)
+fig.suptitle("% cells > 1.5 m flood depth", fontsize=12)
+
+plt.tight_layout()
+plt.show()
+
+
+
+#%% ============================================================================================ # 
+# ================================ Plot % cells that are flooded  ============================== #
+# ============================================================================================== #
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+
+# Plot average flood depth among exposed population
+gdf_2019_F = gdf_pop_2019_exposed_F_coarse.copy()
+gdf_2019_CF = gdf_pop_2019_exposed_CF_coarse.copy()
+
+gdf_2019_CF['change_in_%_cells_flooded'] = gdf_2019_F['pct_cells_flooded'] - gdf_2019_CF['pct_cells_flooded']
+
+# Define colormap: from white to #67CBE4
+cmap = 'Blues'
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019_F['pct_cells_flooded']))
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#651F94"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=(gdf_2019_CF['change_in_%_cells_flooded']).quantile(0.99))
+
+plot = gdf_2019_F.plot(column="pct_cells_flooded", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[0], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2019_CF.plot(column="pct_cells_flooded", cmap=cmap, norm=norm, linewidth=0.1, 
+                edgecolor="grey", ax=axes[1], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+plot = gdf_2019_CF.plot(column="change_in_%_cells_flooded", cmap=cmap_change, norm=norm_change, linewidth=0.1, 
+                edgecolor="grey", ax=axes[2], zorder=2,
+                missing_kwds={"color": "none", "edgecolor": "none"})
+
+xmin, xmax, ymin, ymax = flood_extent
+for i, ax in enumerate(axes):
+    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    bg_filtered_utm.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+    region_utm.boundary.plot(ax=ax, color='black', linewidth=0.5, zorder=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+for i, ax in enumerate(axes[:2]):
+    sm = ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []  
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+    cbar.set_label("% cells flooded")
+
+sm = ScalarMappable(cmap=cmap_change, norm=norm_change)
+sm._A = []  
+cbar = plt.colorbar(sm, ax=axes[2], shrink=0.8)
+cbar.set_label("Difference in % cells flooded")
+
+axes[0].set_title("Factual", fontsize=10)
+axes[1].set_title("No Climate Change", fontsize=10)
+axes[2].set_title("Factual - Counterfactual", fontsize=10)
+
+axes[0].set_ylabel("y coordinate UTM zone 36S [m]")
+axes[0].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[1].set_xlabel("x coordinate UTM zone 36S [m]")
+axes[2].set_xlabel("x coordinate UTM zone 36S [m]")
+
+fig.suptitle("% cells flooded", fontsize=12)
 
 plt.tight_layout()
 plt.show()
@@ -1863,6 +2310,141 @@ axes[1].set_title("Factual Exposed Population")
 plt.tight_layout()
 plt.show()
 
+#%% 
+# ================================================================================== #
+# SUPPLEMENTARY: Factual flood, population & exposed population + changes (6-panel)  #
+# ================================================================================== #
+def setup_map_axes(
+    axes,
+    region_utm,
+    background_utm,
+    flood_extent,
+    subplot_labels=None,
+    titles=None,
+    show_left_labels_only=True,
+    label_offset=(0, 1.02),
+):
+    """
+    Apply standard map formatting to one or more Cartopy axes:
+    region boundary, background, extent, gridlines, labels.
+    """
+    axes_arr = np.atleast_1d(axes)
+    ncols = axes_arr.shape[-1] if axes_arr.ndim >= 2 else axes_arr.size
+    nrows = axes_arr.shape[0] if axes_arr.ndim >= 2 else 1
+    axes_flat = axes_arr.ravel()
+    for i, ax in enumerate(axes_flat):
+        background_utm.plot(ax=ax, color="#E0E0E0", zorder=0)
+        region_utm.boundary.plot(ax=ax, edgecolor="black", linewidth=0.3)
+        ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.5, linestyle="--")
+        gl.right_labels = False
+        gl.top_labels = False
+        gl.xlabel_style = {"size": 9}
+        gl.ylabel_style = {"size": 9}
+        if show_left_labels_only and i % ncols != 0:
+            gl.left_labels = False
+        if i // ncols < nrows - 1:
+            gl.bottom_labels = False
+        
+
+        if subplot_labels and i < len(subplot_labels):
+            ax.text(
+                label_offset[0],
+                label_offset[1],
+                subplot_labels[i],
+                transform=ax.transAxes,
+                fontsize=10,
+                fontweight="bold",      
+                va="bottom",
+                ha="left",
+            )
+        if titles and i < len(titles):
+            ax.set_title(titles[i], fontsize=10)
+
+def plot_supp_factual_changes_overview(hmax_F, gdf_pop_2019_exposed_F_coarse, hmax_diff, 
+                                       gdf_pop_1990_exposed_F_coarse, gdf_pop_1990_exposed_CF_coarse,
+                                       region_utm, background_utm, flood_extent):
+    # Data preparation for plotting
+    gdf_2019 = gdf_pop_2019_exposed_F_coarse.copy()
+    gdf_2019.loc[gdf_2019["total_population"] == 0] = np.nan
+    gdf_1990 = gdf_pop_1990_exposed_F_coarse.copy()
+    gdf_1990.loc[gdf_1990["total_population"] == 0] = np.nan
+    gdf_2019["change_in_population"] = gdf_2019["total_population"] - gdf_1990["total_population"]
+    gdf_attr = gdf_pop_2019_exposed_F_coarse.copy()
+    gdf_attr["attr_exposed_pop"] = gdf_pop_2019_exposed_F_coarse["exposed_population"] - gdf_pop_1990_exposed_CF_coarse["exposed_population"]
+
+    # colour maps and norms
+    norm_pop = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_2019["total_population"].max())
+    cmap_pop = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
+    norm_pop_exposed = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2019_exposed_F_coarse["exposed_population"].max())
+    cmap_pop_exposed = mcolors.LinearSegmentedColormap.from_list("white_to_darkblue", ["#ffffff", "#67CBE4"])
+    cmap_change = plt.cm.Reds
+    norm_pop_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_2019["change_in_population"]))
+    norm_pop_exposed_change = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_1990_exposed_CF_coarse["attr_exposed_pop"].max())
+
+    fig, axes = plt.subplots(2, 3, figsize=(16, 8), dpi=300, sharex=True, sharey=True, constrained_layout=True,
+                             subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+
+    # Plot 1 - Factual fooding
+    im_1 = axes[0,0].imshow(hmax_F, cmap="viridis", extent=flood_extent, origin="lower", vmin=0, vmax=3.5, zorder=2)
+
+    # Plot 2 - Factual population
+    gdf_2019.plot(column="total_population", cmap=cmap_pop, norm=norm_pop, linewidth=0.1,
+                  edgecolor="grey", ax=axes[0,1], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
+    # Plot 3 - Factual exposed population
+    gdf_exposed_F = gdf_pop_2019_exposed_F_coarse.copy()
+    gdf_exposed_F.loc[gdf_exposed_F["exposed_population"] == 0, "exposed_population"] = np.nan
+    gdf_exposed_F.plot(column="exposed_population", cmap=cmap_pop_exposed, edgecolor="grey", 
+                       norm=norm_pop_exposed, linewidth=0.2, ax=axes[0,2], legend=False, 
+                       zorder=2, rasterized=True,
+                       missing_kwds={"color": "none", "edgecolor": "none"})
+    
+    # Plot 4 - Climate change
+    im_2 = axes[1,0].imshow(hmax_diff, cmap=cmap_change, extent=flood_extent, origin="lower", vmin=0, vmax=0.5, zorder=2)
+
+    # Plot 5 - Population change
+    gdf_2019.plot(column="change_in_population", cmap=cmap_change, norm=norm_pop_change, linewidth=0.1,
+                  edgecolor="grey", ax=axes[1,1], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+    
+    # Plot 6 - Attributable exposed population
+    gdf_attr.loc[gdf_attr["attr_exposed_pop"] <= 0, "attr_exposed_pop"] = np.nan
+    gdf_attr.plot(column="attr_exposed_pop", cmap=cmap_change, edgecolor="grey", 
+                  norm=norm_pop_exposed_change, linewidth=0.2, ax=axes[1,2], legend=False, 
+                  zorder=2, rasterized=True,
+                  missing_kwds={"color": "none", "edgecolor": "none"})
+
+    setup_map_axes(axes, region_utm, background_utm, flood_extent,
+                   subplot_labels=["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"],
+                   titles=["Factual flooding", "Factual population", "Factual exposed population", 
+                           "Climate change", "Population change", "Attributable exposed population"])
+
+    # Colour bars top row
+    plt.colorbar(im_1, ax=axes[0,0], shrink=0.8).set_label("Flood depth (m)")
+    sm = ScalarMappable(cmap=cmap_pop, norm=norm_pop)
+    sm._A = []
+    fig.colorbar(sm, ax=axes[0,1], shrink=0.8).set_label("Aggregated population (# people)")
+    sm = ScalarMappable(cmap=cmap_pop_exposed, norm=norm_pop_exposed)
+    sm._A = []
+    fig.colorbar(sm, ax=axes[0,2], shrink=0.8).set_label("Aggregated exposed population (# people)")
+
+    # Colour bars for the bottom row
+    plt.colorbar(im_2, ax=axes[1,0], shrink=0.8).set_label("Attributable flood depth (m)")
+    sm = ScalarMappable(cmap=cmap_change, norm=norm_pop_change)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=axes[1,1], orientation="vertical", shrink=0.8)
+    cbar.set_label("Change in population [# people]", fontsize=10)
+    sm = ScalarMappable(cmap=cmap_change, norm=norm_pop_exposed_change)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=axes[1,2], orientation="vertical", shrink=0.8)
+    cbar.set_label("Attributable exposed population [# people]", fontsize=10)
+
+    return fig
+
+
+fig = plot_supp_factual_changes_overview(hmax_F, gdf_pop_2019_exposed_F_coarse, hmax_diff, gdf_pop_1990_exposed_F_coarse, gdf_pop_1990_exposed_CF_coarse, region_utm, background_utm, flood_extent)
+plt.show()
 
 #%%
 # ============================================================================================ #
@@ -2183,6 +2765,24 @@ plt.show()
 # ===================== Differences in AGGREGATED exposed population ========================= #
 # ============================================================================================ #
 print("Plotting spatially aggregated exposed population change")
+gdf_2019_F = gdf_pop_2019_exposed_F_coarse.copy()
+gdf_2019_F.loc[gdf_2019_F["total_population"] == 0] = np.nan
+
+gdf_1990_F = gdf_pop_1990_exposed_F_coarse.copy()
+gdf_1990_F.loc[gdf_1990_F["total_population"] == 0] = np.nan
+
+gdf_1990_F['change_in_population'] = gdf_2019_F['total_population'] - gdf_1990_F['total_population']
+
+subplot_labels = ['(a)', '(b)', '(c)']
+# Define colormap: from white to #67CBE4
+cmap = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#FC6F37"])
+norm = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_pop_2019_exposed_F_coarse['total_population']))  
+cmap_change = mcolors.LinearSegmentedColormap.from_list("white_to_blue", ["#ffffff", "#BD2A2A"])
+norm_change = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanmax(gdf_1990_F['change_in_population']))
+
+plot = gdf_2019_F.plot(column="total_population", cmap=cmap, norm=norm ,
+                       linewidth=0.1, edgecolor="grey", ax=axes[0], zorder=2, missing_kwds={"color": "none", "edgecolor": "none"})
+
 # plot the total_damage, emphazizing lower values
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), dpi=300, sharey=True, 
                          constrained_layout=True, subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
@@ -2367,98 +2967,27 @@ axes[2].set_title("Spatial - Uniform", fontsize=9)
 # %% #################################################################
 ##################### diff in relative population ####################
 ######################################################################
-print("Plotting spatially aggregated RELATIVE exposed population damage for F, CF population and diff")
-from matplotlib.colors import TwoSlopeNorm
+# Fig 3
+print("Plotting spatially aggregated RELATIVE exposed population for F, and diff for CF clim and pop")
 
-gdf_pop_1990_exposed_F_coarse['population_diff'] = (gdf_pop_2019_exposed_F_coarse['relative_population'] - gdf_pop_1990_exposed_F_coarse['relative_population'])
+gdf_pop_2019_exposed_CF_coarse["rel_diff"] = (gdf_pop_2019_exposed_F_coarse["relative_population"] - 
+                                              gdf_pop_2019_exposed_CF_coarse["relative_population"])
 
-# plot the total_damage, emphazizing lower values
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 6), dpi=300, sharey=True, constrained_layout=True,
-                       subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+gdf_pop_1990_exposed_F_coarse["rel_diff"] = (gdf_pop_2019_exposed_F_coarse["relative_population"] - 
+                                             gdf_pop_1990_exposed_F_coarse["relative_population"])
 
-# Create colormap normalization
-vmin_diff = np.nanpercentile(gdf_pop_1990_exposed_F_coarse["population_diff"], 1)
-vmax_diff = np.nanpercentile(gdf_pop_1990_exposed_F_coarse["population_diff"], 99)
-norm_pop = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2019_exposed_F_coarse["relative_population"].max())
-norm_diff = TwoSlopeNorm(vmin=vmin_diff, vcenter=0, vmax=vmax_diff)
-cmap_diff_pop = plt.get_cmap('RdBu_r')
 
-# Plot using GeoPandas, but draw to custom ax and return colorbar mappable
-gdf_pop_2019_exposed_F_coarse[gdf_pop_2019_exposed_F_coarse['relative_population'] == 0].plot(ax=axes[0], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-plot = gdf_pop_2019_exposed_F_coarse[gdf_pop_2019_exposed_F_coarse['relative_population'] > 0].plot(column='relative_population', cmap='Blues',  edgecolor='grey',
-                                                                               norm=norm_pop, linewidth=0.2, ax=axes[0], legend=False, 
-                                                                               zorder=2, rasterized=True)
-
-gdf_pop_1990_exposed_F_coarse[gdf_pop_1990_exposed_F_coarse['relative_population'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-plot = gdf_pop_1990_exposed_F_coarse[gdf_pop_1990_exposed_F_coarse['relative_population'] > 0].plot(column='relative_population', cmap='Blues', edgecolor='grey',
-                                                                               norm=norm_pop, linewidth=0.2, ax=axes[1], legend=False, 
-                                                                               zorder=2, rasterized=True)
-
-plot = gdf_pop_1990_exposed_F_coarse.plot(
-    column='population_diff',
-    cmap=cmap_diff_pop,
-    norm=norm_diff,
-    edgecolor='grey',
-    linewidth=0.2,
-    ax=axes[2],
-    legend=False,
-    zorder=2,
-    rasterized=True,
-    missing_kwds={"color": "white", "edgecolor": "none"}
-)
-
-subplot_labels = ['(a)', '(b)', '(c)']
-
-for i, ax in enumerate(axes):
-    # Add model region
-    region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
-
-    # Add background and set extent (based on actual lat/lon coordinates)
-    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
-    minx, miny, maxx, maxy = region_utm.bounds.minx.item(), region_utm.bounds.miny.item(), region_utm.bounds.maxx.item(), region_utm.bounds.maxy.item()
-    ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
-
-    # Add gridlines and format tick labels
-    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-    gl.right_labels = False
-    gl.top_labels = False
-    gl.xlabel_style = {'size': 9}
-    gl.ylabel_style = {'size': 9}
-    if i != 0: 
-        gl.left_labels = False
-    
-    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
-            fontsize=10, fontweight='bold', va='bottom', ha='left')
-
-# Colorbars
-sm1 = ScalarMappable(cmap="Blues", norm=norm_pop)
-sm1._A = []  # required for colorbar without passing data
-cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.5)
-cbar.set_label("Aggregated relative exposed population [%]", fontsize=10)
-cbar.ax.tick_params(labelsize=9)
-
-sm2 = ScalarMappable(cmap=cmap_diff_pop, norm=norm_diff)
-sm2.set_array([])
-cbar2 = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.5)
-cbar2.set_label("Attributable relative exposed population [%]", fontsize = 9)
-cbar2.ax.tick_params(labelsize=8)
-
-axes[0].set_title("Factual population \n(2019)", fontsize=9)
-axes[1].set_title("Counterfactual population \n(1990)", fontsize=9)
-axes[2].set_title("Factual - Counterfactual", fontsize=9)
-
-#%%
-print("Plotting spatially RELATIVE aggregated exposed population for F, CF climate and diff")
-
-gdf_pop_2019_exposed_CF_coarse['population_diff'] = (gdf_pop_2019_exposed_F_coarse['relative_population'] - gdf_pop_2019_exposed_CF_coarse['relative_population'])
-
-# plot the total_damage, emphazizing lower values
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5), dpi=300, sharey=True, constrained_layout=True,
                        subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
 
 # Create colormap normalization
+vmax_diff_pop = (gdf_pop_1990_exposed_F_coarse["rel_diff"]).quantile(0.99)
+vmin_diff_pop = (gdf_pop_1990_exposed_F_coarse["rel_diff"]).quantile(0.01)
+vmax_diff_clim = (gdf_pop_2019_exposed_CF_coarse["rel_diff"]).quantile(0.99)
+vmin_diff_clim = (gdf_pop_2019_exposed_CF_coarse["rel_diff"]).quantile(0.01)
 norm_pop = PowerNorm(gamma=0.5, vmin=0, vmax=gdf_pop_2019_exposed_F_coarse["relative_population"].max())
-norm_diff = PowerNorm(gamma=0.5, vmin=0, vmax=np.nanpercentile(gdf_pop_2019_exposed_CF_coarse["population_diff"], 99))
+norm_diff_pop = TwoSlopeNorm(vmin=vmin_diff_pop, vcenter=0, vmax=vmax_diff_pop)
+norm_diff_clim = PowerNorm(gamma=0.5, vmin=vmin_diff_clim, vmax=vmax_diff_clim)
 red_half = LinearSegmentedColormap.from_list("bwr_red", plt.cm.bwr(np.linspace(0.5, 1, 256)))
 
 # Plot using GeoPandas, but draw to custom ax and return colorbar mappable
@@ -2467,25 +2996,33 @@ plot = gdf_pop_2019_exposed_F_coarse[gdf_pop_2019_exposed_F_coarse['relative_pop
                                                                                norm=norm_pop, linewidth=0.2, ax=axes[0], legend=False, 
                                                                                zorder=2, rasterized=True)
 
-gdf_pop_2019_exposed_CF_coarse[gdf_pop_2019_exposed_CF_coarse['relative_population'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-plot = gdf_pop_2019_exposed_CF_coarse[gdf_pop_2019_exposed_CF_coarse['relative_population'] > 0].plot(column='relative_population', cmap='Blues', edgecolor='grey',
-                                                                               norm=norm_pop, linewidth=0.2, ax=axes[1], legend=False, 
-                                                                               zorder=2, rasterized=True)
+gdf_pop_2019_exposed_CF_coarse[gdf_pop_2019_exposed_CF_coarse['rel_diff'] == 0].plot(ax=axes[1], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+plot = gdf_pop_2019_exposed_CF_coarse.plot(column='rel_diff', cmap=red_half, norm=norm_diff_clim, edgecolor='grey', 
+                                           linewidth=0.2, ax=axes[1], legend=False, zorder=2, 
+                                           missing_kwds={"color": "white", "edgecolor": "none"}, rasterized=True)
 
-# gdf_pop_2019_exposed_CF_coarse[gdf_pop_2019_exposed_CF_coarse['population_diff'] <= 0].plot(ax=axes[2], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
-plot = gdf_pop_2019_exposed_CF_coarse[gdf_pop_2019_exposed_CF_coarse['population_diff'] > 0].plot(column='population_diff', cmap=red_half, norm=norm_diff, edgecolor='grey', 
-                                                                 linewidth=0.2, ax=axes[2], legend=False, zorder=2, missing_kwds={"color": "white", "edgecolor": "none"}, rasterized=True)
+gdf_pop_1990_exposed_F_coarse[gdf_pop_1990_exposed_F_coarse['rel_diff'] == 0].plot(ax=axes[2], color='white', edgecolor='grey', linewidth=0.2, zorder=1)
+plot = gdf_pop_1990_exposed_F_coarse.plot(column='rel_diff', cmap='bwr', norm=norm_diff_pop, edgecolor='grey', 
+                                          linewidth=0.2, ax=axes[2], legend=False, zorder=2, 
+                                          missing_kwds={"color": "white", "edgecolor": "none"}, rasterized=True)
+
 subplot_labels = ['(a)', '(b)', '(c)']
 
 for i, ax in enumerate(axes):
     # Add model region
     region_utm.boundary.plot(ax=ax, edgecolor='black', linewidth=0.3)
 
-    # Add background and set extent (based on actual lat/lon coordinates)
-    background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+    # Set extent 
     minx, miny, maxx, maxy = region_utm.bounds.minx.item(), region_utm.bounds.miny.item(), region_utm.bounds.maxx.item(), region_utm.bounds.maxy.item()
     ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
-
+    
+    # Plot background
+    mask_box = box(34.8, -20.3, 35.3, -19.9)  # minx, miny, maxx, maxy
+    background_outside_box = background[~background.intersects(mask_box)] # removing errorneous lines outside model region
+    background_outside_box.plot(ax=ax, color='#E0E0E0', transform=ccrs.PlateCarree(), zorder=0)
+    background_outside_box.boundary.plot(ax=ax, color="#818181", linewidth=0.2, 
+                                             transform=ccrs.PlateCarree(), zorder=1)
+    
     # Add gridlines and format tick labels
     gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     gl.right_labels = False
@@ -2495,25 +3032,31 @@ for i, ax in enumerate(axes):
     if i != 0: 
         gl.left_labels = False
     
-    ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
+    ax.text(-0.05, 1.02, subplot_labels[i], transform=ax.transAxes,
             fontsize=10, fontweight='bold', va='bottom', ha='left')
 
 # Colorbars
 sm1 = ScalarMappable(cmap="Blues", norm=norm_pop)
 sm1._A = []  # required for colorbar without passing data
-cbar = fig.colorbar(sm1, ax=axes[1], orientation="vertical", shrink=0.5)
+cbar = fig.colorbar(sm1, ax=axes[0], orientation="vertical", shrink=0.5)
 cbar.set_label("Aggregated relative exposed population [%]", fontsize=10)
 cbar.ax.tick_params(labelsize=9)
 
-sm2 = ScalarMappable(cmap=red_half, norm=norm_diff)
+sm2 = ScalarMappable(cmap=red_half, norm=norm_diff_clim)
 sm2.set_array([])
-cbar2 = fig.colorbar(sm2, ax=axes[2], orientation="vertical", shrink=0.5)
+cbar2 = fig.colorbar(sm2, ax=axes[1], orientation="vertical", shrink=0.5)
 cbar2.set_label("Attributable relative exposed population [%]", fontsize = 9)
 cbar2.ax.tick_params(labelsize=8)
 
-axes[0].set_title("Factual climate", fontsize=9)
-axes[1].set_title("Counterfactual climate", fontsize=9)
-axes[2].set_title("Factual - Counterfactual", fontsize=9)
+sm3 = ScalarMappable(cmap='bwr', norm=norm_diff_pop)
+sm3.set_array([])
+cbar3 = fig.colorbar(sm3, ax=axes[2], orientation="vertical", shrink=0.5)
+cbar3.set_label("Attributable relative exposed population [%]", fontsize = 9)
+cbar3.ax.tick_params(labelsize=8)
+
+axes[0].set_title("Factual", fontsize=8)
+axes[1].set_title("Factual - Counterfactual climate", fontsize=8)
+axes[2].set_title("Factual - Counterfactual population", fontsize=8)
 
 
 # %%
