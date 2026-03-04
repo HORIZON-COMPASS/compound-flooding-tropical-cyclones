@@ -412,6 +412,8 @@ pop_charac_exposed_F = df_pop_charac.merge(gdf_pop_glopop_exposed_F_coarse[["gri
 pop_charac_exposed_CF = df_pop_charac.merge(gdf_pop_glopop_exposed_CF_coarse[["grid_id", "avg_flood_depth", "exposure_ratio"]], on="grid_id", how="left")
 
 
+
+#%%
 # aggregate individual-level df to grid-cell mean characteristics
 grid_stats = df_pop_charac.groupby('grid_id').agg({
     'WEALTH': 'mean',
@@ -419,6 +421,7 @@ grid_stats = df_pop_charac.groupby('grid_id').agg({
     'EDUC': 'mean',
     'GENDER': 'mean',
     'HHSIZE_CAT': 'mean',
+    'RURAL': 'mean',
     # add more columns if needed
 }).reset_index()
 
@@ -448,20 +451,22 @@ gdf_grid = gdf_grid.merge(grid_stats, on='grid_id', how='left')
 # this assigns each grid cell to a district
 gdf_grid_districts = gpd.sjoin(
     gdf_grid, 
-    districts_adm3[['geometry', 'district_id']],  # keep only ID
+    districts_adm3[['geometry', 'NAME_3']],  # keep only ID
     how='inner',
     predicate='intersects'
 )
 
-district_stats = gdf_grid_districts.groupby('district_id').agg({
+district_stats = gdf_grid_districts.groupby('NAME_3').agg({
     'WEALTH': 'mean',
     'AGE': 'mean',
     'EDUC': 'mean',
     'GENDER': 'mean',
     'HHSIZE_CAT': 'mean',
+    'RURAL': 'mean',
     # you can also compute sum if needed, e.g., population
 }).reset_index()
 
+district_stats.to_csv(("results/district_stats.csv"), index=False)
 
 # %% #########################################################################
 ######################### ======== PLOTTING ======== #########################
@@ -688,15 +693,33 @@ for col, prefix in variables.items():
     agg = pd.merge(agg_F, agg_CF, on=[var, 'flood_category'], how='outer', suffixes=('_F', '_CF'))
 
     # % change
-    agg['pct_change'] = ((agg['weighted_exposed_CF'] - agg['weighted_exposed_F'])
+    agg['pct_change'] = ((agg['weighted_exposed_F'] - agg['weighted_exposed_CF'])
                         / agg['weighted_exposed_F'] * 100)
+
+    # ---- Add total across all flood categories ----
+    total = (
+        agg.groupby(var)[['weighted_exposed_F', 'weighted_exposed_CF']]
+        .sum()
+        .reset_index()
+    )
+
+    total['flood_category'] = 'Total'
+
+    # % change for total
+    total['pct_change'] = (
+        (total['weighted_exposed_F'] - total['weighted_exposed_CF'])
+        / total['weighted_exposed_F'] * 100
+    )
+
+    # Append to agg
+    agg = pd.concat([agg, total], ignore_index=True)
 
     # Pivot
     table = agg.pivot(index='flood_category', columns=var,
                       values=['weighted_exposed_F', 'weighted_exposed_CF', 'pct_change'])
 
     # Ensure correct flood category order
-    table = table.reindex(flood_bins_labels)
+    table = table.reindex(flood_bins_labels + ['Total'])
     table = table.reorder_levels([1, 0], axis=1)
 
     # Rename metrics
@@ -706,7 +729,7 @@ for col, prefix in variables.items():
             renamed_cols.append((cat, 'F'))
         elif metric == 'weighted_exposed_CF':
             renamed_cols.append((cat, 'CF'))
-        else:
+        elif metric == 'pct_change':
             renamed_cols.append((cat, '%'))
 
     table.columns = pd.MultiIndex.from_tuples(renamed_cols)
@@ -725,8 +748,51 @@ for col, prefix in variables.items():
 
     table_t = table_t.loc[new_index]
 
-    # Make clean MultiIndex row structure
-    table_t.index = pd.MultiIndex.from_tuples(table_t.index, names=[col, 'metric'])
+    # Compute total population per group
+    total_pop_F = (
+        pop_charac_exposed_F
+        .groupby(var)
+        .size()
+    )
+
+    # Create a properly aligned DataFrame
+    pop_row = (
+        total_pop_F
+        .to_frame(name='Total')     # only Total column
+        .assign(metric='Population')
+        .set_index('metric', append=True)
+    )
+
+    # Reindex to match table_t columns (fills other flood categories with NaN)
+    pop_row = pop_row.reindex(columns=table_t.columns)
+
+    # Append safely
+    table_t = pd.concat([table_t, pop_row])
+
+
+    # ---- Exposed fraction of total population ----
+    # Get F and CF exposure matrices
+    exposed_F = table_t.xs('F', level=1)
+    exposed_CF = table_t.xs('CF', level=1)
+
+    # Align population index
+    total_pop_aligned = total_pop_F.reindex(exposed_F.index)
+
+    # Divide each column by population
+    frac_depth_F = exposed_F.div(total_pop_aligned, axis=0) * 100
+    frac_depth_CF = exposed_CF.div(total_pop_aligned, axis=0) * 100
+
+    # Add metric label
+    frac_depth_F['metric'] = 'FracDepth_F'
+    frac_depth_CF['metric'] = 'FracDepth_CF'
+
+    # Set MultiIndex
+    frac_depth_F = frac_depth_F.set_index('metric', append=True)
+    frac_depth_CF = frac_depth_CF.set_index('metric', append=True)
+
+    # Append
+    table_t = pd.concat([table_t, frac_depth_F, frac_depth_CF])
+
     all_tables.append(table_t)
 
 # Combine all variables vertically
@@ -739,6 +805,453 @@ final_table = final_table.rename(columns={
 })
 
 final_table
+
+
+
+#%%
+# Function to plot per socio-eco characteristic:
+#  factual exposure, absolute F- CF difference and % difference (F-CF)/F*100 % for a given characteristic
+def plot_socioeconomic_exposure(final_table,
+                                prefix,
+                                depth_order,
+                                figsize=(18, 5)):
+    # ---- Filter selected socio-economic variable ----
+    data = final_table[final_table["Category"].str.startswith(prefix)].copy()
+
+    # Reshape to long
+    data_long = data.melt(
+        id_vars=["Category", "Metric"],
+        var_name="FloodDepth",
+        value_name="Value"
+    )
+
+    # Ensure flood depth order
+    data_long["FloodDepth"] = pd.Categorical(
+        data_long["FloodDepth"],
+        categories=depth_order,
+        ordered=True
+    )
+
+    # Pivot for plotting
+    pivot = data_long.pivot_table(
+        index=["FloodDepth", "Category"],
+        columns="Metric",
+        values="Value"
+    ).reset_index()
+
+    # Add absolute difference
+    pivot["Diff"] = pivot["F"] - pivot["CF"] 
+
+    # Get ordered socio-economic groups
+    groups = sorted(pivot["Category"].unique())
+    n_groups = len(groups)
+
+    x = np.arange(len(depth_order))
+    bar_width = 0.8 / n_groups
+
+    fig, axes = plt.subplots(1, 4, figsize=(figsize[0]*1.3, figsize[1]), sharex=True)
+
+    # -------------------------
+    # PANEL 1 — Factual
+    # -------------------------
+    for i, g in enumerate(groups):
+        sub = pivot[pivot["Category"] == g]
+        sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+        axes[0].bar(x + i * bar_width,
+                    sub["F"],
+                    width=bar_width,
+                    label=f"{g} (n={int(sub_total_pop)})")
+
+    axes[0].set_title("Factual Exposure")
+    axes[0].set_ylabel("Exposed population")
+    axes[0].set_xticks(x + bar_width * (n_groups - 1) / 2)
+    axes[0].set_xticklabels(depth_order)
+
+
+    # -------------------------
+    # PANEL 2 — Exposure fraction (% of group)
+    # -------------------------
+    for i, g in enumerate(groups):
+        sub = pivot[pivot["Category"] == g]
+
+        axes[1].bar(
+            x + i * bar_width,
+            sub["FracDepth_F"],
+            width=bar_width,
+        )
+
+    axes[1].set_title("Exposed fraction of group (%)")
+    axes[1].set_ylabel("Exposure share (%)")
+
+    # -------------------------
+    # PANEL 3 — Absolute Difference
+    # -------------------------
+    for i, g in enumerate(groups):
+        sub = pivot[pivot["Category"] == g]
+        axes[2].bar(x + i * bar_width,
+                    sub["Diff"],
+                    width=bar_width)
+
+    axes[2].axhline(0, linewidth=0.8)
+    axes[2].set_title("Absolute Difference (F − CF)")
+    axes[2].set_xticks(x + bar_width * (n_groups - 1) / 2)
+    axes[2].set_xticklabels(depth_order)
+
+    # -------------------------
+    # PANEL 4 — Percent Change
+    # -------------------------
+    for i, g in enumerate(groups):
+        sub = pivot[pivot["Category"] == g]
+        axes[3].bar(x + i * bar_width,
+                    sub["%"],
+                    width=bar_width)
+
+    axes[3].axhline(0, linewidth=0.8)
+    axes[3].set_title("Percent Change (%)")
+    axes[3].set_xticks(x + bar_width * (n_groups - 1) / 2)
+    axes[3].set_xticklabels(depth_order)
+
+
+    # Shared legend
+    axes[0].legend(title=f"{prefix} category")
+
+    plt.tight_layout()
+    plt.show()
+
+depth_order = ["Low", "Medium", "High", "Total"]
+
+plot_socioeconomic_exposure(final_table, prefix="W", depth_order=depth_order)
+
+
+
+#%%
+def single_var_socioeconomic_exposure(final_table, prefix, depth_order):
+    # ---- Filter selected socio-economic variable ----
+    data = final_table[final_table["Category"].str.startswith(prefix)].copy()
+
+    # Reshape to long
+    data_long = data.melt(
+        id_vars=["Category", "Metric"],
+        var_name="FloodDepth",
+        value_name="Value"
+    )
+
+    # Ensure flood depth order
+    data_long["FloodDepth"] = pd.Categorical(
+        data_long["FloodDepth"],
+        categories=depth_order,
+        ordered=True
+    )
+
+    # Pivot for plotting
+    pivot = data_long.pivot_table(
+        index=["FloodDepth", "Category"],
+        columns="Metric",
+        values="Value"
+    ).reset_index()
+
+    # Add absolute difference
+    pivot["Diff"] = pivot["F"] - pivot["CF"]     
+
+    # Get ordered socio-economic groups
+    groups = sorted(pivot["Category"].unique())
+    n_groups = len(groups)
+
+    x = np.arange(len(depth_order))
+    bar_width = 0.8 / n_groups
+
+    return pivot, groups, n_groups, x, bar_width
+
+depth_order = ["Low", "Medium", "High", "Total"]
+depth_labels = ["Low \n(<0.5 m)", "Medium \n(0.5–1.5 m)", "High \n(>1.5 m)", "Total"]
+pivot_wealth, groups_wealth, n_groups_wealth, x_wealth, bar_width_wealth = single_var_socioeconomic_exposure(final_table, prefix="W", depth_order=depth_order)
+pivot_settlement, groups_settlement, n_groups_settlement, x_settlement, bar_width_settlement = single_var_socioeconomic_exposure(final_table, prefix="R", depth_order=depth_order)
+groups_settlement = ['R1', 'R0']
+
+wealth_labels = {"W1": "Poorest", "W2": "Poorer", "W3": "Middle", "W4": "Richer", "W5": "Richest"}
+settlement_labels = {"R1": "Rural", "R0": "Urban"}
+
+colours_wealth = ["#feebe2", "#fbb4b9", "#f768a1", "#c51b8a", "#7a0177"]
+colours_settlement = ["#5ab4ac", "#d8b365"]
+
+subplot_labels_2 = ["(a)", "(b)"]
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True, dpi=300)
+
+# -------------------------
+# PANEL 1 — % change Wealth
+# -------------------------
+for i, g in enumerate(groups_wealth):
+    sub = pivot_wealth[pivot_wealth["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0].bar(x_wealth + i * bar_width_wealth,
+                sub["%"],
+                width=bar_width_wealth,
+                label=f"{wealth_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_wealth[i % len(colours_wealth)],
+                edgecolor='grey', linewidth=0.3)
+
+axes[0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+axes[0].set_xticks(x_wealth + bar_width_wealth * (n_groups_wealth - 1) / 2)
+
+
+# -----------------------------
+# PANEL 2 — % change Settlement
+# -----------------------------
+for i, g in enumerate(groups_settlement):
+    sub = pivot_settlement[pivot_settlement["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[1].bar(x_settlement + i * bar_width_settlement,
+                sub["%"],
+                width=bar_width_settlement,
+                label=f"{settlement_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_settlement[i % len(colours_settlement)],
+                edgecolor='grey', linewidth=0.3)
+
+
+axes[1].set_xticks(x_settlement + bar_width_settlement * (n_groups_settlement - 1) / 2)
+
+
+for i, ax in enumerate(axes):
+    ax.axhline(0, linestyle="-", color="black", alpha=0.7, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+    ax.set_ylim(ax.get_ylim())  
+    ax.set_xlabel("Flood depth category", fontsize=10)
+    ax.set_xticklabels(depth_order, fontdict={'fontsize': 9, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    ax.text(0, 1.02, subplot_labels_2[i],
+            transform=ax.transAxes,
+            fontsize=10, fontweight="bold",
+            va="bottom", ha="left")
+
+# Shared legend
+axes[0].legend(title=f"Wealth category", loc='upper left', fontsize=8, title_fontsize=8)
+axes[1].legend(title=f"Settlement category", loc='upper left', fontsize=8, title_fontsize=8)
+
+plt.tight_layout()
+plt.show()
+
+#%%
+# Supplement categories
+pivot_age, groups_age, n_groups_age, x_age, bar_width_age = single_var_socioeconomic_exposure(final_table, prefix="A", depth_order=depth_order)
+pivot_gender, groups_gender, n_groups_gender, x_gender, bar_width_gender = single_var_socioeconomic_exposure(final_table, prefix="G", depth_order=depth_order)
+pivot_educ, groups_educ, n_groups_educ, x_educ, bar_width_educ = single_var_socioeconomic_exposure(final_table, prefix="E", depth_order=depth_order)
+pivot_hhsize, groups_hhsize, n_groups_hhsize, x_hhsize, bar_width_hhsize = single_var_socioeconomic_exposure(final_table, prefix="H", depth_order=depth_order)
+
+age_labels = {"A1": "0-4 years", "A2": "5–14 years", "A3": "15–24 years", "A4": "25–34 years", "A5": "35–44 years", 
+              "A6": "45–54 years", "A7": "55–64 years", "A8": ">65 years"}
+gender_labels = {"G0": "Female", "G1": "Male"}
+educ_labels = {"E1": "Less than primary", "E2": "Primary", "E3": "Incomplete secondary", "E4": "Secondary/Tertiary", "E5": "Higher"}
+hhsize_labels = {"H1": "1 person", "H2": "2 people", "H3": "3-4 people", "H4": "5-6 people", "H5": "7-10 people", "H6": ">10 people"}
+colours_age = ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476','#41ab5d','#238b45','#005a32']
+colours_gender = ['#e9a3c9', '#91bfdb']
+colours_educ = ["#E0F2F1", "#B2DFDB", "#80CBC4", "#26A69A", "#00695C"]
+colours_hhsize = ['#feedde','#fdd0a2','#fdae6b','#fd8d3c','#e6550d','#a63603']
+
+
+subplot_labels_4 = ["(a)", "(b)", "(c)", "(d)"]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8), sharey=True, dpi=300)
+
+# -------------------------
+# PANEL 1 — % change Age
+# -------------------------
+for i, g in enumerate(groups_age):
+    sub = pivot_age[pivot_age["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,0].bar(x_age + i * bar_width_age,
+                sub["%"],
+                width=bar_width_age,
+                label=f"{age_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_age[i % len(colours_age)],
+                edgecolor='grey', linewidth=0.3)
+axes[0,0].set_xticks(x_age + bar_width_age * (n_groups_age - 1) / 2)
+
+# -----------------------------
+# PANEL 2 — % change Gender
+# -----------------------------
+for i, g in enumerate(groups_gender):
+    sub = pivot_gender[pivot_gender["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,1].bar(x_gender + i * bar_width_gender,
+                sub["%"],
+                width=bar_width_gender,
+                label=f"{gender_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_gender[i % len(colours_gender)],
+                edgecolor='grey', linewidth=0.3)
+axes[0,1].set_xticks(x_gender + bar_width_gender * (n_groups_gender - 1) / 2)
+
+# -----------------------------
+# PANEL 3 — % change Education
+# -----------------------------
+for i, g in enumerate(groups_educ):
+    sub = pivot_educ[pivot_educ["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[1,0].bar(x_educ + i * bar_width_educ,
+                sub["%"],
+                width=bar_width_educ,
+                label=f"{educ_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_educ[i % len(colours_educ)],
+                edgecolor='grey', linewidth=0.3)
+axes[1,0].set_xticks(x_educ + bar_width_educ * (n_groups_educ - 1) / 2)
+
+# -----------------------------
+# PANEL 4 — % change HH size
+# -----------------------------
+for i, g in enumerate(groups_hhsize):
+    sub = pivot_hhsize[pivot_hhsize["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[1,1].bar(x_hhsize + i * bar_width_hhsize,
+                sub["%"],
+                width=bar_width_hhsize,
+                label=f"{hhsize_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_hhsize[i % len(colours_hhsize)],
+                edgecolor='grey', linewidth=0.3)
+axes[1,1].set_xticks(x_hhsize + bar_width_hhsize * (n_groups_hhsize - 1) / 2)
+
+
+for i, ax in enumerate(axes.flat):
+    ax.axhline(0, linestyle="-", color="black", alpha=0.7, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+    ax.set_ylim(ax.get_ylim())  
+    ax.set_xlabel("Flood depth category", fontsize=10)
+    ax.set_xticklabels(depth_order, fontdict={'fontsize': 9, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    ax.text(0, 1.02, subplot_labels_4[i],
+            transform=ax.transAxes,
+            fontsize=10, fontweight="bold",
+            va="bottom", ha="left")
+
+axes[0,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+axes[1,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+
+# Shared legend
+axes[0,0].legend(title=f"Age category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.05, 1.4), frameon=False)
+axes[0,1].legend(title=f"Education category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.17), frameon=False)
+axes[1,0].legend(title=f"Household size category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.3, 1.33), frameon=False)
+axes[1,1].legend(title=f"Household income category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.05, 1.33), frameon=False)
+
+plt.tight_layout()
+plt.show()
+
+#%%
+# Plot for all characteristics the factual exposed population per flood depth
+subplot_labels_4 = ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"]
+
+fig, axes = plt.subplots(3, 2, figsize=(11, 12), sharey=True, dpi=300, constrained_layout=True)
+
+
+# -------------------------
+# PANEL 1 — % change Wealth
+# -------------------------
+for i, g in enumerate(groups_wealth):
+    sub = pivot_wealth[pivot_wealth["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,0].bar(x_wealth + i * bar_width_wealth,
+                sub["Diff"],
+                width=bar_width_wealth,
+                label=f"{wealth_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_wealth[i % len(colours_wealth)],
+                edgecolor='grey', linewidth=0.3)
+axes[0,0].set_xticks(x_wealth + bar_width_wealth * (n_groups_wealth - 1) / 2)
+
+# -------------------------
+# PANEL 2 — % change Settlement type
+# -------------------------
+for i, g in enumerate(groups_settlement):
+    sub = pivot_settlement[pivot_settlement["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,1].bar(x_settlement + i * bar_width_settlement,
+                sub["Diff"],
+                width=bar_width_settlement,
+                label=f"{settlement_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_settlement[i % len(colours_settlement)],
+                edgecolor='grey', linewidth=0.3)
+axes[0,1].set_xticks(x_settlement + bar_width_settlement * (n_groups_settlement - 1) / 2)
+
+# -------------------------
+# PANEL 3 — % change Age
+# -------------------------
+for i, g in enumerate(groups_age):
+    sub = pivot_age[pivot_age["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[1,0].bar(x_age + i * bar_width_age,
+                sub["Diff"],
+                width=bar_width_age,
+                label=f"{age_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_age[i % len(colours_age)],
+                edgecolor='grey', linewidth=0.3)
+axes[1,0].set_xticks(x_age + bar_width_age * (n_groups_age - 1) / 2)
+
+# -----------------------------
+# PANEL 4 — % change Gender
+# -----------------------------
+for i, g in enumerate(groups_gender):
+    sub = pivot_gender[pivot_gender["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[1,1].bar(x_gender + i * bar_width_gender,
+                sub["Diff"],
+                width=bar_width_gender,
+                label=f"{gender_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_gender[i % len(colours_gender)],
+                edgecolor='grey', linewidth=0.3)
+axes[1,1].set_xticks(x_gender + bar_width_gender * (n_groups_gender - 1) / 2)
+
+# -----------------------------
+# PANEL 5 — % change Education
+# -----------------------------
+for i, g in enumerate(groups_educ):
+    sub = pivot_educ[pivot_educ["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[2,0].bar(x_educ + i * bar_width_educ,
+                sub["Diff"],
+                width=bar_width_educ,
+                label=f"{educ_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_educ[i % len(colours_educ)],
+                edgecolor='grey', linewidth=0.3)
+axes[2,0].set_xticks(x_educ + bar_width_educ * (n_groups_educ - 1) / 2)
+
+# -----------------------------
+# PANEL 6 — % change HH size
+# -----------------------------
+for i, g in enumerate(groups_hhsize):
+    sub = pivot_hhsize[pivot_hhsize["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[2,1].bar(x_hhsize + i * bar_width_hhsize,
+                sub["Diff"],
+                width=bar_width_hhsize,
+                label=f"{hhsize_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_hhsize[i % len(colours_hhsize)],
+                edgecolor='grey', linewidth=0.3)
+axes[2,1].set_xticks(x_hhsize + bar_width_hhsize * (n_groups_hhsize - 1) / 2)
+
+
+for i, ax in enumerate(axes.flat):
+    ax.axhline(0, linestyle="-", color="black", alpha=0.7, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.grid(True, axis='y', linestyle="--", alpha=0.5)
+    ax.set_ylim(ax.get_ylim())  
+    ax.set_xlabel("Flood depth category", fontsize=10)
+    ax.set_xticklabels(depth_order, fontdict={'fontsize': 9, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    ax.text(0, 1.02, subplot_labels_4[i],
+            transform=ax.transAxes,
+            fontsize=10, fontweight="bold",
+            va="bottom", ha="left")
+
+axes[0,0].set_ylabel("Absolute change in exposed population (%)", fontsize=10)
+axes[1,0].set_ylabel("Absolute change in exposed population (%)", fontsize=10)
+axes[2,0].set_ylabel("Absolute change in exposed population (%)", fontsize=10)
+
+# Shared legend
+axes[0,0].legend(title=f"Wealth category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.3), frameon=False)
+axes[0,1].legend(title=f"Settlement category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.16), frameon=False)
+axes[1,0].legend(title=f"Age category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.35), frameon=False)
+axes[1,1].legend(title=f"Gender category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.16), frameon=False)
+axes[2,0].legend(title=f"Education category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.05, 1.3), frameon=False)
+axes[2,1].legend(title=f"Household size category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.3), frameon=False)
+
+plt.tight_layout()
+plt.show()
 
 
 # %%
