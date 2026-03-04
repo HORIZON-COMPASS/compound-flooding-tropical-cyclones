@@ -20,6 +20,7 @@ import cartopy.crs as ccrs
 import matplotlib.ticker as mticker
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LinearSegmentedColormap
+from hydromt import DataCatalog
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -52,7 +53,7 @@ shapefile_fp = "p:/11210471-001-compass/03_Runs/sofala/Idai/sfincs/event_tp_era5
 background = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_region_background.geojson")
 
 # population in provided in thousand persons per grid cell
-pop_raster_path_HE_2020 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2020_30.tif")  
+pop_raster_path_HE_2019 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_2019_30.tif")  
 pop_raster_path_HE_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population/Pop_1990_30.tif")  
 # pop_raster_path_WP_2020_100m = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2020_CN_100m_R2025A_v1.tif")
 # pop_raster_path_WP_2020_1km = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2020_CN_1km_R2025A_UA_v1.tif")
@@ -61,10 +62,18 @@ pop_raster_path_HE_1990 = Path("c:/Code/COMPASS_exposure/Data/Outputs/Population
 # pop_raster_path_WP_2019_1km = os.path.join(prefix,"11210471-001-compass","01_Data","population_data","Worldpop","moz_pop_2019_CN_1km_R2025A_UA_v1.tif")
 
 pop_df_path_GLOPOP_SG = Path("data/GLOPOP-SG/synthpop_MOZr107_grid_combined.csv")  # synthesized population data with coordinates
+pop_GLOPOP_SG_25m = Path("p:/11210471-001-compass/04_Results/Idai_socioeconomic/preprocessed/population_characteristics/population_GLOPOP_SG_MOZr107_regrid.tif")
 
 # flood raster
 F_flooding = sfincs_dir_F / "floodmap.tif"
 CF_flooding = sfincs_dir_CF / "floodmap.tif"
+
+if platform.system() == "Windows":
+    datacat_path = os.path.abspath("../Workflows/03_data_catalogs/datacatalog_general.yml")
+else:
+    datacat_path = os.path.abspath("../Workflows/03_data_catalogs/datacatalog_general___linux.yml")
+data_catalog = DataCatalog(data_libs = [datacat_path])
+
 
 #%%
 # --- Load region ---
@@ -76,14 +85,34 @@ region_geom = [json.loads(region.to_json())["features"][0]["geometry"]]
 
 background = background.to_crs("EPSG:4326")  # Do once
 
+
+districts_adm3 = gpd.read_file("p:/11210471-001-compass/01_Data/sofala_geoms/sofala_districts_study_region.shp")
+districts_adm3_utm = districts_adm3.to_crs(region.crs)  
+districts_adm3_utm = gpd.overlay(districts_adm3_utm, region, how="intersection")  # clip to region
+districts_adm2 = data_catalog.get_geodataframe("gadm_level2", geom=region, buffer=1000)
+districts_adm2_utm = districts_adm2.to_crs(region.crs)
+
+drop_districts = ["Muanza", "Gororngosa-Sede", "Galinha"]
+districts_adm3_filtered = districts_adm3_utm[~districts_adm3_utm['NAME_3'].isin(drop_districts)]
+
+drop_districts = ["Muanza", "Gorongosa"]
+districts_adm2_filtered = districts_adm2_utm[~districts_adm2_utm['NAME_2'].isin(drop_districts)]
+
 # --- Clip rasters ---
 with rasterio.open(pop_raster_path_HE_1990) as src_HE_1990:
     pop_HE_1990, transform_HE_1990 = mask(src_HE_1990, region_geom, crop=True)
     print("No-data value Historical Exposure 1990:", src_HE_1990.nodata)
 
-with rasterio.open(pop_raster_path_HE_2020) as src_HE_2020:
-    pop_HE_2020, transform_HE_2020 = mask(src_HE_2020, region_geom, crop=True)
-    print("No-data value Historical Exposure 2020:", src_HE_2020.nodata)
+with rasterio.open(pop_raster_path_HE_2019) as src_HE_2019:
+    pop_HE_2019, transform_HE_2019 = mask(src_HE_2019, region_geom, crop=True)
+    print("No-data value Historical Exposure 2019:", src_HE_2019.nodata)
+
+with rasterio.open(pop_GLOPOP_SG_25m) as src:
+    ra_pop_GLOPOP_SG_25m = src.read(1)  # read first band 
+    transform_GLOPOP_SG_25m = src.transform
+    crs_GLOPOP_SG_25m = src.crs
+    print("No-data value GLOPOP-SG 25m:", src.nodata)
+    print("CRS GLOPOP-SG 25m:", crs_GLOPOP_SG_25m)
 
 # with rasterio.open(pop_raster_path_WP_2020_100m) as src_WP_2020_100m:
 #     pop_WP_2020, transform_WP_2020 = mask(src_WP_2020_100m, region_geom, crop=True)
@@ -120,19 +149,20 @@ def get_extent(transform, width, height):
     bottom = top + height * transform[4]
     return [left, right, bottom, top]
 
-extent_WP = get_extent(transform_WP_2020, pop_WP_2020.shape[2], pop_WP_2020.shape[1])
-extent_HE2020 = get_extent(transform_HE_2020, pop_HE_2020.shape[2], pop_HE_2020.shape[1])
+# extent_WP = get_extent(transform_WP_2020, pop_WP_2020.shape[2], pop_WP_2020.shape[1])
+extent_HE2019 = get_extent(transform_HE_2019, pop_HE_2019.shape[2], pop_HE_2019.shape[1])
 extent_HE1990 = get_extent(transform_HE_1990, pop_HE_1990.shape[2], pop_HE_1990.shape[1])
+extent_GLOPOP_SG_25m = get_extent(transform_GLOPOP_SG_25m, ra_pop_GLOPOP_SG_25m.shape[2], ra_pop_GLOPOP_SG_25m.shape[1])
 
 #%%
 # Plot the raw pop data for the region
-vmax_WP = np.percentile(pop_WP_2020[0], 99.9)  # 99th percentile
-vmax_HE2020 = np.percentile(pop_HE_2020[0], 99.9)
+# vmax_WP = np.percentile(pop_WP_2020[0], 99.9)  # 99th percentile
+vmax_HE2019 = np.percentile(pop_HE_2019[0], 99.9)
 vmax_HE1990 = np.percentile(pop_HE_1990[0], 99.9)
-
+vmax_GLOPOP_SG_25m = np.percentile(ra_pop_GLOPOP_SG_25m[~np.isnan(ra_pop_GLOPOP_SG_25m)], 99.9)
 # Mask raster outside region (already cropped with rasterio.mask.mask)
-pop_WP_masked = np.where(pop_WP_2020[0] == 0, np.nan, pop_WP_2020[0])
-pop_HE_2020_masked = np.where(pop_HE_2020[0] == 0, np.nan, pop_HE_2020[0])
+# pop_WP_masked = np.where(pop_WP_2020[0] == 0, np.nan, pop_WP_2020[0])
+pop_HE_2019_masked = np.where(pop_HE_2019[0] == 0, np.nan, pop_HE_2019[0])
 pop_HE_1990_masked = np.where(pop_HE_1990[0] == 0, np.nan, pop_HE_1990[0])
 
 # Define a polygon to remove/mask out
@@ -143,7 +173,7 @@ bg_filtered = background.copy()
 bg_filtered['geometry'] = bg_filtered.geometry.apply(lambda g: g.difference(mask_poly))
 
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+fig, axes = plt.subplots(1, 2, figsize=(18, 6))
 
 for ax in axes:
     background.plot(ax=ax, color="#E0E0E0", zorder=0)
@@ -151,52 +181,47 @@ for ax in axes:
     region.boundary.plot(ax=ax, color='black', linewidth=1, zorder=2)
 
 # Plot World pop data
-im = axes[0].imshow(pop_WP_masked, cmap="Blues", extent=extent_WP,  origin='upper', vmin=0, vmax=vmax_WP) 
-cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
-cbar.set_label("Population (people per cell)")
-axes[0].set_title("World Pop 2020 \n[100 m grid]")
+# im = axes[0].imshow(pop_WP_masked, cmap="Blues", extent=extent_WP,  origin='upper', vmin=0, vmax=vmax_WP) 
+# cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
+# cbar.set_label("Population (people per cell)")
+# axes[0].set_title("World Pop 2020 \n[100 m grid]")
 
 # Plot Historical Exposure data 2020
-im = axes[1].imshow(pop_HE_2020_masked, cmap="Blues", extent=extent_HE2020,  origin='upper', vmin=0, vmax=vmax_HE2020) 
-cbar = plt.colorbar(im, ax=axes[1], shrink=0.8)
+im = axes[0].imshow(pop_HE_2019_masked, cmap="Blues", extent=extent_HE2019,  origin='upper', vmin=0, vmax=vmax_HE2019) 
+cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
 cbar.set_label("Population (people per cell)")
-axes[1].set_title("Hist. Exposure 2020 \n[~1 km grid]")
+axes[0].set_title("Hist. Exposure 2019 \n[~1 km grid]")
 
 # Plot Historical Exposure data 1990
-im = axes[2].imshow(pop_HE_1990_masked, cmap="Blues", extent=extent_HE1990,  origin='upper', vmin=0, vmax=vmax_HE1990)
-cbar = plt.colorbar(im, ax=axes[2], shrink=0.8)
+im = axes[1].imshow(pop_HE_1990_masked, cmap="Blues", extent=extent_HE1990,  origin='upper', vmin=0, vmax=vmax_HE1990)
+cbar = plt.colorbar(im, ax=axes[1], shrink=0.8)
 cbar.set_label("Population (people per cell)")
-axes[2].set_title("Hist. Exposure 1990 \n[~1 km grid]")
+axes[1].set_title("Hist. Exposure 1990 \n[~1 km grid]")
 
 for ax in axes:
     region.boundary.plot(ax=ax, color='black', linewidth=1)
 
 
 # %% Regrid WP data to HE for comparison
-pop_WP_2020_coarse = np.zeros(pop_HE_2020.shape, dtype=np.float32)
+# pop_WP_2020_coarse = np.zeros(pop_HE_2020.shape, dtype=np.float32)
 
-# Reproject WP → HE grid
-reproject(
-    source=pop_WP_2020,
-    destination=pop_WP_2020_coarse,
-    src_transform=transform_WP_2020,
-    src_crs=src_WP_2020.crs,
-    dst_transform=transform_HE_2020,
-    dst_crs=src_HE_2020.crs,
-    resampling=Resampling.sum   # sum keeps population counts correct
-)
-
-
-#%% Plot all pop data on the same grid
-# cmap = cm.get_cmap("Blues").copy()
-# cmap.set_bad(color="#E0E0E0")  # grey
-
+# # Reproject WP → HE grid
+# reproject(
+#     source=pop_WP_2020,
+#     destination=pop_WP_2020_coarse,
+#     src_transform=transform_WP_2020,
+#     src_crs=src_WP_2020.crs,
+#     dst_transform=transform_HE_2020,
+#     dst_crs=src_HE_2020.crs,
+#     resampling=Resampling.sum   # sum keeps population counts correct
+# )
+#%%
 # Mask raster outside region (already cropped with rasterio.mask.mask)
-pop_WP_masked = np.where(pop_WP_2020_coarse[0] == 0, np.nan, pop_WP_2020_coarse[0])
-pop_HE_2020_masked = np.where(pop_HE_2020[0] == 0, np.nan, pop_HE_2020[0])
+# pop_WP_masked = np.where(pop_WP_2020_coarse[0] == 0, np.nan, pop_WP_2020_coarse[0])
+pop_HE_2019_masked = np.where(pop_HE_2019[0] == 0, np.nan, pop_HE_2019[0])
 pop_HE_1990_masked = np.where(pop_HE_1990[0] == 0, np.nan, pop_HE_1990[0])
 
-vmax_WP = np.percentile(pop_WP_masked[~np.isnan(pop_WP_masked)], 99.9)
+# vmax_WP = np.percentile(pop_WP_masked[~np.isnan(pop_WP_masked)], 99.9)
 
 # Define a polygon to remove/mask out
 mask_poly = Polygon([(34.9,-20.3), (36,-20.3), (36,-19.8), (34.9,-19.8)])
@@ -206,30 +231,129 @@ bg_filtered = background.copy()
 bg_filtered['geometry'] = bg_filtered.geometry.apply(lambda g: g.difference(mask_poly))
 
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+fig, axes = plt.subplots(1, 1, figsize=(8, 6), dpi=300)
+ax = axes
+# Increase extent
+xmin, ymin, xmax, ymax = region.total_bounds
+
+background.plot(ax=ax, color="#E0E0E0", zorder=0)
+bg_filtered.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
+region.boundary.plot(ax=ax, color='black', linewidth=1, zorder=6)
+districts_adm2_filtered.boundary.plot(ax=ax, color='darkred', linewidth=1, zorder=5)
+districts_adm3_filtered.boundary.plot(ax=ax, color='#542788', linewidth=0.5, zorder=4)
+ax.set_xlim(xmin - 0.2, xmax)
+ax.set_ylim(ymin, ymax)
+for idx, row in districts_adm3_filtered.iterrows():
+    x = row.geometry.centroid.x
+    y = row.geometry.centroid.y      
+    ax.text(
+        x, y,
+        row["NAME_3"],
+        fontsize=7,
+        ha="center",
+        color="#542788",
+        zorder=10,
+        fontweight="bold"
+    )
+for idx, row in districts_adm2_filtered.iterrows():
+    x = row.geometry.centroid.x
+    y = row.geometry.centroid.y       
+    ax.text(
+        x-0.15, y+0.02,
+        row["NAME_2"],
+        fontsize=7,
+        ha="center",
+        color="darkred",
+        zorder=10,
+        fontweight="bold"
+    )
+
+# Plot Historical Exposure data 2019
+im = ax.imshow(pop_HE_2019_masked, cmap="Blues", extent=extent_HE2019,  origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_HE2019)) 
+cbar = plt.colorbar(im, ax=ax, shrink=0.8)
+cbar.set_label("Population (people per cell)")
+ax.set_title("Population in 2019 \n[~1 km grid]", fontsize=11)
+
+
+
+#%% Plot all pop data on the same grid
+# cmap = cm.get_cmap("Blues").copy()
+# cmap.set_bad(color="#E0E0E0")  # grey
+
+# Mask raster outside region (already cropped with rasterio.mask.mask)
+# pop_WP_masked = np.where(pop_WP_2020_coarse[0] == 0, np.nan, pop_WP_2020_coarse[0])
+pop_HE_2020_masked = np.where(pop_HE_2020[0] == 0, np.nan, pop_HE_2020[0])
+pop_HE_1990_masked = np.where(pop_HE_1990[0] == 0, np.nan, pop_HE_1990[0])
+
+# vmax_WP = np.percentile(pop_WP_masked[~np.isnan(pop_WP_masked)], 99.9)
+
+# Define a polygon to remove/mask out
+mask_poly = Polygon([(34.9,-20.3), (36,-20.3), (36,-19.8), (34.9,-19.8)])
+
+# Subtract the polygon from all geometries
+bg_filtered = background.copy()
+bg_filtered['geometry'] = bg_filtered.geometry.apply(lambda g: g.difference(mask_poly))
+
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 6), subplot_kw={'projection': ccrs.PlateCarree()}, dpi=300)
+
+# Increase extent
+xmin, ymin, xmax, ymax = region.total_bounds
 
 for ax in axes:
     background.plot(ax=ax, color="#E0E0E0", zorder=0)
     bg_filtered.boundary.plot(ax=ax, color="#B0B0B0", linewidth=0.5, zorder=1)
     region.boundary.plot(ax=ax, color='black', linewidth=1, zorder=2)
+    districts_adm2_filtered.boundary.plot(ax=ax, color='darkred', linewidth=0.5, zorder=5)
+    districts_adm3_filtered.boundary.plot(ax=ax, color='#542788', linewidth=0.5, zorder=4)
+    ax.set_xlim(xmin - 0.2, xmax)
+    ax.set_ylim(ymin, ymax)
+
+    for idx, row in districts_adm3_filtered.iterrows():
+        x = row.geometry.centroid.x
+        y = row.geometry.centroid.y
+        
+        ax.text(
+            x, y,
+            row["NAME_3"],
+            fontsize=7,
+            ha="center",
+            color="#542788",
+            zorder=10,
+            fontweight="bold"
+        )
+
+    for idx, row in districts_adm2_filtered.iterrows():
+        x = row.geometry.centroid.x
+        y = row.geometry.centroid.y
+        
+        ax.text(
+            x-0.15, y+0.02,
+            row["NAME_2"],
+            fontsize=7,
+            ha="center",
+            color="darkred",
+            zorder=10,
+            fontweight="bold"
+        )
 
 # Plot WorldPop 2020
-im = axes[0].imshow(pop_WP_masked, cmap="Blues", extent=extent_WP, origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_WP))
-cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
-cbar.set_label("Population (people per cell)")
-axes[0].set_title("World Pop 2020 \n[~1 km grid]")
+# im = axes[0].imshow(pop_WP_masked, cmap="Blues", extent=extent_WP, origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_WP))
+# cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
+# cbar.set_label("Population (people per cell)")
+# axes[0].set_title("World Pop 2020 \n[~1 km grid]")
 
 # Plot Historical Exposure data 2020
-im = axes[1].imshow(pop_HE_2020_masked, cmap="Blues", extent=extent_HE2020,  origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_HE2020)) 
-cbar = plt.colorbar(im, ax=axes[1], shrink=0.8)
+im = axes[0].imshow(pop_HE_2020_masked, cmap="Blues", extent=extent_HE2020,  origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_HE2020)) 
+cbar = plt.colorbar(im, ax=axes[0], shrink=0.8)
 cbar.set_label("Population (people per cell)")
-axes[1].set_title("Hist. Exposure 2020 \n[~1 km grid]")
+axes[0].set_title("Hist. Exposure 2020 \n[~1 km grid]")
 
 # Plot Historical Exposure data 1990
-im = axes[2].imshow(pop_HE_1990_masked, cmap="Blues", extent=extent_HE1990,  origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_HE1990))
-cbar = plt.colorbar(im, ax=axes[2], shrink=0.8)
+im = axes[1].imshow(pop_HE_1990_masked, cmap="Blues", extent=extent_HE1990,  origin='upper', norm=PowerNorm(gamma=0.5, vmin=0, vmax=vmax_HE1990))
+cbar = plt.colorbar(im, ax=axes[1], shrink=0.8)
 cbar.set_label("Population (people per cell)")
-axes[2].set_title("Hist. Exposure 1990 \n[~1 km grid]")
+axes[1].set_title("Hist. Exposure 1990 \n[~1 km grid]")
 
 
 
