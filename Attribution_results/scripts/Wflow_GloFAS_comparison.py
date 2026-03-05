@@ -31,7 +31,7 @@ BASE_MODELS = BASE_RUNS / "base_model"
 mod_ini = WflowModel(root=str(BASE_MODELS), mode="r+", config_fn=str(BASE_MODELS / "wflow_sbm.toml"))
 
 # Load wflow and SFINCS regions and basins
-gdf_wflow = gpd.read_file(BASE_MODELS / "staticgeoms" / "basins.geojson").to_crs("EPSG:4326")
+gdf_wflow = gpd.read_file(BASE_RUNS / "basins.geojson").to_crs("EPSG:4326")
 gdf_sfincs = gpd.read_file(BASE_SFINCS / "gis" / "region.geojson", driver="GeoJSON").to_crs("EPSG:4326")
 
 print("Initializing 30-year WFLOW model...")
@@ -89,8 +89,8 @@ def plot_gauges_with_basins_and_sfincs(
     ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=9, crs=gdf_wflow.crs, attribution=False, zorder=0)
 
     txt = ax.text(
-        33.9, -21.07,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
-        "Tiles © Esri -- Source: Esri, i-cubed, USDA, USGS, AEX, \nGeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and \nthe GIS User Community",
+        32.25, -21.1,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
+        "Sources: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, \nAerogrid, IGN, IGP, UPR-EGP, and the GIS User Community | Powered by Esri",
         fontsize=6,
         color='white',
         alpha=0.7,
@@ -116,6 +116,7 @@ def plot_gauges_with_basins_and_sfincs(
     ax.legend(handles=legend_handles, loc="upper right")
 
     fig.savefig("../figures/fS4.png", dpi=300, bbox_inches="tight")
+    fig.savefig("../figures/fS4.pdf", dpi=300, bbox_inches="tight")
 
     return fig, ax
 
@@ -223,7 +224,7 @@ Q_wflow_event_filtered = Q_wflow_event.sel(Q_gauges_locs=gauges_filtered['index'
 # Add correct lat and lon to gauges in wflow output
 gauges_lookup = (gauges_wgs84.set_index("index"))
 gauges_lookup.index = gauges_lookup.index.astype(str)
-gauge_ids = Q_wflow_30yr_filtered.coords["Q_gauges_locs"].values.astype(str)
+gauge_ids = Q_wflow_event_filtered.coords["Q_gauges_locs"].values.astype(str)
 lon = xr.DataArray(gauges_lookup.loc[gauge_ids, "lon"].values, dims="Q_gauges_locs", 
                    coords={"Q_gauges_locs": gauge_ids}, name="lon")
 lat = xr.DataArray(gauges_lookup.loc[gauge_ids, "lat"].values, dims="Q_gauges_locs",
@@ -235,9 +236,9 @@ Q_wflow_event_filtered = Q_wflow_event_filtered.assign_coords(lon=lon, lat=lat)
 
 print("Merge gauges when located within 10 km of each others...")
 # Merge gauges when located within 10 km of each other
-gdf_wflow_gauges = gpd.GeoDataFrame({"Q_gauges_locs": Q_wflow_30yr_filtered.Q_gauges_locs.values},
-                       geometry=[Point(xy) for xy in zip(Q_wflow_30yr_filtered.lon.values,
-                                                         Q_wflow_30yr_filtered.lat.values)], crs="EPSG:4326")
+gdf_wflow_gauges = gpd.GeoDataFrame({"Q_gauges_locs": Q_wflow_event_filtered.Q_gauges_locs.values},
+                       geometry=[Point(xy) for xy in zip(Q_wflow_event_filtered.lon.values,
+                                                         Q_wflow_event_filtered.lat.values)], crs="EPSG:4326")
 gdf_wflow_gauges_utm = gdf_wflow_gauges.to_crs("EPSG:32736")
 
 cluster_id = np.full(len(gdf_wflow_gauges_utm), -1, dtype=int)
@@ -525,7 +526,7 @@ df_stats_40 = pd.DataFrame(columns=['Gauge #', 'wflow [m³]', 'GloFAS [m³]', 'w
 n = len(gauge_ids)
 ncols = 2
 nrows = int(np.ceil(n / ncols))
-fig, axes = plt.subplots(nrows, ncols, figsize=(10, nrows*3), sharex=True, sharey=False)
+fig, axes = plt.subplots(nrows, ncols, figsize=(10, nrows*3), sharex=True, sharey=False, constrained_layout=True)
 axes = axes.flatten()
 
 letters = list(string.ascii_lowercase)
@@ -590,7 +591,6 @@ fig.savefig("../figures/fS5.pdf", dpi=300, bbox_inches="tight")
 for j in range(i+1, len(axes)):
     fig.delaxes(axes[j])
 
-plt.tight_layout()
 plt.show()
 
 print(df_stats_40)

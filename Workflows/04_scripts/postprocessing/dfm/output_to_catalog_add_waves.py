@@ -577,14 +577,12 @@ def plot_wave_overview_Beira(station_idx=52):
                     crs="EPSG:4326", attribution=False, zorder=0)
 
     txt = ax_map.text(
-        34.94, -20.3,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
-        "Tiles © Esri -- Source: Esri, i-cubed, USDA, USGS, " \
-        "\nAEX, GeoEye, Getmapping, Aerogrid, IGN, IGP," \
-        "\nUPR-EGP, and the GIS User Community",
+        35.225, -20.298,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
+        "Sources: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, \nAerogrid, IGN, IGP, UPR-EGP, and the GIS User Community | Powered by Esri",
         fontsize=5.5,
         color='white',
         alpha=0.7,
-        ha='left',
+        ha='right',
         va='bottom',
         zorder=20,
     )

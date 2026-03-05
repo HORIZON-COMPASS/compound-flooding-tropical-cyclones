@@ -39,7 +39,7 @@ norm = plt.Normalize(wind_min, wind_max)
 
 # %% PLOTTING MODEL DOMAIN FIGURES FOR PAPER
 # Getting the model regions
-gdf_wflow = gpd.read_file(os.path.join(data_base, "wflow/gis/basins.geojson"))
+gdf_wflow = gpd.read_file(os.path.join(data_base, "wflow/basins.geojson"))
 gdf_sfincs = gpd.read_file(os.path.join(data_base, "sfincs/gis/region.geojson"))
 gdf_sfincs = gdf_sfincs.to_crs("EPSG:4326")
 gdf_snapwave = gpd.read_file(os.path.join(data_base, "snapwave/gis/SnapWave_region_sofala_only.shp"))
@@ -79,7 +79,7 @@ ctx.add_basemap(ax, source=ctx.providers.Esri.WorldImagery, zoom=7, crs=tc_idai_
 
 txt = ax.text(
     32.01, -21.99,  # x, y in figure coordinates (0=left/bottom, 1=right/top)
-    "Tiles © Esri -- Source: Esri, i-cubed, USDA, USGS, AEX, \nGeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and \nthe GIS User Community",
+    "Sources: Esri, i-cubed, USDA, USGS, AEX, \nGeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, \nand the GIS User Community | Powered by Esri",
     fontsize=5.5,
     color='white',
     alpha=0.7,
