@@ -12,7 +12,7 @@ import rioxarray as rxr
 import geopandas as gpd
 import json
 from shapely import Point
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, mapping
 import matplotlib.pyplot as plt
 from hydromt import DataCatalog
 import rasterio.features as features
@@ -22,6 +22,13 @@ from shapely.geometry import box
 from shapely.geometry import Polygon
 from tqdm import tqdm
 from rasterio.warp import reproject, Resampling
+from matplotlib.colors import LinearSegmentedColormap, PowerNorm, TwoSlopeNorm
+from matplotlib.cm import ScalarMappable
+import cartopy.crs as ccrs
+from rasterio.features import geometry_mask
+from shapely.geometry import mapping
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.ticker import FuncFormatter
 
 prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
@@ -401,17 +408,469 @@ pop_fine_glopop, grid_id_fine_glopop, pop_sofala_arrays_glopop, transform_sofala
 
 
 #%%
+Path_pop_fine_HANZE_regridded_2015 = "c:/Code/COMPASS_exposure/Data/Modified/population_2015_region_regrid_wholepeople.tif"
+Path_pop_fine_HANZE_regridded_2019 = "c:/Code/COMPASS_exposure/Data/Modified/population_2019_region_regrid_wholepeople.tif"
+
+with rasterio.open(Path_pop_fine_HANZE_regridded_2015) as src_id:
+        pop_fine_HANZE_regridded_2015 = src_id.read(1)
+        Path_pop_fine_HANZE_regridded_2015_transform = src_id.transform
+        Path_pop_fine_HANZE_regridded_2015_crs = src_id.crs
+
+with rasterio.open(Path_pop_fine_HANZE_regridded_2019) as src_id:
+        pop_fine_HANZE_regridded_2019 = src_id.read(1)
+        Path_pop_fine_HANZE_regridded_2019_transform = src_id.transform
+        Path_pop_fine_HANZE_regridded_2019_crs = src_id.crs
+
+print("Differences in population counts between GLOPOP-SG and HANZE regridded:")
+print(f"2015 - GLOPOP-SG: {pop_fine_glopop.sum()}, HANZE: {pop_fine_HANZE_regridded_2015.sum()}")
+print(f"2019 - GLOPOP-SG: {pop_fine_glopop.sum()}, HANZE: {pop_fine_HANZE_regridded_2019.sum()}")
+print(f"% difference 2015 (GLOPOP-SG/HANZE): {pop_fine_glopop.sum() / pop_fine_HANZE_regridded_2015.sum() * 100:.2f} %")
+print(f"% difference 2019 (GLOPOP-SG/HANZE): {pop_fine_glopop.sum() / pop_fine_HANZE_regridded_2019.sum() * 100:.2f} %")
+
+#%%
 # Step 2 & 3) Compute exposed population at 25 m resolution and aggregate it and avg flood depth to grid ID raster (1 km)
 gdf_pop_glopop_exposed_F_coarse  = aggregate_exposed_pop_to_grid_id(pop_fine_glopop, hmax_F, grid_id_fine_glopop)
 gdf_pop_glopop_exposed_CF_coarse = aggregate_exposed_pop_to_grid_id(pop_fine_glopop, hmax_CF, grid_id_fine_glopop)
+gdf_pop_hanze_2015_F_coarse  = aggregate_exposed_pop_to_grid_id(pop_fine_HANZE_regridded_2015, hmax_F, grid_id_fine_glopop)
+gdf_pop_hanze_2019_F_coarse  = aggregate_exposed_pop_to_grid_id(pop_fine_HANZE_regridded_2019, hmax_F, grid_id_fine_glopop)
 
 
+#TODO plot spatially difference in population between GLOPOP and HANZE datasets
 
 # %%
 pop_charac_exposed_F = df_pop_charac.merge(gdf_pop_glopop_exposed_F_coarse[["grid_id", "avg_flood_depth", "exposure_ratio"]], on="grid_id", how="left")
 pop_charac_exposed_CF = df_pop_charac.merge(gdf_pop_glopop_exposed_CF_coarse[["grid_id", "avg_flood_depth", "exposure_ratio"]], on="grid_id", how="left")
 
 
+
+#%%
+# Once outside the loop
+region_wgs84 = region.to_crs('EPSG:4326')
+clip_mask = geometry_mask(
+    [mapping(geom) for geom in region_wgs84.geometry],
+    transform=grid_id_transform,
+    invert=True,                  # True = keep inside region
+    out_shape=grid_ids.shape
+)
+
+#%%
+def plot_population_by_category_spatially(
+    df,
+    category,
+    label_dict,
+    grid_id_crs,
+    grid_ids,
+    grid_id_transform,
+    region_utm,
+    background_utm,
+    flood_extent,
+    colour_map='YlOrRd',
+    figsize_per_panel=(4, 5),
+    suptitle=None,
+    clip_mask=clip_mask
+):
+    # --- Aggregate population per grid_id per category value ---
+    agg = df.groupby(['grid_id', category]).agg(
+        population=(category, 'size'),
+    ).reset_index()
+
+    cat_values = sorted(agg[category].unique())
+    n = len(cat_values)
+    fw, fh = figsize_per_panel
+
+    fig, axes = plt.subplots(1, n, figsize=(fw * n, fh), dpi=150,
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+    if n == 1:
+        axes = [axes]
+
+    # --- Shared norm across all panels ---
+    vmin = agg['population'].min()
+    vmax = agg['population'].max()
+    norm = PowerNorm(gamma=0.5, vmin=vmin, vmax=vmax)
+
+    for i, val in enumerate(cat_values):
+        ax = axes[i]
+        sub = agg[agg[category] == val]
+
+        # --- Reconstruct 2D raster from grid_ids and aggregated population ---
+        pop_grid = np.full(grid_ids.shape, np.nan)
+        for _, row in sub.iterrows():
+            mask = grid_ids == row['grid_id']
+            pop_grid[mask] = row['population']
+
+        background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+        region_utm.boundary.plot(ax=ax, color='black', linewidth=0.3, zorder=1)
+
+        # Compute WGS84 extent from grid transform — do this ONCE outside the loop
+        left, bottom, right, top = rasterio.transform.array_bounds(
+            grid_ids.shape[0], grid_ids.shape[1], grid_id_transform
+        )
+        wgs84_extent = [left, right, bottom, top]
+
+        # Then in the imshow call:
+        pop_grid[~clip_mask] = np.nan
+        ax.imshow(pop_grid, extent=wgs84_extent, origin='upper',
+                cmap=colour_map, norm=norm, zorder=2,
+                transform=ccrs.PlateCarree())
+
+        ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+        ax.set_title(label_dict.get(val, str(val)), fontsize=9)
+        ax.text(0, 1.02, f"({chr(97 + i)})", transform=ax.transAxes,
+                fontsize=10, fontweight="bold", va="bottom", ha="left")
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray",
+                          alpha=0.5, linestyle="--")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.left_labels = (i == 0)
+        gl.bottom_labels = True
+        gl.xlabel_style = {"size": 8}
+        gl.ylabel_style = {"size": 8}
+
+    # --- Shared colorbar ---
+    sm = ScalarMappable(cmap=colour_map, norm=norm)
+    sm._A = []
+    cbar = fig.colorbar(sm, ax=axes, shrink=0.6, pad=0.02)
+    cbar.set_label("Population per grid cell")
+
+    fig.suptitle(suptitle or f"Population distribution by {category}", fontsize=11)
+    plt.show()
+
+wealth_labels = {1: "Poorest", 2: "Poorer", 3: "Middle", 4: "Richer", 5: "Richest"} 
+rural_labels =  {0: "Urban", 1: "Rural"} 
+age_labels = {1: "0-4 yr", 2: "5-14 yr", 3: "15-24 yr", 4: "25-34 yr", 5: "35-44 yr", 6: "45-54 yr", 5: "55-64 yr", 8: "65+ yr"} 
+gender_labels = {0: "Male", 1: "Female"}  
+educ_labels = {1: "Less than primary", 2: "Primary", 3: "Incomplete secondary", 4: "Secondary/Tertiary", 5: "Higher"}
+hhsize_labels = {1: "1 person", 2: "2 people", 3: "3-4 people", 4: "5-6 people", 5: "7-10 people", 6: ">10 people"}
+
+plot_population_by_category_spatially(df_pop_charac, 'WEALTH',     wealth_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_population_by_category_spatially(df_pop_charac, 'RURAL',      rural_labels,  grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_population_by_category_spatially(df_pop_charac, 'AGE',        age_labels,    grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_population_by_category_spatially(df_pop_charac, 'GENDER',     gender_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_population_by_category_spatially(df_pop_charac, 'EDUC',       educ_labels,   grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_population_by_category_spatially(df_pop_charac, 'HHSIZE_CAT', hhsize_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+
+
+
+#%%
+def plot_affected_population_by_category_spatially(
+    df,
+    category,
+    label_dict,
+    grid_id_crs,
+    grid_ids,
+    grid_id_transform,
+    region_utm,
+    background_utm,
+    flood_extent,
+    colour_map='YlOrRd',
+    figsize_per_panel=(4, 5),
+    suptitle=None,
+    clip_mask=clip_mask
+):
+    # --- Aggregate population per grid_id per category value ---
+    agg = df.groupby(['grid_id', category]).agg(
+        population=('exposure_ratio', 'sum'),
+    ).reset_index()
+
+    cat_values = sorted(agg[category].unique())
+    n = len(cat_values)
+    fw, fh = figsize_per_panel
+
+    fig, axes = plt.subplots(1, n, figsize=(fw * n, fh), dpi=150,
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+    if n == 1:
+        axes = [axes]
+
+    # --- Shared norm across all panels ---
+    vmin = agg['population'].min()
+    vmax = agg['population'].max()
+    norm = PowerNorm(gamma=0.5, vmin=vmin, vmax=vmax)
+
+    for i, val in enumerate(cat_values):
+        ax = axes[i]
+        sub = agg[agg[category] == val]
+
+        # --- Reconstruct 2D raster from grid_ids and aggregated population ---
+        pop_grid = np.full(grid_ids.shape, np.nan)
+        for _, row in sub.iterrows():
+            mask = grid_ids == row['grid_id']
+            pop_grid[mask] = row['population']
+
+        background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+        region_utm.boundary.plot(ax=ax, color='black', linewidth=0.3, zorder=1)
+
+        # Compute WGS84 extent from grid transform — do this ONCE outside the loop
+        left, bottom, right, top = rasterio.transform.array_bounds(
+            grid_ids.shape[0], grid_ids.shape[1], grid_id_transform
+        )
+        wgs84_extent = [left, right, bottom, top]
+
+        # Then in the imshow call:
+        pop_grid[~clip_mask] = np.nan
+        ax.imshow(pop_grid, extent=wgs84_extent, origin='upper',
+                cmap=colour_map, norm=norm, zorder=2,
+                transform=ccrs.PlateCarree())
+
+        ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+        ax.set_title(label_dict.get(val, str(val)), fontsize=9)
+        ax.text(0, 1.02, f"({chr(97 + i)})", transform=ax.transAxes,
+                fontsize=10, fontweight="bold", va="bottom", ha="left")
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray",
+                          alpha=0.5, linestyle="--")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.left_labels = (i == 0)
+        gl.bottom_labels = True
+        gl.xlabel_style = {"size": 8}
+        gl.ylabel_style = {"size": 8}
+
+    # --- Shared colorbar ---
+    sm = ScalarMappable(cmap=colour_map, norm=norm)
+    sm._A = []
+    cbar = fig.colorbar(sm, ax=axes, shrink=0.6, pad=0.02)
+    cbar.set_label("Population affected per grid cell")
+
+    fig.suptitle(suptitle or f"Affected population distribution by {category}", fontsize=11)
+    plt.show()
+
+wealth_labels = {1: "Poorest", 2: "Poorer", 3: "Middle", 4: "Richer", 5: "Richest"} 
+rural_labels =  {0: "Urban", 1: "Rural"} 
+age_labels = {1: "0-4 yr", 2: "5-14 yr", 3: "15-24 yr", 4: "25-34 yr", 5: "35-44 yr", 6: "45-54 yr", 5: "55-64 yr", 8: "65+ yr"} 
+gender_labels = {0: "Male", 1: "Female"}  
+educ_labels = {1: "Less than primary", 2: "Primary", 3: "Incomplete secondary", 4: "Secondary/Tertiary", 5: "Higher"}
+hhsize_labels = {1: "1 person", 2: "2 people", 3: "3-4 people", 4: "5-6 people", 5: "7-10 people", 6: ">10 people"}
+
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'WEALTH',     wealth_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'RURAL',      rural_labels,  grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'AGE',        age_labels,    grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'GENDER',     gender_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'EDUC',       educ_labels,   grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_affected_population_by_category_spatially(pop_charac_exposed_F, 'HHSIZE_CAT', hhsize_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+
+
+
+#%%
+def plot_socioeconomic_shares(
+    df,
+    grid_id_crs,
+    grid_ids,
+    grid_id_transform,
+    region_utm,
+    background_utm,
+    flood_extent,
+    clip_mask=clip_mask,
+    figsize=(12, 9),
+    dpi=150,
+):
+    left, bottom, right, top = rasterio.transform.array_bounds(
+        grid_ids.shape[0], grid_ids.shape[1], grid_id_transform)
+    wgs84_extent = [left, right, bottom, top]
+
+    # --- Define panels: (category, target_values, title) ---
+    panels = [
+        # Wealth
+        ('WEALTH', [1, 2], 'Wealth: Poorest & Poorer'),
+        ('WEALTH', [4, 5], 'Wealth: Richer & Richest'),
+        # Education
+        ('EDUC', [1, 2], 'Education: < Primary & Primary'),
+        ('EDUC', [4, 5], 'Education: Secondary & Higher'),
+        # Settlement
+        ('RURAL', [1], 'Settlement: Rural'),
+        ('RURAL', [0], 'Settlement: Urban'),
+        # Household size
+        ('HHSIZE_CAT', [1], 'Household size: 1 person'),
+        ('HHSIZE_CAT', [2, 3, 4, 5, 6], 'Household size: 2+ people'),
+        # Gender
+        ('GENDER', [0], 'Gender: Male'),
+        ('GENDER', [1], 'Gender: Female'),
+        # Age
+        ('AGE', [1, 8], 'Age: Young (0-4) & Elderly (65+)'),
+        ('AGE', [2, 3, 4, 5, 6, 7], 'Age: 5-64 years'),
+    ]
+
+    n_cols = 4
+    n_rows = len(panels) // n_cols
+    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize, dpi=dpi,
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+    axes_flat = axes.flat
+
+    # --- Total population per grid cell (denominator) ---
+    # total = df.groupby(['grid_id', category]).agg(population=(category, 'size')).reset_index()
+
+    subplot_labels = [f"({chr(97+i)})" for i in range(len(panels))]
+
+    for i, (category, target_values, title) in enumerate(panels):
+        ax = axes_flat[i]
+
+        # --- Aggregate target group ---
+        target_df = df[df[category].isin(target_values)]
+        agg = target_df.groupby('grid_id').size().reset_index(name='group_pop')
+
+        merged = agg.rename(columns={'group_pop': 'share'})  # reuse 'share' column name for plotting
+
+        # --- Reconstruct 2D raster ---
+        pop_grid = np.full(grid_ids.shape, np.nan)
+        for _, row in merged.iterrows():
+            mask = grid_ids == row['grid_id']
+            pop_grid[mask] = row['share']
+        pop_grid[~clip_mask] = np.nan
+
+        # --- Plot ---
+        background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+        region_utm.boundary.plot(ax=ax, color='black', linewidth=0.3, zorder=1)
+
+        # Compute shared vmax across all panels once before the loop
+        vmax_all = 0
+        for category, target_values, _ in panels:
+            target_df = df[df[category].isin(target_values)]
+            agg = target_df.groupby('grid_id').size().reset_index(name='group_pop')
+            vmax_all = max(vmax_all, agg['group_pop'].max())
+
+        norm = PowerNorm(gamma=0.5, vmin=0, vmax=vmax_all)
+
+        ax.imshow(pop_grid, extent=wgs84_extent, origin='upper',
+                  cmap='YlOrRd', norm=norm, zorder=2,
+                  transform=ccrs.PlateCarree())
+
+        ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+        ax.set_title(title, fontsize=8)
+        ax.text(0, 1.02, subplot_labels[i], transform=ax.transAxes,
+                fontsize=8, fontweight="bold", va="bottom", ha="left")
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray",
+                          alpha=0.5, linestyle="--")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.left_labels = (i % n_cols == 0)
+        gl.bottom_labels = (i >= len(panels) - n_cols)
+        gl.xlabel_style = {"size": 8}
+        gl.ylabel_style = {"size": 8}
+
+    # --- Shared colorbar ---
+    sm = ScalarMappable(cmap='YlOrRd', norm=norm)
+    sm._A = []
+    cbar = fig.colorbar(sm, ax=list(axes_flat), shrink=0.2, pad=0.02,
+                        location='right', aspect=40)
+    cbar.set_label("Population per grid cell (# people)", fontsize=9)
+    cbar.ax.tick_params(labelsize=8)
+
+    fig.suptitle("Spatial distribution of socioeconomic groups", fontsize=9)
+    plt.show()
+    return fig
+
+fig = plot_socioeconomic_shares(pop_charac_exposed_F, grid_id_crs, grid_ids, grid_id_transform,
+                                region, background_utm, flood_extent)
+
+
+
+#%%
+from matplotlib.colors import LinearSegmentedColormap
+def plot_diff_affected_population_by_category_spatially(
+    df_f,
+    df_cf,
+    category,
+    label_dict,
+    grid_id_crs,
+    grid_ids,
+    grid_id_transform,
+    region_utm,
+    background_utm,
+    flood_extent,
+    figsize_per_panel=(4, 5),
+    suptitle=None,
+    clip_mask=clip_mask
+):
+    # --- Aggregate exposure_ratio per grid_id per category value ---
+    agg_f = df_f.groupby(['grid_id', category]).agg(
+        population=('exposure_ratio', 'sum')).reset_index()
+    agg_cf = df_cf.groupby(['grid_id', category]).agg(
+        population=('exposure_ratio', 'sum')).reset_index()
+
+    # --- Compute absolute difference F - CF ---
+    agg = agg_f.merge(agg_cf, on=['grid_id', category], suffixes=('_f', '_cf'), how='outer').fillna(0)
+    agg['diff'] = agg['population_f'] - agg['population_cf']
+
+    cat_values = sorted(agg[category].unique())
+    n = len(cat_values)
+    fw, fh = figsize_per_panel
+
+    fig, axes = plt.subplots(1, n, figsize=(fw * n, fh), dpi=150,
+                             constrained_layout=True,
+                             subplot_kw={"projection": ccrs.UTM(36, southern_hemisphere=True)})
+    if n == 1:
+        axes = [axes]
+
+    # --- Shared norm — symmetric around 0 ---
+    absmax = np.nanmax(np.abs(agg['diff']))
+    norm = TwoSlopeNorm(vmin=-absmax, vcenter=0, vmax=absmax)
+    cmap_diff = LinearSegmentedColormap.from_list(
+    "teal_white_coral", ["#00798C", "#FFFFFF", "#D1495B"])
+
+    left, bottom, right, top = rasterio.transform.array_bounds(
+        grid_ids.shape[0], grid_ids.shape[1], grid_id_transform)
+    wgs84_extent = [left, right, bottom, top]
+
+    for i, val in enumerate(cat_values):
+        ax = axes[i]
+        sub = agg[agg[category] == val]
+
+        # --- Reconstruct 2D raster ---
+        pop_grid = np.full(grid_ids.shape, np.nan)
+        for _, row in sub.iterrows():
+            mask = grid_ids == row['grid_id']
+            pop_grid[mask] = row['diff']
+
+        pop_grid[~clip_mask] = np.nan
+
+        background_utm.plot(ax=ax, color='#E0E0E0', zorder=0)
+        region_utm.boundary.plot(ax=ax, color='black', linewidth=0.3, zorder=1)
+
+        ax.imshow(pop_grid, extent=wgs84_extent, origin='upper',
+                  cmap=cmap_diff, norm=norm, zorder=2,
+                  transform=ccrs.PlateCarree())
+
+        ax.set_extent(flood_extent, crs=ccrs.UTM(36, southern_hemisphere=True))
+        ax.set_title(label_dict.get(val, str(val)), fontsize=9)
+        ax.text(0, 1.02, f"({chr(97 + i)})", transform=ax.transAxes,
+                fontsize=10, fontweight="bold", va="bottom", ha="left")
+
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray",
+                          alpha=0.5, linestyle="--")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.left_labels = (i == 0)
+        gl.bottom_labels = True
+        gl.xlabel_style = {"size": 8}
+        gl.ylabel_style = {"size": 8}
+
+    # --- Shared colorbar ---
+    sm = ScalarMappable(cmap=cmap_diff, norm=norm)
+    sm._A = []
+    cbar = fig.colorbar(sm, ax=axes, shrink=0.6, pad=0.02)
+    cbar.set_label("Absolute difference in exposure (F - CF)")
+
+    fig.suptitle(suptitle or f"Climate change-attributed exposure by {category}", fontsize=11)
+    plt.show()
+
+wealth_labels = {1: "Poorest", 2: "Poorer", 3: "Middle", 4: "Richer", 5: "Richest"} 
+rural_labels =  {0: "Urban", 1: "Rural"} 
+age_labels = {1: "0-4 yr", 2: "5-14 yr", 3: "15-24 yr", 4: "25-34 yr", 5: "35-44 yr", 6: "45-54 yr", 5: "55-64 yr", 8: "65+ yr"} 
+gender_labels = {0: "Male", 1: "Female"}  
+educ_labels = {1: "Less than primary", 2: "Primary", 3: "Incomplete secondary", 4: "Secondary/Tertiary", 5: "Higher"}
+hhsize_labels = {1: "1 person", 2: "2 people", 3: "3-4 people", 4: "5-6 people", 5: "7-10 people", 6: ">10 people"}
+
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'WEALTH',     wealth_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'RURAL',      rural_labels,  grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'AGE',        age_labels,    grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'GENDER',     gender_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'EDUC',       educ_labels,   grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
+plot_diff_affected_population_by_category_spatially(pop_charac_exposed_F, pop_charac_exposed_CF, 'HHSIZE_CAT', hhsize_labels, grid_id_crs, grid_ids, grid_id_transform, region, background_utm, flood_extent)
 
 #%%
 # aggregate individual-level df to grid-cell mean characteristics
@@ -974,6 +1433,8 @@ settlement_labels = {"R1": "Rural", "R0": "Urban"}
 colours_wealth = ["#feebe2", "#fbb4b9", "#f768a1", "#c51b8a", "#7a0177"]
 colours_settlement = ["#5ab4ac", "#d8b365"]
 
+
+#%%
 subplot_labels_2 = ["(a)", "(b)"]
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True, dpi=300)
@@ -1049,74 +1510,126 @@ colours_educ = ["#E0F2F1", "#B2DFDB", "#80CBC4", "#26A69A", "#00695C"]
 colours_hhsize = ['#feedde','#fdd0a2','#fdae6b','#fd8d3c','#e6550d','#a63603']
 
 
-subplot_labels_4 = ["(a)", "(b)", "(c)", "(d)"]
+subplot_labels_4 = ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"]
+labels = ["Low\n(<0.5 m)", "Medium\n(0.5–1.5 m)", "High\n(>1.5 m)", "Total"]
 
-fig, axes = plt.subplots(2, 2, figsize=(10, 8), sharey=True, dpi=300)
+# Plotting masks for different flood depth ranges (low, medium, high)
+x_bg = np.linspace(0, 3.5, 500)  # example x array
+low_mask_bg = x_bg < 0.5
+mid_mask_bg = (x_bg >= 0.5) & (x_bg < 1.5)
+high_mask_bg = x_bg >= 1.5
+
+fig, axes = plt.subplots(3, 2, figsize=(11, 12), sharey=True, dpi=300, constrained_layout=True)
 
 # -------------------------
-# PANEL 1 — % change Age
+# PANEL 1 — % change Wealth
+# -------------------------
+for i, g in enumerate(groups_wealth):
+    sub = pivot_wealth[pivot_wealth["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,0].bar(x_wealth + i * bar_width_wealth,
+                sub["%"],
+                width=bar_width_wealth,
+                label=f"{wealth_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_wealth[i % len(colours_wealth)],
+                edgecolor='grey', linewidth=0.3)
+
+axes[0,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+axes[0,0].set_xticks(x_wealth + bar_width_wealth * (n_groups_wealth - 1) / 2)
+
+
+# -----------------------------
+# PANEL 2 — % change Settlement
+# -----------------------------
+for i, g in enumerate(groups_settlement):
+    sub = pivot_settlement[pivot_settlement["Category"] == g]
+    sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
+    axes[0,1].bar(x_settlement + i * bar_width_settlement,
+                sub["%"],
+                width=bar_width_settlement,
+                label=f"{settlement_labels.get(g, g)} (n={int(sub_total_pop):,})",
+                color=colours_settlement[i % len(colours_settlement)],
+                edgecolor='grey', linewidth=0.3)
+
+axes[0,1].set_xticks(x_settlement + bar_width_settlement * (n_groups_settlement - 1) / 2)
+
+# -------------------------
+# PANEL 3 — % change Age
 # -------------------------
 for i, g in enumerate(groups_age):
     sub = pivot_age[pivot_age["Category"] == g]
     sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
-    axes[0,0].bar(x_age + i * bar_width_age,
+    axes[1,0].bar(x_age + i * bar_width_age,
                 sub["%"],
                 width=bar_width_age,
                 label=f"{age_labels.get(g, g)} (n={int(sub_total_pop):,})",
                 color=colours_age[i % len(colours_age)],
                 edgecolor='grey', linewidth=0.3)
-axes[0,0].set_xticks(x_age + bar_width_age * (n_groups_age - 1) / 2)
+axes[1,0].set_xticks(x_age + bar_width_age * (n_groups_age - 1) / 2)
 
 # -----------------------------
-# PANEL 2 — % change Gender
+# PANEL 4 — % change Gender
 # -----------------------------
 for i, g in enumerate(groups_gender):
     sub = pivot_gender[pivot_gender["Category"] == g]
     sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
-    axes[0,1].bar(x_gender + i * bar_width_gender,
+    axes[1,1].bar(x_gender + i * bar_width_gender,
                 sub["%"],
                 width=bar_width_gender,
                 label=f"{gender_labels.get(g, g)} (n={int(sub_total_pop):,})",
                 color=colours_gender[i % len(colours_gender)],
                 edgecolor='grey', linewidth=0.3)
-axes[0,1].set_xticks(x_gender + bar_width_gender * (n_groups_gender - 1) / 2)
+axes[1,1].set_xticks(x_gender + bar_width_gender * (n_groups_gender - 1) / 2)
 
 # -----------------------------
-# PANEL 3 — % change Education
+# PANEL 5 — % change Education
 # -----------------------------
 for i, g in enumerate(groups_educ):
     sub = pivot_educ[pivot_educ["Category"] == g]
     sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
-    axes[1,0].bar(x_educ + i * bar_width_educ,
+    axes[2,0].bar(x_educ + i * bar_width_educ,
                 sub["%"],
                 width=bar_width_educ,
                 label=f"{educ_labels.get(g, g)} (n={int(sub_total_pop):,})",
                 color=colours_educ[i % len(colours_educ)],
                 edgecolor='grey', linewidth=0.3)
-axes[1,0].set_xticks(x_educ + bar_width_educ * (n_groups_educ - 1) / 2)
+axes[2,0].set_xticks(x_educ + bar_width_educ * (n_groups_educ - 1) / 2)
 
 # -----------------------------
-# PANEL 4 — % change HH size
+# PANEL 6 — % change HH size
 # -----------------------------
 for i, g in enumerate(groups_hhsize):
     sub = pivot_hhsize[pivot_hhsize["Category"] == g]
     sub_total_pop = sub.loc[sub["FloodDepth"] == "Total", "Population"].iloc[0]
-    axes[1,1].bar(x_hhsize + i * bar_width_hhsize,
+    axes[2,1].bar(x_hhsize + i * bar_width_hhsize,
                 sub["%"],
                 width=bar_width_hhsize,
                 label=f"{hhsize_labels.get(g, g)} (n={int(sub_total_pop):,})",
                 color=colours_hhsize[i % len(colours_hhsize)],
                 edgecolor='grey', linewidth=0.3)
-axes[1,1].set_xticks(x_hhsize + bar_width_hhsize * (n_groups_hhsize - 1) / 2)
+axes[2,1].set_xticks(x_hhsize + bar_width_hhsize * (n_groups_hhsize - 1) / 2)
 
 
 for i, ax in enumerate(axes.flat):
+    ymin, ymax = ax.get_ylim()
+    xmin, xmax = ax.get_xlim()
+    xticks = ax.get_xticks()
+    boundaries = (
+        [xmin] +                                                           
+        [(xticks[j] + xticks[j+1]) / 2 for j in range(len(xticks)-1)] +  
+        [xticks[-1] + (xticks[-1] - xticks[-2]) / 2]                      
+    )
+    shade_colors = ["#d9d9d9", "#b3b3b3", "#808080", "#FFFFFF"]
     ax.axhline(0, linestyle="-", color="black", alpha=0.7, linewidth=0.8)
     ax.set_axisbelow(True)
     ax.grid(True, axis='y', linestyle="--", alpha=0.5)
     ax.set_ylim(ax.get_ylim())  
-    ax.set_xlabel("Flood depth category", fontsize=10)
-    ax.set_xticklabels(depth_order, fontdict={'fontsize': 9, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    ax.set_xticklabels(labels, fontdict={'fontsize': 9, 'fontweight': 'bold', 'color': '#5C5C5C'})
+    for j in range(len(xticks)):
+        ax.fill_betweenx([ymin, ymax], boundaries[j], boundaries[j+1],
+                         color=shade_colors[j], alpha=0.3, zorder=0)
+    ax.set_ylim(ymin, ymax)
+    ax.set_xlim(xmin, xmax)
     ax.text(0, 1.02, subplot_labels_4[i],
             transform=ax.transAxes,
             fontsize=10, fontweight="bold",
@@ -1124,12 +1637,17 @@ for i, ax in enumerate(axes.flat):
 
 axes[0,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
 axes[1,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+axes[2,0].set_ylabel("Attributable exposed population (%)", fontsize=10)
+axes[2,0].set_xlabel("Flood depth category", fontsize=10)
+axes[2,1].set_xlabel("Flood depth category", fontsize=10)
 
 # Shared legend
-axes[0,0].legend(title=f"Age category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.05, 1.4), frameon=False)
-axes[0,1].legend(title=f"Education category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1, 1.17), frameon=False)
-axes[1,0].legend(title=f"Household size category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.3, 1.33), frameon=False)
-axes[1,1].legend(title=f"Household income category", loc='upper right', fontsize=8, title_fontsize=8, ncol=2, bbox_to_anchor=(1.05, 1.33), frameon=False)
+axes[0,0].legend(title=f"Wealth category", loc='upper left', fontsize=8, title_fontsize=8)
+axes[0,1].legend(title=f"Settlement category", loc='upper left', fontsize=8, title_fontsize=8)
+axes[1,0].legend(title=f"Age category", loc='upper left', fontsize=7.5, title_fontsize=8)
+axes[1,1].legend(title=f"Gender category", loc='upper left', fontsize=8, title_fontsize=8)
+axes[2,0].legend(title=f"Education category", loc='upper left', fontsize=8, title_fontsize=8,)
+axes[2,1].legend(title=f"Household size category", loc='upper left', fontsize=8, title_fontsize=8)
 
 plt.tight_layout()
 plt.show()
@@ -1405,17 +1923,18 @@ print(bottom10_high)
 # Suppose your table has these columns:
 # 'group_label_coarse', 'Low', 'Medium', 'High' (absolute exposed population)
 # Example: table_coarse = df_grouped[['group_label_coarse', 'Low', 'Medium', 'High']]
+table_sel = table[table.index.isin(['W4-5_R0_A2-7_E3-5_G1_H2-6', 'W4-5_R1_A2-7_E3-5_G1_H2-6', 'W1-2_R0_A1/8_E1-2_G0_H1', 'W1-2_R1_A1/8_E1-2_G0_H1'])]
 
 # Data for plotting
 labels = ['Low', 'Medium', 'High']
 bar_width = 0.25
-# x_pos = np.arange(len(table))  # one tick per coarse group
+x_pos = np.arange(len(table_sel))  # one tick per coarse group
 
 fig, ax = plt.subplots(figsize=(12,6))
 
 # For each flood depth, plot bars side by side
 for i, flood in enumerate(labels):
-    ax.bar(x_pos + i*bar_width, table[flood], width=bar_width, label=flood)
+    ax.bar(x_pos + i*bar_width, table_sel[flood], width=bar_width, label=flood)
 
 # X-axis labels = coarse groups
 ax.set_xticks(x_pos + bar_width)  # center the ticks
@@ -1436,15 +1955,16 @@ import matplotlib.pyplot as plt
 # Make sure your table has '%', for example:
 # table.columns = MultiIndex with (flood_depth, metric)
 # row index = coarse group label
+table_sel = table[table.index.isin(['W4-5_R0_A2-7_E3-5_G1_H2-6', 'W4-5_R1_A2-7_E3-5_G1_H2-6', 'W1-2_R0_A1/8_E1-2_G0_H1', 'W1-2_R1_A1/8_E1-2_G0_H1'])]
 
 flood_bins_labels = ['Low', 'Medium', 'High']
 
 fig, ax = plt.subplots(figsize=(10,6))
 
 # Loop over coarse groups (rows)
-for group_label in filtered.index:
+for group_label in table_sel.index:
     # Extract % values for this group across flood depths
-    y_values = [filtered.loc[group_label, (flood, '%')] for flood in flood_bins_labels]
+    y_values = [table_sel.loc[group_label, (flood, '%')] for flood in flood_bins_labels]
     ax.plot(flood_bins_labels, y_values, marker='o', label=group_label)
 
 ax.set_xlabel("Flood depth")
@@ -1485,16 +2005,22 @@ for i in range(0, n_groups, groups_per_plot):
 # %%
 flood_bins_labels = ['Low', 'Medium', 'High']
 
+# selected_groups = [
+#     "W4-5_R0_A2-7_E3-5_G1_H2-6",  
+#     "W1-2_R1_A1/8_E1-2_G0_H1",  
+#     "W4-5_R1_A1/8_E1-2_G0_H1",  
+#     "W1-2_R0_A1/8_E1-2_G0_H1",  
+#     "W1-2_R1_A1/8_E1-2_G0_H2-6",  
+#     "W1-2_R1_A1/8_E1-2_G1_H1",  
+#     # "W1-2_R1_A1/8_E4-5_G0_H1",    
+#     "W1-2_R1_A2-7_E1-2_G0_H1",     
+# ]
 selected_groups = [
-    "W4-5_R0_A2-7_E3-5_G1_H2-6",  
-    "W1-2_R1_A1/8_E1-2_G0_H1",  
-    "W4-5_R1_A1/8_E1-2_G0_H1",  
-    "W1-2_R0_A1/8_E1-2_G0_H1",  
-    "W1-2_R1_A1/8_E1-2_G0_H2-6",  
-    "W1-2_R1_A1/8_E1-2_G1_H1",  
-    # "W1-2_R1_A1/8_E4-5_G0_H1",    
-    "W1-2_R1_A2-7_E1-2_G0_H1",     
-]
+    'W4-5_R0_A2-7_E3-5_G1_H2-6', 
+    'W4-5_R1_A2-7_E3-5_G1_H2-6', 
+    'W1-2_R0_A1/8_E1-2_G0_H1', 
+    'W1-2_R1_A1/8_E1-2_G0_H1'
+    ]
 
 x = np.arange(len(flood_bins_labels))  # positions for flood depths
 width = 0.1  # width of each bar
