@@ -1,4 +1,4 @@
-# Scripts and data to reproduce the figures from Vertegaal et al. (submitted)
+# Scripts and data to reproduce the figures from Vertegaal et al. (accepted)
 
 ## Data
 For data from the models, the files are provided in the *data* folder that first has to be unzipped. 
@@ -11,7 +11,7 @@ For questions, you can contact the authors (main contact: doris.vertegaal@deltar
 
 
 ## Scripts
-The script sin the folder *scripts* can be used to reproduce the figures and numbers presented in Vertegaal et al. (submitted). On top of every script is stated which Pixi environment from the pixi.toml file can be used to run the scripts. See the main *README.md* on how to use Pixi for Python environments. The figures and table are saved according to their figure or table number in the paper. See the Table below for which script is used for the production of which asset:
+The script sin the folder *scripts* can be used to reproduce the figures and numbers presented in Vertegaal et al. (accepted). On top of every script is stated which Pixi environment from the pixi.toml file can be used to run the scripts. See the main *README.md* on how to use Pixi for Python environments. The figures and table are saved according to their figure or table number in the paper. See the Table below for which script is used for the production of which asset:
 
 | Asset                   | Path                                                                   |
 |-------------------------|------------------------------------------------------------------------|

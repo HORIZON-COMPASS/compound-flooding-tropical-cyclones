@@ -1,6 +1,6 @@
 # Compound Flooding Modeling for Tropical Cyclone Idai, Mozambique
 
-This work is part of the paper Vertegaal et al. (submitted) and Work Package 1 of the COMPASS project whose overarching objective is to characterise compound extremes in current and future climates. COMPASS (COMPound extremes Attribution of climate change: towardS an operational Service) aims to develop a harmonized, yet flexible, methodological framework for **climate and impact attribution** of various complex **extremes** that include compound, sequential and cascading hazard events. For more information and useful links about the project, have a look at the introduction on the [COMPASS Github repository](https://github.com/HORIZON-COMPASS)
+This work is part of the paper Vertegaal et al. (accepted) and Work Package 1 of the COMPASS project whose overarching objective is to characterise compound extremes in current and future climates. COMPASS (COMPound extremes Attribution of climate change: towardS an operational Service) aims to develop a harmonized, yet flexible, methodological framework for **climate and impact attribution** of various complex **extremes** that include compound, sequential and cascading hazard events. For more information and useful links about the project, have a look at the introduction on the [COMPASS Github repository](https://github.com/HORIZON-COMPASS)
 
 ![logoCOMPASS](https://github.com/user-attachments/assets/4c3b95d4-bfc0-4727-a1e8-ee6653a03b5e)
 
@@ -9,7 +9,7 @@ This repository contains workflows to setup a global-to-local modelling chain fo
 
 More specifically, it contains specific workflows to setup a hydrological model (wflow), a coastal hydrodynamic model (Delft3D-FM), a local compound flooding model (SFINCS), and a flood impact model (Delft-FIAT) for the sofala province in Mozambique. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local compound flooding. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)) and SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)), Delft-FIAT ([hydromt-fiat](https://github.com/Deltares/hydromt_fiat)), and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. 
 
-To create the results presentd in Vertegaal et al. (submitted), you can run the scripts in the *Attribution_results/scripts* folder, where another README explains which scripts is needed for which result. Make sure to unzip the *data.zip* from Zenodo to access the results developed for the paper.
+To create the results presentd in Vertegaal et al. (accepted), you can run the scripts in the *Attribution_results/scripts* folder, where another README explains which scripts is needed for which result. Make sure to unzip the *data.zip* from Zenodo to access the results developed for the paper.
 
 ![image](f01.png)
 
