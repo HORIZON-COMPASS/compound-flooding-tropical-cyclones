@@ -383,7 +383,7 @@ axes[1].set_title("", fontsize=10)
 # ==== Colorbar for Flood Depth ====
 cbar1 = fig.colorbar(im, ax=axes[0], orientation="vertical", 
                      fraction=0.035, aspect=20, pad=0.01)
-cbar1.set_label("Maximum flood depth (m)", labelpad=6, fontsize=9)
+cbar1.set_label("Maximum flood depth [m]", labelpad=6, fontsize=9)
 cbar1.ax.tick_params(labelsize=8)
 
 # ==== Colorbar for Damage ====
