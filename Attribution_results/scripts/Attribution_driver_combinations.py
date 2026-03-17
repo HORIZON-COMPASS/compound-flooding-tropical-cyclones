@@ -519,7 +519,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
     # === Final touches ===
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
-    cbar.set_label('Attributable flood depth (m)', labelpad=10, fontsize=9)
+    cbar.set_label('Attributable flood depth [m]', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
     cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
@@ -593,7 +593,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
         plot_data.append({'label': None, 'medium': medium_vals, 'yerr': yerr})
     
     # Plot
-    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=300)
     x = np.arange(len(plot_data))
     width = 0.2
     ax.set_axisbelow(True)    
@@ -627,7 +627,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
     # Labels and ticks
     ax.set_xticks(x)
     ax.set_xticklabels(scenario_labels, fontsize=14)
-    ax.set_ylabel("Attributable relative change (%)", fontsize=16)
+    ax.set_ylabel("Attributable relative change [%]", fontsize=16)
     ax.set_ylim(0, max_val * 1.15)
     ax.tick_params(axis='y', labelsize=14)
     
@@ -637,7 +637,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
         Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood volume'),
         Patch(facecolor='#c34a36', edgecolor='black', label='Damage')
     ]
-    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
+    ax.legend(handles=legend_elements, loc='upper left', fontsize=14)
     
     
     plt.tight_layout()
