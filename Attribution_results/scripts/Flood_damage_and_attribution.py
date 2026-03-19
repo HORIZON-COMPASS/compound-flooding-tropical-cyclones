@@ -383,7 +383,7 @@ axes[1].set_title("", fontsize=10)
 # ==== Colorbar for Flood Depth ====
 cbar1 = fig.colorbar(im, ax=axes[0], orientation="vertical", 
                      fraction=0.035, aspect=20, pad=0.01)
-cbar1.set_label("Maximum flood depth [m]", labelpad=6, fontsize=9)
+cbar1.set_label("Maximum flood depth (m)", labelpad=6, fontsize=9)
 cbar1.ax.tick_params(labelsize=8)
 
 # ==== Colorbar for Damage ====
@@ -391,7 +391,7 @@ sm = ScalarMappable(norm=norm, cmap="Reds")
 sm.set_array([])  # Required to avoid warning, even if dummy
 cbar2 = fig.colorbar(sm, ax=axes[1], orientation="vertical", 
                      fraction=0.035, aspect=20, pad=0.01)
-cbar2.set_label('Aggregated total damage [M USD]', labelpad=6, fontsize=9)
+cbar2.set_label('Aggregated total damage (M USD)', labelpad=6, fontsize=9)
 cbar2.ax.tick_params(labelsize=8)
 # Make the 1e7 offset text smaller
 cbar2.ax.yaxis.offsetText.set_fontsize(7)
