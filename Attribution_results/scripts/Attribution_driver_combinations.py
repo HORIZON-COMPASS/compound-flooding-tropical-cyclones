@@ -519,7 +519,7 @@ def plot_hmax_diff_rain_slrwind_all(models, model_region_gdf, background):
 
     # === Final touches ===
     cbar = fig.colorbar(im, ax=axes, orientation="vertical", shrink=0.5, pad=0.01)
-    cbar.set_label('Attributable flood depth [m]', labelpad=10, fontsize=9)
+    cbar.set_label('Attributable flood depth (m)', labelpad=10, fontsize=9)
     cbar.ax.tick_params(labelsize=9)
     cbar.set_ticks(np.arange(0, 0.7, 0.2))
 
@@ -627,7 +627,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
     # Labels and ticks
     ax.set_xticks(x)
     ax.set_xticklabels(scenario_labels, fontsize=14)
-    ax.set_ylabel("Attributable relative change [%]", fontsize=16)
+    ax.set_ylabel("Attributable relative change (%)", fontsize=16)
     ax.set_ylim(0, max_val * 1.15)
     ax.tick_params(axis='y', labelsize=14)
     
@@ -637,7 +637,7 @@ def plot_driver_combination_volume_extent_damage(sfincs_models, fiat_models):
         Patch(facecolor='#5a7d9a', edgecolor='black', label='Flood volume'),
         Patch(facecolor='#c34a36', edgecolor='black', label='Damage')
     ]
-    ax.legend(handles=legend_elements, loc='upper left', fontsize=14)
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1), fontsize=14)
     
     
     plt.tight_layout()
@@ -951,7 +951,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
     for i, drv in enumerate(drivers[:2]):  # SLR, Wind
         ax = axs[i]
         ax.set_title(f"CF {drv['title']} at Station {stations_list[1]}")
-        ax.set_ylabel("Water level [m]")
+        ax.set_ylabel("Water level (m)")
         ax.grid(True, linestyle="--", alpha=0.6)
 
         # Factual
@@ -985,7 +985,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
     # Discharge
     ax_dis = axs[2]
     ax_dis.set_title(f"CF {rain_drv['title']} at Gauge {gauges_list[0]}")
-    ax_dis.set_ylabel("Discharge [m³/s]")
+    ax_dis.set_ylabel("Discharge (m³/s)")
     ax_dis.grid(True, linestyle="--", alpha=0.6)
 
     dis_factual = model_f['sfincs_model'].forcing['dis'].sel(index=gauges_list[0]).sel(time=slice(start_dis, end_dis))
@@ -1006,7 +1006,7 @@ def plot_cf_timeseries_all(models, stations_list=[5, 40], gauges_list=[1],
     # Precipitation
     ax_prec = axs[3]
     ax_prec.set_title(f"CF {rain_drv['title']}")
-    ax_prec.set_ylabel("Accum. precipitation [mm/h]")
+    ax_prec.set_ylabel("Accum. precipitation (mm/h)")
     ax_prec.set_xlabel("Day and hour in March 2019")
     ax_prec.grid(True, linestyle="--", alpha=0.6)
 
