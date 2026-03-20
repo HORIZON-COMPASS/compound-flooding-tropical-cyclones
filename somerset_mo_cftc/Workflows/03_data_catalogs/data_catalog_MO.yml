@@ -1,0 +1,5360 @@
+all_climate:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: &id001
+    chunks: auto
+  meta: &id002
+    source_url: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_id_southwest_hourly_regridded_bc.nc
+  path: none
+  unit_mult: &id003
+    precip: 1000
+all_climate_0:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_0_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_1:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_1_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_10:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_10_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_100:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_100_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_101:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_101_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_102:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_102_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_103:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_103_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_104:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_104_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_105:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_105_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_106:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_106_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_107:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_107_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_108:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_108_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_109:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_109_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_11:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_11_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_110:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_110_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_111:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_111_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_112:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_112_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_113:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_113_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_114:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_114_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_115:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_115_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_116:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_116_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_117:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_117_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_118:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_118_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_119:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_119_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_12:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_12_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_120:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_120_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_121:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_121_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_122:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_122_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_123:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_123_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_124:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_124_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_125:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_125_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_126:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_126_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_127:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_127_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_128:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_128_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_129:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_129_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_13:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_13_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_130:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_130_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_131:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_131_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_132:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_132_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_133:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_133_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_134:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_134_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_135:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_135_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_136:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_136_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_137:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_137_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_138:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_138_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_139:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_139_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_14:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_14_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_140:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_140_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_141:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_141_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_142:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_142_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_143:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_143_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_144:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_144_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_145:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_145_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_146:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_146_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_147:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_147_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_148:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_148_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_149:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_149_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_15:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_15_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_150:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_150_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_151:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_151_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_152:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_152_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_153:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_153_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_154:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_154_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_155:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_155_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_156:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_156_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_157:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_157_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_158:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_158_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_159:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_159_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_16:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_16_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_160:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_160_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_161:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_161_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_162:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_162_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_163:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_163_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_164:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_164_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_165:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_165_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_166:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_166_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_167:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_167_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_168:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_168_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_169:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_169_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_17:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_17_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_170:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_170_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_171:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_171_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_172:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_172_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_173:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_173_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_174:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_174_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_175:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_175_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_176:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_176_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_177:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_177_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_178:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_178_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_179:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_179_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_18:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_18_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_180:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_180_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_181:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_181_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_182:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_182_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_183:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_183_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_184:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_184_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_185:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_185_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_186:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_186_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_187:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_187_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_188:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_188_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_189:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_189_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_19:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_19_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_190:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_190_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_191:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_191_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_192:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_192_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_193:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_193_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_194:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_194_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_195:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_195_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_196:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_196_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_197:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_197_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_198:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_198_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_199:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_199_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_2:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_2_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_20:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_20_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_200:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_200_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_201:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_201_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_202:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_202_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_203:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_203_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_204:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_204_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_205:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_205_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_206:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_206_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_207:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_207_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_208:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_208_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_209:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_209_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_21:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_21_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_210:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_210_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_211:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_211_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_212:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_212_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_213:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_213_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_214:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_214_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_215:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_215_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_216:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_216_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_217:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_217_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_218:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_218_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_219:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_219_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_22:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_22_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_220:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_220_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_221:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_221_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_222:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_222_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_223:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_223_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_224:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_224_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_225:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_225_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_226:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_226_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_227:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_227_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_228:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_228_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_229:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_229_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_23:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_23_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_230:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_230_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_231:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_231_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_232:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_232_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_233:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_233_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_234:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_234_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_235:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_235_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_236:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_236_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_237:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_237_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_238:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_238_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_239:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_239_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_24:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_24_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_240:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_240_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_241:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_241_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_242:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_242_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_243:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_243_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_244:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_244_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_245:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_245_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_246:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_246_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_247:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_247_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_248:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_248_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_249:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_249_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_25:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_25_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_250:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_250_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_251:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_251_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_252:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_252_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_253:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_253_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_254:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_254_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_255:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_255_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_256:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_256_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_257:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_257_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_258:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_258_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_259:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_259_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_26:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_26_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_260:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_260_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_261:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_261_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_262:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_262_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_263:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_263_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_264:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_264_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_265:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_265_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_266:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_266_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_267:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_267_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_268:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_268_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_269:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_269_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_27:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_27_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_270:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_270_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_271:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_271_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_272:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_272_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_273:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_273_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_274:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_274_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_275:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_275_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_276:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_276_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_277:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_277_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_278:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_278_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_279:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_279_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_28:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_28_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_280:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_280_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_281:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_281_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_282:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_282_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_283:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_283_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_284:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_284_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_285:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_285_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_286:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_286_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_287:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_287_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_288:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_288_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_289:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_289_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_29:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_29_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_290:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_290_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_291:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_291_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_292:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_292_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_293:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_293_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_294:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_294_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_295:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_295_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_296:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_296_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_297:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_297_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_298:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_298_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_299:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_299_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_3:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_3_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_30:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_30_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_31:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_31_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_32:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_32_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_33:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_33_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_34:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_34_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_35:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_35_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_36:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_36_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_37:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_37_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_38:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_38_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_39:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_39_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_4:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_4_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_40:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_40_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_41:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_41_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_42:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_42_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_43:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_43_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_44:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_44_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_45:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_45_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_46:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_46_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_47:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_47_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_48:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_48_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_49:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_49_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_5:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_5_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_50:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_50_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_51:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_51_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_52:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_52_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_53:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_53_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_54:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_54_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_55:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_55_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_56:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_56_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_57:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_57_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_58:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_58_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_59:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_59_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_6:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_6_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_60:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_60_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_61:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_61_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_62:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_62_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_63:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_63_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_64:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_64_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_65:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_65_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_66:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_66_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_67:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_67_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_68:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_68_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_69:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_69_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_7:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_7_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_70:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_70_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_71:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_71_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_72:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_72_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_73:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_73_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_74:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_74_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_75:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_75_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_76:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_76_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_77:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_77_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_78:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_78_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_79:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_79_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_8:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_8_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_80:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_80_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_81:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_81_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_82:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_82_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_83:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_83_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_84:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_84_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_85:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_85_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_86:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_86_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_87:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_87_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_88:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_88_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_89:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_89_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_9:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_9_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_90:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_90_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_91:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_91_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_92:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_92_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_93:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_93_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_94:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_94_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_95:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_95_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_96:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_96_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_97:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_97_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_98:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_98_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+all_climate_99:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id001
+  meta: *id002
+  path: forcing/ALL_model_ready_bc/hadgem3a_ALL_eventid_99_southwest_hourly_regridded_bc.nc
+  unit_mult: *id003
+aster:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 6000
+      y: 6000
+  meta:
+    category: topography
+    source_url: https://www.earthdata.nasa.gov/news/blog/global-digital-elevation-models-now-available-aster-gdem-srtm
+  nodata: -9999
+  path: static/dem.tif
+basin_atlas_level12_v10:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  filesystem: local
+  meta:
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+  path: static/basin_atlas_level12_v10.gpkg
+ceh_gear_hourly:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    category: meteo
+    history: null
+    paper_doi: null
+    paper_ref: null
+    source_license: null
+    source_url: null
+    source_version: CEH_GEAR
+  path: forcing/reprojected_GEAR_2/CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  rename:
+    rainfall_amount: precip
+  unit_mult:
+    precip: 1
+coastal_coupling_msk_SMST:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on EMODnet 2018 (rel.
+      to MSL) data
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  path: static/coastal_bnd_Somerset_5mMSL_polygon.geojson
+era5_daily:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 250
+      longitude: 240
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store; resampled by Deltares to
+      daily frequency
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.bd0915c6
+    source_version: ERA5 daily data on pressure levels
+  path: forcing/era5_{year}*_daily.nc
+  rename:
+    d2m: temp_dew
+    msl: press_msl
+    ssrd: kin
+    t2m: temp
+    tisr: kout
+    tmax: temp_max
+    tmin: temp_min
+    tp: precip
+    u10: wind10_u
+    v10: wind10_v
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
+    temp_max: -273.15
+    temp_min: -273.15
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    press_msl: 0.01
+    ssr: 0.000277778
+era5_hourly:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  path: forcing/era5_hourly_zarr.nc
+  rename:
+    d2m: temp_dew
+    msl: press_msl
+    ssrd: kin
+    t2m: temp
+    tisr: kout
+    tp: precip
+    u10: wind10_u
+    v10: wind10_v
+  unit_add:
+    temp: -273.15
+    temp_dew: -273.15
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    press_msl: 0.01
+    ssr: 0.000277778
+era5_orography:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 120
+      longitude: 125
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://apps.ecmwf.int/codes/grib/param-db?id=129
+  path: forcing/era5_orography_2018.nc
+  rename:
+    z: elevtn
+  unit_mult:
+    elevtn: 0.10197162129779283
+gcn250:
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: soil
+    paper_doi: 10.1038/s41597-019-0155-x
+    paper_ref: Jaafar et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://doi.org/10.6084/m9.figshare.7756202.v1
+    source_version: v1
+  nodata: 255
+  path: static/gcn250/*.tif
+  rename:
+    GCN250_ARCI: cn_dry
+    GCN250_ARCII: cn_avg
+    GCN250_ARCIII: cn_wet
+gebco:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  filesystem: local
+  meta:
+    category: topography
+    paper_doi: 10.5285/a29c5465-b138-234d-e053-6c86abc040b9
+    paper_ref: Weatherall et al (2020)
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_url: https://www.bodc.ac.uk/data/open_download/gebco/gebco_2020/geotiff/
+    source_version: 2020
+    unit: m+MSL
+  path: static/gebco.tif
+gswo:
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 4000
+      y: 4000
+  meta:
+    category: hydrography
+    paper_doi: 10.1038/nature20584
+    paper_ref: Pekel et al. (2016)
+    source_url: https://global-surface-water.appspot.com/download
+    source_version: v1_1_2019
+  nodata: 255
+  path: static//gswo.tif
+gtsm_codec_reanalysis_hourly_v2:
+  crs: 4326
+  data_type: GeoDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  meta:
+    category: ocean
+    paper_doi: null
+    paper_ref: null
+    source_license: null
+    source_url: null
+    source_version: v2
+  path: forcing/gtsm_codec_reanalysis_hourly_v3.nc
+  placeholders:
+    freq:
+    - 10min
+    - hourly
+    - dailymax
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+gtsm_codec_reanalysis_hourly_v3:
+  crs: 4326
+  data_type: GeoDataset
+  filesystem: local
+  meta:
+    category: ocean
+    source_version: v3
+  path: forcing/gtsm_codec_reanalysis_hourly_v3.nc
+hydro_lakes:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: surface water
+    notes: HydroLAKES.v10_extract
+    source_author: Arjen Haag
+    source_version: 1.0
+  path: static/hydro_lakes.gpkg
+  rename:
+    Depth_avg: Depth_avg
+    Dis_avg: Dis_avg
+    Hylak_id: waterbody_id
+    Lake_area: Area_avg
+    Pour_lat: yout
+    Pour_long: xout
+    Vol_total: Vol_avg
+  unit_mult:
+    Area_avg: 1000000.0
+hydro_reservoirs:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: surface water
+    notes: GRanD.v1.1_HydroLAKES.v10_JRC.2016
+    source_author: Alessia Matano
+    source_version: 1.0
+  nodata: -99
+  path: static/hydro_reservoirs.gpkg
+  rename:
+    Depth_avg: Depth_avg
+    Dis_avg: Dis_avg
+    G_CAP_MAX: Capacity_max
+    G_CAP_MIN: Capacity_min
+    G_CAP_REP: Capacity_norm
+    G_DAM_HGT_: Dam_height
+    Grand_id: waterbody_id
+    Hylak_id: Hylak_id
+    Lake_area: Area_avg
+    Pour_lat: yout
+    Pour_long: xout
+    Vol_total: Vol_avg
+  unit_mult:
+    Area_avg: 1000000.0
+    Capacity_max: 1000000.0
+    Capacity_min: 1000000.0
+    Capacity_norm: 1000000.0
+    Vol_avg: 1000000.0
+ksathorfrac_global:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 2400
+      y: 2400
+  meta:
+    category: soil
+    paper_doi: 10.22541/essoar.174016989.99005964/v1
+    resolution: 225 metres
+    resolution_real: 7.5 arc seconds
+    source_author: Awad Mohammed Ali - Deltares
+    source_info: KsatHorFrac estimated with Random Forest (RF) and Boosted Regression
+      Trees (BRT) methods. These ML-based transfer functions are trained on soilgrids
+      and validated with CAMELS-UK dataset in the UK. With these global maps, we expect
+      good results in regions with geology and soil types similar to the UK. For other
+      regions, this has still to be tested. see 10.22541/essoar.174016989.99005964/v1
+    source_version: 1.0
+  path: static/ksathorfrac_global/*.tif
+levees:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  path: static/defs/levees_z/AIMS_levees_fixed.shp
+merit_hydro:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 6000
+      y: 6000
+  meta:
+    category: topography
+    paper_doi: 10.1029/2019WR024873
+    paper_ref: Yamazaki et al. (2019)
+    source_license: CC-BY-NC 4.0 or ODbL 1.0
+    source_url: http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro
+    source_version: 1.0
+  path: static/merit_hydro/*.tif
+  rename:
+    bas: basins
+    dir: flwdir
+    elv: elevtn
+    slp: lndslp
+    sto: strord
+    upa: uparea
+    upg: upgrid
+    wth: rivwth
+merit_hydro_index:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: topography
+    paper_doi: 10.5194/hess-25-5287-2021
+    paper_ref: Eilander et al. (2021)
+    source_license: CC-BY-NC 4.0
+  path: static/merit_hydro_index.gpkg
+meta:
+  root: /data/users/gregory.munday/somerset-compass/01_Data/bucket
+modis_lai:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      x: 6000
+      y: 6000
+  meta:
+    category: landuse
+    notes: this dataset has been extracted from GEE ('MODIS/006/MCD15A3H') for the
+      period '2003-01-01', '2017-12-31'
+    paper_doi: 10.5067/MODIS/MCD15A3H.006
+    paper_ref: Myneni et al (2015)
+    source_license: https://lpdaac.usgs.gov/data/data-citation-and-policies/
+    source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
+    source_version: MCD15A3H V006
+  path: static/modis_lai_somerset.nc
+  unit_mult:
+    LAI: 0.1
+nat_climate:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: &id004
+    chunks: auto
+  meta: &id005
+    source_url: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_id_southwest_hourly_regridded_bc.nc
+  path: none
+  unit_mult: &id006
+    precip: 1000
+nat_climate_0:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_0_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_1:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_1_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_10:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_10_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_100:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_100_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_101:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_101_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_102:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_102_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_103:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_103_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_104:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_104_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_105:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_105_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_106:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_106_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_107:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_107_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_108:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_108_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_109:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_109_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_11:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_11_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_110:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_110_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_111:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_111_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_112:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_112_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_113:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_113_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_114:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_114_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_115:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_115_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_116:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_116_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_117:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_117_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_118:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_118_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_119:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_119_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_12:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_12_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_120:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_120_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_121:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_121_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_122:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_122_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_123:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_123_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_124:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_124_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_125:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_125_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_126:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_126_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_127:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_127_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_128:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_128_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_129:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_129_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_13:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_13_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_130:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_130_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_131:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_131_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_132:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_132_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_133:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_133_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_134:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_134_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_135:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_135_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_136:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_136_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_137:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_137_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_138:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_138_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_139:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_139_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_14:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_14_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_140:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_140_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_141:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_141_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_142:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_142_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_143:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_143_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_144:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_144_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_145:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_145_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_146:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_146_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_147:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_147_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_148:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_148_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_149:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_149_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_15:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_15_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_150:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_150_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_151:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_151_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_152:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_152_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_153:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_153_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_154:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_154_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_155:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_155_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_156:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_156_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_157:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_157_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_158:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_158_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_159:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_159_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_16:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_16_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_160:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_160_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_161:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_161_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_162:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_162_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_163:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_163_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_164:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_164_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_165:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_165_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_166:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_166_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_167:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_167_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_168:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_168_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_169:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_169_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_17:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_17_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_170:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_170_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_171:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_171_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_172:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_172_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_173:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_173_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_174:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_174_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_175:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_175_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_176:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_176_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_177:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_177_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_178:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_178_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_179:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_179_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_18:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_18_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_180:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_180_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_181:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_181_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_182:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_182_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_183:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_183_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_184:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_184_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_185:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_185_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_186:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_186_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_187:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_187_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_188:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_188_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_189:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_189_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_19:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_19_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_190:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_190_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_191:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_191_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_192:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_192_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_193:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_193_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_194:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_194_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_195:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_195_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_196:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_196_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_197:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_197_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_198:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_198_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_199:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_199_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_2:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_2_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_20:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_20_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_200:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_200_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_201:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_201_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_202:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_202_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_203:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_203_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_204:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_204_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_205:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_205_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_206:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_206_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_207:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_207_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_208:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_208_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_209:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_209_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_21:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_21_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_210:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_210_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_211:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_211_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_212:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_212_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_213:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_213_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_214:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_214_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_215:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_215_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_216:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_216_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_217:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_217_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_218:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_218_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_219:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_219_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_22:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_22_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_220:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_220_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_221:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_221_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_222:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_222_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_223:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_223_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_224:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_224_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_225:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_225_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_226:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_226_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_227:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_227_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_228:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_228_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_229:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_229_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_23:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_23_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_230:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_230_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_231:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_231_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_232:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_232_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_233:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_233_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_234:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_234_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_235:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_235_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_236:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_236_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_237:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_237_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_238:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_238_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_239:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_239_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_24:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_24_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_240:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_240_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_241:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_241_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_242:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_242_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_243:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_243_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_244:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_244_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_245:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_245_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_246:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_246_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_247:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_247_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_248:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_248_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_249:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_249_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_25:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_25_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_250:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_250_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_251:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_251_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_252:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_252_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_253:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_253_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_254:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_254_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_255:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_255_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_256:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_256_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_257:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_257_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_258:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_258_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_259:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_259_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_26:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_26_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_260:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_260_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_261:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_261_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_262:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_262_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_263:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_263_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_264:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_264_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_265:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_265_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_266:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_266_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_267:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_267_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_268:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_268_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_269:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_269_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_27:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_27_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_270:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_270_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_271:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_271_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_272:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_272_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_273:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_273_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_274:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_274_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_275:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_275_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_276:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_276_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_277:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_277_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_278:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_278_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_279:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_279_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_28:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_28_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_280:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_280_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_281:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_281_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_282:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_282_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_283:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_283_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_284:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_284_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_285:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_285_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_286:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_286_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_287:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_287_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_288:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_288_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_289:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_289_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_29:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_29_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_290:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_290_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_291:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_291_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_292:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_292_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_293:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_293_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_294:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_294_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_295:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_295_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_296:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_296_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_297:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_297_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_298:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_298_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_299:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_299_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_3:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_3_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_30:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_30_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_31:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_31_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_32:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_32_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_33:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_33_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_34:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_34_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_35:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_35_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_36:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_36_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_37:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_37_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_38:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_38_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_39:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_39_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_4:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_4_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_40:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_40_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_41:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_41_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_42:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_42_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_43:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_43_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_44:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_44_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_45:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_45_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_46:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_46_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_47:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_47_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_48:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_48_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_49:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_49_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_5:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_5_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_50:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_50_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_51:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_51_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_52:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_52_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_53:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_53_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_54:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_54_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_55:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_55_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_56:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_56_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_57:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_57_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_58:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_58_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_59:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_59_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_6:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_6_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_60:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_60_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_61:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_61_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_62:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_62_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_63:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_63_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_64:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_64_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_65:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_65_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_66:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_66_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_67:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_67_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_68:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_68_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_69:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_69_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_7:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_7_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_70:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_70_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_71:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_71_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_72:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_72_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_73:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_73_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_74:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_74_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_75:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_75_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_76:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_76_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_77:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_77_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_78:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_78_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_79:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_79_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_8:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_8_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_80:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_80_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_81:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_81_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_82:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_82_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_83:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_83_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_84:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_84_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_85:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_85_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_86:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_86_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_87:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_87_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_88:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_88_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_89:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_89_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_9:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_9_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_90:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_90_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_91:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_91_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_92:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_92_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_93:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_93_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_94:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_94_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_95:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_95_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_96:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_96_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_97:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_97_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_98:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_98_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+nat_climate_99:
+  crs: 4326
+  data_type: RasterDataset
+  driver: netcdf
+  driver_kwargs: *id004
+  meta: *id005
+  path: forcing/NAT_model_ready_bc/hadgem3a_NAT_eventid_99_southwest_hourly_regridded_bc.nc
+  unit_mult: *id006
+ocean_shape:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: hydrography
+  path: static/ocean_polygon/water_polygons.shp
+osm_coastlines:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: geography
+    notes: OpenStreetMap coastlines water polygons, last updated 2020-01-09T05:29
+    source_author: OpenStreetMap
+    source_license: ODbL
+    source_url: https://osmdata.openstreetmap.de/data/coastlines.html
+    source_version: 1.0
+  path: static/osm_coastlines.gpkg
+  rename:
+    fid: coastline_id
+pop_exposure:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: pop_exposure
+  path: static/exposure/Population_100m_2014.tif
+rivers_lin2019_v1:
+  data_type: GeoDataFrame
+  driver: vector
+  meta:
+    category: hydrography
+    paper_doi: 10.5281/zenodo.3552776
+    paper_ref: Lin et al. (2019)
+    source_license: CC-BY-NC 4.0
+    source_url: https://zenodo.org/record/3552776#.YVbOrppByUk
+    source_version: 1
+  path: static/rivers_lin2019_v1.gpkg
+  rename:
+    Q2: qbankfull
+    width_m: rivwth
+soilgrids:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 2400
+      y: 2400
+  meta:
+    category: soil
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/n/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
+    paper_doi: 10.1371/journal.pone.0169748
+    paper_ref: Hengl et al. (2017)
+    source_license: ODbL
+    source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids-2017
+    source_version: 2017
+  path: static/soilgrids/*.tif
+  rename:
+    BLDFIE_M_sl1_250m_ll: bd_sl1
+    BLDFIE_M_sl2_250m_ll: bd_sl2
+    BLDFIE_M_sl3_250m_ll: bd_sl3
+    BLDFIE_M_sl4_250m_ll: bd_sl4
+    BLDFIE_M_sl5_250m_ll: bd_sl5
+    BLDFIE_M_sl6_250m_ll: bd_sl6
+    BLDFIE_M_sl7_250m_ll: bd_sl7
+    CLYPPT_M_sl1_250m_ll: clyppt_sl1
+    CLYPPT_M_sl2_250m_ll: clyppt_sl2
+    CLYPPT_M_sl3_250m_ll: clyppt_sl3
+    CLYPPT_M_sl4_250m_ll: clyppt_sl4
+    CLYPPT_M_sl5_250m_ll: clyppt_sl5
+    CLYPPT_M_sl6_250m_ll: clyppt_sl6
+    CLYPPT_M_sl7_250m_ll: clyppt_sl7
+    ORCDRC_M_sl1_250m_ll: oc_sl1
+    ORCDRC_M_sl2_250m_ll: oc_sl2
+    ORCDRC_M_sl3_250m_ll: oc_sl3
+    ORCDRC_M_sl4_250m_ll: oc_sl4
+    ORCDRC_M_sl5_250m_ll: oc_sl5
+    ORCDRC_M_sl6_250m_ll: oc_sl6
+    ORCDRC_M_sl7_250m_ll: oc_sl7
+    PHIHOX_M_sl1_250m_ll: ph_sl1
+    PHIHOX_M_sl2_250m_ll: ph_sl2
+    PHIHOX_M_sl3_250m_ll: ph_sl3
+    PHIHOX_M_sl4_250m_ll: ph_sl4
+    PHIHOX_M_sl5_250m_ll: ph_sl5
+    PHIHOX_M_sl6_250m_ll: ph_sl6
+    PHIHOX_M_sl7_250m_ll: ph_sl7
+    SLTPPT_M_sl1_250m_ll: sltppt_sl1
+    SLTPPT_M_sl2_250m_ll: sltppt_sl2
+    SLTPPT_M_sl3_250m_ll: sltppt_sl3
+    SLTPPT_M_sl4_250m_ll: sltppt_sl4
+    SLTPPT_M_sl5_250m_ll: sltppt_sl5
+    SLTPPT_M_sl6_250m_ll: sltppt_sl6
+    SLTPPT_M_sl7_250m_ll: sltppt_sl7
+    SNDPPT_M_sl1_250m_ll: sndppt_sl1
+    SNDPPT_M_sl2_250m_ll: sndppt_sl2
+    SNDPPT_M_sl3_250m_ll: sndppt_sl3
+    SNDPPT_M_sl4_250m_ll: sndppt_sl4
+    SNDPPT_M_sl5_250m_ll: sndppt_sl5
+    SNDPPT_M_sl6_250m_ll: sndppt_sl6
+    SNDPPT_M_sl7_250m_ll: sndppt_sl7
+    SoilThickness_250m_ll: soilthickness
+    TAXOUSDA_250m_ll: tax_usda
+  unit_mult:
+    bd_sl1: 0.001
+    bd_sl2: 0.001
+    bd_sl3: 0.001
+    bd_sl4: 0.001
+    bd_sl5: 0.001
+    bd_sl6: 0.001
+    bd_sl7: 0.001
+    oc_sl1: 0.1
+    oc_sl2: 0.1
+    oc_sl3: 0.1
+    oc_sl4: 0.1
+    oc_sl5: 0.1
+    oc_sl6: 0.1
+    oc_sl7: 0.1
+    ph_sl1: 0.1
+    ph_sl2: 0.1
+    ph_sl3: 0.1
+    ph_sl4: 0.1
+    ph_sl5: 0.1
+    ph_sl6: 0.1
+    ph_sl7: 0.1
+vito:
+  crs: 4326
+  data_type: RasterDataset
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    paper_doi: 10.5281/zenodo.3939038
+    paper_ref: Buchhorn et al (2020)
+    source_url: https://land.copernicus.eu/global/products/lc
+    source_version: v2.0.2
+  path: static/vito.tif
+vito_mapping:
+  data_type: DataFrame
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+  path: static/vito_mapping.csv
+  provider: user
+walls:
+  crs: 4326
+  data_type: GeoDataFrame
+  driver: vector
+  path: static/defs/walls_z/walls_z.shp

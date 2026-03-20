@@ -1,0 +1,95 @@
+meta:
+  root: /data/users/gregory.munday/somerset-compass/01_Data/data_static
+gebco:
+  data_type: RasterDataset
+  path: gebco.tif
+  driver: raster
+  filesystem: local
+  meta:
+    category: topography
+    paper_doi: 10.5285/a29c5465-b138-234d-e053-6c86abc040b9
+    paper_ref: Weatherall et al (2020)
+    source_license: https://www.gebco.net/data_and_products/gridded_bathymetry_data/#a1
+    source_url: https://www.bodc.ac.uk/data/open_download/gebco/gebco_2020/geotiff/
+    source_version: 2020
+    unit: m+MSL
+  crs: 4326
+merit_hydro:
+  data_type: RasterDataset
+  path: merit_hydro/*.vrt
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 6000
+      y: 6000
+  rename:
+    bas: basins
+    dir: flwdir
+    elv: elevtn
+    slp: lndslp
+    sto: strord
+    upa: uparea
+    upg: upgrid
+    wth: rivwth
+  meta:
+    category: topography
+    paper_doi: 10.1029/2019WR024873
+    paper_ref: Yamazaki et al. (2019)
+    source_license: CC-BY-NC 4.0 or ODbL 1.0
+    source_url: http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro
+    source_version: 1.0
+  crs: 4326
+coastal_coupling_msk_SMST:
+  data_type: GeoDataFrame
+  path: coastal_bnd_Somerset_5mMSL_polygon.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on EMODnet 2018 (rel. to MSL) data
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+vito:
+  data_type: RasterDataset
+  path: PROBAV_LC100_global_v3.0.1_2015-base_Discrete-Classification-map_EPSG-4326.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    paper_doi: 10.5281/zenodo.3939038
+    paper_ref: Buchhorn et al (2020)
+    source_url: https://land.copernicus.eu/global/products/lc
+    source_version: v2.0.2
+  crs: 4326
+vito_mapping:
+  data_type: DataFrame
+  provider: user
+  path: vito_mapping.csv
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+gcn250:
+  data_type: RasterDataset
+  path: gcn250/GCN250_*.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  nodata: 255
+  rename:
+    GCN250_ARCI: cn_dry
+    GCN250_ARCII: cn_avg
+    GCN250_ARCIII: cn_wet
+  meta:
+    category: soil
+    paper_doi: 10.1038/s41597-019-0155-x
+    paper_ref: Jaafar et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://doi.org/10.6084/m9.figshare.7756202.v1
+    source_version: v1

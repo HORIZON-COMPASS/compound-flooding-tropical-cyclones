@@ -1,0 +1,68 @@
+meta:
+  root: /data/users/gregory.munday/somerset-compass/01_Data/forcing
+era5_hourly:
+  data_type: RasterDataset
+  path: era5_hourly.nc
+  driver: netcdf
+  filesystem: local
+  meta:
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  crs: 4326
+ceh_gear_hourly:
+  data_type: RasterDataset
+  path: CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  driver: netcdf
+  filesystem: local
+  meta:
+    category: meteo
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  crs: 27700
+  rename:
+    rainfall_amount: precip
+  unit_mult:
+    precip: 1
+gtsm_codec_reanalysis_hourly_v2:
+  crs: 4326
+  data_type: GeoDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  meta:
+    category: ocean
+    paper_doi: 
+    paper_ref: 
+    source_license: 
+    source_url: 
+    source_version: v2
+  path: reanalysis_waterlevel_hourly_v2.nc
+  placeholders:
+    freq: [10min, hourly, dailymax]
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+basin_atlas_level12_v10:
+  data_type: GeoDataFrame
+  path: BasinAtlas_v10.gpkg
+  driver: vector
+  driver_kwargs:
+    layer: BasinATLAS_v10_lev12
+  meta:
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+  crs: 4326

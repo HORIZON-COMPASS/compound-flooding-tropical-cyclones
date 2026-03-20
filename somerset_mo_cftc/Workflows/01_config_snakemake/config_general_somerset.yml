@@ -1,0 +1,26 @@
+dir_data: 01_Data
+dir_models: 02_Models
+dir_runs: 03_Runs
+root_dir: /data/users/gregory.munday/somerset-compass
+runname_ids:
+  SomersetLevels_VALIDATION:
+    bathy: gebco
+    bbox_dfm: '[-4.1849,-2.5063, 51,51.7]'
+    bbox_sfincs: '[-3.16169,51.06687,-2.867119,51.258058]'
+    coastal_ts: gtsm_codec_reanalysis_hourly_v2
+    config_sfincs_base: sfincs_base_build.yml
+    dfm_coastal_mask: coastal_coupling_msk_SMST
+    dfm_dxy_base: '0.05'
+    dfm_obs_file: coastal_coupling_DFM_obs_points_SMST
+    dfm_res: '90'
+    dfm_verification_points: dfm_verif_points_SMST
+    end_time: 20140301 000000
+    forcing: ceh_gear_hourly
+    region: somerset
+    start_time: 20131201 000000
+    tc_name: winterstorm
+    tidemodel: GTSMv41opendap
+    use_dfm: false
+    use_wflow: true
+    utmzone: 30u
+    wind_forcing: era5_hourly
