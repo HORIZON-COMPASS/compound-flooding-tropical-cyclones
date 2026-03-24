@@ -31,9 +31,6 @@ setup_glaciers:
   glaciers_fn: rgi                 # source for glaciers based on Randolph Glacier Inventory {rgi}
   min_area: 1.0                    # minimum glacier area to consider [km2]
 
-setup_lulcmaps:
-  lulc_fn: vito                    # source for lulc maps: {globcover, vito, corine}
-
 setup_laimaps:
   lai_fn: modis_lai                # source for LAI: {modis_lai}
 

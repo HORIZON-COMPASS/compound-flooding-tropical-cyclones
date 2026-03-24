@@ -13,6 +13,8 @@ if "snakemake" in locals():
     sfincs_model_folder   = snakemake.params.dir_run_with_forcing
     wflow_root            = snakemake.params.wflow_root_forcing
     data_cats             = snakemake.params.data_cats
+    use_bankfull_corr     = snakemake.params.use_bankfull_corr
+    wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
     wflow_base            = snakemake.params.wflow_base
 else:
     curdir              = '../../../'
@@ -33,6 +35,8 @@ else:
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
+    use_bankfull_corr     = 1
+    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
 
 #%%
 
@@ -47,18 +51,24 @@ reftime_object = config["tref"]
 mod_ini = WflowModel(root=join(wflow_base), mode="r+", config_fn=join(wflow_base, "wflow_sbm.toml"))
 q_locs = mod_ini.geoms["gauges_locs"]
 
-# Read model output (without removing bankfull discharge)
-mod = WflowModel(
-    root=join(wflow_root, 'events'),
-    data_libs=data_cats,
-    mode="r",
-    logger=logger,
-)
-mod.read()
+if use_bankfull_corr:
+    # Read wflow qbankfull corrected discharge
+    df = pd.read_csv(wflow_dis_no_bankfull)
+    df.set_index('time', inplace=True)
+    df.columns.name = "Q_gauges_locs"
+    df.index = pd.to_datetime(df.index)
+else:
+    # Read model output (without removing bankfull discharge)
+    mod = WflowModel(
+        root=join(wflow_root, 'events'),
+        data_libs=data_cats,
+        mode="r",
+        logger=logger,
+    )
+    mod.read()
+    df = mod.results['netcdf']['Q'].to_pandas()
 
-df = mod.results['netcdf']['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
-
 df = df[q_locs['index'].astype(str).values] # adjust gauge order to match the gauge location in the sfincs.src file
 df.to_csv(
     join(sfincs_model_folder, "sfincs.dis"),

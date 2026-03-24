@@ -22,12 +22,23 @@ setup_mask_active:
 setup_mask_active2:
   fill_area: 500
   reset_mask: False
+  
+setup_mask_active3:
+  fill_area: 500
+  reset_mask: False
 
 setup_mask_bounds:
   btype: waterlevel            # Set waterlevel boundaries
-  include_mask_buffer: 2000    
+  zmin: -10
+  include_mask_buffer: 1000      
   reset_bounds: True  
 
+setup_mask_bounds2:
+  btype: outflow                # Set waterlevel boundaries
+  zmin: 0
+  zmax: 10
+  reset_bounds: False 
+  
 setup_subgrid:
   datasets_dep:
   - elevtn: fabdem        # !TODO change to fabdem     

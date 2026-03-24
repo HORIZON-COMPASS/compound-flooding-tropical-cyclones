@@ -32,10 +32,7 @@ setup_subgrid:
   datasets_dep:
   - elevtn: fabdem_n10w080       
     zmin: 0.001              
-  datasets_rgh:
-  - lulc: vito  
-    reclass_table: vito_mapping
-  nr_subgrid_pixels: 2  
+  nr_subgrid_pixels: 4  
   write_dep_tif: True  # save a cloud-optimized geotiff of the subgrid topography
   write_man_tif: True
   nrmax: 2000  # set tile size a bit larger speed up processing (default 2000)
