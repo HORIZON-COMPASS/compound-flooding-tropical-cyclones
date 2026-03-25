@@ -33,6 +33,9 @@ def get_dfm_coastal_mask(wildcards):
 def get_river_upa(wildcards):    
     return config["runname_ids"][wildcards.runname]["river_upa"]
 
+def get_lulc_mapping(wildcards):    
+    return config["runname_ids"][wildcards.runname]["lulc_mapping_sfincs"]
+
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return [
@@ -51,26 +54,36 @@ def get_datacatalog(wildcards):
 
 runname_ids = list(config['runname_ids'].keys())
 regions = [value['region'] for key, value in config['runname_ids'].items()]
+CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
+
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for lulc in product(value['CF_landuse']):
+        run_combinations.append((value['region'], key, lulc))
+
+# Unpack into separate wildcard lists
+region, runname_ids, CF_landuse = zip(*run_combinations)
 
 rule all_sfincs_build:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"), zip, region=regions, runname=runname_ids),
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"), zip, region=regions, runname=runname_ids)
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "sfincs.msk"), zip, region=regions, runname=runname_ids, CF_landuse=CF_landuse),
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "src.geojson"), zip, region=regions, runname=runname_ids, CF_landuse=CF_landuse)
 
 rule make_base_model_sfincs:
     params:
         arg_bbox = get_bbox,
-        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
+        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}"),
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
-        river_upa = get_river_upa
+        river_upa = get_river_upa,
+        lulc_mapping_sfincs = get_lulc_mapping,
     input:
         config_file = get_config,
     output: 
-        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
-        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
-        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
+        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}")),
+        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}" , "sfincs.msk"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "src.geojson"),
+        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "region.geojson"),
     script:
         join("..","04_scripts", "model_building", "sfincs", "setup_sfincs_base.py")

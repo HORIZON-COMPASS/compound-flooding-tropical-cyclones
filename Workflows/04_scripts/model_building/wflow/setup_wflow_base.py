@@ -13,8 +13,12 @@ if "snakemake" in locals():
     data_cat         = snakemake.params.data_cat
     region_geom      = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
-    river_upa = snakemake.params.river_upa
+    river_upa        = snakemake.params.river_upa
+    landuse          = snakemake.wildcards.CF_landuse
+    lulc_mapping     = snakemake.params.lulc_mapping_wflow
 else:
+    landuse          = 'vito'
+    lulc_mapping     = 'vito_mapping_wflow'
     model_dir        = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
     config_file      = "../../../05_config_models/01_wflow/config_wflow.yml"
     data_cat         = [
@@ -36,6 +40,12 @@ logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
 opt = configread(config_file, abs_path=True)  
 kwargs = opt.pop("global", {})
 
+# Prescribe land use maps
+opt['setup_lulcmaps'] = {
+    'lulc_fn': landuse,
+    'lulc_mapping_fn': lulc_mapping
+    }
+
 # Set up output points based on SFINCS inflow river points
 opt['setup_gauges'] = {
     'gauges_fn': join(dir_sfincs_model, "gis", "src.geojson"),
@@ -51,7 +61,10 @@ opt['setup_rivers']['river_upa'] = river_upa
 
 #%%
 # Read SFINCS region
-region = gpd.read_file(region_geom).to_crs(epsg = '4326')
+region_sfincs = gpd.read_file(region_geom).to_crs(epsg = '4326')
+region_sfincs.geometry = region_sfincs.buffer(-0.02)
+region = region_sfincs.explode()
+region = region[~region.is_empty]
 
 #%%
 # Set up wflow 

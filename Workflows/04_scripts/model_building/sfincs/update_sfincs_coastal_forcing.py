@@ -120,14 +120,13 @@ if wind_forcing_str not in SKIP_WIND_KEYWORDS:
     logger.info(f"Adding wind forcing using: {wind_forcing}")
     if 'spw' in wind_forcing_str: # Check if it's a spiderweb file type
         logger.info(f"Setting up SPIDERWEB wind forcing for: {wind_forcing}")
-        spw_input = data_catalog[wind_forcing].path
+        meteo_type = 'spiderweb'
+        spw = 1 
+        spw_input = data_cat[f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"].path
         spw_file = os.path.basename(spw_input)
-        spw_copy = os.path.join(sfincs_mod_with_forcing,spw_file)
+        spw_copy = os.path.join(sfincs_mod_with_forcing, spw_file)
         shutil.copyfile(spw_input, spw_copy)
         opt["setup_config"]["spwfile"] =  os.path.basename(spw_file)
-
-        logger.info(f"Set SFINCS config: spwfile='{os.path.basename(spw_file)}', meteotype='spiderweb'")
-
     else: # Assuming gridded data like ERA5
         logger.info(f"Setting up gridded wind forcing using data catalog entry: {wind_forcing}")
         opt["setup_wind_forcing_from_grid"] = dict(wind=wind_forcing)

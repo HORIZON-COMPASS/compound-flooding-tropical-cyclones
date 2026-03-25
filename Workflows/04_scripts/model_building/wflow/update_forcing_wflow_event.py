@@ -10,7 +10,7 @@ from datetime import timedelta
 logger = setuplog("update", "./hydromt.log", log_level=10)
 
 if "snakemake" in locals():
-    tc_name              = snakemake.wildcards.runname
+    tc_name              = snakemake.params.tc_name
     wflow_root_noforcing = snakemake.params.wflow_root_noforcing
     wflow_root_forcing   = snakemake.params.wflow_root_forcing
     start_time           = snakemake.params.start_time
@@ -19,7 +19,7 @@ if "snakemake" in locals():
     precip_forcing       = snakemake.wildcards.precip_forcing
     CF_rain              = float(snakemake.wildcards.CF_rain)
     CF_rain_txt          = snakemake.wildcards.CF_rain
-    meteo_fn             = snakemake.params.forcing
+    meteo_fn             = snakemake.params.meteo_forcing
 else:
     tc_name              = "Idai"
     precip_forcing       = "era5_hourly"
@@ -59,7 +59,6 @@ opt = {
     },
     "setup_temp_pet_forcing": {
         "temp_pet_fn": meteo_fn,
-        # "temp_pet_fn": "era5_hourly_zarr",
         "press_correction": True,
         "temp_correction": True,
         "pet_method": "debruin",

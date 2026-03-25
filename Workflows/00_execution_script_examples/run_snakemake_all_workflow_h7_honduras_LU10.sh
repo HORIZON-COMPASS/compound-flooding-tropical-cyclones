@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=compass-sfincs          # Job name
 #SBATCH --output=output_log_%j.log     # Standard output and error log
-#SBATCH --time=1-00:00:00           # Job duration (hh:mm:ss)
-#SBATCH --partition 16vcpu
+#SBATCH --time=0-16:00:00           # Job duration (hh:mm:ss)
+#SBATCH --partition 44vcpu
 #SBATCH --exclusive 
 #SBATCH --ntasks=1                  # Number of tasks (analyses) to run
 
@@ -28,11 +28,11 @@ julia +1.9 -e 'using Pkg; Pkg.instantiate(); Pkg.add("Wflow")'
 cd Workflows/02_workflow_rules
 
 #Unlocking the directory for snakemake
-snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU100.yml 
+snakemake --unlock -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU10.yml 
 
 # running workflow with snakemake
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU100.yml --rulegraph | dot -Tpng > dag_smk_all_honduras.png
-snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU100.yml --cores 'all' --latency-wait 180 --wait-for-files --rerun-incomplete #--forceall #--dry-run # --forceall --cores 4 
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU10.yml --rulegraph | dot -Tpng > dag_smk_all_honduras.png
+snakemake -s snakefile_all_wflow_sfincs.smk --configfile ../01_config_snakemake/config_general_honduras_LU10.yml --cores 'all' --latency-wait 180 --wait-for-files #--forceall #--dry-run # --forceall --cores 4 
 
 
 exit

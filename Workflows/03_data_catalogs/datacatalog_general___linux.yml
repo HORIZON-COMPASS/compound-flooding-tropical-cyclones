@@ -94,6 +94,36 @@ basin_atlas_level12_v10:
     source_url: https://www.hydrosheds.org/hydroatlas
     source_version: 10
   crs: 4326
+basin_atlas_level9_v10:
+  data_type: GeoDataFrame
+  path: wflow_global/hydromt/hydrography/hydro_atlas/basin_atlas_v10.gpkg
+  driver: vector
+  driver_kwargs:
+    layer: BasinATLAS_v10_lev09
+  meta:
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+  crs: 4326
+basin_atlas_level10_v10:
+  data_type: GeoDataFrame
+  path: wflow_global/hydromt/hydrography/hydro_atlas/basin_atlas_v10.gpkg
+  driver: vector
+  driver_kwargs:
+    layer: BasinATLAS_v10_lev10
+  meta:
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+  crs: 4326
 chelsa:
   data_type: RasterDataset
   path: wflow_global/hydromt/meteo/chelsa_clim_v1.2/CHELSA_bio10_12.tif
@@ -221,6 +251,31 @@ chirps_global_daily_v2.0:
     source_license: CC
     source_url: https://www.chc.ucsb.edu/data/chirps
     source_version: v2.0
+  crs: 4326
+chirps_IMERGlate_v3:
+  data_type: RasterDataset
+  path: wflow_global/hydromt/meteo/chirps_global_daily_v3.0/IMERGlate-v07/CHIRPS_rainfall_{year}.nc
+  driver: netcdf
+  driver_kwargs:
+   chunks:
+     lat: 240
+     lon: 720
+     time: 90
+   combine: by_coords
+   decode_times: true
+   parallel: true
+  unit_add:
+   time: 86400
+  rename:
+   precipitation: precip    
+  meta:
+   category: meteo
+   paper_doi: 10.1038/sdata.2015.66
+   paper_ref: Funk et al (2015)
+   source_license: CC BY 4.0
+   source_url:  https://doi.org/10.15780/G2JQ0P
+   source_version: v3.0
+#    notes: CHIRPS is a pentad dataset and they downscaled to daily using two datasets: IMERGlate-v07 precipitation for 2000 to 2025 and ERA5 from 1981 to 2025. see https://data.chc.ucsb.edu/products/CHIRPS/v3.0/daily/readme.txt
   crs: 4326
 copdem30:
   data_type: RasterDataset
@@ -2414,7 +2469,21 @@ simard_v2011:
   crs: 4326
 sofala_incl_polygon:
   data_type: GeoDataFrame
-  path: 11210471-001-compass/01_Data/sofala_region_incl_polygon/Incl_polygon_sofala_region.shp
+  path: 11210471-001-compass/01_Data/sofala_geoms/Incl_polygon_sofala_region.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
+sofala_incl_polygon_2:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sofala_geoms/Incl_polygon_sofala_region_2.shp
+  driver: vector
+  meta:
+    category: hydrography
+  crs: 4326
+sofala_excl_northern_basin:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/sofala_geoms/basins_to_remove_copy.gpkg
   driver: vector
   meta:
     category: hydrography
@@ -2943,10 +3012,86 @@ vito_2019_v3.0.1:
     source_url: https://land.copernicus.eu/global/products/lc
     source_version: v3.0.1
   crs: 4326
-vito_mapping:
+gdlc_100m_v3_2019:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/lulc/PROBAV_LC100_global_v3.0.1_2019-nrt_Discrete-Classification-map_EPSG-4326.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v3
+  crs: 4326
+gdlc_100m_v3_2019_HND_CF:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/lulc/landcover_HND/PROBAV_LC100_global_v3.0.1_2019-nrt_Discrete-Classification-map_EPSG-4326_HND_CF_full.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v3
+    source_info: modified by Christopher Jack from RCCC to simulate deforestation counterfactual for COMPASS Use Case study. 
+  crs: 4326
+gdlc_10m_v1_2020_HND:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/lulc/landcover_HND/gdlc_10m/gdlc_10m_2020_v1.vrt
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v1
+    source_info: 10 m v1 dataset for 2020
+  crs: 4326
+gdlc_10m_v1_2020_HND_CF:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/lulc/landcover_HND/from_Chris_RCCC/LCFM_LCM-10_V100_2020_cf.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v1
+    source_info: 10 m v1 dataset for 2020. modified by Christopher Jack from RCCC to simulate deforestation counterfactual for COMPASS Use Case study.
+  crs: 4326
+vito_mapping_sfincs:
   data_type: DataFrame
   provider: user
   path: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+vito_mapping_wflow:
+  data_type: DataFrame
+  provider: user
+  path: 11210471-001-compass/01_Data/lulc/vito_mapping_hydromtwflow.csv
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+gdlc10m_mapping_sfincs:
+  data_type: DataFrame
+  provider: user
+  path: 11210471-001-compass/01_Data/lulc/GDLC10_mapping.csv
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+gdlc10m_mapping_wflow:
+  data_type: DataFrame
+  provider: user
+  path: 11210471-001-compass/01_Data/lulc/GDLC10_mapping_hydromtwflow.csv
   driver: csv
   driver_kwargs:
     index_col: 0

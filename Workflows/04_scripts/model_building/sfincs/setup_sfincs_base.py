@@ -22,6 +22,9 @@ if "snakemake" in locals():
     bathy            = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
     river_upa = snakemake.params.river_upa
+    region_name      = snakemake.wildcards.region
+    landuse          = snakemake.wildcards.CF_landuse
+    lulc_mapping     = snakemake.params.lulc_mapping_sfincs
 else:
     model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
     config_file = r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
@@ -37,6 +40,8 @@ else:
     #bathy = 'emodnet_bathy_E4_2018_msl'
     dfm_coastal_mask = 'coastal_coupling_msk_SMST'
     river_upa = 30
+    landuse = 'vito'
+    lulc_mapping = 'vito_mapping'
 
 # Check whether model folder exists. If not, make one
 if not exists(model_dir):
@@ -50,6 +55,7 @@ kwargs = opt.pop("global", {})
 # fill in the configuration for SFINCS with arguments from the snakemake config file
 opt['setup_dep']['datasets_dep'] = opt['setup_dep']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
 opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
+opt['setup_subgrid']['datasets_rgh'] = [{'lulc': landuse, 'reclass_table': lulc_mapping}]
 
 #%%
 region = get_local_vector_data(
@@ -61,8 +67,15 @@ region = get_local_vector_data(
 #%%
 # Set up model region
 opt['setup_mask_active']['mask'] = region
-opt['setup_mask_active']['mask_buffer'] = 1000
+#opt['setup_mask_active']['mask_buffer'] = 1000
 opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
+
+if region_name == 'sofala':
+    opt['setup_mask_active2']['include_mask'] = 'sofala_incl_polygon'
+    opt['setup_mask_active2']['exclude_mask'] = 'sofala_excl_northern_basin'
+    opt['setup_mask_active3']['include_mask'] = 'sofala_incl_polygon_2'
+else:
+    pass
 
 opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
 

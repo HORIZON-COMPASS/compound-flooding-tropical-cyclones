@@ -15,6 +15,7 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000      
         precip_forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
         wind_forcing: era5_hourly_spw_IBTrACS   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]           
