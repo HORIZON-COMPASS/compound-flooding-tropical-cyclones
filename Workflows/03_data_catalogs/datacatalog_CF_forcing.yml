@@ -389,7 +389,7 @@ spw_IBTrACS_CF-5_Idai:
       to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
 spw_IBTrACS_CF0_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
   driver: raster
   meta:
     category: meteo
