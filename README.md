@@ -1,17 +1,17 @@
 # Compound Flooding Modeling for Tropical Cyclone Idai, Mozambique
 
-This work is part of the paper Vertegaal et al. (submitted) and Work Package 1 of the COMPASS project whose overarching objective is to characterise compound extremes in current and future climates. COMPASS (COMPound extremes Attribution of climate change: towardS an operational Service) aims to develop a harmonized, yet flexible, methodological framework for **climate and impact attribution** of various complex **extremes** that include compound, sequential and cascading hazard events. For more information and useful links about the project, have a look at the introduction on the [COMPASS Github repository](https://github.com/HORIZON-COMPASS)
+This work is part of the paper Webb et al. (submitted), and Work Package 1 of the COMPASS project whose overarching objective is to characterise compound extremes in current and future climates. COMPASS (COMPound extremes Attribution of climate change: towardS an operational Service) aims to develop a harmonized, yet flexible, methodological framework for **climate and impact attribution** of various complex **extremes** that include compound, sequential and cascading hazard events. For more information and useful links about the project, have a look at the introduction on the [COMPASS Github repository](https://github.com/HORIZON-COMPASS)
 
 ![logoCOMPASS](https://github.com/user-attachments/assets/4c3b95d4-bfc0-4727-a1e8-ee6653a03b5e)
 
 ## Description
-This repository contains workflows to setup a global-to-local modelling chain for the hazard and impact modelling of tropical cyclone (TC) Idai, and scripts to analyse the model results. 
+This repository is based on based on the work of [Vertegaal et al. (2026)](https://nhess.copernicus.org/articles/26/1417/2026/nhess-26-1417-2026.html) and contains workflows to setup a global-to-local modelling chain for the hazard tropical cyclone (TC) Idai under different climate scenarios, and scripts to analyse the model results. This repository extends the workflow to also include counterfactual and land use scenarios. 
 
-More specifically, it contains specific workflows to setup a hydrological model (wflow), a coastal hydrodynamic model (Delft3D-FM), a local compound flooding model (SFINCS), and a flood impact model (Delft-FIAT) for the sofala province in Mozambique. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local compound flooding. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)) and SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)), Delft-FIAT ([hydromt-fiat](https://github.com/Deltares/hydromt_fiat)), and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. 
+More specifically, it contains specific workflows to setup a hydrological model (wflow), a coastal hydrodynamic model (Delft3D-FM), and a local compound flooding model (SFINCS) for the sofala province in Mozambique. Each model is setup through a separate workflow and provide boundary conditions for a specific TC driver to be considered to model local compound flooding. The workflows are created using the [snakemake](https://snakemake.readthedocs.io/en/stable/) package and [hydroMT](https://deltares.github.io/hydromt/stable/) model builders for wflow ([hydroMT-Wflow](https://deltares.github.io/hydromt_wflow/latest/)) and SFINCS ([hydromt-sfincs](https://deltares.github.io/hydromt_sfincs/latest/)), and the Python [dfm-tools](https://deltares.github.io/dfm_tools/) for the Delft3D-FM model. All the input datasets are defined in a data catalog and specific model parameters and other pre-processing steps in a configuration file, both are .yml files. 
 
-To create the results presentd in Vertegaal et al. (submitted), you can run the scripts in the *Attribution_results/scripts* folder, where another README explains which scripts is needed for which result. Make sure to unzip the *data.zip* from Zenodo to access the results developed for the paper.
+To create the results presentd in Webb et al. (submitted), you can run the scripts in the *Attribution_results/scripts* folder, where another README explains which scripts is needed for which result. Make sure to unzip the *data.zip* from Zenodo to access the results developed for the paper.
 
-![image](f01.png)
+![image](Diagram.png)
 
 ## This code is specifically for the climate and impact attribution of TC Idai but can be applied to other flood events.
 
@@ -21,7 +21,7 @@ Make sure you have [Git](https://github.com/git-guides/install-git) installed. Y
 
 ### Installation
 In order to use the workflows, you will need to clone this repository and install the dependencies required to run the code. 
-1. Open a terminal and clone this repository: `git clone https://github.com/HORIZON-COMPASS/compound-flooding-tropical-cyclones/attribution_TC_Idai.git`
+1. Open a terminal and clone this repository: `git clone https://github.com/HORIZON-COMPASS/compound-flooding-tropical-cyclones/attribution_TC_Idai_landuse.git`
 2. Navigate to the project directory: `cd compound-flooding-tropical-cyclones`
 3. Install dependencies: `pixi install`. This will install all the environments required to run all the workflows. To install only specific environments, mention it, for example : `pixi install compass-sfincs`. All the enviroments available are listed [environments] in the pixi.toml file
    
@@ -35,7 +35,6 @@ At the moment, seven snakemake workflow files are present. All workflows work bo
 - **snakefile_sfincs_update.smk**: This workflow updates the SFINCS model by adding forcing data and running the model simulations. It handles the addition of meteorological, coastal and discharge forcing data; executes the model, and generates the output. Both factual and counterfactual precipitation, sea level and wind speed can be provided as input.
 - **snakefile_all_wflow_sfincs.smk**: This workflow combines the wflow and sfincs into one large workflow. Combining all workflow is not possible due to conflicting packages and the need for one overarching pixi environment. You can use this snakefile instead of the one mentioned shortly. The sequence of the workflows are: 
 snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
-- **snakefile_fiat.smk**: This workflow builds and runs the Delft-FIAT model to estimate flood damage, based on the floodmap generated by the SFINCS simulations. 
 
 All snakemake workflows use the same configuration file: config_snakemake/config_general_MZB.yml.
 
