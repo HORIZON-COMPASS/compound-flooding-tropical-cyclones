@@ -11,7 +11,7 @@ More specifically, it contains specific workflows to setup a hydrological model 
 
 To create the results presentd in Webb et al. (submitted), you can run the scripts in the *Attribution_results/scripts* folder, where another README explains which scripts is needed for which result. Make sure to unzip the *data.zip* from Zenodo to access the results developed for the paper.
 
-![image](Diagram.png)
+![image](Method.png)
 
 ## This code is specifically for the climate and impact attribution of TC Idai but can be applied to other flood events.
 
@@ -37,9 +37,6 @@ At the moment, seven snakemake workflow files are present. All workflows work bo
 snakefile_sfincs_build.smk > snakefile_wflow.smk > snakefile_sfincs_update.smk
 
 All snakemake workflows use the same configuration file: config_snakemake/config_general_MZB.yml.
-
-Here is a visual overview of the combined workflows:
-![image](Snakemake_overview.png)
 
 We provide examples on how to run each workflow in specific Jupyter notebook in the docs folder. Building the workflow requires the same general steps in snakemake, summarized below.
  1. Activating the environments to load all the required dependencies
