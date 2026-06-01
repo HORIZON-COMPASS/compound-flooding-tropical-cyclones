@@ -1,8 +1,8 @@
 meta:
-  root: /p/
+  root: c:\p
 dfm_output_MZB_Idai_noSLR2015:
   data_type: GeoDataset
-  path: 11210471-001-compass\01_Data\counterfactuals\SLR\ISIMIP\dfm_output_MZB_Idai_SLR2015.his
+  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_MZB_Idai_SLR2015.his
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -15,43 +15,37 @@ dfm_output_MZB_Idai_noSLR2015:
   meta:
     category: ocean
   crs: 4326
-gtsm_codec_future_tide_v1:
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.07_era5_hourly_spw_IBTrACS_CF-4:
   data_type: GeoDataset
-  path: archivedprojects\11205028-c3s_435\01_data\01_Timeseries\timeseries2\tide\future_tide_{year}_{month:02d}_v1.nc
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.07_era5_hourly_spw_IBTrACS_CF-4/output/settings_0000_his.nc
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
+      station: 10
       time: -1
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
-    stations: index
   meta:
     category: ocean
-    paper_doi: 10.3389/fmars.2020.00263
-    paper_ref: Muis at al (2020)
-    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
-    source_url: https://doi.org/10.24381/cds.8c59054f
-    source_version: v1
   crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0_waves:
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
-  rename:
-    station_y_coordinate: lat
-    station: index
-    station_x_coordinate: lon
   data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
   driver_kwargs:
     chunks:
       time: -1
       station: 10
-  crs: 4326
-  driver: netcdf
+  rename:
+    station_y_coordinate: lat
+    station: index
+    station_x_coordinate: lon
   meta:
     notes: DFM output combined with wave data from SNAPWAVE provides by Fernaldi Gradyanto
     category: ocean
     creation_date: '2025-06-24T15:36:19.706212'
+  crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc
@@ -145,4 +139,24 @@ era5_hourly_zarr_CF-8_Idai:
     consolidated: false
   meta:
     notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  crs: 4326
+gtsm_codec_future_tide_v1:
+  data_type: GeoDataset
+  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/tide/future_tide_{year}_{month:02d}_v1.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+    stations: index
+  meta:
+    category: ocean
+    paper_doi: 10.3389/fmars.2020.00263
+    paper_ref: Muis at al (2020)
+    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
+    source_url: https://doi.org/10.24381/cds.8c59054f
+    source_version: v1
   crs: 4326
