@@ -36,6 +36,7 @@ DelftFIAT/scripts/cache
 # Socioeconomic data
 Socio-economic/data/
 Socio-economic/results/
+Socio-economic/figures/
 
 # Distribution / packaging
 .Python
