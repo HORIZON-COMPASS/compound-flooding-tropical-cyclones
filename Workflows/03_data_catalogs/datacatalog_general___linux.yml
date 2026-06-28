@@ -342,6 +342,44 @@ mswep_v280_3h_durban_apr2022:
     notes: MSWEP V2.8.0 NRT 3-hourly precipitation for Durban April 2022 (DOY 100-103 = April 10-13). Only 32 files instead of 2920. Units are mm/3h (cumulative) - HydroMT converts to mm/hr automatically with cumulative_input=True.
     source_url: https://www.gloh2o.org/mswep/
   crs: 4326
+mswep_v316_3h:
+  data_type: RasterDataset
+  path: wflow_global/forcing/MSWEP_V316_test/Past/3hourly/{year}*.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 180
+      lon: 360
+      time: 8
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  meta:
+    category: meteo
+    notes: MSWEP V3.1.6 Past 3-hourly precipitation (0.1 degree global). File naming is {year}{day_of_year}.{hour}.nc. Units are mm/3h (cumulative) - HydroMT converts to mm/hr automatically. WARNING - loads all files for the year, use event-specific entries for faster loading.
+    source_url: https://www.gloh2o.org/mswep/
+  crs: 4326
+mswep_v316_3h_durban_apr2022:
+  data_type: RasterDataset
+  path: wflow_global/forcing/MSWEP_V316_test/Past/3hourly/202210[0-3].*.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      lat: 180
+      lon: 360
+      time: 8
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    precipitation: precip
+  meta:
+    category: meteo
+    notes: MSWEP V3.1.6 Past 3-hourly precipitation for Durban April 2022 (DOY 100-103 = April 10-13). Only 32 files. Units are mm/3h (cumulative) - HydroMT converts to mm/hr automatically with cumulative_input=True.
+    source_url: https://www.gloh2o.org/mswep/
+  crs: 4326
 era5_ocean:
   data_type: RasterDataset
   path: wflow_global/hydromt/ocean/era5/{variable}/era5_{variable}_{year}_hourly.nc
@@ -1691,3 +1729,64 @@ gtsm_codec_reanalysis_{freq}_v1:
   rename:
     station_x_coordinate: lon
     station_y_coordinate: lat
+
+# ===== Climate DT Durban April 2022 Precipitation =====
+# ECMWF Climate DT storyline data for Durban floods (April 2022)
+# Three scenarios: hist (historical), cont (control/counterfactual), Tplus2.0K (future +2K warming)
+
+climateDT_tp_hist_Durban:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/nc_Durban/climateDT_tp_hist_Durban_20220409_to_20220414.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 15
+      longitude: 19
+      time: 144
+    decode_times: true
+  rename:
+    tp: precip
+  unit_mult:
+    precip: 1000
+  meta:
+    category: meteo
+    notes: Climate DT historical scenario precipitation for Durban April 2022 flood event. Original units m, converted to mm.
+  crs: 4326
+
+climateDT_tp_cont_Durban:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/nc_Durban/climateDT_tp_cont_Durban_20220409_to_20220414.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 15
+      longitude: 19
+      time: 144
+    decode_times: true
+  rename:
+    tp: precip
+  unit_mult:
+    precip: 1000
+  meta:
+    category: meteo
+    notes: Climate DT control/counterfactual scenario precipitation for Durban April 2022 flood event. Original units m, converted to mm.
+  crs: 4326
+
+climateDT_tp_Tplus2K_Durban:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/nc_Durban/climateDT_tp_Tplus2.0K_Durban_20220409_to_20220414.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 15
+      longitude: 19
+      time: 144
+    decode_times: true
+  rename:
+    tp: precip
+  unit_mult:
+    precip: 1000
+  meta:
+    category: meteo
+    notes: Climate DT future +2K warming scenario precipitation for Durban April 2022 flood event. Original units m, converted to mm.
+  crs: 4326
