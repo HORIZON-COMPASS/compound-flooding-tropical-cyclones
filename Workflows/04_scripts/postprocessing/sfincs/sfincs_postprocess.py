@@ -56,10 +56,11 @@ depfile = join(dir_run, "subgrid", "dep_subgrid.tif")
 da_dep = mod.data_catalog.get_rasterdataset(depfile)
 
 # read global surface water occurance (GSWO) data to mask permanent water
-gswo = mod.data_catalog.get_rasterdataset("gswo", geom=mod.region, buffer=1000)
+# v1: model.region component is gone; use the grid component's region geometry
+gswo = mod.data_catalog.get_rasterdataset("gswo", geom=mod.grid.region, buffer=1000)
 
-# reading in the model results
-mod.read_results()
+# reading in the model results (v1: results are the `output` component)
+mod.output.read()
 
 #%%
 ### PLOT BASEMAP
@@ -76,7 +77,7 @@ _ = mod.plot_forcing(
 #%%
 ### PLOT MAX INUNDATION
 # compute the maximum water level over all time steps
-da_zsmax = mod.results["zsmax"].max(dim="timemax")
+da_zsmax = mod.output.data["zsmax"].max(dim="timemax")
 
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
@@ -109,8 +110,8 @@ fig, ax = mod.plot_basemap(
     cbar_kwargs={"shrink": 0.6, "anchor": (0, 0)},
 )
 
-tstart = np.datetime_as_string(mod.results['zs'].time.values[0],'m').replace('T',' ')
-tend = np.datetime_as_string(mod.results['zs'].time.values[-1],'m').replace('T',' ')
+tstart = np.datetime_as_string(mod.output.data['zs'].time.values[0],'m').replace('T',' ')
+tend = np.datetime_as_string(mod.output.data['zs'].time.values[-1],'m').replace('T',' ')
 ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
@@ -121,8 +122,8 @@ da_hmax_masked.raster.to_raster(floodmap)  # This creates the expected floodmap.
 
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
-for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
-    da_zsmax = mod.results["zsmax"].isel(timemax=ii)
+for ii,timestamp in enumerate(mod.output.data['zsmax'].timemax.values):
+    da_zsmax = mod.output.data["zsmax"].isel(timemax=ii)
     da_hmax = utils.downscale_floodmap(
         zsmax=da_zsmax,
         dep=da_dep,
@@ -145,10 +146,10 @@ for ii,timestamp in enumerate(mod.results['zsmax'].timemax.values):
         cbar_kwargs={"shrink": 0.6, "anchor": (0, 0)},
     )
     if ii==0:
-        tstart = np.datetime_as_string(mod.results['zs'].time.values[0],'m').replace('T',' ')
+        tstart = np.datetime_as_string(mod.output.data['zs'].time.values[0],'m').replace('T',' ')
     else:
-        tstart = np.datetime_as_string(mod.results['zsmax'].timemax.values[ii-1],'m').replace('T',' ')
-    tend = np.datetime_as_string(mod.results['zsmax'].timemax.values[ii],'m').replace('T',' ')
+        tstart = np.datetime_as_string(mod.output.data['zsmax'].timemax.values[ii-1],'m').replace('T',' ')
+    tend = np.datetime_as_string(mod.output.data['zsmax'].timemax.values[ii],'m').replace('T',' ')
     ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 
     figname_ext = f'period_{tstart}_to_{tend}'

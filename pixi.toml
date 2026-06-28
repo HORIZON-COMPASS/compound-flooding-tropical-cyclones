@@ -107,8 +107,52 @@ matplotlib = "==3.10.3"
 numba = "=0.59.0"
 geopandas = "0.14.*"
 
+# --- HydroMT v1 stack (branch hydromt_v1_test) ---
+# conda-forge lags PyPI for the v1 packages (conda has hydromt 1.3.1 / wflow 1.0.1 / sfincs v0
+# only), and Azure data-catalog support needs hydromt>=1.4.0, so the three hydromt packages are
+# installed from PyPI while conda-forge provides the binary/geo stack they depend on.
+# The compass-v1 environment uses no-default-feature=true so it does NOT inherit the shared
+# [dependencies] v0 pins (hydromt<0.11, zarr<3, hydromt_wflow<0.9), which conflict with v1.
+[feature.v1.dependencies]
+python = ">=3.11"
+pip = "*"
+gdal = ">=3.5"
+libgdal-hdf5 = "*"
+libgdal-netcdf = "*"
+rasterio = ">=1.3,<1.5"
+netcdf4 = "*"
+geopandas = ">=0.10"
+pyogrio = ">=0.6"
+pyproj = "*"
+shapely = ">=2.1.2"
+xarray = "*"
+dask = "*"
+numba = "*"
+numpy = "*"
+pandas = "<4"
+scipy = "*"
+pyflwdir = ">=0.5.10"
+xugrid = ">=0.15.1"
+zarr = ">=3.1,<4"
+rioxarray = "*"
+bottleneck = "*"
+pyarrow = "*"
+pooch = "*"
+
+[feature.v1.pypi-dependencies]
+hydromt = { version = ">=1.4.0,<1.5", extras = ["io"] }
+hydromt_wflow = ">=1.0.2,<1.1"
+hydromt_sfincs = "==2.0.0rc3"
+
+# The user's ~/.local site-packages is placed ahead of the env on sys.path and shadows env
+# packages (e.g. an old typing_extensions without Sentinel breaks pydantic). Disable user-site
+# for this env so only the pixi-managed packages are used.
+[feature.v1.activation.env]
+PYTHONNOUSERSITE = "1"
+
 [environments]
 default = { features = ["py311"]}
+compass-v1 = { features = ["v1", "dataviz", "snake", "wflow_extra"], no-default-feature = true }
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
 compass-snake-dfm = { features = ["py311", "snake_dfm", "dfm", "cht"]}

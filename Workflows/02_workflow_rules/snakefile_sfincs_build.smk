@@ -47,10 +47,10 @@ def get_datacatalog(wildcards):
         ]
     elif os.name == "posix": #Running on linux
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
-            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
         ]
 
 runname_ids = list(config['runname_ids'].keys())

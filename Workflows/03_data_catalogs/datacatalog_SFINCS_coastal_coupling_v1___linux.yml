@@ -1,0 +1,148 @@
+coastal_coupling_DFM_obs_points_HND:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Output points for the DFM model of Western part of Honduras
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_Honduras_5mMSL_points_1km.shp
+coastal_coupling_DFM_obs_points_MZB:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Output points for the DFM model of Mozambique
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_MZB_5mMSL_points_1km.shp
+coastal_coupling_DFM_obs_points_SMST:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Output points for the DFM model for Somerset UK
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/points/coastal_bnd_SomersetUK_5mMSL_points_1km.shp
+coastal_coupling_msk_HND:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for
+      Western part of the Honduras coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Honduras_5mMSL_polygon.geojson
+coastal_coupling_msk_MZB:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Polygon outlining isobath of approx. 5 mMSL based on GEBCO_2024 data for
+      Mozambique coast
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_MZB_5mMSL_polygon.geojson
+coastal_coupling_msk_SMST:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Polygon outlining isobath of approx. 5 mMSL based on EMODnet 2018 (rel.
+      to MSL) data
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Somerset_5mMSL_polygon.geojson
+dfm_output_event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: 11210471-001-compass/03_Runs/honduras/Eta/dfm/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta/output/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta_0000_his.nc
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai_test/output/event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai_0000_his.nc
+dfm_verif_points_MZB:
+  data_type: DataFrame
+  metadata:
+    category: geography
+    crs: 4326
+    notes: observation points
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/points/MZB_Sofala_IHO_obs.xyn
+dfm_verif_points_SMST:
+  data_type: DataFrame
+  metadata:
+    category: geography
+    crs: 4326
+    notes: observation points
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/Coastal_boundary/points/Somerset_verification_points.xyn
+meta:
+  category: null
+  hydromt_version: null
+  name: null
+  validate_hydromt_version: true
+  version: null
+  root: /p
+obs_points_sofala:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 4326
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/obs_locs.geojson

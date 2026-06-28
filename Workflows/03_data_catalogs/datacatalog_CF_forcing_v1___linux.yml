@@ -1,0 +1,247 @@
+dfm_output_MZB_Idai_noSLR2015:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_MZB_Idai_SLR2015.his
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: /p/11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: /p/11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0/output/settings_0000_his.nc
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF-10:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: /p/11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+  uri: /p/11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
+era5_hourly_CF-10_Durban_April2022:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 10
+        longitude: 10
+        time: 24
+      decode_times: true
+  metadata:
+    category: meteo
+    crs: 4326
+    notes: ERA5 hourly precipitation with -10% counterfactual adjustment for Durban
+      April 2022 (climate attribution analysis, thermodynamic delta from ClimateDT
+      large-box analysis)
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-10_Durban_April2022.nc
+era5_hourly_CF-7_Idai:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 125
+        longitude: 120
+        time: 50
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly dataset and adjusted with CF value -7%
+  uri: /p/p:/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-7_Idai.nc
+era5_hourly_CF-8_Durban_April2022:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 10
+        longitude: 10
+        time: 24
+      decode_times: true
+  metadata:
+    category: meteo
+    crs: 4326
+    notes: ERA5 hourly precipitation with -8% counterfactual adjustment for Durban
+      April 2022 (climate attribution analysis)
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Durban_April2022.nc
+era5_hourly_CF-8_Freddy:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 125
+        longitude: 120
+        time: 50
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly dataset and adjusted with CF value -8%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Freddy.nc
+era5_hourly_CF-8_Kenneth:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 125
+        longitude: 120
+        time: 50
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly dataset and adjusted with CF value -8%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Kenneth.nc
+era5_hourly_zarr_CF-7_Idai:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks: auto
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-7_Idai.zarr
+era5_hourly_zarr_CF-8_Kenneth:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks: auto
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-8_Kenneth.zarr
+era5_hourly_zarr_CF-9_EtaIota:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 125
+        longitude: 120
+        time: 50
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_EtaIota.nc
+era5_hourly_zarr_CF-9_Iota:
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 125
+        longitude: 120
+        time: 50
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  uri: /p/11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_Iota.nc
+gtsm_codec_future_tide_v1:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+    paper_doi: 10.3389/fmars.2020.00263
+    paper_ref: Muis at al (2020)
+    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
+    source_url: https://doi.org/10.24381/cds.8c59054f
+    source_version: v1
+  uri: /p/archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/tide/future_tide_{year}_{month:02d}_v1.nc
+meta:
+  category: null
+  hydromt_version: null
+  name: null
+  validate_hydromt_version: true
+  version: null
+  root: /p/

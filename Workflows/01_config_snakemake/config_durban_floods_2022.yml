@@ -36,7 +36,7 @@ runname_ids:
         skip_discharge_forcing: True                     # Skip river discharge forcing
 
         # SFINCS model settings
-        config_sfincs_base: sfincs_base_build.yml       # Base configuration
+        config_sfincs_base: sfincs_base_build_v1.yml    # Base configuration (HydroMT v1)
         sfincs_obs_file: obs_locs_durban.geojson        # Observation points (empty placeholder for now)
         bbox_sfincs: "[30.659688,-29.978273,31.076825,-29.740075]"  # [lon_min, lat_min, lon_max, lat_max] - Durban area
         dfm_coastal_mask: coastal_coupling_msk_MZB      # Placeholder (not used but may be referenced)

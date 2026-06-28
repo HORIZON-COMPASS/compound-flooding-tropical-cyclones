@@ -1,0 +1,67 @@
+meta:
+  category: null
+  hydromt_version: null
+  name: null
+  validate_hydromt_version: true
+  version: null
+  root: /p/
+obs_points_EtaIota:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 3036
+    notes: Output points for the EtaIota model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_EtaIota.geojson
+obs_points_Freddy1:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 3036
+    notes: Output points for the Freddy1 model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy1.geojson
+obs_points_Freddy2:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 3036
+    notes: Output points for the Freddy2 model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Freddy2.geojson
+obs_points_Kenneth:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 3036
+    notes: Output points for the Kenneth model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_Kenneth.geojson
+obs_points_sofala:
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: geography
+    crs: 3036
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_version: '1.0'
+  uri: 11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_sofala.geojson
