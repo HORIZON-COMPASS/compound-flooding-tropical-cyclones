@@ -3,234 +3,63 @@
 # This bankfull discharge estimate is removed from the TC event discharge as an approximation for streamflow
 # This script is based on: https://scaling-robot-wgkjqqr.pages.github.io/notebooks/Fit_univariate.html
 
-# First, load the packages using the ixi environement compass-wflow
+# First, load the packages
 import os
 from datetime import datetime as datetime
 from os.path import join
-from hydromt.log import setuplog
-from hydromt_wflow import WflowModel
+from hydromt_wflow import WflowSbmModel
+from pyextremes import EVA
 import matplotlib.pyplot as plt
 import pandas as pd
 
 #%%
-# Set up wflow run variables
-logger = setuplog("update", "./hydromt.log", log_level=10)
+# Set up wflow run variables (v1: hydromt.log.setuplog removed; no logger needed)
 if "snakemake" in locals():
-    wflow_root_30yr   = snakemake.params.wflow_root_forcing_30yr
-    wflow_root_event  = snakemake.params.wflow_root_forcing
-    data_cats         = snakemake.params.data_cat
-    results_dir       = snakemake.params.results
-    use_bankfull_corr = snakemake.params.use_bankfull_corr
-    landuse_30yr      = snakemake.params.landuse_30yr
-    precip_forcing    = snakemake.wildcards.precip_forcing
+    wflow_root_30yr  = snakemake.params.wflow_root_forcing_30yr
+    wflow_root_event = snakemake.params.wflow_root_forcing
+    data_cat         = snakemake.params.data_cat
 else:
     region           = "sofala"
     TC_name          = "Idai"
     precip_forcing   = "era5_hourly_zarr"
     CF_rain          = 0
     CF_rain_txt      = "0"
-    CF_landuse       = "vito"
-    landuse_30yr     = "vito"
-    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}"
-    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow_{CF_landuse}/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF0_30yr"
+    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     curdir           = '../../../'
-    results_dir      = join("../../../../", "Attribution_results")
     data_cats        = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
-    use_bankfull_corr = False
 
 #%%
-if not use_bankfull_corr:
-    print('Not using bankfull correction, skipping...')
-    df = pd.DataFrame(list())
-    df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_bankfull.csv"))
+# check whether the bankfull calculations have already been done
+wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
-else:
-    from pyextremes import EVA
-    
-    # check whether the bankfull calculations have already been done
-    wflow_path_30yr  = join(wflow_root_30yr, f"wflow_{landuse_30yr}", f"event_precip_{precip_forcing}_CF0_30yr")
-    wflow_bankfull = f"{wflow_path_30yr}/warmup/qbankfull_wflow_gauges.csv"
-
-    os.makedirs(results_dir, exist_ok=True)
-
-    if not os.path.exists(wflow_bankfull):
-        if not os.path.isdir(wflow_path_30yr):
-            print("Error: Bankfull calculation does not exist.")
-
-        print('Performing bankfull calculations...')
-        # Read ('r') the Wflow 30yr warm-up results 
-        mod = WflowModel(
-            root=join(wflow_path_30yr, "warmup"),
-            data_libs=data_cats,
-            mode="r",
-            logger=logger,
-        )
-        mod.read()
-
-        # Read in the wflow discharge 
-        df = mod.results['netcdf']['Q'].to_pandas()
-
-        # Now we calculate the bankfull discharge, based on a 2 yr return period by using block maxima and fitting the distribution using Akaike Information Criterion (AIC)
-        qbankfull = []
-
-        # Loop over the different wflow gauges (output points)
-        for gauge in df.columns:
-            data = df[gauge]
-            # Initialize a model for block maxima where we will store the results
-            model_bm = EVA(data=data)
-
-            # Sampling Annual Maxima, therefore using a block size of 365D
-            peaks = model_bm.get_extremes(
-                method="BM",
-                extremes_type="high",
-                block_size="365.2425D",
-                errors="raise",
-            )
-
-            # Plot the selected extremes
-            model_bm.plot_extremes()
-
-            # We fit the extreme value models
-            model_bm.fit_model(model="Emcee")
-
-            # Estimate of return periods
-            rp = [2] # 2-year return period for bankfull discharge
-            summary = model_bm.get_summary(return_period=rp, alpha=0.95)
-            print(summary)
-
-            # Remove index and add gauge number
-            summary = summary.reset_index(drop=True)
-            summary["gauge"] = gauge
-
-            # Add summary information to one df
-            qbankfull.append(summary)
-
-            # Plotting the fitting annual maxima
-            fig, ax = model_bm.plot_return_values(alpha=0.95)
-            ax.set_title(f"Gauge: {gauge}")
-            ax.set_ylabel("Discharge [m³/s]")
-
-        # Combine all into one DataFrame
-        qbankfull_df = pd.concat(qbankfull, ignore_index=True)
-
-        # Save to CSV - input Table S1
-        qbankfull_df.to_csv(wflow_bankfull, index=False)
-
-    else:
-        print('Bankfull calculations have already been done.')
-        qbankfull_df = pd.read_csv(wflow_bankfull)
-
-
-    # %% ---------------------------------------------------------------
-    # Check removing bankfull discharge from factual event simulations
-    # ------------------------------------------------------------------
-    # Read ('r') the Wflow 30yr warm-up results 
-    mod_F = WflowModel(
-        root=join(wflow_root_event, "events"),
-        data_libs=data_cats,
-        mode="r"
-    )
-    mod_F.read()
-    # %%
-    # Check results
-    df_F = mod_F.results['netcdf']['Q'].to_pandas()
-    df_F
-
-    # %%
-    # Remove the qbankfull from all discharge values and set to zero if discharge is below 0
-    qbankfull_df = qbankfull_df.set_index('gauge')
-    qbankfull_df.index = qbankfull_df.index.astype(str)
-
-    # Ensure timeseries_df columns are strings for matching
-    df_F.columns = df_F.columns.astype(str)
-
-    df_F_no_bankfull = df_F.copy(deep=True)
-    for gauge in df_F_no_bankfull.columns:
-        if gauge in qbankfull_df.index:
-            qbankfull_gauge = qbankfull_df.loc[gauge, "return value"]
-            df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge] - qbankfull_gauge
-            df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
-            df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_bankfull.csv"), index=True)
-
-
-
-# %% BANKFULL FIGURES
-make_bankfull_figures = False # Set to True if you want to make the figures for the bankfull calculations   
-if make_bankfull_figures:
-    # We select the first discharge location
-    data_F = df_F["1"]
-    # And have a look at the data
-    plt.figure()
-    ax = data_F.plot()
-    plt.ylabel("Discharge (m³/s)")
-
-
-
-    #%% Plot the masked discharge compared to the full discharge
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    # Plot both time series
-    df_F['1'].plot(ax=ax, label='Raw WFLOW output', color='steelblue', linewidth=1.8)
-    df_F_no_bankfull['1'].plot(ax=ax, label='Effective discharge', color='darkorange', linewidth=1.8)
-
-    # Add horizontal bankfull line
-    ax.axhline(
-        qbankfull_df.loc['1', 'return value'],
-        color='crimson', linestyle='--', linewidth=2,
-        label='Estimated bankfull Q'
-    )
-
-    # Labels and title
-    ax.set_xlabel("Time", fontsize=13)       # X-axis label
-    ax.set_ylabel("Discharge [m³/s]", fontsize=13)
-    ax.set_title("Gauge 1: Discharge with bankfull threshold removed", fontsize=14)
-
-    # Tick label sizes
-    ax.tick_params(axis='x', labelsize=12)
-    ax.tick_params(axis='y', labelsize=12)
-
-    # Grid for clarity
-    ax.grid(True, linestyle="--", alpha=0.6)
-
-    # Legend outside plot
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize=11)
-
-    # Save
-    fig.savefig(join(results_dir, "fS3.png"), dpi=300, bbox_inches='tight')
-    fig.savefig(join(results_dir, "fS3.pdf"), dpi=300, bbox_inches='tight')
-
-
-
-    #%%
-    # Read the model
-    mod = WflowModel(
-        root=join(wflow_path_30yr, "warmup"),
+if not os.path.exists(wflow_bankfull):
+   # Read ('r') the Wflow 30yr warm-up results 
+    mod = WflowSbmModel(
+        root=join(wflow_root_30yr, "warmup"),
         data_libs=data_cats,
         mode="r",
-        logger=logger,
     )
     mod.read()
 
-    # Read in the wflow discharge 
-    df = mod.results['netcdf']['Q'].to_pandas()
+    # Read in the wflow discharge (v1: results['netcdf'] -> output_scalar component)
+    df = mod.output_scalar.data['Q'].to_pandas()
 
-    # Select first two gauges
-    gauges = df[['1', '2']]
-
-    # Create subplots for two gauges
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
+    # Now we calculate the bankfull discharge, based on a 2 yr return period by using block maxima and fitting the distribution using Akaike Information Criterion (AIC)
     qbankfull = []
 
-    for i, gauge in enumerate(gauges):
+    # Loop over the different wflow gauges (output points)
+    for gauge in df.columns:
         data = df[gauge]
+        # Initialize a model for block maxima where we will store the results
         model_bm = EVA(data=data)
 
+        # Sampling Annual Maxima, therefore using a block size of 365D
         peaks = model_bm.get_extremes(
             method="BM",
             extremes_type="high",
@@ -238,24 +67,94 @@ if make_bankfull_figures:
             errors="raise",
         )
 
+        # Plot the selected extremes
+        model_bm.plot_extremes()
+
+        # We fit the extreme value models
         model_bm.fit_model(model="Emcee")
 
-        rp = [2]
+        # Estimate of return periods
+        rp = [2] # 2-year return period for bankfull discharge
         summary = model_bm.get_summary(return_period=rp, alpha=0.95)
+        print(summary)
+
+        # Remove index and add gauge number
         summary = summary.reset_index(drop=True)
         summary["gauge"] = gauge
+
+        # Add summary information to one df
         qbankfull.append(summary)
 
-        # Plot on respective subplot
-        model_bm.plot_return_values(alpha=0.95, ax=axes[i])
-        # axes[i].plot(ax_sub.lines[0].get_xdata(), ax_sub.lines[0].get_ydata())
-        axes[i].set_title(f"Gauge {i+1}")
-        axes[i].set_ylabel("Discharge [m³/s]")
-        axes[i].text(0.02, 1.06, f"({chr(97+i)})", transform=axes[i].transAxes,
-                    fontsize=12, fontweight='bold', va='top')
-        
-        fig.savefig(join(results_dir, "fS2.png"), dpi=300, bbox_inches='tight')
-        fig.savefig(join(results_dir, "fS2.pdf"), dpi=300, bbox_inches='tight')
+        # Plotting the fitting annual maxima
+        fig, ax = model_bm.plot_return_values(alpha=0.95)
+        ax.set_title(f"Gauge: {gauge}")
+        ax.set_ylabel("Discharge [m³/s]")
 
-    plt.tight_layout()
-    plt.show()
+    # Combine all into one DataFrame
+    qbankfull_df = pd.concat(qbankfull, ignore_index=True)
+
+    # Save to CSV
+    qbankfull_df.to_csv(wflow_bankfull, index=False)
+
+else:
+    qbankfull_df = pd.read_csv(wflow_bankfull)
+
+
+# %% ---------------------------------------------------------------
+# Check removing bankfull discharge from factual event simulations
+# ------------------------------------------------------------------
+# Read ('r') the Wflow 30yr warm-up results 
+mod_F = WflowSbmModel(
+    root=join(wflow_root_event, "events"),
+    data_libs=data_cats,
+    mode="r"
+)
+mod_F.read()
+# %%
+# Check results (v1: results['netcdf'] -> output_scalar component)
+df_F = mod_F.output_scalar.data['Q'].to_pandas()
+df_F
+
+# %%
+# We select the first discharge location
+data_F = df_F["1"]
+# And have a look at the data
+plt.figure()
+ax = data_F.plot()
+plt.ylabel("Discharge (m³/s)")
+
+# %%
+# Remove the qbankfull from all discharge values and set to zero if discharge is below 0
+qbankfull_df = qbankfull_df.set_index('gauge')
+qbankfull_df.index = qbankfull_df.index.astype(str)
+
+# Ensure timeseries_df columns are strings for matching
+df_F.columns = df_F.columns.astype(str)
+
+df_F_no_bankfull = df_F.copy(deep=True)
+for gauge in df_F_no_bankfull.columns:
+    if gauge in qbankfull_df.index:
+        qbankfull_gauge = qbankfull_df.loc[gauge, "return value"]
+        df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge] - qbankfull_gauge
+        df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
+        df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_qbankfull.csv"), index=True)
+
+# %%
+# Plot the masked discharge compared to the full discharge
+fig, ax = plt.subplots(figsize=(12, 6))
+
+# Plot both time series on same axis
+df_F['1'].plot(ax=ax, label='Original', color='blue')
+df_F_no_bankfull['1'].plot(ax=ax, label='Masked', color='orange')
+
+# Add horizontal bankfull line
+ax.axhline(qbankfull_df.loc['1', 'return value'], color='red', linestyle=':', linewidth=2, label='Bankfull Q')
+
+ax.set_ylabel("Discharge (m³/s)")
+ax.set_title("Discharge with Bankfull Threshold for Gauge 1")
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+# %%
