@@ -1,0 +1,76 @@
+# SFINCS base build configuration — HydroMT v1 / hydromt_sfincs v2 (component-based steps).
+# Migrated from sfincs_base_build.yml (v0 setup_* dict format). The build script
+# (setup_sfincs_base.py) injects the dynamic values at runtime into the matching steps:
+#   - grid.create_from_region.region   <- computed region GeoDataFrame
+#   - elevation.create / subgrid.create elevation_list  <- appends the bathy dataset
+#   - mask.create_active.exclude_polygon  <- dfm_coastal_mask
+#   - mask.create_boundary.include_polygon <- dfm_coastal_mask
+#   - rivers.create_river_inflow/outflow.river_upa <- river_upa
+modeltype: sfincs
+
+global:
+  data_libs: []   # provided at runtime by the build script (data_cats)
+
+steps:
+  - config.update:
+      stopdepth: 500
+      storecuminf: 1     # store cumulative infiltration
+      storecumprcp: 1    # store cumulative precip
+
+  - grid.create_from_region:
+      region:
+        geom: null       # injected by the script (region GeoDataFrame)
+      res: 100           # model resolution [m]
+      crs: utm           # model CRS (UTM zone)
+      rotated: false     # allow a rotated grid
+
+  - elevation.create:
+      elevation_list:
+        - elevation: fabdem   # 1st elevation dataset
+          zmin: 0.001         # only use where values > 0.001
+        # the script appends {elevation: <bathy>, reproj_method: bilinear}
+
+  - mask.create_active:
+      zmin: -10
+      fill_area: 50
+      include_polygon: ocean_shape   # was include_mask
+      reset_mask: true
+      # the script sets exclude_polygon: <dfm_coastal_mask>
+
+  - mask.create_active:              # second pass (was setup_mask_active2)
+      fill_area: 500
+      reset_mask: false
+
+  - mask.create_boundary:
+      btype: waterlevel              # set waterlevel boundaries
+      include_polygon_buffer: 2000   # was include_mask_buffer
+      reset_bounds: true
+      # the script sets include_polygon: <dfm_coastal_mask>
+
+  - subgrid.create:
+      elevation_list:
+        - elevation: fabdem
+          zmin: 0.001
+        # the script appends {elevation: <bathy>, reproj_method: bilinear}
+      roughness_list:
+        - lulc: vito
+          reclass_table: vito_mapping
+      nr_subgrid_pixels: 4
+      write_dep_tif: true            # save a cloud-optimized geotiff of subgrid topo
+      write_man_tif: true
+      nrmax: 5000                    # tile size (default 2000) to speed up processing
+
+  - infiltration.create_cn:
+      cn: gcn250
+      antecedent_moisture: dry
+
+  - rivers.create_river_inflow:
+      hydrography: merit_hydro
+      buffer: 500
+      river_len: 5000
+      keep_rivers_geom: true
+      # the script sets river_upa: <river_upa>
+
+  # NOTE: river outflow is NOT a registered build step in hydromt_sfincs 2.0.0rc3
+  # (create_river_outflow lacks @hydromt_step). The build script calls it directly
+  # after build() instead — see setup_sfincs_base.py.

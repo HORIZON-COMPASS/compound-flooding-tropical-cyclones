@@ -1,10 +1,18 @@
 # %%
+# Build a Wflow base model with HydroMT v1 / hydromt_wflow 1.0.x (WflowSbmModel).
+# Migrated from the v0 setup_*/opt API: the build config is now a `steps` list
+# (wflow_base_build_v1.yml); region, river_upa and the SFINCS-derived gauges are injected
+# into the steps at runtime before mod.build(steps=...).
 from os.path import join, exists
 import os
-from hydromt.config import configread
-from hydromt.log import setuplog
-from hydromt_wflow import WflowModel
+import yaml
 import geopandas as gpd
+from hydromt_wflow import WflowSbmModel
+
+
+def find_steps(steps, key):
+    return [list(s.values())[0] for s in steps if list(s.keys())[0] == key]
+
 
 # %%
 if "snakemake" in locals():
@@ -13,55 +21,67 @@ if "snakemake" in locals():
     data_cat         = snakemake.params.data_cat
     region_geom      = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
-    river_upa = snakemake.params.river_upa
+    river_upa        = snakemake.params.river_upa
 else:
-    model_dir        = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
-    config_file      = "../../../05_config_models/01_wflow/config_wflow.yml"
+    model_dir        = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/wflow_v1_test"
+    config_file      = "../../../05_config_models/01_wflow/wflow_base_build_v1.yml"
     data_cat         = [
-        '../../../03_data_catalogs/datacatalog_general.yml',
-        '../../../03_data_catalogs/datacatalog_CF_forcing.yml'
-        ] 
-    region_geom      = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test/gis/region.geojson'
-    dir_sfincs_model = 'p:/11210471-001-compass/02_Models/sofala/Idai/sfincs_test'
+        "../../../03_data_catalogs/datacatalog_general_v1___linux.yml",
+        "../../../03_data_catalogs/datacatalog_CF_forcing_v1___linux.yml",
+    ]
+    region_geom      = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs_v1/gis/region.geojson"
+    dir_sfincs_model = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs_v1"
+    river_upa        = 30
 
-#%%
 # Check whether model folder exists
 if not exists(model_dir):
-    os.mkdir(model_dir)
+    os.makedirs(model_dir)
 
-# model and data paths/
-logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
+# %%
+# Read the v1 build config (modeltype / global / steps)
+with open(config_file) as f:
+    cfg = yaml.safe_load(f)
+steps = cfg["steps"]
 
-# read settings from ini file
-opt = configread(config_file, abs_path=True)  
-kwargs = opt.pop("global", {})
-
-# Set up output points based on SFINCS inflow river points
-opt['setup_gauges'] = {
-    'gauges_fn': join(dir_sfincs_model, "gis", "src.geojson"),
-    'snap_to_river': True,
-    'snap_uparea': True,
-    'rel_error': 0.2,
-    'derive_subcatch': False,
-    'index_col': 'index',
-    'basename': 'locs'
-}
-
-opt['setup_rivers']['river_upa'] = river_upa
-
-#%%
 # Read SFINCS region
-region = gpd.read_file(region_geom).to_crs(epsg = '4326')
+region = gpd.read_file(region_geom).to_crs(epsg="4326")
 
-#%%
-# Set up wflow 
-mod = WflowModel(
-    root=model_dir, data_libs=data_cat, mode="w+", logger=logger, **kwargs
+# %%
+# Inject dynamic values into the matching steps
+for s in find_steps(steps, "setup_basemaps"):
+    s["region"] = {"basin": region}
+for s in find_steps(steps, "setup_rivers"):
+    s["river_upa"] = river_upa
+
+# Add a setup_gauges step based on the SFINCS inflow river points. Insert it before
+# setup_config_output_timeseries (which references the gauge map by name).
+# NOTE: in hydromt_sfincs v2 the river-inflow source points are written to gis/dis.geojson
+# (the v0 gis/src.geojson was renamed).
+gauges_step = {
+    "setup_gauges": {
+        "gauges_fn": join(dir_sfincs_model, "gis", "dis.geojson"),
+        "snap_to_river": True,
+        "snap_uparea": True,
+        "rel_error": 0.2,
+        "derive_subcatch": False,
+        "index_col": "index",
+        "basename": "locs",
+    }
+}
+insert_at = next(
+    (i for i, s in enumerate(steps) if list(s.keys())[0] == "setup_config_output_timeseries"),
+    len(steps),
 )
-mod.config['csv'] = None
-# %% BUILD MODEL
-mod.build(region={"basin": region}, opt=opt)
-mod.config['csv'] = None
-mod.write_config()
+steps.insert(insert_at, gauges_step)
+
+# %%
+# Build the model (v1: WflowSbmModel, no logger kwarg, build takes steps=)
+mod = WflowSbmModel(root=model_dir, data_libs=data_cat, mode="w+")
+mod.build(steps=steps)
+
+# Disable CSV output (v0 did mod.config['csv'] = None) and persist the config
+if "csv" in mod.config.data:
+    mod.config.data.pop("csv", None)
+mod.config.write()
 
 # %%
