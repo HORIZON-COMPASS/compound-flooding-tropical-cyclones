@@ -4,17 +4,16 @@
 # This script is based on: https://scaling-robot-wgkjqqr.pages.github.io/notebooks/Fit_univariate.html
 
 # First, load the packages
+import os
 from datetime import datetime as datetime
 from os.path import join
-from hydromt.log import setuplog
-from hydromt_wflow import WflowModel
+from hydromt_wflow import WflowSbmModel
 from pyextremes import EVA
 import matplotlib.pyplot as plt
 import pandas as pd
 
 #%%
-# Set up wflow run variables
-logger = setuplog("update", "./hydromt.log", log_level=10)
+# Set up wflow run variables (v1: hydromt.log.setuplog removed; no logger needed)
 if "snakemake" in locals():
     wflow_root_30yr  = snakemake.params.wflow_root_forcing_30yr
     wflow_root_event = snakemake.params.wflow_root_forcing
@@ -41,16 +40,15 @@ wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
 if not os.path.exists(wflow_bankfull):
    # Read ('r') the Wflow 30yr warm-up results 
-    mod = WflowModel(
+    mod = WflowSbmModel(
         root=join(wflow_root_30yr, "warmup"),
         data_libs=data_cats,
         mode="r",
-        logger=logger,
     )
     mod.read()
 
-    # Read in the wflow discharge 
-    df = mod.results['netcdf']['Q'].to_pandas()
+    # Read in the wflow discharge (v1: results['netcdf'] -> output_scalar component)
+    df = mod.output_scalar.data['Q'].to_pandas()
 
     # Now we calculate the bankfull discharge, based on a 2 yr return period by using block maxima and fitting the distribution using Akaike Information Criterion (AIC)
     qbankfull = []
@@ -106,15 +104,15 @@ else:
 # Check removing bankfull discharge from factual event simulations
 # ------------------------------------------------------------------
 # Read ('r') the Wflow 30yr warm-up results 
-mod_F = WflowModel(
+mod_F = WflowSbmModel(
     root=join(wflow_root_event, "events"),
     data_libs=data_cats,
     mode="r"
 )
 mod_F.read()
 # %%
-# Check results
-df_F = mod_F.results['netcdf']['Q'].to_pandas()
+# Check results (v1: results['netcdf'] -> output_scalar component)
+df_F = mod_F.output_scalar.data['Q'].to_pandas()
 df_F
 
 # %%

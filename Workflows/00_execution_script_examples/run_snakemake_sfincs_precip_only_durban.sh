@@ -18,8 +18,8 @@ module load pixi
 ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
-# Activate pixi environment (SFINCS only, no Wflow/Julia needed)
-eval "$(pixi shell-hook -e compass-snake-sfincs)"
+# Activate pixi environment (HydroMT v1 stack: hydromt 1.4 / hydromt_sfincs 2.0.0rc3)
+eval "$(pixi shell-hook -e compass-v1)"
 
 # Navigate to workflow directory
 cd Workflows/02_workflow_rules

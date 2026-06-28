@@ -175,6 +175,7 @@ rule run_sfincs_model:
                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.wind_forcing}")
         ),
         exe = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
+        sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
     output:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
                      "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
@@ -186,8 +187,9 @@ rule run_sfincs_model:
             with open(join(params.dir_run_with_forcing, "sfincs.log"), "w") as f:
                 subprocess.run([str(params.exe)], stdout=f, cwd=params.dir_run_with_forcing)
         if os.name == 'posix':
-            shell("docker image ls")
-            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:latest sfincs")
+            # This host has no docker; run the SFINCS container via apptainer/singularity
+            # using the local .sif image (deltares/sfincs-cpu). Bind the run dir to /data.
+            shell("apptainer run --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
 
 # Rule 3: Post-process and visualize flood maps
 rule sfincs_plot_floodmap:

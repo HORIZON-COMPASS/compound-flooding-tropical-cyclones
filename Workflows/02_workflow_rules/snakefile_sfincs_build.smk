@@ -70,7 +70,7 @@ rule make_base_model_sfincs:
     output: 
         dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
         msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
         region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
     script:
         join("..","04_scripts", "model_building", "sfincs", "setup_sfincs_base.py")

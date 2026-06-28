@@ -6,7 +6,7 @@ import matplotlib.patches as mpatches
 import os
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import pandas as pd
-from hydromt_wflow import WflowModel
+from hydromt_wflow import WflowSbmModel
 
 
 def plot_region_with_satellite(region, runname, discharge_locations_gdf, discharge_timeseries, save=True, custom_offsets = None):
@@ -198,12 +198,12 @@ event = 'Idai'
 
 # Example discharge locations: [(x_pos, y_pos, (width, height), name)]
 discharge_locations_gdf = gpd.read_file(f'p:/11210471-001-compass/02_Models/{region}/{event}/wflow/staticgeoms/gauges_locs.geojson')
-mod = WflowModel(f'p:/11210471-001-compass/03_Runs/{region}/{event}/wflow/event_precip_era5_hourly_zarr_CF0/events', mode='r')
-mod.read_results()
+mod = WflowSbmModel(f'p:/11210471-001-compass/03_Runs/{region}/{event}/wflow/event_precip_era5_hourly_zarr_CF0/events', mode='r')
+mod.read()  # v1: read_results() removed; output components read via mod.read()
 
 
-# Example timeseries (use actual discharge data for these)
-discharge_timeseries = discharge_timeseries = mod.results['netcdf']
+# Example timeseries (v1: results['netcdf'] -> output_scalar component)
+discharge_timeseries = mod.output_scalar.data
 
 # Plot region with timeseries insets
 plot_region_with_satellite('sofala', 'Idai', discharge_locations_gdf, discharge_timeseries, save=True, custom_offsets=custom_offsets)
@@ -270,6 +270,6 @@ def plot_max_discharge_map(dataset, title="Maximum Discharge Map", save=False, f
 # Assuming 'dataset' is the xarray Dataset you provided
 # plot_max_discharge_map(dataset, title="Maximum Discharge During Hurricane Idai", save=True, filename="max_discharge_idai.png")
 # %%
-dataset= mod.results['output']
+dataset= mod.output_grid.data  # v1: results['output'] (gridded netcdf) -> output_grid component
 plot_max_discharge_map(dataset)
 # %%
