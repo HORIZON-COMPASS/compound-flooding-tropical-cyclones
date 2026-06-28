@@ -13,6 +13,12 @@ pixi.lock
 
 #Workflow output files
 Workflows/dag*.png
+
+# Snakemake generated cache & metadata (never commit — can be hundreds of MB)
+cache/
+**/cache/
+.snakemake/
+**/.snakemake/
 Workflows/dag*.pdf
 Workflows/*.dot
 Workflows/hook.sh
