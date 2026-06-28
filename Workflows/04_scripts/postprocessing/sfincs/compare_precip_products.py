@@ -37,11 +37,16 @@ BASE_RUN_PATH = Path("/p/11210471-001-compass/03_Runs")
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/precip_comparison")
 
 # Precipitation products to compare
-# Format: {display_name: folder_suffix}
+# Format: {display_name: {"suffix": folder_suffix, "runname": optional_runname}}
+# If "runname" is not specified, uses the default RUNNAME
 PRECIP_PRODUCTS = {
-    "ERA5": "era5_hourly",
-    "GPM IMERG": "gpm_imerg_durban",
-    "MSWEP": "mswep_v280_3h_durban_apr2022",
+    "ERA5": {"suffix": "era5_hourly"},
+    "GPM IMERG": {"suffix": "gpm_imerg_durban"},
+    "MSWEP": {"suffix": "mswep_v316_3h_durban_apr2022"},  # v280: mswep_v280_3h_durban_apr2022
+    "ClimateDT": {
+        "suffix": "climateDT_tp_hist_Durban",
+        "runname": "Durban2022_ClimateDT",
+    },
 }
 
 # Plotting thresholds
@@ -55,8 +60,16 @@ DIFF_VMAX = 0.5
 # ===== HELPER FUNCTIONS =====
 def get_run_path(precip_name: str) -> Path:
     """Get the run directory path for a given precipitation product."""
-    precip_suffix = PRECIP_PRODUCTS[precip_name]
-    return BASE_RUN_PATH / REGION / RUNNAME / "sfincs" / f"event_precip_{precip_suffix}_CF0_no_wind"
+    product_config = PRECIP_PRODUCTS[precip_name]
+    precip_suffix = product_config["suffix"]
+    runname = product_config.get("runname", RUNNAME)  # Use custom runname or default
+    return (
+        BASE_RUN_PATH
+        / REGION
+        / runname
+        / "sfincs"
+        / f"event_precip_{precip_suffix}_CF0_no_wind"
+    )
 
 
 def load_hmax_tif(precip_name: str) -> xr.DataArray:
@@ -90,7 +103,7 @@ def load_precip_forcing(precip_name: str) -> xr.DataArray:
 
     ds = xr.open_dataset(precip_path)
     # Get precipitation variable (usually 'Precipitation' or 'precip')
-    precip_var = [v for v in ds.data_vars if 'precip' in v.lower()][0]
+    precip_var = [v for v in ds.data_vars if "precip" in v.lower()][0]
     return ds[precip_var]
 
 
@@ -100,7 +113,9 @@ def get_time_step_hours(precip: xr.DataArray) -> float:
         return 1.0
 
     # Use timedelta64 with minutes for better precision with sub-hourly data
-    time_diff = np.diff(precip.time.values).astype('timedelta64[m]').astype(float) / 60.0
+    time_diff = (
+        np.diff(precip.time.values).astype("timedelta64[m]").astype(float) / 60.0
+    )
     dt_hours = np.median(time_diff)
 
     # Sanity check
@@ -121,7 +136,9 @@ def load_sfincs_output(precip_name: str) -> xr.Dataset:
     return xr.open_dataset(map_path)
 
 
-def calculate_flood_volume(hmax: xr.DataArray, threshold: float = FLOOD_THRESHOLD) -> float:
+def calculate_flood_volume(
+    hmax: xr.DataArray, threshold: float = FLOOD_THRESHOLD
+) -> float:
     """Calculate total flood volume in m³ from hmax raster."""
     # Get cell area from coordinates
     try:
@@ -143,7 +160,9 @@ def calculate_flood_volume(hmax: xr.DataArray, threshold: float = FLOOD_THRESHOL
     return volume_m3
 
 
-def calculate_flood_extent(hmax: xr.DataArray, threshold: float = FLOOD_THRESHOLD) -> float:
+def calculate_flood_extent(
+    hmax: xr.DataArray, threshold: float = FLOOD_THRESHOLD
+) -> float:
     """Calculate total flood extent in km² from hmax raster."""
     try:
         dx = float(np.abs(hmax.x.diff("x").median()))
@@ -190,7 +209,8 @@ def plot_hmax_comparison(hmax_data: dict, output_path: Path):
             levels=flood_levels,
             cmap="viridis",
             add_colorbar=False,
-            x="x", y="y",
+            x="x",
+            y="y",
             alpha=0.7,
             zorder=2,
         )
@@ -218,7 +238,9 @@ def plot_hmax_comparison(hmax_data: dict, output_path: Path):
 
     plt.suptitle(
         f"Maximum Flood Depth Comparison - {EVENT_NAME}",
-        fontsize=14, fontweight="bold", y=1.02
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
     )
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -262,25 +284,45 @@ def plot_bilateral_differences(hmax_data: dict, output_dir: Path):
         # Plot product 1
         hmax1_plot = hmax1.where(hmax1 > FLOOD_THRESHOLD)
         im1 = hmax1_plot.plot(
-            ax=axes[0], levels=flood_levels, cmap="viridis",
-            add_colorbar=False, x="x", y="y", alpha=0.7, zorder=2
+            ax=axes[0],
+            levels=flood_levels,
+            cmap="viridis",
+            add_colorbar=False,
+            x="x",
+            y="y",
+            alpha=0.7,
+            zorder=2,
         )
         axes[0].set_title(f"{name1}", fontsize=12, fontweight="bold")
 
         # Plot product 2
         hmax2_plot = hmax2.where(hmax2 > FLOOD_THRESHOLD)
         im2 = hmax2_plot.plot(
-            ax=axes[1], levels=flood_levels, cmap="viridis",
-            add_colorbar=False, x="x", y="y", alpha=0.7, zorder=2
+            ax=axes[1],
+            levels=flood_levels,
+            cmap="viridis",
+            add_colorbar=False,
+            x="x",
+            y="y",
+            alpha=0.7,
+            zorder=2,
         )
         axes[1].set_title(f"{name2}", fontsize=12, fontweight="bold")
 
         # Plot difference
         im3 = diff.plot(
-            ax=axes[2], levels=diff_levels, cmap="RdBu_r",
-            add_colorbar=False, x="x", y="y", alpha=0.7, zorder=2
+            ax=axes[2],
+            levels=diff_levels,
+            cmap="RdBu_r",
+            add_colorbar=False,
+            x="x",
+            y="y",
+            alpha=0.7,
+            zorder=2,
         )
-        axes[2].set_title(f"Difference ({name1} - {name2})", fontsize=12, fontweight="bold")
+        axes[2].set_title(
+            f"Difference ({name1} - {name2})", fontsize=12, fontweight="bold"
+        )
 
         # Add basemaps and format axes
         for ax in axes:
@@ -289,8 +331,12 @@ def plot_bilateral_differences(hmax_data: dict, output_dir: Path):
             ax.set_ylabel("Latitude [°]")
             try:
                 ctx.add_basemap(
-                    ax=ax, source=ctx.providers.OpenStreetMap.Mapnik,
-                    crs="EPSG:4326", attribution=False, zorder=1, zoom=11
+                    ax=ax,
+                    source=ctx.providers.OpenStreetMap.Mapnik,
+                    crs="EPSG:4326",
+                    attribution=False,
+                    zorder=1,
+                    zoom=11,
                 )
             except Exception:
                 pass
@@ -311,7 +357,9 @@ def plot_bilateral_differences(hmax_data: dict, output_dir: Path):
         plt.suptitle(
             f"Flood Depth Comparison: {name1} vs {name2}\n"
             f"Mean diff: {mean_diff:.3f}m | Max diff: {max_diff:.3f}m | Min diff: {min_diff:.3f}m",
-            fontsize=13, fontweight="bold", y=1.05
+            fontsize=13,
+            fontweight="bold",
+            y=1.05,
         )
 
         plt.tight_layout()
@@ -341,20 +389,30 @@ def plot_precip_forcing_comparison(precip_data: dict, output_path: Path):
     ax1 = axes[0]
     for (name, precip), color in zip(precip_data.items(), colors):
         # Calculate spatial mean precipitation rate over time
-        precip_mean = precip.mean(dim=['x', 'y']) if 'x' in precip.dims else precip.mean(dim=['m', 'n'])
+        precip_mean = (
+            precip.mean(dim=["x", "y"])
+            if "x" in precip.dims
+            else precip.mean(dim=["m", "n"])
+        )
         ax1.plot(precip.time, precip_mean, label=name, color=color, linewidth=1.5)
 
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Mean Precipitation Rate [mm/hr]")
-    ax1.set_title("Spatial Mean Precipitation Rate Over Time", fontsize=12, fontweight="bold")
+    ax1.set_title(
+        "Spatial Mean Precipitation Rate Over Time", fontsize=12, fontweight="bold"
+    )
     ax1.legend(loc="upper right")
     ax1.grid(True, alpha=0.3)
-    ax1.tick_params(axis='x', rotation=45)
+    ax1.tick_params(axis="x", rotation=45)
 
     # Bottom panel: Cumulative precipitation
     ax2 = axes[1]
     for (name, precip), color in zip(precip_data.items(), colors):
-        precip_mean = precip.mean(dim=['x', 'y']) if 'x' in precip.dims else precip.mean(dim=['m', 'n'])
+        precip_mean = (
+            precip.mean(dim=["x", "y"])
+            if "x" in precip.dims
+            else precip.mean(dim=["m", "n"])
+        )
 
         # Get time step in hours using helper function
         dt_hours = get_time_step_hours(precip)
@@ -368,11 +426,146 @@ def plot_precip_forcing_comparison(precip_data: dict, output_path: Path):
     ax2.set_title("Cumulative Precipitation Over Time", fontsize=12, fontweight="bold")
     ax2.legend(loc="upper left")
     ax2.grid(True, alpha=0.3)
-    ax2.tick_params(axis='x', rotation=45)
+    ax2.tick_params(axis="x", rotation=45)
 
     plt.suptitle(
         f"Precipitation Forcing Comparison - {EVENT_NAME}",
-        fontsize=14, fontweight="bold", y=1.02
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
+    )
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {output_path}")
+
+
+def plot_precip_spatial_snapshot(precip_data: dict, output_path: Path):
+    """
+    Create a spatial comparison of precipitation patterns at the peak timestep.
+
+    Finds the timestep with maximum mean precipitation across all products,
+    then plots the spatial distribution for each product at that time.
+
+    Parameters
+    ----------
+    precip_data : dict
+        Dictionary mapping product names to precipitation DataArrays
+    output_path : Path
+        Output path for the figure
+    """
+    # Find the peak timestep based on the maximum of the mean across all products
+    peak_times = {}
+    peak_values = {}
+
+    for name, precip in precip_data.items():
+        # Calculate spatial mean precipitation rate over time
+        if "x" in precip.dims:
+            precip_mean = precip.mean(dim=["x", "y"])
+        else:
+            precip_mean = precip.mean(dim=["m", "n"])
+
+        # Find the timestep with maximum precipitation
+        peak_idx = int(precip_mean.argmax().values)
+        peak_times[name] = precip.time.values[peak_idx]
+        peak_values[name] = float(precip_mean.values[peak_idx])
+
+    # Use the overall peak time (from the product with highest peak)
+    max_product = max(peak_values, key=peak_values.get)
+    reference_peak_time = peak_times[max_product]
+
+    # Convert to numpy datetime64 to ensure consistent type for comparisons
+    reference_peak_time = np.datetime64(reference_peak_time, "ns")
+
+    print(f"  Peak precipitation time (from {max_product}): {reference_peak_time}")
+    print(f"  Peak values by product: {peak_values}")
+
+    # Create figure with subplots for each product
+    n_products = len(precip_data)
+    n_cols = min(n_products, 4)  # Max 4 columns
+    n_rows = (n_products + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
+
+    if n_products == 1:
+        axes = np.array([axes])
+    axes = axes.flatten() if n_products > 1 else axes
+
+    # Determine common color scale across all products
+    all_peak_values = []
+    precip_at_peak = {}
+
+    for name, precip in precip_data.items():
+        # Find the closest timestep to the reference peak time
+        # Convert time values to same dtype for comparison
+        time_vals = precip.time.values.astype("datetime64[ns]")
+        time_diff = np.abs(time_vals - reference_peak_time)
+        closest_idx = int(np.argmin(time_diff.astype(float)))
+
+        # Get precipitation at this timestep
+        precip_snapshot = precip.isel(time=closest_idx)
+        precip_at_peak[name] = precip_snapshot
+        all_peak_values.append(float(precip_snapshot.max()))
+
+    vmax = max(all_peak_values) * 1.1 if all_peak_values else 10
+    vmin = 0
+
+    # Plot each product
+    for idx, (name, precip_snapshot) in enumerate(precip_at_peak.items()):
+        ax = axes[idx] if n_products > 1 else axes[0]
+
+        # Get spatial coordinates
+        if "x" in precip_snapshot.dims:
+            x_coord, y_coord = "x", "y"
+        else:
+            x_coord, y_coord = "n", "m"
+
+        im = precip_snapshot.plot(
+            ax=ax,
+            cmap="Blues",
+            vmin=vmin,
+            vmax=vmax,
+            add_colorbar=False,
+            x=x_coord,
+            y=y_coord,
+        )
+
+        # Calculate mean and max for this snapshot
+        mean_val = float(precip_snapshot.mean())
+        max_val = float(precip_snapshot.max())
+
+        ax.set_title(
+            f"{name}\nMean: {mean_val:.1f}, Max: {max_val:.1f} mm/hr",
+            fontsize=11,
+            fontweight="bold",
+        )
+        ax.set_xlabel("Longitude" if x_coord == "x" else "X")
+        ax.set_ylabel("Latitude" if y_coord == "y" else "Y")
+        ax.set_aspect("equal")
+
+    # Hide unused subplots
+    for idx in range(n_products, len(axes) if isinstance(axes, np.ndarray) else 1):
+        if isinstance(axes, np.ndarray):
+            axes[idx].set_visible(False)
+
+    # Add shared colorbar
+    cbar = fig.colorbar(
+        im,
+        ax=axes if isinstance(axes, np.ndarray) else [axes],
+        shrink=0.8,
+        pad=0.02,
+        aspect=30,
+    )
+    cbar.set_label("Precipitation Rate [mm/hr]", fontsize=11)
+
+    # Format the timestamp for the title
+    peak_time_str = np.datetime_as_string(reference_peak_time, unit="h")
+
+    plt.suptitle(
+        f"Precipitation Spatial Patterns at Peak ({peak_time_str}) - {EVENT_NAME}",
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
     )
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -403,7 +596,9 @@ def plot_volume_comparison(volumes: dict, extents: dict, output_path: Path):
     # Volume bar chart
     ax1 = axes[0]
     volume_values = [volumes[name] / 1e6 for name in product_names]  # Convert to Mm³
-    bars1 = ax1.bar(x, volume_values, width, color=colors, edgecolor='black', linewidth=1)
+    bars1 = ax1.bar(
+        x, volume_values, width, color=colors, edgecolor="black", linewidth=1
+    )
 
     ax1.set_ylabel("Flood Volume [Mm³]", fontsize=11, fontweight="bold")
     ax1.set_title("Total Flood Volume", fontsize=12, fontweight="bold")
@@ -412,17 +607,25 @@ def plot_volume_comparison(volumes: dict, extents: dict, output_path: Path):
     ax1.set_ylim(0, max(volume_values) * 1.15)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.grid(axis="y", alpha=0.3)
 
     # Add value labels on bars
     for bar, val in zip(bars1, volume_values):
-        ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(volume_values)*0.02,
-                 f'{val:.2f}', ha='center', va='bottom', fontsize=10)
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + max(volume_values) * 0.02,
+            f"{val:.2f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
     # Extent bar chart
     ax2 = axes[1]
     extent_values = [extents[name] for name in product_names]
-    bars2 = ax2.bar(x, extent_values, width, color=colors, edgecolor='black', linewidth=1)
+    bars2 = ax2.bar(
+        x, extent_values, width, color=colors, edgecolor="black", linewidth=1
+    )
 
     ax2.set_ylabel("Flood Extent [km²]", fontsize=11, fontweight="bold")
     ax2.set_title("Total Flood Extent", fontsize=12, fontweight="bold")
@@ -431,16 +634,24 @@ def plot_volume_comparison(volumes: dict, extents: dict, output_path: Path):
     ax2.set_ylim(0, max(extent_values) * 1.15)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
-    ax2.grid(axis='y', alpha=0.3)
+    ax2.grid(axis="y", alpha=0.3)
 
     # Add value labels on bars
     for bar, val in zip(bars2, extent_values):
-        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(extent_values)*0.02,
-                 f'{val:.2f}', ha='center', va='bottom', fontsize=10)
+        ax2.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + max(extent_values) * 0.02,
+            f"{val:.2f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
     plt.suptitle(
         f"Flood Impact Comparison by Precipitation Product - {EVENT_NAME}",
-        fontsize=14, fontweight="bold", y=1.02
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
     )
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -448,16 +659,20 @@ def plot_volume_comparison(volumes: dict, extents: dict, output_path: Path):
     print(f"Saved: {output_path}")
 
 
-def export_summary_csv(volumes: dict, extents: dict, precip_totals: dict, output_path: Path):
+def export_summary_csv(
+    volumes: dict, extents: dict, precip_totals: dict, output_path: Path
+):
     """Export summary statistics to CSV."""
     data = []
     for name in volumes.keys():
-        data.append({
-            "Precipitation_Product": name,
-            "Flood_Volume_Mm3": volumes[name] / 1e6,
-            "Flood_Extent_km2": extents[name],
-            "Total_Precipitation_mm": precip_totals.get(name, np.nan),
-        })
+        data.append(
+            {
+                "Precipitation_Product": name,
+                "Flood_Volume_Mm3": volumes[name] / 1e6,
+                "Flood_Extent_km2": extents[name],
+                "Total_Precipitation_mm": precip_totals.get(name, np.nan),
+            }
+        )
 
     df = pd.DataFrame(data)
     df.to_csv(output_path, index=False)
@@ -499,12 +714,18 @@ def main():
 
             # Calculate total precipitation
             precip = precip_data[name]
-            precip_mean = precip.mean(dim=['x', 'y']) if 'x' in precip.dims else precip.mean(dim=['m', 'n'])
+            precip_mean = (
+                precip.mean(dim=["x", "y"])
+                if "x" in precip.dims
+                else precip.mean(dim=["m", "n"])
+            )
             dt_hours = get_time_step_hours(precip)
             precip_totals[name] = float(np.sum(precip_mean.values * dt_hours))
 
-            print(f"    Volume: {volumes[name]/1e6:.2f} Mm³, Extent: {extents[name]:.2f} km², "
-                  f"Total Precip: {precip_totals[name]:.1f} mm")
+            print(
+                f"    Volume: {volumes[name]/1e6:.2f} Mm³, Extent: {extents[name]:.2f} km², "
+                f"Total Precip: {precip_totals[name]:.1f} mm"
+            )
 
         except Exception as e:
             print(f"  ERROR loading {name}: {e}")
@@ -519,7 +740,9 @@ def main():
 
     # 1. Overall hmax comparison
     print("  Creating hmax comparison plot...")
-    plot_hmax_comparison(hmax_data, OUTPUT_DIR / f"hmax_comparison_{EVENT_NAME.lower()}.png")
+    plot_hmax_comparison(
+        hmax_data, OUTPUT_DIR / f"hmax_comparison_{EVENT_NAME.lower()}.png"
+    )
 
     # 2. Bilateral differences
     print("  Creating bilateral difference plots...")
@@ -527,15 +750,32 @@ def main():
 
     # 3. Precipitation forcing comparison
     print("  Creating precipitation forcing comparison...")
-    plot_precip_forcing_comparison(precip_data, OUTPUT_DIR / f"precip_forcing_comparison_{EVENT_NAME.lower()}.png")
+    plot_precip_forcing_comparison(
+        precip_data, OUTPUT_DIR / f"precip_forcing_comparison_{EVENT_NAME.lower()}.png"
+    )
 
-    # 4. Volume and extent bar charts
+    # 4. Precipitation spatial snapshot at peak
+    print("  Creating precipitation spatial snapshot at peak...")
+    plot_precip_spatial_snapshot(
+        precip_data, OUTPUT_DIR / f"precip_spatial_peak_{EVENT_NAME.lower()}.png"
+    )
+
+    # 5. Volume and extent bar charts
     print("  Creating volume/extent bar charts...")
-    plot_volume_comparison(volumes, extents, OUTPUT_DIR / f"volume_extent_comparison_{EVENT_NAME.lower()}.png")
+    plot_volume_comparison(
+        volumes,
+        extents,
+        OUTPUT_DIR / f"volume_extent_comparison_{EVENT_NAME.lower()}.png",
+    )
 
-    # 5. Export summary CSV
+    # 6. Export summary CSV
     print("  Exporting summary CSV...")
-    export_summary_csv(volumes, extents, precip_totals, OUTPUT_DIR / f"summary_{EVENT_NAME.lower()}.csv")
+    export_summary_csv(
+        volumes,
+        extents,
+        precip_totals,
+        OUTPUT_DIR / f"summary_{EVENT_NAME.lower()}.csv",
+    )
 
     print(f"\n{'='*60}")
     print(f"Analysis complete! Output files saved to: {OUTPUT_DIR}")

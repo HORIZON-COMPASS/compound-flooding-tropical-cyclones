@@ -32,6 +32,7 @@ EVENT_CITIES = {
     "Kenneth": mozambique_cities,
     "Idai": mozambique_cities,
     "Durban_April2022": south_africa_cities,
+    "Durban_April2022_ClimateDT": south_africa_cities,
 }
 
 
@@ -103,7 +104,7 @@ def add_city_markers(ax, extent, cities, fontsize=8, markersize=50):
 
 # ===== CONFIGURATION =====
 # Set your event name here
-EVENT_NAME = "Durban_April2022"  # Change this to: "Kenneth", "Freddy", "Idai", "Durban_April2022"
+EVENT_NAME = "Durban_April2022_ClimateDT"  # Change this to: "Kenneth", "Freddy", "Idai", "Durban_April2022"
 
 # Base paths - update these as needed
 OUTPUT_DIR = Path("/p/11210471-001-compass/04_Results/CF_figs")
@@ -135,6 +136,14 @@ EVENT_CONFIG = {
         "counterfactual": "event_precip_era5_hourly_CF-8_no_wind",
         "folder_name": "Durban2022",  # Folder name in base_path
     },
+    "Durban_April2022_ClimateDT": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/durban"),
+        "factual": "event_precip_climateDT_tp_hist_Durban_CF0_no_wind",
+        "factual_folder": "Durban2022_ClimateDT",  # Factual run folder
+        "counterfactual": "event_precip_climateDT_tp_cont_Durban_CF0_no_wind",
+        "counterfactual_folder": "Durban2022_ClimateDT_cont",  # Counterfactual run folder
+        "folder_name": None,  # Not used - using separate folders for factual/counterfactual
+    },
 }
 
 # Validate event name
@@ -153,9 +162,13 @@ EVENT_CITY_LIST = EVENT_CITIES.get(EVENT_NAME, [])  # Get cities for this event
 
 # ===== DYNAMIC FILE PATHS =====
 # Construct file paths based on event name
+# Support separate folders for factual/counterfactual (e.g., Climate DT runs)
+factual_folder = event_cfg.get("factual_folder", FOLDER_NAME)
+counterfactual_folder = event_cfg.get("counterfactual_folder", FOLDER_NAME)
+
 file_cf0 = (
     BASE_RUN_PATH
-    / FOLDER_NAME
+    / factual_folder
     / "sfincs"
     / event_cfg["factual"]
     / "plot_output"
@@ -163,7 +176,7 @@ file_cf0 = (
 )
 file_cf8 = (
     BASE_RUN_PATH
-    / FOLDER_NAME
+    / counterfactual_folder
     / "sfincs"
     / event_cfg["counterfactual"]
     / "plot_output"
@@ -544,13 +557,20 @@ def create_bar_chart_with_annotation(
 
     # Calculate spacing based on the difference between bars (with a minimum)
     bar_diff = bar_heights[higher_bar_idx] - bar_heights[lower_bar_idx]
-    text_spacing = max(bar_diff * 0.15, max(totals) * 0.03)  # Ensure minimum spacing
-
+    text_spacing = max(bar_diff * 0.15, max(totals) * 0.03)  # Ensure minimum spacin
     # Format the difference text
     diff_text = f"{unit_prefix}{difference:.2f}{unit_suffix} ({percentage_diff:.0f}%)"
 
     # Place the value text slightly below midpoint
-    ax.text(text_x, midpoint_y - text_spacing, diff_text, ha="left", va="center", fontsize=10, rotation=0)
+    ax.text(
+        text_x,
+        midpoint_y - text_spacing,
+        diff_text,
+        ha="left",
+        va="center",
+        fontsize=10,
+        rotation=0,
+    )
 
     # Place the label text slightly above midpoint
     ax.text(

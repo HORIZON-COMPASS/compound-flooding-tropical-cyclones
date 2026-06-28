@@ -16,10 +16,7 @@ cd "${ROOT}"
 
 # Installing pixi environment
 pixi install --environment compass-fiat
-pixi run --environment compass-fiat pip install "hydromt_fiat @ git+https://github.com/Deltares/hydromt_fiat.git"
-pixi run --environment compass-fiat conda install libstdcxx-ng=12 
-pixi run --environment compass-fiat conda install gcc
-pixi run --environment compass-fiat conda install --force-reinstall pandas xarray
+pixi run --environment compass-fiat pip install "hydromt_fiat==0.5.10" "dask==2024.12.1"
 pixi shell-hook --environment compass-fiat > hook.sh
 source hook.sh
 

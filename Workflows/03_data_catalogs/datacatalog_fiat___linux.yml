@@ -1,7 +1,7 @@
 meta:
   root: /p/
 jrc_vulnerability_curves:
-    path: 11210471-001-compass\01_Data\fiat\JRC_damage_functions.csv
+    path: 11210471-001-compass/01_Data/fiat/JRC_damage_functions.csv
     data_type: DataFrame
     driver: csv
     meta:
@@ -12,7 +12,7 @@ jrc_vulnerability_curves:
       paper_doi: https://dx.doi.org/10.2760/16510
 
 jrc_vulnerability_curves_linking:
-    path: 11210471-001-compass\01_Data\fiat\JRC_damage_functions_linking.csv
+    path: 11210471-001-compass/01_Data/fiat/JRC_damage_functions_linking.csv
     data_type: DataFrame
     driver: csv
     meta:
@@ -20,7 +20,7 @@ jrc_vulnerability_curves_linking:
       description: Default linking table for the JRC damage functions (e.g., the residential damage function links to residential buildings).
 
 jrc_damage_values:
-    path: 11210471-001-compass\01_Data\fiat\JRC_base_damage_values.csv
+    path: 11210471-001-compass/01_Data/fiat/JRC_base_damage_values.csv
     data_type: DataFrame
     driver: csv
     meta:

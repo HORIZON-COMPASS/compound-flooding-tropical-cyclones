@@ -1,0 +1,31 @@
+# Delft-FIAT flood impact configuration for Durban, South Africa (April 2022)
+# Designed to work with precip-only SFINCS outputs (snakefile_sfincs_precip_only.smk)
+# Uses: snakefile_fiat_precip_only.smk
+#
+# Priority scenarios: ERA5 CF0 (factual) and CF-10 (counterfactual, -10% thermodynamic delta)
+# Both have completed floodmap.tif from the SFINCS precip-only workflow.
+
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    Durban2022:
+        # Event metadata
+        tc_name: Durban_April2022
+        region: durban
+
+        # SFINCS scenario to pull floodmap from (must match the existing run directory name)
+        precip_forcing: era5_hourly
+        wind_forcing: no_wind
+
+        # Delft-FIAT exposure/vulnerability settings
+        continent: Africa
+        country: "South Africa"          # must match the JRC CSV country column exactly
+        config_fiat_base: fiat_base_build.yml
+
+        # Counterfactual settings: both ERA5 scenarios have completed floodmap.tif
+        CF_value_rain: [0, -10]          # 0 = factual, -10 = counterfactual (thermodynamic attribution)
+        CF_value_wind: [0]
+        CF_value_SLR: [0]

@@ -47,6 +47,12 @@ EVENT_CONFIG = {
         "counterfactual": "event_tp_era5_hourly_zarr_CF-8_GTSMv41_CF-0.14_era5_hourly_spw_IBTrACS_CF-10",
         "damage_file": "spatial.fgb",
     },
+    "Durban2022": {
+        "base_path": Path("/p/11210471-001-compass/03_Runs/durban"),
+        "factual": "event_precip_era5_hourly_CF0_no_wind",
+        "counterfactual": "event_precip_era5_hourly_CF-8_no_wind",
+        "damage_file": "spatial.fgb",
+    },
 }
 
 # Validate event name
