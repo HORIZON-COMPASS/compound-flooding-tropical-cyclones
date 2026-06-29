@@ -11,7 +11,7 @@ from datetime import timedelta
 
 # %%
 if "snakemake" in locals():
-    tc_name              = snakemake.wildcards.runname
+    tc_name              = snakemake.params.tc_name
     wflow_root_noforcing = snakemake.params.wflow_root_noforcing
     wflow_root_forcing   = snakemake.params.wflow_root_forcing
     start_time           = snakemake.params.start_time
@@ -20,7 +20,7 @@ if "snakemake" in locals():
     precip_forcing       = snakemake.wildcards.precip_forcing
     CF_rain              = float(snakemake.wildcards.CF_rain)
     CF_rain_txt          = snakemake.wildcards.CF_rain
-    meteo_fn             = snakemake.params.forcing
+    meteo_fn             = snakemake.params.meteo_forcing
 else:
     tc_name              = "Idai"
     precip_forcing       = "era5_hourly"

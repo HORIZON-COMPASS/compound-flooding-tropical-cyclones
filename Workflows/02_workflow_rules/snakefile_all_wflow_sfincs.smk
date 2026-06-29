@@ -24,6 +24,7 @@ wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].it
 CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
 CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -35,12 +36,12 @@ wildcard_constraints:
 
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for tp, slr, wind in product(value['CF_value_rain'], value['CF_value_SLR'], value['CF_value_wind']):
-        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['precip_forcing'], tp, value['tidemodel'], slr, value['wind_forcing'], wind))
+    for tp, slr, wind, lulc in product(value['CF_value_rain'], value['CF_value_SLR'], value['CF_value_wind'], value['CF_landuse']):
+        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['precip_forcing'], tp, value['tidemodel'], slr, value['wind_forcing'], wind, lulc))
 
 # Unpack into separate wildcard lists
-region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
+region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR, wind_forcing, CF_wind, CF_landuse = zip(*run_combinations)
 
 rule all_general:
     input:
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "sfincs_basemap.png"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "sfincs_basemap.png"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind, CF_landuse=CF_landuse),

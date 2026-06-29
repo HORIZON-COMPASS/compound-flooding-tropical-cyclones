@@ -1,27 +1,18 @@
 # %%
-# Build a SFINCS base model with HydroMT v1 / hydromt_sfincs v2 (component-based steps).
-# Migrated from the v0 setup_*/opt API: the build config is now a `steps` list
-# (sfincs_base_build_v1.yml) and we inject the dynamic values into the matching steps
-# before calling mod.build(steps=...).
 from os.path import join, exists
-import os
-import ast
-import yaml
 import geopandas as gpd
+from hydromt.config import configread
+import ast
+from hydromt.log import setuplog
 import hydromt
 from hydromt_sfincs import SfincsModel
-
-
+#%%
 def get_local_vector_data(file, bbox, data_cat):
     dataCat = hydromt.data_catalog.DataCatalog(data_cat)
-    return dataCat.get_geodataframe(data_like=file, bbox=bbox)
-
-
-def find_steps(steps, key):
-    """Return the argument dicts of every step whose single key == `key` (component.method)."""
-    return [list(s.values())[0] for s in steps if list(s.keys())[0] == key]
-
-
+    vector = dataCat.get_geodataframe(
+        data_like = file,
+        bbox = bbox)
+    return vector
 # %%
 if "snakemake" in locals():
     model_dir        = snakemake.params.dir_model_sfincs
@@ -30,98 +21,85 @@ if "snakemake" in locals():
     bbox             = ast.literal_eval(snakemake.params.arg_bbox)
     bathy            = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
-    river_upa        = snakemake.params.river_upa
+    river_upa = snakemake.params.river_upa
+    region_name      = snakemake.wildcards.region
+    landuse          = snakemake.wildcards.CF_landuse
+    lulc_mapping     = snakemake.params.lulc_mapping_sfincs
 else:
-    # Durban precip-only test case (config_durban_floods_2022.yml)
-    model_dir = "/p/11210471-001-compass/02_Models/durban/Durban2022/sfincs"
-    config_file = "../../../05_config_models/02_sfincs/sfincs_base_build_v1.yml"
+    model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
+    config_file = r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
     data_cats = [
-        "../../../03_data_catalogs/datacatalog_general_v1___linux.yml",
-        "../../../03_data_catalogs/datacatalog_SFINCS_obspoints_v1___linux.yml",
-        "../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling_v1___linux.yml",
-    ]
-    bbox = [30.659688, -29.978273, 31.076825, -29.740075]
-    bathy = "gebco2024_MZB"
-    dfm_coastal_mask = "coastal_coupling_msk_MZB"
+        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_general.yml',
+        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_obspoints.yml',
+        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
+        ]
+    #bbox =[-3.2913,50.9637,-2.5063,51.3508]
+    bbox =[-3.16169,51.06687,-2.867119,51.258058]
+    #bbox =[36.7,-18.35,37.41,-17.64]
+    bathy = 'gebco'
+    #bathy = 'emodnet_bathy_E4_2018_msl'
+    dfm_coastal_mask = 'coastal_coupling_msk_SMST'
     river_upa = 30
+    landuse = 'vito'
+    lulc_mapping = 'vito_mapping'
 
 # Check whether model folder exists. If not, make one
 if not exists(model_dir):
-    os.makedirs(model_dir)
+    os.mkdir(model_dir)
+#%%
+# model and data paths/
+logger = setuplog("update", join(model_dir, "hydromt.log"), log_level=10)
+opt = configread(config_file, abs_path=True)  # read settings from ini file
+kwargs = opt.pop("global", {})
 
-# %%
-# Read the v1 build config (modeltype / global / steps)
-with open(config_file) as f:
-    cfg = yaml.safe_load(f)
-steps = cfg["steps"]
+# fill in the configuration for SFINCS with arguments from the snakemake config file
+opt['setup_dep']['datasets_dep'] = opt['setup_dep']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
+opt['setup_subgrid']['datasets_dep'] = opt['setup_subgrid']['datasets_dep'] + [{'elevtn': bathy, 'reproj_method': 'bilinear'}]   
+opt['setup_subgrid']['datasets_rgh'] = [{'lulc': landuse, 'reclass_table': lulc_mapping}]
 
-# %%
-# Build the model region from the basin atlas, clipped to the bbox
+#%%
 region = get_local_vector_data(
-    file="basin_atlas_level12_v10",
-    bbox=bbox,
-    data_cat=data_cats[0],
+    file = 'basin_atlas_level12_v10',
+    bbox = bbox,
+    data_cat = data_cats[0],
 )
 
-# %%
-# Inject the dynamic values into the matching steps
-# region -> grid.create_from_region
-for s in find_steps(steps, "grid.create_from_region"):
-    s["region"] = {"geom": region}
+#%%
+# Set up model region
+opt['setup_mask_active']['mask'] = region
+#opt['setup_mask_active']['mask_buffer'] = 1000
+opt['setup_mask_active']['exclude_mask'] = dfm_coastal_mask
 
-# bathy -> elevation.create and subgrid.create elevation_list
-bathy_entry = {"elevation": bathy, "reproj_method": "bilinear"}
-for key in ("elevation.create", "subgrid.create"):
-    for s in find_steps(steps, key):
-        s.setdefault("elevation_list", []).append(bathy_entry)
-
-# dfm coastal mask -> first mask.create_active (exclude) and mask.create_boundary (include)
-active_steps = find_steps(steps, "mask.create_active")
-if active_steps:
-    active_steps[0]["exclude_polygon"] = dfm_coastal_mask
-for s in find_steps(steps, "mask.create_boundary"):
-    s["include_polygon"] = dfm_coastal_mask
-
-# river upstream-area threshold -> river inflow (outflow handled after build, see below)
-for s in find_steps(steps, "rivers.create_river_inflow"):
-    s["river_upa"] = river_upa
-
-# %%
-# Initialise and build the model (v1: no logger kwarg, build takes steps=)
-mod = SfincsModel(root=model_dir, data_libs=data_cats, mode="w+")
-mod.build(steps=steps)
-
-# River outflow is not a registered build step in hydromt_sfincs 2.0.0rc3, so call the
-# component method directly on the built model, then re-write the affected outputs.
-# rc3 bug: create_river_outflow references self.logger (missing) in its "no points" branch;
-# give the component the attribute so it behaves, and guard the call defensively.
-import logging
-try:
-    mod.rivers.logger = logging.getLogger("hydromt_sfincs")
-except Exception:
+if region_name == 'sofala':
+    opt['setup_mask_active2']['include_mask'] = 'sofala_incl_polygon'
+    opt['setup_mask_active2']['exclude_mask'] = 'sofala_excl_northern_basin'
+    opt['setup_mask_active3']['include_mask'] = 'sofala_incl_polygon_2'
+else:
     pass
-try:
-    mod.rivers.create_river_outflow(
-        hydrography="merit_hydro",
-        river_len=5000,
-        river_upa=river_upa,
-        keep_rivers_geom=True,
-    )
-    mod.write()
-except Exception as e:
-    print(f"WARNING: river outflow step skipped (hydromt_sfincs 2.0.0rc3 limitation): {e}")
 
-# %%
-# Plot the region and boundaries (model-level method, unchanged)
+opt['setup_mask_bounds']['include_mask'] = dfm_coastal_mask
+
+opt['setup_river_inflow']['river_upa'] = river_upa
+opt['setup_river_outflow']['river_upa'] = river_upa
+
+#%%
+# Initialise model object
+mod = SfincsModel(
+    root=model_dir, data_libs=data_cats, mode="w+", logger=logger, **kwargs
+)
+
+# %% BUILD MODEL
+mod.build(region={"geom": region}, opt=opt)
+
+#%% Plot the region and boundaries
 fig, ax = mod.plot_basemap(
-    fn_out=model_dir,
+    fn_out=model_dir, 
     variable="dep",
     plot_bounds=True,
-    plot_geoms=True,
+    plot_geoms=True, 
     plot_region=True,
     bmap="sat",
     zoomlevel=12,
-    figsize=(8, 6),
-)
+    figsize=(8, 6))
 
 # %%

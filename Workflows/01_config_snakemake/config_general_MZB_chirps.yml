@@ -5,7 +5,7 @@ dir_data:    01_Data
 dir_models:  02_Models              # Folder where the base models will be saved (without dynamic forcing data)
 dir_runs:    03_Runs                # Folder where model runs will be saved (with forcing)
 runname_ids: 
-    Idai_chirps:                                         # name of the model run
+    Idai_chirps_test_full:                                         # name of the model run
         # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
         region: sofala                                      # name of the region will be used in naming folders 
@@ -15,6 +15,7 @@ runname_ids:
         start_time: 20190309 000000
         end_time: 20190325 060000      
         precip_forcing: chirps_IMERGlate_v3                 # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
         wind_forcing: era5_hourly_spw_IBTrACS   # spw_IBTrACS                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]           
