@@ -25,6 +25,13 @@ def get_start_time(wildcards):
 def get_end_time(wildcards):
     return config["runname_ids"][wildcards.runname]['end_time']
 
+def get_meteo_forcing(wildcards):
+    # dataset used for wflow temperature/PET in the event. Defaults to precip_forcing (works when
+    # that is a full met dataset like era5), but can be set separately when the precip product is
+    # precip-only (e.g. ceh_gear radar) via a `meteo_forcing` config field.
+    rid = config["runname_ids"][wildcards.runname]
+    return rid.get('meteo_forcing', rid['precip_forcing'])
+
 def get_bbox(wildcards):
     prebbox = config["runname_ids"][wildcards.runname]["bbox_sfincs"]
     arg_bbox = "{" + "'bbox': "+ prebbox + "}"
@@ -124,7 +131,7 @@ rule update_forcing_wflow_event:
         wflow_root_forcing= directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}")),
         start_time = get_start_time,
         end_time = get_end_time,
-        forcing = "{precip_forcing}",
+        forcing = get_meteo_forcing,
         data_cat = get_datacatalog,
         tc_name = get_tcname
     script:
