@@ -48,8 +48,8 @@ def get_datacatalog(wildcards):
         ]
     elif os.name == "posix": #Running on linux
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"),
-            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
         ]
 
 runname_ids = list(config['runname_ids'].keys())
@@ -80,7 +80,7 @@ rule make_base_model_wflow:
         #config_file = join(curdir,'..', "05_config_models", "01_wflow", "config_wflow.yml"),
         region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
         dir_sfincs_model = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
         config_file = get_config_wflow  
     params:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
@@ -140,10 +140,13 @@ rule run_wflow_warmup:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "instate", "instates.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
-        julia_env_fn = "~/.julia/environments/v1.9"
+        julia_env_fn = "~/.julia/environments/wflow1"  # Wflow.jl 1.0.2 (v1); v1.9 env has v0.8
     shell:
+        # The wflow0.8.1 exe cannot run a Wflow.jl v1 TOML, so on Linux this falls through to
+        # Julia with the wflow1 env (Wflow 1.0.2). Uses the juliaup default Julia (1.11.3, which
+        # matches the wflow1 manifest); the old `+1.9` channel is not installed here.
         """
-        {params.exe} {input.toml} || julia +1.9 --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
 
 rule run_wflow_event:
