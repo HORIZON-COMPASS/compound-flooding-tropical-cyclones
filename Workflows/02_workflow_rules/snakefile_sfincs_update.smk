@@ -48,10 +48,10 @@ def get_datacatalog(wildcards):
         ]
     elif os.name == "posix": #Running on linux
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling___linux.yml"), 
-            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints___linux.yml"),
-            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
         ]
 
 def get_use_dfm(wildcards):
@@ -60,11 +60,17 @@ def get_use_dfm(wildcards):
 def get_coastal_ts(wildcards):
     return config['runname_ids'][wildcards.runname]['coastal_ts']
 
+def get_skip_coastal_forcing(wildcards):
+    return config['runname_ids'][wildcards.runname].get('skip_coastal_forcing', False)
+
+def get_skip_discharge_forcing(wildcards):
+    return config['runname_ids'][wildcards.runname].get('skip_discharge_forcing', False)
+
 def get_cf_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing.yml')
     elif os.name == "posix": #Running on linux
-        return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing___linux.yml')
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing_v1___linux.yml')
 
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
@@ -113,14 +119,19 @@ rule add_forcing_coastal_meteo_sfincs:
         dfm_output = lambda wildcards: f"dfm_output_event_{config['runname_ids'][wildcards.runname]['dfm_res']}_{config['runname_ids'][wildcards.runname]['bathy']}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}",
         utmzone = get_utmzone,
         sfincs_obs_points = lambda wildcards: join(root_dir, dir_data, "sfincs_obs_points", config["runname_ids"][wildcards.runname]["sfincs_obs_file"]),
+        skip_coastal_forcing = get_skip_coastal_forcing,
+        skip_discharge_forcing = get_skip_discharge_forcing,
     output:
-        bzs_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.bzs"),
+        # sfincs.inp is always produced (with or without coastal forcing); sfincs.bzs only exists
+        # when coastal water levels are added, so use sfincs.inp as the rule's output to allow
+        # skip_coastal_forcing (e.g. a precip+wflow fluvial case with no coastal data).
+        inp_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.inp"),
     script:
         join( '..', "04_scripts", "model_building", "sfincs", "update_sfincs_coastal_forcing.py")
 
 rule update_dis_forcing_sfincs:
     input:
-        bzs_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.bzs"),
+        inp_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.inp"),
         wflow_output = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), # do not change!
         # wflow_dis_no_bankfull = join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"),
     params:

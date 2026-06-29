@@ -1,0 +1,41 @@
+# Somerset Levels test config — HydroMT v1 pipeline (matches the Durban/MZB current format).
+# CF0 baseline only. Runname has a _test suffix so it writes to its own folders and does not
+# overwrite older somerset runs. use_dfm=False (coastal water level from the GTSM reanalysis
+# time series), use_wflow=True (discharge coupling). Shorter event window for a tractable first
+# end-to-end run; extend start_time/end_time to the full storm once validated.
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    SomersetLevels_test:
+        tc_name: winterstorm                                # event name
+        region: somerset                                    # region folder name
+        start_time: 20140101 000000                         # test window (full storm: 20131225-20140115)
+        end_time: 20140106 000000
+        precip_forcing: ceh_gear                            # UK gridded rainfall (DataCatalog handle)
+        wind_forcing: era5_hourly                           # wind/pressure dataset
+        bathy: gebco                                        # bathymetry dataset
+        river_upa: 5                                        # min upstream area threshold [km2]
+        use_dfm: False                                      # no D-FM; coastal water level from coastal_ts
+        use_waves: False
+        skip_coastal_forcing: True                          # no GTSM coastal data on this system -> fluvial (precip+wflow) case
+        skip_discharge_forcing: True                        # discharge comes from Wflow coupling, not gridded GloFAS
+        use_wflow: True                                     # couple the Wflow hydrological model
+        use_bankfull_corr: True
+        dfm_res: '100'                                      # placeholder (D-FM not used)
+        dfm_coastal_mask: coastal_coupling_msk_SMST         # coastal coupling mask
+        dfm_obs_file: coastal_coupling_DFM_obs_points_SMST  # placeholder (D-FM not used)
+        dfm_verification_points: dfm_verif_points_SMST      # placeholder
+        tidemodel: GTSMv41opendap                           # tide model label (used in run-folder naming)
+        coastal_ts: gtsm_codec_reanalysis                   # coastal boundary conditions (GTSM reanalysis)
+        config_sfincs_base: sfincs_base_build_v1.yml        # HydroMT v1 SFINCS build config
+        config_wflow_base: wflow_base_build_v1.yml          # HydroMT v1 Wflow build config
+        sfincs_obs_file: obs_locs_sofala.geojson            # placeholder obs points (no somerset obs file yet)
+        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"  # [lon_min, lat_min, lon_max, lat_max]
+        utmzone: 30u                                        # UTM zone for SFINCS
+        # CF0 baseline only (factual)
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
