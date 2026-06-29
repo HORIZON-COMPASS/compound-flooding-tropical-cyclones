@@ -32,7 +32,7 @@ runname_ids:
         coastal_ts: gtsm_codec_reanalysis                   # coastal boundary conditions (GTSM reanalysis)
         config_sfincs_base: sfincs_base_build_v1.yml        # HydroMT v1 SFINCS build config
         config_wflow_base: wflow_base_build_v1.yml          # HydroMT v1 Wflow build config
-        sfincs_obs_file: obs_locs_sofala.geojson            # placeholder obs points (no somerset obs file yet)
+        sfincs_obs_file: obs_locs_somerset.geojson          # no somerset obs file -> script skips obs points (file absent)
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"  # [lon_min, lat_min, lon_max, lat_max]
         utmzone: 30u                                        # UTM zone for SFINCS
         # CF0 baseline only (factual)
