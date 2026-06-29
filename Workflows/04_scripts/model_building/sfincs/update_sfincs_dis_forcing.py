@@ -1,20 +1,18 @@
 # %%
+# Couple Wflow event discharge into the SFINCS model as sfincs.dis — HydroMT v1.
+# Migrated from the v0 API: hydromt_sfincs.sfincs_input.SfincsInput is gone in v2 (the sfincs.inp
+# is the `config` component now); WflowModel -> WflowSbmModel; results['netcdf'] -> output_scalar.
 from datetime import datetime as datetime
 from os.path import join
-from hydromt.log import setuplog
-from hydromt_wflow import WflowModel
-from hydromt_sfincs.sfincs_input import SfincsInput
 import pandas as pd
+from hydromt_sfincs import SfincsModel
+from hydromt_wflow import WflowSbmModel
 
 # %%
-# model and data paths/
-logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
     sfincs_model_folder   = snakemake.params.dir_run_with_forcing
     wflow_root            = snakemake.params.wflow_root_forcing
     data_cats             = snakemake.params.data_cats
-    use_bankfull_corr     = snakemake.params.use_bankfull_corr
-    wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
     wflow_base            = snakemake.params.wflow_base
 else:
     curdir              = '../../../'
@@ -22,63 +20,47 @@ else:
     tc_name             = "Idai"
     precip_forcing      = "era5_hourly_zarr"
     wind_forcing        = 'spw_IBTrACS'
-    tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel           = 'GTSMv41opendap'
     CF_rain_txt         = "0"
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
-    wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
-    wflow_base          = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
-    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
+    wflow_root          = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_base          = f"/p/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
+    sfincs_model_folder = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
     data_cats           = [
-        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
-        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
-        ]
-    use_bankfull_corr     = 1
-    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
+        join(curdir, "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling_v1___linux.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints_v1___linux.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml"),
+    ]
 
-#%%
+# %%
+# Read the SFINCS config (sfincs.inp) via the v2 config component
+sf = SfincsModel(root=sfincs_model_folder, mode="r+")
+sf.config.read()
+reftime_object = sf.config.data["tref"]
+if not isinstance(reftime_object, datetime):
+    reftime_object = datetime.strptime(str(reftime_object), "%Y%m%d %H%M%S")
 
-# Read config rile from sfincs model with coastal and meteo forcing
-inp = SfincsInput.from_file(join(sfincs_model_folder,"sfincs.inp"))
-config = inp.to_dict()
+# %%
+# Read the original wflow gauge order so the .dis columns match the sfincs source order
+mod_ini = WflowSbmModel(root=wflow_base, mode="r", config_filename="wflow_sbm.toml")
+mod_ini.geoms.read()
+q_locs = mod_ini.geoms.data["gauges_locs"]   # gauge geom from setup_gauges(basename="locs")
 
-# Write dis file to sfincs event model folder
-reftime_object = config["tref"]
-
-# Read the original wflow gauge order to match that of sfincs
-mod_ini = WflowModel(root=join(wflow_base), mode="r+", config_fn=join(wflow_base, "wflow_sbm.toml"))
-q_locs = mod_ini.geoms["gauges_locs"]
-
-if use_bankfull_corr:
-    # Read wflow qbankfull corrected discharge
-    df = pd.read_csv(wflow_dis_no_bankfull)
-    df.set_index('time', inplace=True)
-    df.columns.name = "Q_gauges_locs"
-    df.index = pd.to_datetime(df.index)
-else:
-    # Read model output (without removing bankfull discharge)
-    mod = WflowModel(
-        root=join(wflow_root, 'events'),
-        data_libs=data_cats,
-        mode="r",
-        logger=logger,
-    )
-    mod.read()
-    df = mod.results['netcdf']['Q'].to_pandas()
-
+# Read the wflow event discharge output (v1: results['netcdf'] -> output_scalar)
+mod = WflowSbmModel(root=join(wflow_root, 'events'), data_libs=data_cats, mode="r")
+mod.read()
+df = mod.output_scalar.data['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
-df = df[q_locs['index'].astype(str).values] # adjust gauge order to match the gauge location in the sfincs.src file
-df.to_csv(
-    join(sfincs_model_folder, "sfincs.dis"),
-    sep=" ",
-    header=False,
-)
 
-config.update({"disfile": "sfincs.dis"})
-config.update({"srcfile": "sfincs.src"})
-inp = SfincsInput.from_dict(config)
-inp.write(inp_fn=join(sfincs_model_folder, "sfincs.inp"))
+# Order columns to match the sfincs source points, write the .dis file
+df = df[q_locs['index'].astype(str).values]
+df.to_csv(join(sfincs_model_folder, "sfincs.dis"), sep=" ", header=False)
 
+# %%
+# Point the SFINCS config at the discharge + source files and write it back
+sf.config.set("disfile", "sfincs.dis")
+sf.config.set("srcfile", "sfincs.src")
+sf.config.write()
 # %%
