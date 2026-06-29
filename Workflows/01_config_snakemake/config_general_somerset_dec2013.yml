@@ -1,0 +1,40 @@
+# Somerset December-2013 compound test on HydroMT v1 — the real event window, fully local data:
+#   coastal = GTSM-ERA5 10-min archive (gtsm_codec_reanalysis_10min_v3, covers 2013)
+#   precip  = local CEH-GEAR-1hr-v2 (ceh_gear_compass, Dec 2013)
+#   + Wflow discharge coupling + SFINCS. CF0. Short 3-day window for a quick run.
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    SomersetLevels_dec:
+        tc_name: winterstorm
+        region: somerset
+        start_time: 20131220 000000
+        end_time: 20131223 000000                           # 3-day Dec-2013 window
+        precip_forcing: ceh_gear_compass                    # local CEH-GEAR-1hr-v2 (Dec 2013)
+        meteo_forcing: era5_daily                           # wflow temp/PET (warmup spans 2012-2013)
+        wind_forcing: no_wind
+        bathy: gebco
+        river_upa: 5
+        use_dfm: False
+        use_waves: False
+        use_wflow: True
+        use_bankfull_corr: False
+        skip_coastal_forcing: False                         # coastal ON (GTSM archive)
+        skip_discharge_forcing: True                        # discharge from Wflow coupling
+        dfm_res: '100'
+        dfm_coastal_mask: coastal_coupling_msk_SMST
+        dfm_obs_file: coastal_coupling_DFM_obs_points_SMST
+        dfm_verification_points: dfm_verif_points_SMST
+        tidemodel: GTSMv41opendap
+        coastal_ts: gtsm_codec_reanalysis_10min_v3          # local GTSM-ERA5 10-min archive (covers 2013)
+        config_sfincs_base: sfincs_base_build_v1.yml
+        config_wflow_base: wflow_base_build_v1.yml
+        sfincs_obs_file: obs_locs_somerset.geojson
+        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"
+        utmzone: 30u
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]

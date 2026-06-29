@@ -2052,6 +2052,26 @@ gtsm_codec_reanalysis:
     source_url: https://doi.org/10.24381/cds.8c59054f
     source_version: v1
   uri: 11209169-003-up2030/data_gtsm/combi/reanalysis_10min_v1.zarr
+gtsm_codec_reanalysis_10min_v3:
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  data_type: GeoDataset
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    category: ocean
+    crs: 4326
+    notes: GTSM-ERA5 10-min water-level reanalysis archive (1950-present; covers Somerset 2013/14).
+      {year}/{month} are time-resolved by hydromt.
+    source_version: v3
+  uri: archivedprojects/11210221-gtsm-reanalysis/GTSM-ERA5-E_dataset/waterlevel/reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
 gtsm_codec_reanalysis_hourly_v3:
   data_adapter:
     rename:
