@@ -14,7 +14,8 @@ runname_ids:
         region: somerset                                    # region folder name
         start_time: 20140101 000000                         # test window (full storm: 20131225-20140115)
         end_time: 20140106 000000
-        precip_forcing: ceh_gear                            # UK gridded rainfall (DataCatalog handle)
+        precip_forcing: ceh_gear                            # UK gridded rainfall (precip-only)
+        meteo_forcing: era5_daily                           # temp/PET source for wflow (ceh_gear has no temp/PET)
         wind_forcing: era5_hourly                           # wind/pressure dataset
         bathy: gebco                                        # bathymetry dataset
         river_upa: 5                                        # min upstream area threshold [km2]
