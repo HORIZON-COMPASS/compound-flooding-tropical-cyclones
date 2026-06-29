@@ -1,0 +1,34 @@
+# Durban quick end-to-end test — CF0 only, 3-hour window (~3 hourly output steps) for a fast
+# beginning-to-end SFINCS precip-only run on HydroMT v1. Separate runname (Durban2022_qt) so it
+# does not overwrite the full Durban2022 runs.
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+runname_ids:
+    Durban2022_qt:
+        tc_name: Durban_April2022
+        region: durban
+        start_time: 20220410 000000                      # full event window (reverted from 3h quick test)
+        end_time: 20220413 000000
+        precip_forcing: era5_hourly
+        wind_forcing: no_wind
+        bathy: gebco2024_MZB
+        river_upa: 30
+        use_dfm: False
+        use_wflow: False
+        skip_coastal_forcing: True
+        skip_discharge_forcing: True
+        config_sfincs_base: sfincs_base_build_v1.yml
+        sfincs_obs_file: obs_locs_durban.geojson
+        bbox_sfincs: "[30.659688,-29.978273,31.076825,-29.740075]"
+        dfm_coastal_mask: coastal_coupling_msk_MZB
+        utmzone: 36s
+        CF_value_rain: [0]                               # CF0 (factual) only
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
+        tidemodel: GTSMv41opendap
+        coastal_ts: gtsm_codec_reanalysis_hourly_v3
+        dfm_res: '450'
+        continent: Africa
+        country: South_Africa

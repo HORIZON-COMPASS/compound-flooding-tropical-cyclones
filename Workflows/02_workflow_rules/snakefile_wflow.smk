@@ -153,6 +153,7 @@ rule run_wflow_warmup:
         # Julia with the wflow1 env (Wflow 1.0.2). Uses the juliaup default Julia (1.11.3, which
         # matches the wflow1 manifest); the old `+1.9` channel is not installed here.
         """
+        export PATH="$HOME/.juliaup/bin:$PATH"
         {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
 
@@ -166,10 +167,11 @@ rule run_wflow_event:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
     params:
         exe = join(root_dir, dir_models, "00_executables", "wflow0.8.1", "wflow_cli", "bin", "wflow_cli.exe"),
-        julia_env_fn = "~/.julia/environments/v1.9",
+        julia_env_fn = "~/.julia/environments/wflow1",  # Wflow.jl 1.0.2 (v1); v1.9 env has v0.8
     shell:
         """
-        {params.exe} {input.toml} || julia +1.9 --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
+        export PATH="$HOME/.juliaup/bin:$PATH"
+        {params.exe} {input.toml} || julia --threads 4 --project={params.julia_env_fn} -e "using Wflow; Wflow.run()" "{input.toml}"
         """
 
 # # remove bankfull discharge 
