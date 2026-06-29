@@ -59,8 +59,8 @@ steps:
       river_only: True
 
   - setup_config_output_timeseries:
-      mapname: wflow_gauges_locs
-      toml_output: netcdf
+      mapname: gauges_locs                       # v1 gauge map name (setup_gauges basename=locs)
+      toml_output: netcdf_scalar                 # v1 valid value -> writes output.netcdf_scalar -> output_scalar.nc
       header: ["Q"]
       param: ["river_water__volume_flow_rate"]   # was lateral.river.q_av (wflow.jl v1 name)
 

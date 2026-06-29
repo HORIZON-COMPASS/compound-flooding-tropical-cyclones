@@ -38,7 +38,7 @@ else:
 # Read the SFINCS config (sfincs.inp) via the v2 config component
 sf = SfincsModel(root=sfincs_model_folder, mode="r+")
 sf.config.read()
-reftime_object = sf.config.data["tref"]
+reftime_object = sf.config.get("tref")   # v2: config.data is not subscriptable; use .get()
 if not isinstance(reftime_object, datetime):
     reftime_object = datetime.strptime(str(reftime_object), "%Y%m%d %H%M%S")
 
@@ -55,7 +55,7 @@ df = mod.output_scalar.data['Q'].to_pandas()
 df.index = (df.index - reftime_object).total_seconds()
 
 # Order columns to match the sfincs source points, write the .dis file
-df = df[q_locs['index'].astype(str).values]
+df = df[q_locs['fid'].astype(str).values]   # v1 gauge id column is 'fid' (was 'index'); matches output_scalar Q columns
 df.to_csv(join(sfincs_model_folder, "sfincs.dis"), sep=" ", header=False)
 
 # %%

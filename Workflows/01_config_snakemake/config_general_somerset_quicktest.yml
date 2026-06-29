@@ -1,0 +1,33 @@
+# Somerset quick end-to-end test — precip-only SFINCS (no wflow), CF0, 3-hour window
+# (~3 hourly output steps) on HydroMT v1. Mirrors the Durban quick test to validate the
+# Somerset SFINCS chain fast. Separate runname (SomersetLevels_qt) so nothing is overwritten.
+# Uses era5_hourly precip for a clean hourly window (the full somerset case uses ceh_gear).
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+runname_ids:
+    SomersetLevels_qt:
+        tc_name: winterstorm
+        region: somerset
+        start_time: 20140102 000000                      # 3-hour window for a quick test
+        end_time: 20140102 030000
+        precip_forcing: era5_hourly
+        wind_forcing: no_wind
+        bathy: gebco
+        river_upa: 5
+        use_dfm: False
+        use_wflow: False
+        skip_coastal_forcing: True
+        skip_discharge_forcing: True
+        config_sfincs_base: sfincs_base_build_v1.yml
+        sfincs_obs_file: obs_locs_somerset.geojson        # absent -> obs points skipped
+        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"
+        dfm_coastal_mask: coastal_coupling_msk_SMST
+        utmzone: 30u
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]
+        tidemodel: GTSMv41opendap
+        coastal_ts: gtsm_codec_reanalysis
+        dfm_res: '100'
