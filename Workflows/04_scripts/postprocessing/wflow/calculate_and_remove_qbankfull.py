@@ -9,7 +9,6 @@ from datetime import datetime as datetime
 from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
-from pyextremes import EVA
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -47,6 +46,8 @@ if not use_bankfull_corr:
     df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_qbankfull.csv"))
 
 else:
+    from pyextremes import EVA
+    
     # check whether the bankfull calculations have already been done
     wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
