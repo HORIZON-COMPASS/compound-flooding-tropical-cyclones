@@ -10,7 +10,7 @@
 
 export HDF5_USE_FILE_LOCKING=FALSE
 module load pixi
-ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones"
+ROOT="/home/azureuser/cloudfiles/code/Users/eloise.matthews/hydromt_v1_somerset"
 cd "${ROOT}"
 eval "$(pixi shell-hook -e compass-v1)"
 cd Workflows/02_workflow_rules

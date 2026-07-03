@@ -1,27 +1,27 @@
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-snake-sfincs/etc/conda/deactivate.d/gdal-deactivate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-snake-sfincs/etc/conda/deactivate.d/geotiff-deactivate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-snake-sfincs/etc/conda/deactivate.d/libglib_deactivate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-snake-sfincs/etc/conda/deactivate.d/libxml2_deactivate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-snake-sfincs/etc/conda/deactivate.d/proj4-deactivate.sh"
-export PATH="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/bin:/opt/apps/pixi:/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-sfincs/bin:/u/morenodu/.pixi/bin:/u/morenodu/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/u/morenodu/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/u/morenodu/.vscode-server/cli/servers/Stable-560a9dba96f961efea7b1612916f89e5d5d4d679/server/bin/remote-cli:/u/morenodu/.pixi/bin:/u/morenodu/.juliaup/bin:/u/morenodu/.local/bin:/u/morenodu/.pixi/bin:/opt/apps/miniconda/py312_24.7.1-0/condabin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/u/morenodu/.vscode-server/extensions/ms-python.debugpy-2025.18.0-linux-x64/bundled/scripts/noConfigScripts"
-export CONDA_PREFIX="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat"
-export PIXI_EXE="/opt/apps/pixi/pixi"
-export PIXI_PROJECT_NAME="COMPASS_UC3"
-export PIXI_PROJECT_MANIFEST="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/pixi.toml"
-export PIXI_PROJECT_ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones"
-export PIXI_PROJECT_VERSION="0.1.0"
-export PIXI_IN_SHELL="1"
-export CONDA_DEFAULT_ENV="COMPASS_UC3:compass-fiat"
-export PIXI_ENVIRONMENT_NAME="compass-fiat"
-export PIXI_ENVIRONMENT_PLATFORMS="win-64,linux-64"
-export PIXI_PROMPT="(COMPASS_UC3:compass-fiat) "
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/gdal-activate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/geotiff-activate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/libarrow_activate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/libglib_activate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/libxml2_activate.sh"
-. "/u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/etc/conda/activate.d/proj4-activate.sh"
-source /u/morenodu/git_repos/compound-flooding-tropical-cyclones/.pixi/envs/compass-fiat/share/bash-completion/completions/*
+. /anaconda/envs/azureml_py38/etc/conda/deactivate.d/libglib_deactivate.sh
+. /anaconda/envs/azureml_py38/etc/conda/deactivate.d/tesseract_deactivate.sh
+export PATH="/mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/bin:/home/azureuser/.pixi/bin:/home/azureuser/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/home/azureuser/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/home/azureuser/.vscode-server/bin/0958016b2af9f09bb4257e0df4a95e2f90590f9f/bin/remote-cli:/home/azureuser/bin:/home/azureuser/.local/bin:/home/azureuser/.pixi/bin:/home/azureuser/.vscode-server/bin/0958016b2af9f09bb4257e0df4a95e2f90590f9f/bin:/home/azureuser/bin:/home/azureuser/.local/bin:/home/azureuser/.juliaup/bin:/home/azureuser/.pixi/bin:/anaconda/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/azureuser/.dotnet/tools:/home/azureuser/.dotnet/tools:/home/azureuser/.vscode-server/extensions/ms-python.debugpy-2026.6.0-linux-x64/bundled/scripts/noConfigScripts"
+export CONDA_SHLVL=7
+export CONDA_ENV_SHLVL_7_CONDA_PREFIX=/anaconda/envs/azureml_py38
+export CONDA_PREFIX=/mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1
+export PIXI_PROJECT_VERSION=0.1.0
+export PIXI_IN_SHELL=1
+export PIXI_PROJECT_ROOT=/mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset
+export PIXI_PROJECT_NAME=COMPASS_UC3
+export PIXI_PROJECT_MANIFEST=/mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/pixi.toml
+export PIXI_EXE=/home/azureuser/.pixi/bin/pixi
+export CONDA_ENV_SHLVL_7_CONDA_DEFAULT_ENV=azureml_py38
+export CONDA_DEFAULT_ENV=COMPASS_UC3:compass-v1
+export PIXI_ENVIRONMENT_NAME=compass-v1
+export PIXI_ENVIRONMENT_PLATFORMS='win-64,linux-64'
+export PIXI_PROMPT='(COMPASS_UC3:compass-v1) '
+. /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/etc/conda/activate.d/gdal-activate.sh
+. /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/etc/conda/activate.d/libarrow_activate.sh
+. /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/etc/conda/activate.d/libglib_activate.sh
+. /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/etc/conda/activate.d/libxml2-split_activate.sh
+. /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/etc/conda/activate.d/proj4-activate.sh
+export PYTHONNOUSERSITE=1
+source /mnt/batch/tasks/shared/LS_root/mounts/clusters/ci-5-ukcrcompassflood/code/Users/eloise.matthews/hydromt_v1_somerset/.pixi/envs/compass-v1/share/bash-completion/completions/*
 
 # shellcheck shell=bash
 pixi() {
@@ -39,4 +39,4 @@ pixi() {
     return 0
 }
 
-export PS1="(COMPASS_UC3:compass-fiat) ${PS1:-}"
+export PS1="(COMPASS_UC3:compass-v1) ${PS1:-}"

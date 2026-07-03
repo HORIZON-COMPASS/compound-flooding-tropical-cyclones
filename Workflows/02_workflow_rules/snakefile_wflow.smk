@@ -55,8 +55,8 @@ def get_datacatalog(wildcards):
         ]
     elif os.name == "posix": #Running on linux
         return [
-            join(curdir, '..', "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
-            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "data_catalog_MO_azure_UKCP.yml"),
+            # join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
         ]
 
 runname_ids = list(config['runname_ids'].keys())

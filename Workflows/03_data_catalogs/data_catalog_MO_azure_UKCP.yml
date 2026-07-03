@@ -1,0 +1,749 @@
+# meta: # need different roots as moved some data to local
+#   root: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket
+# aster: # not in auto
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/dem.tif
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#   provider: azure
+#   data_type: RasterDataset
+#   driver:
+#     name: rasterio
+#     options:
+#       chunks:
+#         x: 6000
+#         y: 6000
+#   metadata:
+#     crs: 4326
+#     category: topography
+#     source_url: https://www.earthdata.nasa.gov/news/blog/global-digital-elevation-models-now-available-aster-gdem-srtm
+#     nodata: -9999
+basin_atlas_level12_v10:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/hydro_atlas/basin_atlas_v10.gpkg
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: hydrography
+    notes: renaming and units might require some revision
+    paper_doi: 10.1038/s41597-019-0300-6
+    paper_ref: Linke et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://www.hydrosheds.org/hydroatlas
+    source_version: 10
+ceh_gear_hourly:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/reprojected_GEAR/CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 250
+        longitude: 240
+        time: 30
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    category: meteo
+    history: null
+    paper_doi: null
+    paper_ref: null
+    source_license: null
+    source_url: null
+    source_version: CEH_GEAR
+  data_adapter:
+    unit_mult:
+      precip: 1
+    rename:
+      rainfall_amount: precip
+ceh_gear_hourly_counterfactual:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t1_{year}{month:02d}.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 250
+        longitude: 240
+        time: 30
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    category: meteo
+    history: null
+    paper_doi: null
+    paper_ref: null
+    source_license: null
+    source_url: null
+    source_version: CEH_GEAR
+  data_adapter:
+    unit_mult:
+      precip: 1
+    rename:
+      rainfall_amount: precip
+ceh_gear_hourly_future:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t3_{year}{month:02d}.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 250
+        longitude: 240
+        time: 30
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    category: meteo
+    history: null
+    paper_doi: null
+    paper_ref: null
+    source_license: null
+    source_url: null
+    source_version: CEH_GEAR
+  data_adapter:
+    unit_mult:
+      precip: 1
+    rename:
+      rainfall_amount: precip
+coastal_coupling_msk_SMST: # not in auto
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/coastal_bnd_Somerset_5mMSL_polygon.geojson
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: geography
+    notes: Polygon outlining isobath of approx. 5 mMSL based on EMODnet 2018 (rel.
+      to MSL) data
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+era5_daily:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/era5_{year}*_daily.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 250
+        longitude: 240
+        time: 30
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    crs: 4326
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store; resampled by Deltares to
+      daily frequency
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.bd0915c6
+    source_version: ERA5 daily data on pressure levels
+  data_adapter:
+    unit_mult:
+      kin: 0.000277778
+      kout: 0.000277778
+      press_msl: 0.01
+      ssr: 0.000277778
+    unit_add:
+      temp: -273.15
+      temp_dew: -273.15
+      temp_max: -273.15
+      temp_min: -273.15
+    rename:
+      d2m: temp_dew
+      msl: press_msl
+      ssrd: kin
+      t2m: temp
+      tisr: kout
+      tmax: temp_max
+      tmin: temp_min
+      tp: precip
+      u10: wind10_u
+      v10: wind10_v
+era5_hourly:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/era5_hourly_zarr.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks: auto
+  metadata:
+    crs: 4326
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://doi.org/10.24381/cds.adbb2d47
+    source_version: ERA5 hourly data on single levels from 1940 to present
+  data_adapter:
+    unit_mult:
+      kin: 0.000277778
+      kout: 0.000277778
+      press_msl: 0.01
+      ssr: 0.000277778
+    unit_add:
+      temp: -273.15
+      temp_dew: -273.15
+    rename:
+      d2m: temp_dew
+      msl: press_msl
+      ssrd: kin
+      t2m: temp
+      tisr: kout
+      tp: precip
+      u10: wind10_u
+      v10: wind10_v
+era5_orography:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/era5_orography_2018.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        latitude: 120
+        longitude: 125
+  metadata:
+    crs: 4326
+    category: meteo
+    notes: Extracted from Copernicus Climate Data Store
+    paper_doi: 10.1002/qj.3803
+    paper_ref: Hersbach et al. (2019)
+    source_license: https://cds.climate.copernicus.eu/cdsapp/#!/terms/licence-to-use-copernicus-products
+    source_url: https://apps.ecmwf.int/codes/grib/param-db?id=129
+  data_adapter:
+    unit_mult:
+      elevtn: 0.10197162129779283
+    rename:
+      z: elevtn
+fabdem:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/topography/fabdem/fabdem.tif
+  data_adapter:
+    rename:
+      fabdem: elevtn
+  driver:
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+    name: rasterio
+  metadata:
+    crs: 4326
+    category: topography
+    paper_doi: CC BY-NC-SA 4.0
+    paper_ref: Hawker et al. (2022)
+    source_license: CC BY-NC-SA 4.0
+    source_url: https://data.bris.ac.uk/data/dataset/25wfy0f9ukoge2gs7a5mqpq2j7
+    source_version: '1.0'
+  data_type: RasterDataset
+gcn250:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/gcn250/*.tif
+  # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/landuse/gcn250/GCN250_*.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    category: soil
+    paper_doi: 10.1038/s41597-019-0155-x
+    paper_ref: Jaafar et al. (2019)
+    source_license: CC BY 4.0
+    source_url: https://doi.org/10.6084/m9.figshare.7756202.v1
+    source_version: v1
+    nodata: 255
+  data_adapter:
+    rename:
+      GCN250_ARCI: cn_dry
+      GCN250_ARCII: cn_avg
+      GCN250_ARCIII: cn_wet
+gebco:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/bathymetry/gebco/gebco.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  data_adapter:
+    rename:
+      gebco: elevtn
+  driver:
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+    name: rasterio
+  metadata:
+    crs: 4326
+    category: topography
+    paper_doi: 10.5285/a29c5465-b138-234d-e053-6c86abc040b9
+    paper_ref: Weatherall et al (2020)
+    source_license: Gridded Bathymetry Data
+    source_url: https://www.bodc.ac.uk/data/open_download/gebco/gebco_2020/geotiff/
+    source_version: 2020
+    unit: m+MSL
+gswo:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/gswo/occur.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 4000
+        y: 4000
+  metadata:
+    category: hydrography
+    paper_doi: 10.1038/nature20584
+    paper_ref: Pekel et al. (2016)
+    source_url: https://global-surface-water.appspot.com/download
+    source_version: v1_1_2019
+    nodata: 255
+gtsm_codec_reanalysis_hourly_v3: # change to 10min version in a bit
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/gtsm_codec_reanalysis_hourly_v3.nc
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataset
+  metadata:
+    crs: 4326
+    category: ocean
+    source_version: v3
+hydro_lakes:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/lakes/lake-db.fgb
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: surface water
+    notes: HydroLAKES.v10_extract
+    source_author: Arjen Haag
+    source_version: '1.0'
+  data_adapter:
+    rename:
+      Depth_avg: Depth_avg
+      Dis_avg: Dis_avg
+      Hylak_id: waterbody_id
+      Lake_area: Area_avg
+      Pour_lat: yout
+      Pour_long: xout
+      Vol_total: Vol_avg
+hydro_reservoirs:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/reservoirs/reservoir-db.fgb
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: surface water
+    notes: GRanD.v1.1_HydroLAKES.v10_JRC.2016
+    source_author: Alessia Matano
+    source_version: '1.0'
+    nodata: -99
+  data_adapter:
+    unit_mult:
+      Area_avg: 1000000.0
+      Capacity_max: 1000000.0
+      Capacity_min: 1000000.0
+      Capacity_norm: 1000000.0
+      Vol_avg: 1000000.0
+    rename:
+      Depth_avg: Depth_avg
+      Dis_avg: Dis_avg
+      G_CAP_MAX: Capacity_max
+      G_CAP_MIN: Capacity_min
+      G_CAP_REP: Capacity_norm
+      G_DAM_HGT_: Dam_height
+      Grand_id: waterbody_id
+      Hylak_id: Hylak_id
+      Lake_area: Area_avg
+      Pour_lat: yout
+      Pour_long: xout
+      Vol_total: Vol_avg
+ksathorfrac_global:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt_staging/ksathorfrac_thesis_awadali/*.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 2400
+        y: 2400
+  metadata:
+    crs: 4326
+    category: soil
+    paper_doi: 10.22541/essoar.174016989.99005964/v1
+    resolution: 225 metres
+    resolution_real: 7.5 arc seconds
+    source_author: Awad Mohammed Ali - Deltares
+    source_info: KsatHorFrac estimated with Random Forest (RF) and Boosted Regression
+      Trees (BRT) methods. These ML-based transfer functions are trained on soilgrids
+      and validated with CAMELS-UK dataset in the UK. With these global maps, we expect
+      good results in regions with geology and soil types similar to the UK. For other
+      regions, this has still to be tested. see 10.22541/essoar.174016989.99005964/v1
+    source_version: '1.0'
+# levees: # add in later
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/defs/levees_z/AIMS_levees_fixed.shp
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#   provider: azure
+#   data_type: GeoDataFrame
+#   driver:
+#     name: pyogrio
+#   metadata:
+#     crs: 4326
+merit_hydro:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/topography/merit_hydro/*.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 6000
+        y: 6000
+  metadata:
+    crs: 4326
+    category: topography
+    paper_doi: 10.1029/2019WR024873
+    paper_ref: Yamazaki et al. (2019)
+    source_license: CC-BY-NC 4.0 or ODbL 1.0
+    source_url: http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro
+    source_version: '1.0'
+  data_adapter:
+    rename:
+      bas: basins
+      dir: flwdir
+      elv: elevtn
+      slp: lndslp
+      sto: strord
+      upa: uparea
+      upg: upgrid
+      wth: rivwth
+merit_hydro_index:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/topography/merit_hydro/basin_index.fgb
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: topography
+    paper_doi: 10.5194/hess-25-5287-2021
+    paper_ref: Eilander et al. (2021)
+    source_license: CC-BY-NC 4.0
+modis_lai:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/landuse/modis/MODIS_MCD15A3H_LAI/LAI_*.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+      concat: true
+    name: rasterio
+  metadata:
+    crs: 4326
+    category: landuse
+    notes: this dataset has been extracted from GEE ('MODIS/006/MCD15A3H') for the
+      period '2003-01-01', '2017-12-31'
+    paper_doi: 10.5067/MODIS/MCD15A3H.006
+    paper_ref: Myneni et al (2015)
+    source_license: https://lpdaac.usgs.gov/data/data-citation-and-policies/
+    source_url: https://lpdaac.usgs.gov/products/mcd15a3hv006/
+    source_version: MCD15A3H V006
+  data_adapter:
+    unit_mult:
+      LAI: 0.1
+ocean_shape:
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/ocean_polygon/water_polygons.shp
+  # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
+  # uri_resolver:
+  #   name: azure_blob
+  #   options:
+  #     sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: hydrography
+osm_coastlines:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/geography/osm/osm_coastlines-db.fgb
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    crs: 4326
+    category: geography
+    notes: OpenStreetMap coastlines water polygons, last updated 2020-01-09T05:29
+    source_author: OpenStreetMap
+    source_license: ODbL
+    source_url: https://osmdata.openstreetmap.de/data/coastlines.html
+    source_version: 1.0
+  data_adapter:
+    rename:
+      fid: coastline_id
+# pop_exposure: # add in later
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/exposure/Population_100m_2014.tif
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#   provider: azure
+#   data_type: RasterDataset
+#   driver:
+#     name: rasterio
+#     options:
+#       chunks:
+#         x: 3600
+#         y: 3600
+#   metadata:
+#     crs: 4326
+#     category: pop_exposure
+rivers_lin2019_v1:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/rivers_lin2019/rivers_ge30m.fgb
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: GeoDataFrame
+  driver:
+    name: pyogrio
+  metadata:
+    category: hydrography
+    paper_doi: 10.5281/zenodo.3552776
+    paper_ref: Lin et al. (2019)
+    source_license: CC-BY-NC 4.0
+    source_url: https://zenodo.org/record/3552776#.YVbOrppByUk
+    source_version: 1
+  data_adapter:
+    rename:
+      Q2: qbankfull
+      width_m: rivwth
+soilgrids:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/soil/soilgrids_v1.0/*_250m_ll.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_adapter:
+    rename:
+      BLDFIE_M_sl1_250m_ll: bd_sl1
+      BLDFIE_M_sl2_250m_ll: bd_sl2
+      BLDFIE_M_sl3_250m_ll: bd_sl3
+      BLDFIE_M_sl4_250m_ll: bd_sl4
+      BLDFIE_M_sl5_250m_ll: bd_sl5
+      BLDFIE_M_sl6_250m_ll: bd_sl6
+      BLDFIE_M_sl7_250m_ll: bd_sl7
+      CLYPPT_M_sl1_250m_ll: clyppt_sl1
+      CLYPPT_M_sl2_250m_ll: clyppt_sl2
+      CLYPPT_M_sl3_250m_ll: clyppt_sl3
+      CLYPPT_M_sl4_250m_ll: clyppt_sl4
+      CLYPPT_M_sl5_250m_ll: clyppt_sl5
+      CLYPPT_M_sl6_250m_ll: clyppt_sl6
+      CLYPPT_M_sl7_250m_ll: clyppt_sl7
+      ORCDRC_M_sl1_250m_ll: oc_sl1
+      ORCDRC_M_sl2_250m_ll: oc_sl2
+      ORCDRC_M_sl3_250m_ll: oc_sl3
+      ORCDRC_M_sl4_250m_ll: oc_sl4
+      ORCDRC_M_sl5_250m_ll: oc_sl5
+      ORCDRC_M_sl6_250m_ll: oc_sl6
+      ORCDRC_M_sl7_250m_ll: oc_sl7
+      PHIHOX_M_sl1_250m_ll: ph_sl1
+      PHIHOX_M_sl2_250m_ll: ph_sl2
+      PHIHOX_M_sl3_250m_ll: ph_sl3
+      PHIHOX_M_sl4_250m_ll: ph_sl4
+      PHIHOX_M_sl5_250m_ll: ph_sl5
+      PHIHOX_M_sl6_250m_ll: ph_sl6
+      PHIHOX_M_sl7_250m_ll: ph_sl7
+      SLTPPT_M_sl1_250m_ll: sltppt_sl1
+      SLTPPT_M_sl2_250m_ll: sltppt_sl2
+      SLTPPT_M_sl3_250m_ll: sltppt_sl3
+      SLTPPT_M_sl4_250m_ll: sltppt_sl4
+      SLTPPT_M_sl5_250m_ll: sltppt_sl5
+      SLTPPT_M_sl6_250m_ll: sltppt_sl6
+      SLTPPT_M_sl7_250m_ll: sltppt_sl7
+      SNDPPT_M_sl1_250m_ll: sndppt_sl1
+      SNDPPT_M_sl2_250m_ll: sndppt_sl2
+      SNDPPT_M_sl3_250m_ll: sndppt_sl3
+      SNDPPT_M_sl4_250m_ll: sndppt_sl4
+      SNDPPT_M_sl5_250m_ll: sndppt_sl5
+      SNDPPT_M_sl6_250m_ll: sndppt_sl6
+      SNDPPT_M_sl7_250m_ll: sndppt_sl7
+      SoilThickness_250m_ll: soilthickness
+      TAXOUSDA_250m_ll: tax_usda
+  driver:
+    options:
+      chunks:
+        x: 2400
+        y: 2400
+    name: rasterio
+  metadata:
+    crs: 4326
+    category: soil
+    notes: 'soilthickness is based on 1) soilgrids (global) and 2) dataset for Eurasia/
+      / (ESDAC, 2004; Panagos et al., 2012): ESDAC, 2004. The european soil database/
+      / distribution version 2.0, european commission and the European soil bureau/n/
+      / network.  esdac.jrc.ec.europa.eu, accessed: 2017-11-17.  Panagos, P., Van/
+      / Liedekerke, M., Jones, A., Montanarella, L., 2012. European soil data centre:/
+      / Response to european policy support  and public data requirements. Land Use/
+      / Policy 29 (2), 329/xE2/u20AC/u201C338. /n'
+    paper_doi: 10.1371/journal.pone.0169748
+    paper_ref: Hengl et al. (2017)
+    source_license: ODbL
+    source_url: https://www.isric.org/explore/soilgrids/faq-soilgrids-2017
+    source_version: '2017'
+  data_type: RasterDataset
+vito:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/landuse/vito/ProbaV_LC100_epoch2015_global_v2.0.2_discrete-classification_EPSG-4326.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    crs: 4326
+    category: landuse
+    paper_doi: 10.5281/zenodo.3939038
+    paper_ref: Buchhorn et al (2020)
+    source_url: https://land.copernicus.eu/global/products/lc
+    source_version: v2.0.2
+vito_mapping:
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/vito_mapping.csv
+  # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/11210471-001-compass/01_Data/lulc/vito_mapping.csv
+  # uri_resolver:
+  #   name: azure_blob
+  #   options:
+  #     sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  provider: azure
+  data_type: DataFrame
+  driver:
+    name: pandas
+    options:
+      index_col: 0
+# walls: # add in later
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/defs/walls_z/walls_z.shp
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#   provider: azure
+#   data_type: GeoDataFrame
+#   driver:
+#     name: pyogrio
+#   metadata:
+#     crs: 4326

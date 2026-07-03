@@ -1,8 +1,8 @@
 # Somerset December-2013 compound test on HydroMT v1 — the real event window, fully local data:
 #   coastal = GTSM-ERA5 10-min archive (gtsm_codec_reanalysis_10min_v3, covers 2013)
-#   precip  = local CEH-GEAR-1hr-v2 (ceh_gear_compass, Dec 2013)
+#   precip  = local CEH-GEAR-1hr-v2 (ceh_gear_hourly, Dec 2013)
 #   + Wflow discharge coupling + SFINCS. CF0. Short 3-day window for a quick run.
-root_dir:    11210471-001-compass
+root_dir:    /home/azureuser/cloudfiles/code/Users/eloise.matthews
 dir_data:    01_Data
 dir_models:  02_Models
 dir_runs:    03_Runs
@@ -13,7 +13,7 @@ runname_ids:
         region: somerset
         start_time: 20131220 000000
         end_time: 20131223 000000                           # 3-day Dec-2013 window
-        precip_forcing: ceh_gear_compass                    # local CEH-GEAR-1hr-v2 (Dec 2013)
+        precip_forcing: ceh_gear_hourly                     # local CEH-GEAR-1hr-v2 (Dec 2013)
         meteo_forcing: era5_daily                           # wflow temp/PET (warmup spans 2012-2013)
         wind_forcing: no_wind
         bathy: gebco
