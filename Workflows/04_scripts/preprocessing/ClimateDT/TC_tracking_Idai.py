@@ -296,12 +296,20 @@ def track_distance(track, ref_points):
 best_match_per_realization = {}
 
 for r, data in tracks_all_realizations.items():
-    all_tracks = data["valid"] + data["invalid"]
+    if len(data["valid"]) != 0:
+        tracks = data["valid"]
+        print(f"  Using {len(tracks)} valid tracks for realization {r}")
+    elif len(data["valid"]) == 0 and len(data["invalid"]) != 0:
+        tracks = data["invalid"]
+        print(f"  Using {len(tracks)} invalid tracks for realization {r}")
+    else:
+        print(f"  No tracks found for realization {r}")
+        continue
     
     best_match = None
     best_distance = np.inf
 
-    for tid, track in enumerate(all_tracks):
+    for tid, track in enumerate(tracks):
 
         dist = track_distance(track, tc_idai_points_TC)
 
