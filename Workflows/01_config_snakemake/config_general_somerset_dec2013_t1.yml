@@ -1,0 +1,39 @@
+# Somerset December-2013 compound event — T1 counterfactual (past/pre-industrial rainfall).
+# T1 removes the anthropogenic climate change signal: lower rainfall intensity than factual.
+# Full pipeline: Wflow + SFINCS. Use alongside _factual and _t3 configs for attribution comparison.
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+runname_ids:
+    SomersetLevels_dec_t1:
+        tc_name: winterstorm
+        region: somerset
+        start_time: 20131203 000000
+        end_time: 20140228 230000
+        precip_forcing: ceh_t1_compass                      # T1 counterfactual (past climate)
+        meteo_forcing: era5_daily
+        wind_forcing: no_wind
+        bathy: gebco
+        river_upa: 5
+        use_dfm: False
+        use_waves: False
+        use_wflow: True
+        use_bankfull_corr: False
+        skip_coastal_forcing: False
+        skip_discharge_forcing: True
+        dfm_res: '100'
+        dfm_coastal_mask: coastal_coupling_msk_SMST
+        dfm_obs_file: coastal_coupling_DFM_obs_points_SMST
+        dfm_verification_points: dfm_verif_points_SMST
+        tidemodel: GTSMv41opendap
+        coastal_ts: gtsm_codec_reanalysis_10min_v3
+        config_sfincs_base: sfincs_base_build_v1.yml
+        config_wflow_base: wflow_base_build_v1.yml
+        sfincs_obs_file: obs_locs_somerset.geojson
+        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"
+        utmzone: 30u
+        CF_value_rain: [0]
+        CF_value_wind: [0]
+        CF_value_SLR: [0]

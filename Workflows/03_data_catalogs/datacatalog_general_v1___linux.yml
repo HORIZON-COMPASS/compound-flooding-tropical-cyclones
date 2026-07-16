@@ -120,6 +120,54 @@ ceh_gear_compass:
     source_version: CEH-GEAR-1hr-v2
     unit: mm
   uri: 11210471-001-compass/01_Data/ceh-gear/CEH-GEAR-1hr-v2_*.nc
+ceh_t1_compass:
+  data_adapter:
+    rename:
+      rainfall_amount: precip
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 300
+        longitude: 200
+        time: 48
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    category: meteo
+    crs: 4326
+    notes: CEH-GEAR 1hr v2 counterfactual variant T1 (COMPASS local copy);
+      rainfall_amount in kg m-2 (= mm) renamed to precip.
+    source_url: https://catalogue.ceh.ac.uk/documents/fc9423d6-3d54-467f-bb2b-fc7357a3941f
+    source_version: CEH-GEAR-1hr-v2
+    unit: mm
+  uri: 11210471-001-compass/01_Data/ceh-gear/ceh_t1_*.nc
+ceh_t3_compass:
+  data_adapter:
+    rename:
+      rainfall_amount: precip
+  data_type: RasterDataset
+  driver:
+    name: raster_xarray
+    options:
+      chunks:
+        latitude: 300
+        longitude: 200
+        time: 48
+      combine: by_coords
+      decode_times: true
+      parallel: true
+  metadata:
+    category: meteo
+    crs: 4326
+    notes: CEH-GEAR 1hr v2 counterfactual variant T3 (COMPASS local copy);
+      rainfall_amount in kg m-2 (= mm) renamed to precip.
+    source_url: https://catalogue.ceh.ac.uk/documents/fc9423d6-3d54-467f-bb2b-fc7357a3941f
+    source_version: CEH-GEAR-1hr-v2
+    unit: mm
+  uri: 11210471-001-compass/01_Data/ceh-gear/ceh_t3_*.nc
 ceh_gear:
   data_adapter:
     rename:
