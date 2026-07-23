@@ -5,7 +5,7 @@ dir_data:    01_Data                                        # Folder where some 
 dir_models:  02_Models                                      # Folder where the base models will be saved (without dynamic forcing data)
 dir_runs:    03_Runs                                        # Folder where model runs will be saved (with forcing)
 runname_ids: 
-    Idai:                                                   # name of the model run
+    Idai_ClimateDT_hist:                                                   # name of the model run
         # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
         region: sofala                                      # name of the region will be used in naming folders 
@@ -14,8 +14,8 @@ runname_ids:
         # For all model setups
         start_time: 20190309 000000                         # start time of the simulation (YYYYMMDD HHMMSS)
         end_time: 20190325 000000                           # end time of the simulation (YYYYMMDD HHMMSS)
-        precip_forcing: era5_hourly_zarr                    # forcing dataset for the rainfall data (matching to the DataCatalog handle)
-        wind_forcing: era5_hourly_spw_IBTrACS               # wind and pressure dataset (used for coastal surge modelling)
+        precip_forcing: ClimateDT_hist                      # forcing dataset for the rainfall data (matching to the DataCatalog handle)
+        wind_forcing: ClimateDT_hist                        # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period to align with total simulation period              
 
