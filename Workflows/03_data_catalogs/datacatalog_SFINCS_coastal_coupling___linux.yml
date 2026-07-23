@@ -98,36 +98,6 @@ dfm_verif_points_SMST:
     source_url: none
     source_version: 1.0
   crs: 4326
-dfm_output_event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/honduras/Eta/dfm/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta/output/event_450_gebco2024_HND_GTSMv41opendap_spw_IBTrACS_CF0_Eta_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_spw_IBTrACS_CF0_Idai:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
 obs_points_sofala:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/obs_locs.geojson
@@ -140,20 +110,14 @@ obs_points_sofala:
     source_url: none
     source_version: 1.0
   crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves:
+SNAPWAVE_Idai_setup:
   data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  path: 11210471-001-compass/code/SFINCS/SFINCS_Idai_Wave_Tim/max_wave_setup_TL_v03.nc
   driver: netcdf
-  driver_kwargs:
-    chunks:
-      station: 10
-      time: -1
   rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
+    transects: station
+    obs_id: station_name
   meta:
-    category: ocean
-    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
-      & Tim Leijnse
-  crs: 4326
-  
+    notes: SNAPWAVE simulation using ERA5 significant wave height
+    source_author: Fernaldi Gradiyanto & Tim Leijnse
+  crs: 32736

@@ -86,18 +86,6 @@ dfm_verif_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
 coastal_coupling_msk_SMST:
   data_type: GeoDataFrame
   path: 11210471-001-compass/01_Data/Coastal_boundary/coastal_bnd_Somerset_5mMSL_polygon.geojson
@@ -122,3 +110,26 @@ dfm_verif_points_MZB:
     source_url: none
     source_version: 1.0
   crs: 4326
+obs_points_sofala:
+  data_type: GeoDataFrame
+  path: 11210471-001-compass/01_Data/obs_locs.geojson
+  driver: vector
+  meta:
+    category: geography
+    notes: Output points for the Sofala model
+    source_author: Natalia Aleksandrova
+    source_license: na
+    source_url: none
+    source_version: 1.0
+  crs: 4326
+SNAPWAVE_Idai_setup:
+  data_type: GeoDataset
+  path: 11210471-001-compass/code/SFINCS/SFINCS_Idai_Wave_Tim/max_wave_setup_TL_v03.nc
+  driver: netcdf
+  rename:
+    transects: station
+    obs_id: station_name
+  meta:
+    notes: SNAPWAVE simulation using ERA5 significant wave height
+    source_author: Fernaldi Gradiyanto & Tim Leijnse
+  crs: 32736
