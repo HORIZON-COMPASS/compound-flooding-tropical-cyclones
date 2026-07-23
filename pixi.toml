@@ -94,13 +94,47 @@ snakemake-executor-plugin-cluster-generic = "*"
 zarr = "==2.18.3"
 cartopy = ">=0.24.0,<0.25"
 
+[feature.socio.dependencies]
+openpyxl = "*"
+tqdm = "*"
+rasterstats = "*"
+hydromt = ">=0.10.0, <1.0.0"
+contextily = "*"
+
+[feature.socio_pypi.pypi-dependencies]
+deep-translator = ">=1.11.4, <2"
+requests = "*" 
+aiohttp = "*"
+dfm-tools = "*"
+
+[feature.scipy_geo.dependencies]
+pandas = "*"
+xarray = "*"
+geopandas = "*"
+rioxarray = "*"
+scipy = "*"
+
+[feature.climatedt_pypi.pypi-dependencies]
+polytope-client = "*"
+earthkit = "==0.11.2"
+lxml = "*"
+conflator = "*"
+
+[feature.climatedt.pypi-dependencies]
+eccodes = ">=2.41.0,<3"
+pyvis = ">=0.3.2,<0.4"
+
 [environments]
 default = { features = ["py311"]}
-compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
-compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
-compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
-compass-fiat = { features = ["py311", "fiat"]}
-compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
-compass-cht = { features = ["py311","cht","cht_env"]}
-compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
-compass-dataviz = { features = ["py311", "dataviz"]}
+# compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
+# compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
+# compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
+# compass-fiat = { features = ["py311", "fiat"]}
+# compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
+# compass-cht = { features = ["py311","cht","cht_env"]}
+# compass-wflow = { features = ["py311", "sfincs","wflow", "wflow_extra", "snake"]}
+# compass-dataviz = { features = ["py311", "dataviz"]}
+compass-socio = { features = ["py311", "dataviz", "scipy_geo", "socio_pypi", "socio"]}
+compass-climatedt = { features = ["py311", "climatedt", "climatedt_pypi", "scipy_geo", "dataviz"]}
+
+
