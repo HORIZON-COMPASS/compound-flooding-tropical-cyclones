@@ -34,6 +34,14 @@ ffmpeg = ">=7.1.1,<9"
 [feature.py311.dependencies]
 python = "3.11.*"
 
+[feature.test.dependencies]
+python = "3.11.*"
+pytest = ">=8.0"
+pytest-cov = ">=5.0"
+pandas = ">=2.0"
+numpy = ">=1.26"
+toml = ">=0.10"
+
 [feature.dataviz.dependencies]
 ffmpeg = ">=7.0.0" 
 cartopy = ">=0.20.0" 
@@ -152,7 +160,8 @@ PYTHONNOUSERSITE = "1"
 
 [environments]
 default = { features = ["py311"]}
-compass-v1 = { features = ["v1", "dataviz", "snake", "wflow_extra"], no-default-feature = true }
+test = { features = ["test"], no-default-feature = true }
+compass-v1 = { features = ["v1", "dataviz", "snake", "wflow_extra", "test"], no-default-feature = true }
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
 compass-snake-dfm = { features = ["py311", "snake_dfm", "dfm", "cht"]}

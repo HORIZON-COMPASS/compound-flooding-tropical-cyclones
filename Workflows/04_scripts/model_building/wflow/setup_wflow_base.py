@@ -5,13 +5,17 @@
 # into the steps at runtime before mod.build(steps=...).
 from os.path import join, exists
 import os
+import sys
+from pathlib import Path
 import yaml
 import geopandas as gpd
 from hydromt_wflow import WflowSbmModel
 
-
-def find_steps(steps, key):
-    return [list(s.values())[0] for s in steps if list(s.keys())[0] == key]
+# Ensure the shared scripts root is importable regardless of Snakemake CWD
+_scripts_dir = str(Path(__file__).parents[2])
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
+from utils.pipeline_utils import find_steps, find_step_index
 
 
 # %%
@@ -68,10 +72,7 @@ gauges_step = {
         "basename": "locs",
     }
 }
-insert_at = next(
-    (i for i, s in enumerate(steps) if list(s.keys())[0] == "setup_config_output_timeseries"),
-    len(steps),
-)
+insert_at = find_step_index(steps, "setup_config_output_timeseries", default=len(steps))
 steps.insert(insert_at, gauges_step)
 
 # %%
