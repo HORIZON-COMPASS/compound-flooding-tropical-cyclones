@@ -6,20 +6,23 @@
 from os.path import join, exists
 import os
 import ast
+import sys
+from pathlib import Path
 import yaml
 import geopandas as gpd
 import hydromt
 from hydromt_sfincs import SfincsModel
 
+# Ensure the shared scripts root is importable regardless of Snakemake CWD
+_scripts_dir = str(Path(__file__).parents[2])
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
+from utils.pipeline_utils import find_steps
+
 
 def get_local_vector_data(file, bbox, data_cat):
     dataCat = hydromt.data_catalog.DataCatalog(data_cat)
     return dataCat.get_geodataframe(data_like=file, bbox=bbox)
-
-
-def find_steps(steps, key):
-    """Return the argument dicts of every step whose single key == `key` (component.method)."""
-    return [list(s.values())[0] for s in steps if list(s.keys())[0] == key]
 
 
 # %%

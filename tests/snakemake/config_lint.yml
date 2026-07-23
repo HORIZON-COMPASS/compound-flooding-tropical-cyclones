@@ -1,0 +1,53 @@
+# Minimal dummy config for snakemake --lint.
+# Values are placeholders — lint parses and resolves DAG structure; it does not
+# check whether paths exist or run any rules. Every key accessed at module level
+# across all .smk files must be present here.
+
+root_dir:    11210471-001-compass
+dir_data:    01_Data
+dir_models:  02_Models
+dir_runs:    03_Runs
+
+# CF_data.smk top-level accesses
+precip_name:    era5_hourly
+tc_name:        TestEvent
+CF_value_rain:  [0]
+CF_value_wind:  [0]
+
+runname_ids:
+    TestEvent:
+        # CF_data.smk
+        forcing:          era5_hourly
+        region:           somerset
+        file_spw:         tc_test.spw
+        # wflow.smk / sfincs_build.smk
+        tc_name:          TestEvent
+        start_time:       "20131201 000000"
+        end_time:         "20140301 000000"
+        bbox_sfincs:      "[34.6, -19.7, 34.7, -19.6]"
+        config_wflow_base: wflow_base_build_v1.yml
+        config_sfincs_base: sfincs_base_build_v1.yml
+        river_upa:        30
+        bathy:            gebco2024_MZB
+        dfm_coastal_mask: coastal_coupling_msk_MZB
+        dfm_res:          "450"
+        # sfincs_update.smk / forcing scripts
+        precip_forcing:   era5_hourly
+        meteo_forcing:    era5_hourly
+        tidemodel:        GTSMv41opendap
+        wind_forcing:     no_wind
+        coastal_ts:       gtsm_codec_reanalysis_hourly_v3
+        # fiat.smk
+        country:          Mozambique
+        continent:        Africa
+        config_fiat_base: fiat_base_build.yml
+        CF_value_rain:    [0]
+        CF_value_SLR:     [0]
+        CF_value_wind:    [0]
+        CF_landuse:       [0]
+        # misc
+        utmzone:          36s
+        use_dfm:          false
+        skip_coastal_forcing: false
+        skip_discharge_forcing: true
+        sfincs_obs_points: ""

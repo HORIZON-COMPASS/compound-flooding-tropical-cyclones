@@ -193,6 +193,8 @@ cython_debug/
 
 .claude/
 
+00_execution_script_examples
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
