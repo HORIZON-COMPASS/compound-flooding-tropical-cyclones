@@ -211,17 +211,17 @@ datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
 
 #%%
 # Load all the different DFM outputs with different SLR and wind CFs
-dfm_run = 'dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1_waves'
+# dfm_run = 'dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1_waves'
 ds_dfm_SLR_0cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves')
-ds_dfm_SLR_5cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0_waves')
-ds_dfm_SLR_10cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0_waves')
-ds_dfm_SLR_15cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0_waves')
-ds_dfm_SLR_0cm_wind_1 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1_waves')
-ds_dfm_SLR_0cm_wind_5 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5_waves')
-ds_dfm_SLR_0cm_wind_10 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10_waves')
-ds_dfm_SLR_5cm_wind_1 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1_waves')
-ds_dfm_SLR_10cm_wind_5 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5_waves')
-ds_dfm_SLR_15cm_wind_10 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10_waves')
+# ds_dfm_SLR_5cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0_waves')
+# ds_dfm_SLR_10cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0_waves')
+# ds_dfm_SLR_15cm_wind_0 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0_waves')
+# ds_dfm_SLR_0cm_wind_1 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1_waves')
+# ds_dfm_SLR_0cm_wind_5 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5_waves')
+# ds_dfm_SLR_0cm_wind_10 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10_waves')
+# ds_dfm_SLR_5cm_wind_1 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1_waves')
+# ds_dfm_SLR_10cm_wind_5 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5_waves')
+# ds_dfm_SLR_15cm_wind_10 = datacatalog.get_geodataframe('dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10_waves')
 
 #%%
 ########################################################################################################

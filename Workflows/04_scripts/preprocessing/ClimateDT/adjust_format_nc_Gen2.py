@@ -21,7 +21,7 @@ os.makedirs(out_dir, exist_ok=True)
 varnames = ['avg_tprate', 'msl','10u','10v', '2t', 'avg_sdswrf', 'tisr']
 experiments = ["cont","hist","Tplus2.0K"]
 areaname = 'Idai_full'
-bbox = [32, -23, 36, -17]
+# bbox = [32, -23, 36, -17]
 bbox = [30, -22, 45, -12]     # Idai
 # incl madagascar piece [30, -22, 45, -14.5] 
 renamevars = {'avg_tprate':'tp', 'msl':'msl','10u':'10u','10v':'10v', '2t':'2t', 'avg_sdswrf':'ssrd', 'avg_tdswrf':'tisr', 'avg_snswrf': 'ssr'}
@@ -36,8 +36,8 @@ units = {'10u':'m/s', '10v':'m/s', 'msl':'Pa', '2t':'K', 'ssrd':'W/m2', 'tisr':'
 realizations = ['1', '2', '3', '4', '5']
 
 #%%
-for experiment in experiments[1:2]:
-    for varname in varnames[1:4]:
+for experiment in experiments[:]:
+    for varname in varnames[3:4]:
         for realization in realizations:
     
             files = glob(os.path.join(data_dir, f'climateDT_{varname}_{experiment}_{areaname}_*_r{realization}.nc'))
