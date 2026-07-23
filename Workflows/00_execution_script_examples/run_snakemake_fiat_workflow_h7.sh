@@ -1,17 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=compass-fiat                                              # Job name
+#SBATCH --job-name=compass-fiat                                                # Job name
 #SBATCH --output=00_execution_script_examples/logs/slurm/slurm_fiat_%j.log     # Standard output and error log
 #SBATCH --time=0-2:00:00                                                       # Job duration (hh:mm:ss)
-#SBATCH --partition 4vcpu
-#SBATCH --exclusive 
+#SBATCH --partition 4vcpu                                                      # Partition to use (e.g., 1vcpu, 4vcpu, test, etc.)
+#SBATCH --exclusive                                                            # Request exclusive access to the node
 #SBATCH --ntasks=1                                                             # Number of tasks (analyses) to run
+
+# Make sure to adapt configuration for the specific use case (e.g., Idai, Freddy, Kenneth, etc.) by modifying the config_general_*.yml file accordingly.
+export PIXI_CACHE_DIR=/tmp/$USER/pixi-cache
+mkdir -p "$PIXI_CACHE_DIR"
 
 module load pixi
 
-#Going to the folder where git checkout is
-#ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
-#ROOT="/u/bovensch/git_repos/COMPASS"
-ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/"
+# Going to the folder where git checkout is
+# ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
+# ROOT="/u/bovensch/git_repos/COMPASS"
+# ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/"
+ROOT="/u/vertegaa/git_repos/COMPASS"
 cd "${ROOT}"
 
 # Installing pixi environment
