@@ -1,5 +1,98 @@
 meta:
   root: /p/
+ClimateDT_hist:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/Gen2/climateDT_*_hist_r*_Sofala_20190301_to_20190329.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    msl: press_msl  # Pa
+    tp: precip # mm/h
+    10u: wind10_u # m/s
+    10v: wind10_v # m/s
+    ssrd: kin # W/m2
+    2t: temp # K
+    tisr: kout # W/m2
+  unit_mult:
+    # kin: 0.000277778    # to convert from J/m2 to W/m2
+    # kout: 0.000277778   # to convert from J/m2 to W/m2
+    # ssr: 0.000277778    # to convert from J/m2 to W/m2
+    press_msl: 0.01 # convert to hPa for wflow
+  unit_add:
+    temp: -273.15
+  meta:
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth and preprocessed
+  crs: 4326
+ClimateDT_Tplus2K:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/Gen2/climateDT_*_Tplus2.0K_Sofala_20190301_to_20190329.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 10
+      longitude: 10
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    msl: press_msl  # Pa
+    tp: precip # mm/h
+    10u: wind10_u # m/s
+    10v: wind10_v # m/s
+    ssrd: kin # W/m2
+    2t: temp # K
+    tisr: kout # W/m2
+  unit_mult:
+    # kin: 0.000277778    # to convert from J/m2 to W/m2
+    # kout: 0.000277778   # to convert from J/m2 to W/m2
+    # ssr: 0.000277778    # to convert from J/m2 to W/m2
+    press_msl: 0.01 # convert to hPa for wflow
+  unit_add:
+    temp: -273.15
+  meta:
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth and preprocessed
+  crs: 4326
+ClimateDT_cont:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/Gen2/climateDT_*_cont_Sofala_20190301_to_20190329.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 10
+      longitude: 10
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    msl: press_msl  # Pa
+    tp: precip # mm/h
+    10u: wind10_u # m/s
+    10v: wind10_v # m/s
+    ssrd: kin # W/m2
+    2t: temp # K
+    tisr: kout # W/m2
+  unit_mult:
+    # kin: 0.000277778    # to convert from J/m2 to W/m2
+    # kout: 0.000277778   # to convert from J/m2 to W/m2
+    # ssr: 0.000277778    # to convert from J/m2 to W/m2
+    press_msl: 0.01 # convert to hPa for wflow
+  unit_add:
+    temp: -273.15
+  meta:
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth and preprocessed
+  crs: 4326
 dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1:
   data_type: GeoDataset
   path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1/output/settings_0000_his.nc
