@@ -44,6 +44,7 @@ Workflows/04_scripts/model_building/fiat/cache
 DelftFIAT/scripts/cache
 
 # Distribution / packaging
+.vscode/settings.json
 .Python
 build/
 develop-eggs/
