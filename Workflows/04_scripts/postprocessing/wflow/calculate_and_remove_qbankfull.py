@@ -28,8 +28,8 @@ else:
     wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     curdir           = '../../../'
     data_cats        = [
-        join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
-        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
+        join(curdir, "03_data_catalogs", "datacatalog_general.yml"),
+        join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
@@ -39,7 +39,7 @@ else:
 wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
 if not os.path.exists(wflow_bankfull):
-   # Read ('r') the Wflow 30yr warm-up results 
+   # Read ('r') the Wflow 30yr warm-up results
     mod = WflowSbmModel(
         root=join(wflow_root_30yr, "warmup"),
         data_libs=data_cats,
@@ -103,7 +103,7 @@ else:
 # %% ---------------------------------------------------------------
 # Check removing bankfull discharge from factual event simulations
 # ------------------------------------------------------------------
-# Read ('r') the Wflow 30yr warm-up results 
+# Read ('r') the Wflow 30yr warm-up results
 mod_F = WflowSbmModel(
     root=join(wflow_root_event, "events"),
     data_libs=data_cats,
