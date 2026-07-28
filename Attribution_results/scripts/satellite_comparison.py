@@ -2,14 +2,14 @@
 # This code is based on that of DirkEilander. (2022). DirkEilander/compound_flood_modelling: revised paper (Version v2). Zenodo. https://doi.org/10.5281/zenodo.7274465
 
 # Load modules
+import glob
 import os
+from os.path import join
+
+import hydromt
 import numpy as np
-import matplotlib.pyplot as plt
 import xarray as xr
 from hydromt_sfincs import SfincsModel, utils
-from os.path import join, isfile, basename, isdir, dirname
-import glob
-import hydromt
 
 #%%
 # Set variable of the runs
@@ -76,7 +76,6 @@ for date in dates:
                 da_obs0.close()
                 rm_fns.append(fn)
                 print('out of bounds')
-                pass
             
         if len(da_lst) > 0:
             print(f'concatenate {len(da_lst)} files')
@@ -134,7 +133,7 @@ msk = da_hmax.where(gswo_mask <= 5)
 
 
 for event, dates in event.items():
-    da_sfx = xr.open_dataarray(join(root, f'sfincs_map.nc'))
+    da_sfx = xr.open_dataarray(join(root, 'sfincs_map.nc'))
     # da_cmf = xr.open_dataarray(join(mdir1, f'flddph_{event}_v2.nc'))
 
     da_obs_lst = []
@@ -166,7 +165,7 @@ for event, dates in event.items():
    
 
 dfs = []
-for date in sfx_skill.keys():
+for date in sfx_skill:
     df1 = pd.concat([cmf_skill[date],sfx_skill[date]],axis=1,keys=['CMF', 'SFINCS']).swaplevel(0,1,axis=1).sort_index(axis=0).sort_index(axis=1)
     dfs.append(df1)
 df1 = pd.concat(dfs, axis=1, keys=sfx_skill.keys())
