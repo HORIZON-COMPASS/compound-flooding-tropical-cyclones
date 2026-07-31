@@ -70,7 +70,7 @@ DEP_SUBGRID = RUN_DIR / "subgrid" / "dep_subgrid.tif"
 # Where to write.  The nested layout is what plot_sfincs_timeseries.py globs
 # for (<scenario>/sfincs/event_tp_*/plot_output), so pointing that script's
 # BASE at OUT_ROOT.parent and using this scenario name works unchanged.
-OUT_ROOT = Path("/tmp/claude-1028338/-u-morenodu-git-repos-compound-flooding-tropical-cyclones/aa293cb4-537d-4389-8c07-df74afd2ac1d/scratchpad/shared_factual")
+OUT_ROOT = Path("/p/11210471-001-compass/03_Runs/somerset/shared_factual")
 OUT_DIR  = OUT_ROOT / "sfincs" / "event_tp_shared" / "plot_output"
 
 # Permanent-water mask.  None to skip.
@@ -89,7 +89,7 @@ HMIN = 0.05   # m — passed to downscale_floodmap
 REPROJ_ALLTIME = "bilinear"
 REPROJ_PERIOD  = "nearest"
 
-LIMIT_STEPS = 3      # int to process only the first N steps (testing)
+LIMIT_STEPS = None   # int to process only the first N steps (testing)
 
 
 # ── HELPERS ───────────────────────────────────────────────────────────────────
