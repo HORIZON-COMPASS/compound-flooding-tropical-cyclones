@@ -116,6 +116,7 @@ rule add_forcing_coastal_meteo_sfincs:
         start_time           = get_starttime, 
         end_time             = get_endtime,
         use_dfm              = get_use_dfm,
+        use_waves            = get_use_waves,
         coastal_ts           = get_coastal_ts,
         dfm_output           = lambda wildcards: f"dfm_output_event_{config['runname_ids'][wildcards.runname]['dfm_res']}_{config['runname_ids'][wildcards.runname]['bathy']}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}",
         utmzone              = get_utmzone,
