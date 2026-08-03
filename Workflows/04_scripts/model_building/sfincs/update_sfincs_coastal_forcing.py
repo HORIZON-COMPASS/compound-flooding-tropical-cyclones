@@ -1,12 +1,10 @@
-# %%
+# %%  Use pixi environment compass-snake-sfincs
 from datetime import datetime as datetime
-from os.path import basename, join, exists
-from hydromt.config import configread
+from os.path import exists
 from hydromt.log import setuplog
 from hydromt import data_catalog
 import shutil
 import os
-from os.path import join
 from hydromt_sfincs import SfincsModel
 
 # %%
@@ -22,6 +20,7 @@ if "snakemake" in locals():
     end_time                = snakemake.params.end_time
     precip_forcing          = snakemake.wildcards.precip_forcing
     use_dfm                 = snakemake.params.use_dfm
+    use_waves               = snakemake.params.use_waves
     coastal_ts              = snakemake.params.coastal_ts
     dfm_output              = snakemake.params.dfm_output
     utmzone                 = snakemake.params.utmzone
@@ -48,8 +47,8 @@ else:
     CF_rain_txt             = f"{CF_rain}"
     CF_SLR_txt              = "0"
     CF_wind_txt             = "0"
-    start_time = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
-    end_time = "20190430 000000"     
+    start_time              = "20190425 000000"                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
+    end_time                = "20190430 000000"     
     use_dfm                 = False
     use_waves               = False
     # dfm_model               = f"event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_test"
@@ -60,7 +59,7 @@ else:
     coastal_ts = "gtsm_codec_reanalysis_hourly_v3"                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
 
 
-#%%
+#%% Open data catalog
 data_cat = data_catalog.DataCatalog(data_cats)
 
 if not exists(sfincs_mod_with_forcing):
