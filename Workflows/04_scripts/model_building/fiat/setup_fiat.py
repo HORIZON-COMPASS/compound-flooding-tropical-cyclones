@@ -9,6 +9,12 @@ import shutil
 from hydromt.config import configread
 import rasterio
 import toml
+import tempfile
+import pandas as pd
+import logging
+from pathlib import Path
+import platform
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 #%%
 if "snakemake" in locals():
@@ -24,10 +30,10 @@ else:
     country                 = "Mozambique"
     region                  = "sofala"
     tc_name                 = "Idai"
-    wind_forcing            = 'spw_IBTrACS'
+    wind_forcing            = 'era5_hourly_spw_IBTrACS'
     precip_forcing          = 'era5_hourly_zarr'
     bathy                   = "gebco2024_MZB"
-    tidemodel               = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    tidemodel               = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     data_catalog            = '../../../03_data_catalogs/datacatalog_fiat.yml'  
     CF_rain_txt             = "0"
     CF_SLR_txt              = "0"
@@ -63,45 +69,89 @@ config["setup_hazard"]["map_fn"]              = floodmap
 config["setup_hazard"]["crs"]                 = crs_flood
 
 #%%
-# Set up model
-# if model_folder.exists():
-#     shutil.rmtree(model_folder)
-fiat_model = FiatModel(root=model_folder, mode="w+", data_libs=[data_catalog], logger=logger)
+# Define temporary directory for building the model
+with tempfile.TemporaryDirectory() as tmpdir:
+    print("temporary directory for building the model")
+    tmp_model_base = Path(tmpdir)
+    tmp_model_folder = tmp_model_base / "fiat_model_temp"
 
-#%%
-# Build and write the model
-fiat_model.build(region={"geom": region}, opt=config, write=True)
+    # Set up the model in temp directory
+    print("Build the model")
+    fiat_model = FiatModel(root=tmp_model_folder, mode="w+", data_libs=[data_catalog], logger=logger)
+    fiat_model.build(region={"geom": region}, opt=config, write=True)
 
+    # Try .fgb first, fallback to .gpkg
+    fgb_path = tmp_model_folder / "exposure" / "buildings.fgb"
+    gpkg_path = tmp_model_folder / "exposure" / "buildings.gpkg"
 
-#%%
-# Debugging to allow running the model from a different location than python environment is stored
-# Load the buildings.gpkg file
-gdf = gpd.read_file(f"{model_folder}/exposure/buildings.gpkg")
+    if fgb_path.exists():
+        pass
+    elif gpkg_path.exists():
+        gdf = gpd.read_file(gpkg_path)
+        gdf.to_file(f"{tmp_model_folder}/exposure/buildings.fgb", driver="FlatGeobuf")
+    else:
+        raise FileNotFoundError("Neither buildings.fgb nor buildings.gpkg found in the exposure folder.")
 
-# Save as .fgb
-gdf.to_file(f"{model_folder}/exposure/buildings.fgb", driver="FlatGeobuf")
+    # Update settings.toml
+    toml_file = tmp_model_folder / "settings.toml"
+    with open(toml_file, "r") as f:
+        settings = toml.load(f)
+    settings["exposure"]["geom"]["file1"] = "exposure/buildings.fgb"
+    settings["output"]["geom"]["name1"] = "spatial.fgb"
+    with open(toml_file, "w") as f:
+        toml.dump(settings, f)
 
-#%%
-# Refer to the new file in the settings.toml
-with open(f"{model_folder}/settings.toml", "r") as f:
-    settings = toml.load(f)
+    # Ensure Linux readability for CSV
+    vuln_csv = tmp_model_folder / "vulnerability/vulnerability_curves.csv"
+    with open(vuln_csv, 'r') as f:
+        lines = f.read().splitlines()
+    with open(vuln_csv, 'w') as f:
+        for line in lines:
+            f.write(line + '\n')
 
-# Update the file path
-settings["exposure"]["geom"]["file1"] = "exposure/buildings.fgb"
-settings["output"]["geom"]["name1"] = "spatial.fgb"
+    # Remove unrealistic building for sofala
+    if "sofala" in str(model_folder).lower():
+        # Load buildings and exposure
+        gdf_buildings = gpd.read_file(tmp_model_folder / "exposure" / "buildings.fgb")
+        df_exposure = pd.read_csv(tmp_model_folder / "exposure" / "exposure.csv")
 
-# Save the updated TOML file
-with open(f"{model_folder}/settings.toml", "w") as f:
-    toml.dump(settings, f)
+        # ---- Identify the "unrealistic" building ----
+        gdf_utm = gdf.to_crs(epsg=32736)
 
-# %%
-# Ensure readability on linux
-with open(f'{model_folder}/vulnerability/vulnerability_curves.csv', 'r') as f:
-    lines = f.read().splitlines()
+        # Add area column in square meters
+        gdf_utm["area_m2"] = gdf_utm.geometry.area
+        big_buildings = gdf_utm[gdf_utm['area_m2'] > 1000000]
 
-with open(f'{model_folder}/vulnerability/vulnerability_curves.csv', 'w') as f:
-    for line in lines:
-        f.write(line + '\n')
+        if not big_buildings.empty:
+            print("Deleting these buildings:")
+            print(big_buildings)
 
+            exclude_ids = big_buildings["object_id"].tolist()
+            gdf_buildings = gdf_buildings[~gdf_buildings["object_id"].isin(exclude_ids)].copy()
+
+            # Drop corresponding entries from df_exposure
+            df_exposure = df_exposure[~df_exposure['object_id'].isin(big_buildings['object_id'])]
+
+            # Save the cleaned files
+            gdf_buildings.to_file(os.path.join(tmp_model_folder,"exposure","buildings.fgb"), driver="FlatGeobuf")
+            df_exposure.to_csv(os.path.join(tmp_model_folder,"exposure","exposure.csv"), index=False)
+        else:
+            print("No buildings above the area threshold were found.")
+
+    # Close all handlers attached to the logger
+    for handler in logging.root.handlers[:]:
+        handler.close()
+        logging.root.removeHandler(handler)
+
+    # Move CONTENTS of tmp_model_folder into model_folder
+    print("Move CONTENTS of tmp_model_folder into model_folder")
+    if model_folder.exists():
+        shutil.rmtree(model_folder)
+    # Create target directory if not exists
+    model_folder.parent.mkdir(parents=True, exist_ok=True)
+
+    for item in tmp_model_folder.iterdir():
+        shutil.move(str(item), str(model_folder / item.name))
+        
 #%%
 # To run the model, use the "execute_fiat_example.ipynb" script
