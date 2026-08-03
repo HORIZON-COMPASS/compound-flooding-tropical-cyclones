@@ -36,7 +36,7 @@ else:
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
     use_bankfull_corr     = 1
-    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis_no_qbankfull.csv"
+    wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis.csv"
 
 #%%
 
