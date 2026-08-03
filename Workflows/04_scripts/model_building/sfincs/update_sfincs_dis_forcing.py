@@ -1,9 +1,10 @@
-# %%
+# %% Use pixi environment compass-snake-sfincs
 from datetime import datetime as datetime
 from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
 from hydromt_sfincs.sfincs_input import SfincsInput
+from hydromt_sfincs import SfincsModel
 import pandas as pd
 
 # %%
@@ -21,21 +22,21 @@ else:
     region              = "sofala"
     tc_name             = "Idai"
     precip_forcing      = "era5_hourly_zarr"
-    wind_forcing        = 'spw_IBTrACS'
-    tidemodel           = 'GTSMv41opendap' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
+    wind_forcing        = 'era5_hourly_spw_IBTrACS'
+    tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv4.1, GTSMv4.1_opendap, tpxo80_opendap
     CF_rain_txt         = "0"
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
     wflow_root          = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     wflow_base          = f"p:/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
-    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
+    sfincs_model_folder = f"p:/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}"
     data_cats           = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"), 
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
-    use_bankfull_corr     = 1
+    use_bankfull_corr     = True
     wflow_dis_no_bankfull = f"{wflow_root}/events/run_default/wflow_dis.csv"
 
 #%%
@@ -82,3 +83,12 @@ inp = SfincsInput.from_dict(config)
 inp.write(inp_fn=join(sfincs_model_folder, "sfincs.inp"))
 
 # %%
+# Plot the updated forcing
+mod = SfincsModel(
+    root=sfincs_model_folder,
+    data_libs=data_cats,
+    mode="r",
+    logger=logger,
+)
+
+mod.plot_forcing()
