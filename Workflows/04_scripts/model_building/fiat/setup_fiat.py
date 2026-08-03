@@ -116,7 +116,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
         df_exposure = pd.read_csv(tmp_model_folder / "exposure" / "exposure.csv")
 
         # ---- Identify the "unrealistic" building ----
-        gdf_utm = gdf.to_crs(epsg=32736)
+        gdf_utm = gdf_buildings.to_crs(epsg=32736)
 
         # Add area column in square meters
         gdf_utm["area_m2"] = gdf_utm.geometry.area
@@ -152,6 +152,6 @@ with tempfile.TemporaryDirectory() as tmpdir:
 
     for item in tmp_model_folder.iterdir():
         shutil.move(str(item), str(model_folder / item.name))
-        
+
 #%%
 # To run the model, use the "execute_fiat_example.ipynb" script
