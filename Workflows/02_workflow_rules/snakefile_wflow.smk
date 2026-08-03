@@ -52,6 +52,9 @@ def get_lulc_mapping(wildcards):
 def get_use_bankfull_corr(wildcards):    
     return config["runname_ids"][wildcards.runname]["use_bankfull_corr"]
 
+def get_landuse_30yr_wflow(wildcards):    
+    return config["runname_ids"][wildcards.runname]["bankfull_corr_lulc"]
+
 # def get_dir_model_base(wildcards):
 #     print(wildcards)
 #     return join(root_dir, dir_models, config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
@@ -71,7 +74,6 @@ def get_datacatalog(wildcards):
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
 precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
-bankfull_corr = [value['use_bankfull_corr'] for key, value in config['runname_ids'].items()]
 CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
 
@@ -192,7 +194,8 @@ rule postprocess_discharge:
     params:
         use_bankfull_corr       = get_use_bankfull_corr,
         wflow_root_forcing      = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}")),
-        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF0_30yr")),
+        landuse_30yr            = get_landuse_30yr_wflow,
+        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}")),
         data_cat                = get_datacatalog,
         results                 = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}","figures")),
     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")
