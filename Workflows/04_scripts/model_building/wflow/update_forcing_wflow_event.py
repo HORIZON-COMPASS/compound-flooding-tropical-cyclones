@@ -1,4 +1,4 @@
-# %%
+# %% Use pixi environment compass-wflow
 from os.path import join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
@@ -22,7 +22,7 @@ if "snakemake" in locals():
     meteo_fn             = snakemake.params.meteo_forcing
 else:
     tc_name              = "Idai"
-    precip_forcing       = "era5_hourly"
+    precip_forcing       = "era5_hourly_zarr"
     CF_rain              = -7
     CF_rain_txt          = f"{CF_rain}"
     wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
@@ -84,5 +84,6 @@ else:
 mod.set_root(join(wflow_root_forcing, "events"), mode="w+")
 mod.update(opt=opt, write=False)
 mod.write_forcing()
+mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 # %%
