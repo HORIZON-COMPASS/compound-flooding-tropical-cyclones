@@ -18,6 +18,7 @@ runname_ids:
         wind_forcing: era5_hourly_spw_IBTrACS               # wind and pressure dataset (used for coastal surge modelling)
         bathy: 'gebco2024_MZB'                              # DataCatalog handle for the bathymetry dataset
         ext_days: '9'                                       # the nr of days used to extend the spw file beyond the IBTrACS time period to align with total simulation period              
+        river_upa: 100                                      # minimum upstream area threshold for the SFINCS and wflow [km2]
 
         # Models selections
         use_dfm: True                                       # use the coastal hydrodynamic model D-FM
