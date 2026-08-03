@@ -1,4 +1,7 @@
-#%%### Import some useful python libraries
+workflow.global_resources["io_heavy"] = 1  # Only allow 1 job at a time
+
+#%%
+### Import some useful python libraries
 import os
 from snakemake.io import Wildcards
 from os.path import join
@@ -85,9 +88,11 @@ for key, value in config['runname_ids'].items():
 # Unpack into separate wildcard lists
 region, runname_ids, precip_forcing, CF_rain, CF_landuse = zip(*run_combinations)
 
-
+# Uncomment the first "expand" line, and comment the other two, when running the first rule 'make_base_model_wflow' only, 
+# which is necessary before running the snakefile_wflow_30yr.smk once.
 rule all_wflow:
     input:
+        # expand(join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}", 'staticmaps.nc'), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv") if bankfull_corr else [], zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, bankfull_corr=bankfull_corr, CF_landuse=CF_landuse),
 
@@ -183,12 +188,11 @@ rule postprocess_discharge:
     input:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv")
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv")
     params:
-        use_bankfull_corr = get_use_bankfull_corr,
-        wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}")),
-        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF0_30yr")),
-        # join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF0_30yr", "warmup", "run_default", "output_scalar.nc"),
-        data_cat = get_datacatalog,
-        results = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}","figures")),
+        use_bankfull_corr       = get_use_bankfull_corr,
+        wflow_root_forcing      = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}")),
+        wflow_root_forcing_30yr = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF0_30yr")),
+        data_cat                = get_datacatalog,
+        results                 = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}","figures")),
     script: join(curdir, '..',  "04_scripts", "postprocessing", "wflow", "calculate_and_remove_qbankfull.py")

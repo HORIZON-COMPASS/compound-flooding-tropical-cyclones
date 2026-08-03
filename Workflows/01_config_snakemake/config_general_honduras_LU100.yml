@@ -14,7 +14,7 @@ runname_ids:
         start_time: 20201101 000000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
         end_time: 20201130 000000                          # End time of the model run in format: YYYYMMDD HHMMSS              
         precip_forcing: era5_hourly_zarr                   # DataCatalog handle for forcing dataset for the rainfall data  
-        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation   
+        wflow_meteo_forcing: era5_hourly_zarr              # forcing dataset containing temperature, in- and out-going radiation   
         wind_forcing: no_wind                              # wind and pressure dataset (used for coastal surge modelling)     
         
         # Cross-model settings
@@ -34,14 +34,15 @@ runname_ids:
         dfm_verification_points:  test                     # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes - check this  
         
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build_HND.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)    
-        use_bankfull_corr: False    
+        config_wflow_base: wflow_base_build_HND.yml        # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)    
+        use_bankfull_corr: False                           # use bankfull correction for the discharge output (True/False)
+        lulc_mapping_wflow: gdlc10m_mapping_wflow          # Factual landuse when using bankfull correction from 30 yr wflow run 
         lulc_mapping_wflow: vito_mapping_wflow  
         
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build_honduras.yml # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
         sfincs_obs_file: obs_locs_EtaIota.geojson
-        bbox_sfincs: "[-88.065,15.175,-87.63,16.0]"             # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
+        bbox_sfincs: "[-88.065,15.175,-87.63,16.0]"        # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
         utmzone: 16p                                       # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)     
         coastal_ts: gtsm_codec_reanalysis_hourly_v3        # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used   # gtsm_codec_reanalysis until 2018 only
         dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask  
