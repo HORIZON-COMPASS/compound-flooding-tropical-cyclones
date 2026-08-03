@@ -28,7 +28,7 @@ setup_mask_active3:
   reset_mask: False
 
 setup_mask_bounds:
-  btype: waterlevel            # Set waterlevel boundaries
+  btype: waterlevel             # Set waterlevel boundaries
   zmin: -10
   include_mask_buffer: 1000      
   reset_bounds: True  
@@ -41,7 +41,7 @@ setup_mask_bounds2:
   
 setup_subgrid:
   datasets_dep:
-  - elevtn: fabdem        # !TODO change to fabdem     
+  - elevtn: fabdem        
     zmin: 0.001              
   datasets_rgh:
   - lulc: vito
@@ -53,10 +53,9 @@ setup_subgrid:
   
 setup_cn_infiltration:
   cn: gcn250  
-  antecedent_moisture: dry     # TBD
+  antecedent_moisture: dry     # dry, average, wet
 
 setup_river_inflow:
-  # rivers: rivers_lin2019_v1    # inconsistent! --> gives strange source
   hydrography: merit_hydro
   buffer: 500
   river_len: 5000
