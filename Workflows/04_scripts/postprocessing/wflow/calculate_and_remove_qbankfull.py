@@ -43,7 +43,7 @@ else:
 if not use_bankfull_corr:
     print('Not using bankfull correction, skipping...')
     df = pd.DataFrame(list())
-    df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_qbankfull.csv"))
+    df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis.csv"))
 
 else:
     from pyextremes import EVA
@@ -158,7 +158,7 @@ else:
             qbankfull_gauge = qbankfull_df.loc[gauge, "return value"]
             df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge] - qbankfull_gauge
             df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
-            df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_qbankfull.csv"), index=True)
+            df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis.csv"), index=True)
 
     # %%
     # Plot the masked discharge compared to the full discharge

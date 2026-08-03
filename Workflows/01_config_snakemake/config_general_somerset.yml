@@ -33,6 +33,7 @@ runname_ids:
 
         #Wflow model user-defined settings
         config_wflow_base: wflow_base_build.yml                 # name of the wflow configuration file under 05_config_models/01_wflow 
+        use_bankfull_corr: False                             # use bankfull correction for the discharge output (True/False)
 
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  

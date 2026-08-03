@@ -37,6 +37,7 @@ runname_ids:
         #Wflow model user-defined settings
         config_wflow_base: wflow_base_build_general.yml     # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
         use_bankfull_corr: True
+        bankfull_corr_lulc: vito                            # Factual landuse when using bankfull correction from 30 yr wflow run 
         
         # SFINCS model user-defined settings
         bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
