@@ -7,14 +7,12 @@ import matplotlib.pyplot as plt
 plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
-import xarray as xr
 import pandas as pd
 import geopandas as gpd
 import shutil
 from datetime import datetime, timedelta
 import hydromt
 import ast
-import pyproj
 
 #%%
 if "snakemake" in locals():
@@ -48,7 +46,7 @@ else:
     dfm_res              = "450"
     bathy                = "gebco2024_MZB"
     tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing         = "spw_IBTrACS"
+    wind_forcing         = "era5_hourly_spw_IBTrACS"
     CF_SLR               = 0
     CF_SLR_txt           = f"{CF_SLR}"
     CF_wind              = 0
