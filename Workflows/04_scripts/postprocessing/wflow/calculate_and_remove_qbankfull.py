@@ -16,19 +16,23 @@ import pandas as pd
 # Set up wflow run variables
 logger = setuplog("update", "./hydromt.log", log_level=10)
 if "snakemake" in locals():
-    wflow_root_30yr  = snakemake.params.wflow_root_forcing_30yr
-    wflow_root_event = snakemake.params.wflow_root_forcing
-    data_cats        = snakemake.params.data_cat
-    results_dir      = snakemake.params.results
+    wflow_root_30yr   = snakemake.params.wflow_root_forcing_30yr
+    wflow_root_event  = snakemake.params.wflow_root_forcing
+    data_cats         = snakemake.params.data_cat
+    results_dir       = snakemake.params.results
     use_bankfull_corr = snakemake.params.use_bankfull_corr
+    landuse_30yr      = snakemake.params.landuse_30yr
+    precip_forcing    = snakemake.wildcards.precip_forcing
 else:
     region           = "sofala"
     TC_name          = "Idai"
     precip_forcing   = "era5_hourly_zarr"
     CF_rain          = 0
     CF_rain_txt      = "0"
-    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF0_30yr"
-    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    CF_landuse       = "vito"
+    landuse_30yr     = "vito"
+    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}"
+    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow_{CF_landuse}/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     curdir           = '../../../'
     results_dir      = join("../../../../", "Attribution_results")
     data_cats        = [
@@ -49,18 +53,19 @@ else:
     from pyextremes import EVA
     
     # check whether the bankfull calculations have already been done
-    wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
+    wflow_path_30yr  = join(wflow_root_30yr, f"wflow_{landuse_30yr}", f"event_precip_{precip_forcing}_CF0_30yr")
+    wflow_bankfull = f"{wflow_path_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
     os.makedirs(results_dir, exist_ok=True)
 
     if not os.path.exists(wflow_bankfull):
-        if not os.path.isdir(wflow_root_30yr):
+        if not os.path.isdir(wflow_path_30yr):
             print("Error: Bankfull calculation does not exist.")
 
         print('Performing bankfull calculations...')
         # Read ('r') the Wflow 30yr warm-up results 
         mod = WflowModel(
-            root=join(wflow_root_30yr, "warmup"),
+            root=join(wflow_path_30yr, "warmup"),
             data_libs=data_cats,
             mode="r",
             logger=logger,
@@ -199,7 +204,7 @@ else:
 
     # Read the model
     mod = WflowModel(
-        root=join(wflow_root_30yr, "warmup"),
+        root=join(wflow_path_30yr, "warmup"),
         data_libs=data_cats,
         mode="r",
         logger=logger,
