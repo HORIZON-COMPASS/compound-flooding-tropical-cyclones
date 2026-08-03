@@ -1,11 +1,12 @@
-# %%
+# %% Use pixi environment compass-snake-sfincs or compass-wflow
 from os.path import join, exists
-import geopandas as gpd
 from hydromt.config import configread
 import ast
 from hydromt.log import setuplog
 import hydromt
 from hydromt_sfincs import SfincsModel
+import os
+
 #%%
 def get_local_vector_data(file, bbox, data_cat):
     dataCat = hydromt.data_catalog.DataCatalog(data_cat)
@@ -26,18 +27,15 @@ if "snakemake" in locals():
     landuse          = snakemake.wildcards.CF_landuse
     lulc_mapping     = snakemake.params.lulc_mapping_sfincs
 else:
-    model_dir = r'p:\11210471-001-compass\02_Models\somerset\SomersetLevels\sfincs'
-    config_file = r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\05_config_models\02_sfincs\sfincs_base_build.yml'
+    model_dir = 'p:/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs'
+    config_file = r'../../05_config_models/02_sfincs/sfincs_base_build.yml'
     data_cats = [
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_general.yml',
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_obspoints.yml',
-        r'c:\CODE\COMPASS\compound-flooding-tropical-cyclones\Workflows\03_data_catalogs\datacatalog_SFINCS_coastal_coupling.yml',
+        r'../../03_data_catalogs/datacatalog_general.yml',
+        r'../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        r'../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         ]
-    #bbox =[-3.2913,50.9637,-2.5063,51.3508]
     bbox =[-3.16169,51.06687,-2.867119,51.258058]
-    #bbox =[36.7,-18.35,37.41,-17.64]
     bathy = 'gebco'
-    #bathy = 'emodnet_bathy_E4_2018_msl'
     dfm_coastal_mask = 'coastal_coupling_msk_SMST'
     river_upa = 30
     landuse = 'vito'
