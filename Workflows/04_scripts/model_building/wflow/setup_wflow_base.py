@@ -59,7 +59,6 @@ opt['setup_gauges'] = {
 
 opt['setup_rivers']['river_upa'] = river_upa
 opt['setup_floodplains']['river_upa'] = river_upa
-opt['setup_river_outflow']['river_upa'] = river_upa
 
 #%%
 # Read SFINCS region
