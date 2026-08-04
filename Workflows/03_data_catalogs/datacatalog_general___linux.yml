@@ -1593,3 +1593,29 @@ chirps_IMERGlate_v3:
    source_version: v3.0
 #    notes: CHIRPS is a pentad dataset and they downscaled to daily using two datasets: IMERGlate-v07 precipitation for 2000 to 2025 and ERA5 from 1981 to 2025. see https://data.chc.ucsb.edu/products/CHIRPS/v3.0/daily/readme.txt
   crs: 4326
+
+# GTSM CODEC reanalysis, monthly netCDF, 1979-2018. The `gtsm_codec_reanalysis` entry above
+# points at 11209169-003-up2030/data_gtsm/... which no longer exists: that project has been
+# archived and its own catalog resolves the reanalysis to the c3s_435 project below.
+# Note the coverage stops at 2018, so this cannot serve 2019+ events (e.g. Idai).
+gtsm_codec_reanalysis_{freq}_v1:
+  crs: 4326
+  data_type: GeoDataset
+  driver: netcdf
+  kwargs:
+    chunks:
+      stations: 10
+      time: -1
+  meta:
+    category: ocean
+    paper_doi: 10.3389/fmars.2020.00263
+    paper_ref: Muis at al (2020)
+    source_license: https://cds.climate.copernicus.eu/api/v2/terms/static/licence-to-use-copernicus-products.pdf
+    source_url: https://doi.org/10.24381/cds.8c59054f
+    source_version: v1
+  path: archivedprojects/11205028-c3s_435/01_data/01_Timeseries/timeseries2/waterlevel/reanalysis_waterlevel_{freq}_{year}_{month:02d}_v1.nc
+  placeholders:
+    freq: [10min, hourly, dailymax]
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
