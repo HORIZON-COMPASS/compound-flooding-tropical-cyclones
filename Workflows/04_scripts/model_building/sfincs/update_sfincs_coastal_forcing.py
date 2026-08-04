@@ -99,8 +99,12 @@ else:
     # Add coastal water level forcing from an existing time series
     opt['setup_waterlevel_forcing'] = dict(geodataset=coastal_ts,buffer=1000,merge=False)
 
-# Add observation points for timeserie output
-opt['setup_observation_points'] = dict(locations=obs_points, merge=False)
+# Add observation points for timeserie output. Not every region has an obs-points file
+# (e.g. somerset), so skip rather than fail when it is absent.
+if exists(obs_points):
+    opt['setup_observation_points'] = dict(locations=obs_points, merge=False)
+else:
+    logger.info(f"No observation points file at {obs_points} - skipping observation points")
 
 #%%
 mod = SfincsModel(
