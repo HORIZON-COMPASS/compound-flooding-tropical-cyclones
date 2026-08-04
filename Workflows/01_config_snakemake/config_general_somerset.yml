@@ -49,7 +49,7 @@ runname_ids:
         CF_value_SLR: [0]                                   # Factual specified as 0, counterfactuals as a list (e.g. [-0.1] for -0.1 m SLR)
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_SMST         # DataCatalog handle for the coastal coupling mask
-        coastal_ts: gtsm_codec_reanalysis_hourly_v2         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
+        coastal_ts: gtsm_codec_reanalysis_hourly_v1        # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         #discharge_ts: discharge_era5_hourly_zarr           # DataCatalog handle for the discharge boundary conditions if wflow is NOT used  - NOT IMPLEMENTED YET
         utmzone: 30u                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)                                                
 
