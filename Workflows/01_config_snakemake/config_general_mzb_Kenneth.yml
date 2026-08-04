@@ -9,6 +9,9 @@ runname_ids:
         #Settings of the workflow                          # name of the model run
         tc_name: Kenneth                                   # name of the storm. For tropical cyclones, this can be the name of the TC
         region: test                                       # name of the region will be used in naming folders 
+        lulc_mapping_sfincs: vito_mapping_sfincs            # land-use -> SFINCS manning mapping table
+        lulc_mapping_wflow: vito_mapping_wflow              # land-use -> wflow parameter mapping table
+        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
         CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         
         #For all model setups

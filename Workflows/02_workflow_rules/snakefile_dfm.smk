@@ -11,6 +11,8 @@ elif os.name == "posix": #Running on linux
     disk_dir = join("/p")
 
 root_dir = join(disk_dir,config['root_dir'])
+# Rules below refer to the drive root as p_dir (the name used in snakefile_dfm_cluster.smk).
+p_dir = disk_dir
 
 # define other directories:
 dir_models = config["dir_models"]
