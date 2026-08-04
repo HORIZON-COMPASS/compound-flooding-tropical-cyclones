@@ -40,19 +40,16 @@ def get_config_wflow(wildcards):
 def get_river_upa(wildcards):    
     return config["runname_ids"][wildcards.runname]["river_upa"]
 
-def get_use_bankfull_corr(wildcards):
-    return config['runname_ids'][wildcards.runname]['use_bankfull_corr']
-
 def get_wflow_meteo_forcing(wildcards):
     return config["runname_ids"][wildcards.runname]["wflow_meteo_forcing"]
 
-def get_lulc_mapping(wildcards):    
+def get_lulc_mapping(wildcards):
     return config["runname_ids"][wildcards.runname]["lulc_mapping_wflow"]
 
-def get_use_bankfull_corr(wildcards):    
+def get_use_bankfull_corr(wildcards):
     return config["runname_ids"][wildcards.runname]["use_bankfull_corr"]
 
-def get_landuse_30yr_wflow(wildcards):    
+def get_landuse_30yr_wflow(wildcards):
     return config["runname_ids"][wildcards.runname]["bankfull_corr_lulc"]
 
 # def get_dir_model_base(wildcards):
@@ -76,6 +73,7 @@ region = [value['region'] for key, value in config['runname_ids'].items()]
 precip_forcing = [value['precip_forcing'] for key, value in config['runname_ids'].items()]
 CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
+bankfull_corr = [value['use_bankfull_corr'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -85,10 +83,11 @@ wildcard_constraints:
 run_combinations = []
 for key, value in config['runname_ids'].items():
     for tp, lulc in product(value['CF_value_rain'], value['CF_landuse']):
-        run_combinations.append((value['region'], key, value['precip_forcing'], tp, lulc))
+        run_combinations.append((value['region'], key, value['precip_forcing'], tp, lulc,
+                                 value['use_bankfull_corr']))
 
 # Unpack into separate wildcard lists
-region, runname_ids, precip_forcing, CF_rain, CF_landuse = zip(*run_combinations)
+region, runname_ids, precip_forcing, CF_rain, CF_landuse, bankfull_corr = zip(*run_combinations)
 
 # Uncomment the first "expand" line, and comment the other two, when running the first rule 'make_base_model_wflow' only, 
 # which is necessary before running the snakefile_wflow_30yr.smk once.
@@ -96,7 +95,12 @@ rule all_wflow:
     input:
         # expand(join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}", 'staticmaps.nc'), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv") if bankfull_corr else [], zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, bankfull_corr=bankfull_corr, CF_landuse=CF_landuse),
+        # Only the runs with use_bankfull_corr enabled request the corrected discharge series.
+        # NOTE: the file is named wflow_dis.csv (renamed from wflow_dis_no_qbankfull.csv) and is
+        # what rule postprocess_discharge actually produces.
+        [fn for fn, use_bf in zip(
+            expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
+            bankfull_corr) if use_bf],
 
 rule make_base_model_wflow:
     input:
