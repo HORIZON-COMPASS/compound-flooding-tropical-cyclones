@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "COMPASS_UC3"
 version = "0.1.0"
 description = "This environment is for running scripts for the COMPASS UC3 for Mozambique tropical cyclones"
@@ -106,7 +106,7 @@ cartopy = ">=0.24.0,<0.25"
 default = { features = ["py311"]}
 compass-sfincs = { features = ["py311", "sfincs","dataviz"]}
 compass-snake-sfincs = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra"]}
-compass-snake-dfm = { features = ["snake_dfm", "dfm", "cht"]}
+compass-snake-dfm = { features = ["py311", "snake_dfm", "dfm", "cht"]}
 compass-fiat = { features = ["py311", "fiat"]}
 compass-wflow-sfincs-fiat = { features = ["py311", "sfincs","dataviz","snake","wflow", "wflow_extra", "fiat"]}
 compass-cht = { features = ["py311","cht","cht_env"]}
