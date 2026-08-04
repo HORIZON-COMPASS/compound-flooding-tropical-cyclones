@@ -620,3 +620,38 @@ spw_IBTrACS_CF0_Idai:
     category: meteo
     notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
       to match simulation time
+
+# Restored: removed during the data catalog cleanup but still referenced by the
+# wflow build configs / snakemake configs.
+ClimateDT_hist:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/climateDT_*_hist_Sofala_20190301_to_20190329.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 160
+      longitude: 150
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    msl: press_msl
+    tp: precip
+    10u: wind10_u
+    10v: wind10_v
+    ssrd: kin
+    2t: temp
+    tisr: kout
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    press_msl: 0.01
+    precip: 1000
+  unit_add:
+    temp: -273.15
+  meta:
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth
+  crs: 4326
