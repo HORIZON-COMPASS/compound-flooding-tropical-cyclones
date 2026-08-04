@@ -58,7 +58,8 @@ def get_use_dfm(wildcards):
     return config['runname_ids'][wildcards.runname]['use_dfm']
 
 def get_use_waves(wildcards):
-    return config['runname_ids'][wildcards.runname]['use_waves']
+    # SnapWave coupling is optional: cases without wave output simply omit the key.
+    return config['runname_ids'][wildcards.runname].get('use_waves', False)
 
 def get_use_bankfull_corr(wildcards):
     return config['runname_ids'][wildcards.runname]['use_bankfull_corr']
@@ -149,7 +150,8 @@ rule run_sfincs_model:
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"sfincs_{wildcards.CF_landuse}", 
                                                                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
-        exe                  = join(root_dir, dir_models, "00_executables", "sfincs-v2.2.0-col-dEze-Release", 'sfincs.exe'),
+        exe                  = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
+        sfincs_sif           = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
     output:
         mapout               = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs_map.nc"),
     run:
@@ -161,8 +163,9 @@ rule run_sfincs_model:
                 subprocess.run([str(params.exe)], stdout=f, cwd=params.dir_run_with_forcing)
                 print("Finished running")
         if os.name == 'posix':
-            shell("docker image ls")
-            shell("docker run --mount src={params.dir_run_with_forcing},target=/data,type=bind deltares/sfincs-cpu:sfincs-v2.2.0-col-dEze-Release")
+            # The HPC nodes have no docker daemon; run the SFINCS container via
+            # apptainer/singularity from the local .sif image instead. Bind the run dir to /data.
+            shell("apptainer run --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
 
 rule sfincs_plot_floodmap:
     input:

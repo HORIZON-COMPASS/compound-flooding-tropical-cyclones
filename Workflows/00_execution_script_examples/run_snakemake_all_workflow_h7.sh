@@ -18,8 +18,13 @@ module load pixi
 module load julia
 module load apptainer 
 
-# Navigate to the repo directory
-ROOT="/u/vertegaa/git_repos/COMPASS"
+# Navigate to the repo directory.
+# Resolved automatically so this script works for any checkout; override by exporting
+# COMPASS_ROOT before submitting.
+ROOT="${COMPASS_ROOT:-$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null)}"
+if [ -z "$ROOT" ]; then
+    echo "Could not determine repo root; export COMPASS_ROOT=/path/to/compound-flooding-tropical-cyclones"; exit 1
+fi
 echo "Changing to ROOT directory: $ROOT"
 cd "${ROOT}" || { echo "Failed to cd to ROOT directory!"; exit 1; }
 

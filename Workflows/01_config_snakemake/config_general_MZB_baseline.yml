@@ -9,6 +9,7 @@ runname_ids:
         # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
         region: sofala                                      # name of the region will be used in naming folders 
+        CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         sid: 2019063S18038                                  # Storm id from IBTrACS
             
         # For all model setups

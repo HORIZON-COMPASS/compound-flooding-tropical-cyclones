@@ -44,10 +44,11 @@ def get_dfm_bbox(wildcards):
     return bbox
 
 def get_use_waves(wildcards):
-    return config['runname_ids'][wildcards.runname]['use_waves']
+    # SnapWave coupling is optional: cases without wave output simply omit the key.
+    return config['runname_ids'][wildcards.runname].get('use_waves', False)
 
 def get_wave_output(wildcards):
-    return config['runname_ids'][wildcards.runname]['wave_output']
+    return config['runname_ids'][wildcards.runname].get('wave_output', None)
     
 def get_dfm_dxy_base(wildcards):
     dfm_dxy_base = config["runname_ids"][wildcards.runname]["dfm_dxy_base"]
