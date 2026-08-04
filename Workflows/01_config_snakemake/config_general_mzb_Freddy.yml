@@ -36,7 +36,7 @@ runname_ids:
         dfm_verification_points: dfm_verif_points_MZB      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
 
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build.yml            # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_build_general.yml            # name of the wflow configuration file under 05_config_models/01_wflow 
         use_bankfull_corr: False                           # use bankfull correction for the discharge output (True/False)
         bankfull_corr_lulc: vito                           # Factual landuse when using bankfull correction from 30 yr wflow run 
 
