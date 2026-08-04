@@ -50,8 +50,10 @@ wildcard_constraints:
 # If one would want to analyse the effect of landuse on the bankfull discharge over 30 years, one can run a warmup run of wflow for 30 years for every landuse configuration (not implemented here)
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for lulc in product(value['landuse']):
-        run_combinations.append((value['region'], key, value['precip_forcing'], lulc))
+    # bankfull_corr_lulc is a single land-use handle (not a list), so there is exactly one
+    # 30-yr warmup combination per run.
+    lulc = value['bankfull_corr_lulc']
+    run_combinations.append((value['region'], key, value['precip_forcing'], lulc))
 
 # Unpack into separate wildcard lists
 region, runname_ids, precip_forcing, landuse = zip(*run_combinations)

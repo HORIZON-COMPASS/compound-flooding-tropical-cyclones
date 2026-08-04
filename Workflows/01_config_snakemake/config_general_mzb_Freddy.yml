@@ -9,6 +9,7 @@ runname_ids:
         #Settings of the workflow                          # name of the model run
         tc_name: Freddy                                    # name of the storm. For tropical cyclones, this can be the name of the TC
         region: test                                       # name of the region will be used in naming folders 
+        CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         
         #For all model setups
         start_time: 20230310 000000                        # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           

@@ -9,11 +9,13 @@ runname_ids:
         #Settings of the workflow                           # name of the model run
         tc_name: winterstorm                                # name of the storm. For tropical cyclones, this can be the name of the TC
         region: somerset_test_rivers                        # name of the region will be used in naming folders 
+        CF_landuse: [vito]                                  # data catalog handles of land use scenarios
+        bankfull_corr_lulc: vito          # Factual landuse when using bankfull correction from 30 yr wflow run
         
         #For all model setups
         start_time: 20131225 000000                         # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
         end_time: 20140115 000000                           # End time of the SFINCS model run in format: YYYYMMDD HHMMSS          
-        forcing: ceh_gear                                   # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
+        precip_forcing: ceh_gear                            # forcing dataset for the rainfall data (matching to the DataCatalog handle) #era5_hourly_zarr
         wind_forcing: era5_hourly                           # wind and pressure dataset (used for coastal surge modelling)
         bathy: gebco                                        # DataCatalog handle for the bathymetry dataset
         river_upa: 5                                        # minimum upstream area threshold for the SFINCS and wflow [km2]
@@ -36,7 +38,12 @@ runname_ids:
         use_bankfull_corr: False                             # use bankfull correction for the discharge output (True/False)
 
         #SFINCS model user-defined settings
-        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)  
+        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+
+        # Factual-only: this case has no counterfactual variants defined.
+        CF_value_rain: [0]                                  # Factual specified as 0, counterfactuals as a list (e.g. [-8] for -8% rainfall)
+        CF_value_wind: [0]                                  # Factual specified as 0, counterfactuals as a list (e.g. [-5] for -5% wind speed)
+        CF_value_SLR: [0]                                   # Factual specified as 0, counterfactuals as a list (e.g. [-0.1] for -0.1 m SLR)
         bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
         dfm_coastal_mask: coastal_coupling_msk_SMST         # DataCatalog handle for the coastal coupling mask
         coastal_ts: gtsm_codec_reanalysis_hourly_v2         # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
