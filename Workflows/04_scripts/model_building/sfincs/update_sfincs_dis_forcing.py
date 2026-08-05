@@ -14,6 +14,8 @@ if "snakemake" in locals():
     wflow_root            = snakemake.params.wflow_root_forcing
     data_cats             = snakemake.params.data_cats
     wflow_base            = snakemake.params.wflow_base
+    use_bankfull_corr     = snakemake.params.use_bankfull_corr
+    wflow_dis_no_bankfull = snakemake.input.wflow_dis_no_bankfull
 else:
     curdir              = '../../../'
     region              = "sofala"
@@ -24,6 +26,9 @@ else:
     CF_rain_txt         = "0"
     CF_SLR_txt          = "0"
     CF_wind_txt         = "0"
+    CF_landuse          = "vito"
+    use_bankfull_corr   = False
+    wflow_dis_no_bankfull = ""
     wflow_root          = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     wflow_base          = f"/p/11210471-001-compass/02_Models/{region}/{tc_name}/wflow"
     sfincs_model_folder = f"/p/11210471-001-compass/03_Runs/{region}/{tc_name}/sfincs/event_tp_{precip_forcing}_CF{CF_rain_txt}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}_nobankfull"
@@ -51,7 +56,15 @@ q_locs = mod_ini.geoms.data["gauges_locs"]   # gauge geom from setup_gauges(base
 # Read the wflow event discharge output (v1: results['netcdf'] -> output_scalar)
 mod = WflowSbmModel(root=join(wflow_root, 'events'), data_libs=data_cats, mode="r")
 mod.read()
-df = mod.output_scalar.data['Q'].to_pandas()
+
+if use_bankfull_corr:
+    # Bankfull-corrected series produced by rule postprocess_discharge: the estimated
+    # bankfull discharge has already been subtracted, approximating streamflow.
+    print(f"Using bankfull-corrected discharge from {wflow_dis_no_bankfull}")
+    df = pd.read_csv(wflow_dis_no_bankfull, index_col=0, parse_dates=True)
+else:
+    df = mod.output_scalar.data['Q'].to_pandas()
+
 df.index = (df.index - reftime_object).total_seconds()
 
 # Order columns to match the sfincs source points, write the .dis file

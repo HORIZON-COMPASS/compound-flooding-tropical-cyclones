@@ -54,6 +54,9 @@ def get_datacatalog(wildcards):
             join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
         ]
 
+def get_use_bankfull_corr(wildcards):
+    return config['runname_ids'][wildcards.runname]['use_bankfull_corr']
+
 def get_use_dfm(wildcards):
     return config['runname_ids'][wildcards.runname]['use_dfm']
 
@@ -138,12 +141,15 @@ rule update_dis_forcing_sfincs:
     input:
         inp_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.inp"),
         wflow_output = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), # do not change!
-        # wflow_dis_no_bankfull = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"),
+        # Always produced by rule postprocess_discharge (an empty placeholder when the
+        # bankfull correction is disabled), so it is a stable input either way.
+        wflow_dis_no_bankfull = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv"),
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"sfincs_{wildcards.CF_landuse}", 
                                                                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
         wflow_root_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}")),
         wflow_base = directory(join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}")),
+        use_bankfull_corr = get_use_bankfull_corr,
         data_cats = get_datacatalog,
     output:
         dis_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"),
