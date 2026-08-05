@@ -34,7 +34,7 @@ mod = WflowSbmModel(root=wflow_root_noforcing, data_libs=data_cat, mode="r")
 mod.read()
 
 start_time_object = datetime.strptime(start_time, "%Y%m%d %H%M%S") - timedelta(days=2)  # start 2 days before sfincs
-start_time_warmup = datetime.strftime(start_time_object - timedelta(days=365), "%Y-%m-%dT%H:%M:%S")
+start_time_warmup = datetime.strftime(start_time_object - timedelta(days=20), "%Y-%m-%dT%H:%M:%S")
 end_time_warmup = datetime.strftime(start_time_object, "%Y-%m-%dT%H:%M:%S")
 
 # %% v1 steps (setup_config takes a `data` dict; time settings live under [time] in Wflow.jl v1)
