@@ -8,9 +8,11 @@ import os
 from datetime import datetime as datetime
 from os.path import join
 from hydromt_wflow import WflowSbmModel
-from pyextremes import EVA
 import matplotlib.pyplot as plt
 import pandas as pd
+# NOTE: pyextremes is imported lazily further down, only on the branch that actually fits the
+# extreme-value distribution. Importing it at module level made this script fail even when
+# use_bankfull_corr is False, where no fitting happens at all.
 
 #%%
 # Set up wflow run variables (v1: hydromt.log.setuplog removed; no logger needed)
@@ -57,7 +59,9 @@ if not use_bankfull_corr:
 wflow_bankfull = f"{wflow_path_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
 if not os.path.exists(wflow_bankfull):
-   # Read ('r') the Wflow 30yr warm-up results
+    from pyextremes import EVA   # only needed when the distribution is actually fitted
+
+    # Read ('r') the Wflow 30yr warm-up results
     mod = WflowSbmModel(
         root=join(wflow_path_30yr, "warmup"),
         data_libs=data_cats,
