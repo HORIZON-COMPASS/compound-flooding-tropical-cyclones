@@ -9,6 +9,10 @@ runname_ids:
         #Settings of the workflow                          # name of the model run
         tc_name: Freddy                                    # name of the storm. For tropical cyclones, this can be the name of the TC
         region: test                                       # name of the region will be used in naming folders 
+        lulc_mapping_sfincs: vito_mapping_sfincs            # land-use -> SFINCS manning mapping table
+        lulc_mapping_wflow: vito_mapping_wflow              # land-use -> wflow parameter mapping table
+        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
+        CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         
         #For all model setups
         start_time: 20230310 000000                        # Start time of the SFINCS model run in format: YYYYMMDD HHMMSS           
@@ -32,7 +36,7 @@ runname_ids:
         dfm_verification_points: dfm_verif_points_MZB      # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes
 
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build.yml            # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_build_general.yml            # name of the wflow configuration file under 05_config_models/01_wflow 
         use_bankfull_corr: False                           # use bankfull correction for the discharge output (True/False)
         bankfull_corr_lulc: vito                           # Factual landuse when using bankfull correction from 30 yr wflow run 
 

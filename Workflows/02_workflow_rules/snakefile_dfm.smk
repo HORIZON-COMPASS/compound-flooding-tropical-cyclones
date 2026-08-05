@@ -11,6 +11,8 @@ elif os.name == "posix": #Running on linux
     disk_dir = join("/p")
 
 root_dir = join(disk_dir,config['root_dir'])
+# Rules below refer to the drive root as p_dir (the name used in snakefile_dfm_cluster.smk).
+p_dir = disk_dir
 
 # define other directories:
 dir_models = config["dir_models"]
@@ -44,10 +46,11 @@ def get_dfm_bbox(wildcards):
     return bbox
 
 def get_use_waves(wildcards):
-    return config['runname_ids'][wildcards.runname]['use_waves']
+    # SnapWave coupling is optional: cases without wave output simply omit the key.
+    return config['runname_ids'][wildcards.runname].get('use_waves', False)
 
 def get_wave_output(wildcards):
-    return config['runname_ids'][wildcards.runname]['wave_output']
+    return config['runname_ids'][wildcards.runname].get('wave_output', None)
     
 def get_dfm_dxy_base(wildcards):
     dfm_dxy_base = config["runname_ids"][wildcards.runname]["dfm_dxy_base"]
@@ -186,9 +189,6 @@ rule add_waves_and_output_to_catalog:
     input:
         his_file       = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
     params:
-        model_name     = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
-        cf_data_cat    = get_cf_datacatalog,
-        root_dir       = p_dir,
         model_name     = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
         cf_data_cat    = get_cf_datacatalog,
         root_dir       = p_dir,

@@ -9,6 +9,7 @@ runname_ids:
     EtaIota:                                               # name of the model run     
         tc_name: EtaIota                                   # name of the storm. For tropical cyclones, this can be the name of the TC 
         region: honduras                                   # name of the region will be used in naming folders                
+        bankfull_corr_lulc: gdlc_10m_v1_2020_HND          # Factual landuse when using bankfull correction from 30 yr wflow run
         
         #Meteo forcing
         start_time: 20201101 000000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
@@ -77,7 +78,7 @@ runname_ids:
     #     dfm_verification_points:  test                     # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes - check this  
         
     #     #Wflow model user-defined settings
-    #     config_wflow_base: wflow_base_build.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
+    #     config_wflow_base: wflow_base_build_HND.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)          
         
     #     #SFINCS model user-defined settings
     #     config_sfincs_base: sfincs_base_build_honduras.yml # name of the SFINCS configuration file (default: sfincs_base_build.yml)             

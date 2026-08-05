@@ -2,6 +2,7 @@
 import os
 from snakemake.io import Wildcards
 from os.path import join
+from itertools import product   # used at module level below; needed when this file is run standalone
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows

@@ -9,6 +9,10 @@ runname_ids:
         # Settings of the workflow
         tc_name: Idai                                       # name of the storm. For tropical cyclones, this can be the name of the TC
         region: sofala                                      # name of the region will be used in naming folders 
+        lulc_mapping_sfincs: vito_mapping_sfincs            # land-use -> SFINCS manning mapping table
+        lulc_mapping_wflow: vito_mapping_wflow              # land-use -> wflow parameter mapping table
+        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
+        CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         sid: 2019063S18038                                  # Storm id from IBTrACS
             
         # For all model setups
@@ -44,7 +48,7 @@ runname_ids:
         coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         
         # wflow model user-defined settings
-        config_wflow_base: wflow_base_build.yml             # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_build_general.yml             # name of the wflow configuration file under 05_config_models/01_wflow 
         use_bankfull_corr: True                             # use bankfull correction for the discharge output (True/False)
         bankfull_corr_lulc: vito                            # Factual landuse when using bankfull correction from 30 yr wflow run 
 

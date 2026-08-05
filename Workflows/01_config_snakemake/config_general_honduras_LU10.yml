@@ -55,6 +55,7 @@ runname_ids:
     Iota:                                               # name of the model run     
         tc_name: Iota                                   # name of the storm. For tropical cyclones, this can be the name of the TC 
         region: honduras                                   # name of the region will be used in naming folders                
+        bankfull_corr_lulc: gdlc_10m_v1_2020_HND          # Factual landuse when using bankfull correction from 30 yr wflow run
         
         #Meteo forcing
         start_time: 20201112 120000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
