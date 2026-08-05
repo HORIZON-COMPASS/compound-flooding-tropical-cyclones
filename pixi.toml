@@ -75,7 +75,14 @@ contextily = "*"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
-pyextremes = "==2.3.3"
+# Range rather than ==2.3.3 so each environment's solver can pick a build that fits its
+# stack: the hard pin resolved in neither compass-v1 nor compass-snake-sfincs, leaving
+# pyextremes absent from both (gwwapi from this same block did install). Both 2.3.3 and
+# 2.5.0 accept numpy<3 / scipy<2 / pandas<3, so the v1 stack is compatible.
+pyextremes = ">=2.3.3,<3"
+# Required by pyextremes' Emcee fit, which calculate_and_remove_qbankfull.py uses via
+# fit_model(model="Emcee"). Declared explicitly so it cannot go missing silently again.
+emcee = ">=3.0.3,<4"
 
 [feature.snake.dependencies]
 snakemake = ">=8.10.6,<8.11"
