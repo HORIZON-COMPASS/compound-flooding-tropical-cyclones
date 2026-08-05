@@ -13,6 +13,8 @@ runname_ids:
         # Workflow settings
         tc_name: Durban_April2022_ClimateDT              # Event name
         region: durban                                    # Region identifier for folder structure
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
+        use_bankfull_corr: False                            # bankfull correction needs a separate 30-yr wflow run
 
         # Temporal extent (Climate DT data covers April 9-14, 2022)
         start_time: 20220410 000000                      # April 10, 2022 00:00:00

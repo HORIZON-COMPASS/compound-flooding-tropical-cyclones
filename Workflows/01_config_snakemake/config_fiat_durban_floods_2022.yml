@@ -15,6 +15,8 @@ runname_ids:
         # Event metadata
         tc_name: Durban_April2022
         region: durban
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
+        use_bankfull_corr: False                            # bankfull correction needs a separate 30-yr wflow run
 
         # SFINCS scenario to pull floodmap from (must match the existing run directory name)
         precip_forcing: era5_hourly

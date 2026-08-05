@@ -9,6 +9,8 @@ runname_ids:
     SomersetLevels_qt_ceh:
         tc_name: winterstorm
         region: somerset
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
+        use_bankfull_corr: False                            # bankfull correction needs a separate 30-yr wflow run
         start_time: 20131220 000000                      # 3-hour window within the Dec-2013 CEH data
         end_time: 20131220 030000
         precip_forcing: ceh_gear_compass                  # local CEH-GEAR-1hr-v2 hourly rainfall

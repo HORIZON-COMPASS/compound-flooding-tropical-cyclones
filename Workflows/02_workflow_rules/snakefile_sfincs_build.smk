@@ -53,15 +53,24 @@ def get_datacatalog(wildcards):
 runname_ids = list(config['runname_ids'].keys())
 regions = [value['region'] for key, value in config['runname_ids'].items()]
 
+# Model/run directories are suffixed with the land-use scenario (sfincs_{CF_landuse}),
+# so several land-use variants of the same run can coexist.
+run_combinations = []
+for key, value in config['runname_ids'].items():
+    for lulc in value['CF_landuse']:
+        run_combinations.append((value['region'], key, lulc))
+
+regions, runname_ids, CF_landuse = zip(*run_combinations)
+
 rule all_sfincs_build:
     input:
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"), zip, region=regions, runname=runname_ids),
-        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "src.geojson"), zip, region=regions, runname=runname_ids)
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "sfincs.msk"), zip, region=regions, runname=runname_ids, CF_landuse=CF_landuse),
+        expand(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "dis.geojson"), zip, region=regions, runname=runname_ids, CF_landuse=CF_landuse)
 
 rule make_base_model_sfincs:
     params:
         arg_bbox = get_bbox,
-        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
+        dir_model_sfincs = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}"),
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
@@ -69,9 +78,9 @@ rule make_base_model_sfincs:
     input:
         config_file = get_config,
     output: 
-        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
-        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs" , "sfincs.msk"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
-        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
+        dir_sfincs_model = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}")),
+        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}" , "sfincs.msk"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
+        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "region.geojson"),
     script:
         join("..","04_scripts", "model_building", "sfincs", "setup_sfincs_base.py")

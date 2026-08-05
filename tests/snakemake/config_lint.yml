@@ -44,7 +44,11 @@ runname_ids:
         CF_value_rain:    [0]
         CF_value_SLR:     [0]
         CF_value_wind:    [0]
-        CF_landuse:       [0]
+        CF_landuse:       [vito]        # model/run dirs are suffixed with this
+        use_bankfull_corr: False
+        bankfull_corr_lulc: vito        # land use of the decoupled 30-yr run
+        use_waves:        False         # SnapWave coupling (optional)
+        wave_output:      SNAPWAVE_test_setup
         # misc
         utmzone:          36s
         use_dfm:          false

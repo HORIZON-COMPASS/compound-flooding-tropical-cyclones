@@ -10,6 +10,7 @@ runname_ids:
     SomersetLevels_coastal:
         tc_name: winterstorm
         region: somerset
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
         start_time: 20190315 000000                         # March 2019 (local GTSM coverage)
         end_time: 20190318 000000                           # 3-day window
         precip_forcing: era5_hourly

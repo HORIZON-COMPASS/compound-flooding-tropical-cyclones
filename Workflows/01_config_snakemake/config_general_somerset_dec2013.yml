@@ -11,6 +11,7 @@ runname_ids:
     SomersetLevels_dec:
         tc_name: winterstorm
         region: somerset
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
         start_time: 20131220 000000
         end_time: 20131223 000000                           # 3-day Dec-2013 window
         precip_forcing: ceh_gear_compass                    # local CEH-GEAR-1hr-v2 (Dec 2013)

@@ -9,6 +9,8 @@ runname_ids:
     Durban2022_qt:
         tc_name: Durban_April2022
         region: durban
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
+        use_bankfull_corr: False                            # bankfull correction needs a separate 30-yr wflow run
         start_time: 20220410 000000                      # full event window (reverted from 3h quick test)
         end_time: 20220413 000000
         precip_forcing: era5_hourly

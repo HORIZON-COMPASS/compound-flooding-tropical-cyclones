@@ -10,6 +10,8 @@ runname_ids:
     SomersetLevels_qt:
         tc_name: winterstorm
         region: somerset
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
+        use_bankfull_corr: False                            # bankfull correction needs a separate 30-yr wflow run
         start_time: 20140102 000000                      # 3-hour window for a quick test
         end_time: 20140102 030000
         precip_forcing: era5_hourly

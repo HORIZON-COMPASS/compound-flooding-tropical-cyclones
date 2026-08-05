@@ -12,6 +12,7 @@ runname_ids:
     SomersetLevels_test:
         tc_name: winterstorm                                # event name
         region: somerset                                    # region folder name
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
         start_time: 20140101 000000                         # test window (full storm: 20131225-20140115)
         end_time: 20140106 000000
         precip_forcing: ceh_gear                            # UK gridded rainfall (precip-only)

@@ -15,19 +15,25 @@ import pandas as pd
 #%%
 # Set up wflow run variables (v1: hydromt.log.setuplog removed; no logger needed)
 if "snakemake" in locals():
-    wflow_root_30yr  = snakemake.params.wflow_root_forcing_30yr
-    wflow_root_event = snakemake.params.wflow_root_forcing
-    data_cat         = snakemake.params.data_cat
+    wflow_root_30yr   = snakemake.params.wflow_root_forcing_30yr
+    wflow_root_event  = snakemake.params.wflow_root_forcing
+    data_cats         = snakemake.params.data_cat
+    use_bankfull_corr = snakemake.params.use_bankfull_corr
+    landuse_30yr      = snakemake.params.landuse_30yr
+    precip_forcing    = snakemake.wildcards.precip_forcing
 else:
-    region           = "sofala"
-    TC_name          = "Idai"
-    precip_forcing   = "era5_hourly_zarr"
-    CF_rain          = 0
-    CF_rain_txt      = "0"
-    wflow_root_30yr  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF0_30yr"
-    wflow_root_event = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
-    curdir           = '../../../'
-    data_cats        = [
+    region            = "sofala"
+    TC_name           = "Idai"
+    precip_forcing    = "era5_hourly_zarr"
+    CF_rain           = 0
+    CF_rain_txt       = "0"
+    CF_landuse        = "vito"
+    landuse_30yr      = "vito"
+    use_bankfull_corr = True
+    wflow_root_30yr   = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}"
+    wflow_root_event  = f"p:/11210471-001-compass/03_Runs/{region}/{TC_name}/wflow_{CF_landuse}/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    curdir            = '../../../'
+    data_cats         = [
         join(curdir, "03_data_catalogs", "datacatalog_general.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling.yml"),
         join(curdir, "03_data_catalogs", "datacatalog_SFINCS_obspoints.yml"),
@@ -35,13 +41,25 @@ else:
         ]
 
 #%%
+# The 30-yr run is decoupled: it lives under its own land-use directory and is not
+# necessarily the same land use as the event run.
+wflow_path_30yr = join(wflow_root_30yr, f"wflow_{landuse_30yr}", f"event_precip_{precip_forcing}_CF0_30yr")
+dis_out = os.path.join(wflow_root_event, "events", "run_default", "wflow_dis.csv")
+
+if not use_bankfull_corr:
+    # Still emit the file the workflow expects, so downstream rules have a stable input.
+    print("Not using bankfull correction, writing empty placeholder discharge file...")
+    os.makedirs(os.path.dirname(dis_out), exist_ok=True)
+    pd.DataFrame(list()).to_csv(dis_out)
+    raise SystemExit(0)
+
 # check whether the bankfull calculations have already been done
-wflow_bankfull = f"{wflow_root_30yr}/warmup/qbankfull_wflow_gauges.csv"
+wflow_bankfull = f"{wflow_path_30yr}/warmup/qbankfull_wflow_gauges.csv"
 
 if not os.path.exists(wflow_bankfull):
    # Read ('r') the Wflow 30yr warm-up results
     mod = WflowSbmModel(
-        root=join(wflow_root_30yr, "warmup"),
+        root=join(wflow_path_30yr, "warmup"),
         data_libs=data_cats,
         mode="r",
     )
@@ -137,7 +155,7 @@ for gauge in df_F_no_bankfull.columns:
         qbankfull_gauge = qbankfull_df.loc[gauge, "return value"]
         df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge] - qbankfull_gauge
         df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
-        df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_qbankfull.csv"), index=True)
+        df_F_no_bankfull.to_csv(dis_out, index=True)
 
 # %%
 # Plot the masked discharge compared to the full discharge

@@ -10,6 +10,7 @@ runname_ids:
     SomersetLevels_dec_t3:
         tc_name: winterstorm
         region: somerset
+        CF_landuse: [vito]                                  # land-use scenarios; model/run dirs are suffixed with this
         start_time: 20131203 000000
         end_time: 20140228 230000
         precip_forcing: ceh_t3_compass                      # T3 counterfactual (future climate)

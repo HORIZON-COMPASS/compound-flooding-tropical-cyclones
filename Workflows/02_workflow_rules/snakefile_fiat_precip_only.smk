@@ -40,16 +40,17 @@ def get_datacatalog(wildcards):
 # Build run combinations from config: one entry per (runname, CF_rain) pair
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for tp in value['CF_value_rain']:
+    for tp, lulc in product(value['CF_value_rain'], value['CF_landuse']):
         run_combinations.append((
             value['region'],
             key,
             value['precip_forcing'],
             value['wind_forcing'],
             tp,
+            lulc,
         ))
 
-region, runname_ids, precip_forcing, wind_forcing, CF_rain = zip(*run_combinations)
+region, runname_ids, precip_forcing, wind_forcing, CF_rain, CF_landuse = zip(*run_combinations)
 
 wildcard_constraints:
     precip_forcing='|'.join([re.escape(x) for x in set(precip_forcing)]),
@@ -60,7 +61,7 @@ wildcard_constraints:
 rule all_fiat_precip_only:
     input:
         expand(
-            join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
+            join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}",
                  "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
                  "output", "spatial.fgb"),
             zip,
@@ -69,27 +70,28 @@ rule all_fiat_precip_only:
             precip_forcing=precip_forcing,
             CF_rain=CF_rain,
             wind_forcing=wind_forcing,
+            CF_landuse=CF_landuse,
         )
 
 
 rule build_fiat_model_precip_only:
     input:
-        floodmap = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        floodmap = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                         "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
                         "plot_output", "floodmap.tif"),
     params:
         dir_run_with_forcing = directory(
-            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                  "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}")
         ),
         datacat_fiat  = get_datacatalog,
-        model_folder  = join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
+        model_folder  = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}",
                              "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}"),
         continent     = get_continent,
         country       = get_country,
         config        = get_config,
     output:
-        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
+        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}",
                              "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
                              "settings.toml"),
     script:
@@ -98,16 +100,16 @@ rule build_fiat_model_precip_only:
 
 rule run_fiat_model_precip_only:
     input:
-        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
+        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}",
                              "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
                              "settings.toml"),
     params:
         dir_run_with_forcing = lambda wildcards: directory(
-            join(root_dir, dir_runs, wildcards.region, wildcards.runname, "fiat",
+            join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"fiat_{wildcards.CF_landuse}",
                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.wind_forcing}")
         ),
     output:
-        out = join(root_dir, dir_runs, "{region}", "{runname}", "fiat",
+        out = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}",
                    "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
                    "output", "spatial.fgb"),
     run:

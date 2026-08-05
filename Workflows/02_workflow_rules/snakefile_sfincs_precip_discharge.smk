@@ -41,17 +41,18 @@ wildcard_constraints:
 # Create run combinations
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for tp in value['CF_value_rain']:
+    for tp, lulc in product(value['CF_value_rain'], value['CF_landuse']):
         run_combinations.append((
             value['region'],
             key,
             value['precip_forcing'],
             value['wind_forcing'],
-            tp
+            tp,
+            lulc
         ))
 
 # Unpack into separate wildcard lists
-region, runname_ids, precip_forcing, wind_forcing, CF_rain = zip(*run_combinations)
+region, runname_ids, precip_forcing, wind_forcing, CF_rain, CF_landuse = zip(*run_combinations)
 
 # ==================== Helper Functions ====================
 
@@ -127,7 +128,7 @@ def get_coastal_ts(wildcards):
 rule all_sfincs_precip_discharge:
     input:
         expand(
-            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                  "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                  "plot_output", "sfincs_basemap.png"),
             zip,
@@ -135,18 +136,19 @@ rule all_sfincs_precip_discharge:
             runname=runname_ids,
             precip_forcing=precip_forcing,
             CF_rain=CF_rain,
-            wind_forcing=wind_forcing
+            wind_forcing=wind_forcing,
+            CF_landuse=CF_landuse
         )
 
 # Rule 1: Add precipitation AND discharge forcing
 rule add_precip_discharge_forcing_sfincs:
     input:
-        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "sfincs.msk"),
+        msk_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "sfincs.msk"),
     params:
         tc_name = get_tcname,
-        dir_run_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
+        dir_run_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}")),
         dir_run_with_forcing = lambda wildcards: directory(
-            join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs",
+            join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"sfincs_{wildcards.CF_landuse}",
                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.wind_forcing}_dis")
         ),
         data_cats = get_datacatalog,
@@ -166,7 +168,7 @@ rule add_precip_discharge_forcing_sfincs:
         discharge_forcing = get_discharge_forcing,
         discharge_uparea = get_discharge_uparea,
     output:
-        inp_file = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        inp_file = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                        "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                        "sfincs.inp"),
     script:
@@ -176,18 +178,18 @@ rule add_precip_discharge_forcing_sfincs:
 rule run_sfincs_model_with_discharge:
     threads: 16
     input:
-        inp_file = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        inp_file = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                        "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                        "sfincs.inp"),
     params:
         dir_run_with_forcing = lambda wildcards: directory(
-            join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs",
+            join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"sfincs_{wildcards.CF_landuse}",
                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.wind_forcing}_dis")
         ),
         exe = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
         sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
     output:
-        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                      "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                      "sfincs_map.nc"),
     run:
@@ -203,21 +205,21 @@ rule run_sfincs_model_with_discharge:
 # Rule 3: Post-process and visualize flood maps
 rule sfincs_plot_floodmap_with_discharge:
     input:
-        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                      "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                      "sfincs_map.nc"),
     params:
         dir_run = directory(
-            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+            join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                  "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis")
         ),
-        dir_model_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs")),
+        dir_model_no_forcing = directory(join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}")),
         datacat = get_datacatalog
     output:
-        figure = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        figure = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                      "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                      "plot_output", "sfincs_basemap.png"),
-        floodmap = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
+        floodmap = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}",
                        "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}_dis",
                        "plot_output", "floodmap.tif")
     script:
