@@ -1,5 +1,6 @@
 # This script is based on the ModelBuilder template from dfm_tools v0.23.0 (accessed on 18/07/2024). 
-# Adapted by Natalia Aleksandrova
+# Adapted by Natalia Aleksandrova & Doris Vertegaal
+# Use pixi environment compass-snake-dfm
 #%%
 # import packages
 import os
@@ -7,14 +8,12 @@ import matplotlib.pyplot as plt
 plt.close('all')
 import dfm_tools as dfmt
 import hydrolib.core.dflowfm as hcdfm
-import xarray as xr
 import pandas as pd
 import geopandas as gpd
 import shutil
 from datetime import datetime, timedelta
 import hydromt
 import ast
-import pyproj
 
 #%%
 if "snakemake" in locals():
@@ -29,7 +28,6 @@ if "snakemake" in locals():
     end_time             = snakemake.params.end_time
     bbox_dfm             = ast.literal_eval(snakemake.params.dfm_bbox)
     sfincs_region        = os.path.abspath(snakemake.params.sfincs_region)
-    # output_bbox          = ast.literal_eval(snakemake.params.output_bbox)
     dfm_obs_file         = snakemake.params.dfm_obs_file
     verification_points  = snakemake.params.verif_points
     path_data_cat        = snakemake.params.data_cat
@@ -49,7 +47,7 @@ else:
     dfm_res              = "450"
     bathy                = "gebco2024_MZB"
     tidemodel            = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
-    wind_forcing         = "era5_hourly"
+    wind_forcing         = "era5_hourly_spw_IBTrACS"
     CF_SLR               = 0
     CF_SLR_txt           = f"{CF_SLR}"
     CF_wind              = 0
@@ -64,6 +62,7 @@ else:
         '../../../03_data_catalogs/datacatalog_general.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
         '../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+        '../../../03_data_catalogs/datacatalog_CF_forcing.yml',
         ]
     model_name           = f'event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}_{wind_forcing}_CF{CF_wind_txt}'
     base_model           = f'base_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR_txt}'
@@ -199,43 +198,16 @@ if meteo_type == 'spiderweb_era5_merged':
     shutil.copyfile(preprocess_era5_Idai_path, preprocess_era5_Idai_dest)
 
     # Create forcing with only file names for Linux
-    ext_old.forcing.append(hcdfm.ExtOldForcing(quantity='airpressure_windx_windy_charnock',
+    ext_old.forcing.append(hcdfm.ExtOldForcing(quantity='airpressure_windx_windy',
                                                 filename=preprocess_era5_Idai_file,
-                                                varname='msl u10n v10n chnk',
+                                                varname='msl u10n v10n',
                                                 filetype=hcdfm.ExtOldFileType.NetCDFGridData, #11
                                                 method=hcdfm.ExtOldMethod.InterpolateTimeAndSpaceSaveWeights, #3
-                                                operand=hcdfm.Operand.override, #O
+                                                operand=hcdfm.Operand.add, # O
                                                 ))
     ext_old.forcing.append(create_forcing('airpressure_windx_windy', spw_copy, hcdfm.ExtOldFileType.SpiderWebData, 
                                           hcdfm.ExtOldMethod.PassThrough, hcdfm.Operand.override, use_basename=True))
     ext_old.save(filepath=ext_file_old) # save the file
-
-    # Modify ext_file_old to new dfm setting that allow era5+spw merging
-    with open(ext_old, "r") as f:
-        lines = f.readlines()
-
-        replacements = {
-        "QUANTITY=": "quantity=",
-        "FILENAME=": "forcingFile=",
-        "VARNAME=": "forcingVariableName=",
-        "FILETYPE=11": "forcingFileType=netcdf",
-        "FILETYPE=5": "forcingFileType=spiderWeb",
-        "METHOD=3": "interpolationMethod=linearSpaceTime",
-        "METHOD=1": "interpolationMethod=linearSpaceTime",
-        "OPERAND=": "operand=",
-        }
-
-        updated_lines = []
-        for line in lines:
-            for old, new in replacements.items():
-                if old in line:
-                    line = line.replace(old, new)
-            updated_lines.append(line)
-
-        with open(ext_old, "w") as f:
-            f.writelines(updated_lines)
-
-        print(f"Rewritten file saved to: {ext_old}")
 
     # Add setting to spw to be merge with era5 at the radius of 0.75
     with open(spw_copy, "r") as f:
@@ -262,7 +234,7 @@ elif 'era5' in meteo_type: # ERA5 - download spatial fields of air pressure, win
     dir_output_data_era5 = os.path.join(dir_output_bc,'meteo', 'ERA5')
     os.makedirs(dir_output_data_era5, exist_ok=True)
         
-    varlist_list = [['msl','u10n','v10n','chnk']]
+    varlist_list = [['msl','u10n','v10n']]
     for varlist in varlist_list:
         for varkey in varlist:
             #TODO change to use data catalog?
@@ -307,10 +279,11 @@ gdfp = gpd.read_file(data_catalog[dfm_obs_file].path)
 region_poly = gpd.read_file(sfincs_region)
 
 # Ensure both have the same CRS
-gdfp = gdfp.to_crs(region_poly.crs)
+region_poly = region_poly.to_crs(crs)
+gdfp = gdfp.to_crs(crs)
 
 # Buffer the region_poly and clip the points along the coastline by the buffered region
-buffer_size = 100  # Set buffer distance (adjust as needed)
+buffer_size = 0.01  # Set buffer distance (adjust as needed)
 region_poly_buffered = region_poly.buffer(buffer_size)
 gdfp_clipped = gpd.clip(gdfp, region_poly_buffered)
 
@@ -346,7 +319,8 @@ pd_obs.to_csv(file_obs, sep=' ', header=False, index=False, float_format='%.6f')
 fig, ax = plt.subplots(figsize=(8,4))
 xu_grid_uds.grid.plot(ax=ax,linewidth=0.5,color='k',alpha=0.2)
 ax.plot(pd_obs['x'],pd_obs['y'],'rx')
-dfmt.plot_coastlines(ax=ax, crs=crs)
+region_poly.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1)
+dfmt.plot_coastlines(ax=ax, crs=region_poly.crs)
 
 # Save the figure
 output_path = os.path.join(dir_output_geom, 'grid_obs_points.png')

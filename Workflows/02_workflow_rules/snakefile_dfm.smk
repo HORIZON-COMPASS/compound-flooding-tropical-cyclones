@@ -15,6 +15,7 @@ root_dir = join(disk_dir,config['root_dir'])
 # define other directories:
 dir_models = config["dir_models"]
 dir_runs   = config["dir_runs"]
+dir_data   = config["dir_data"]
 
 def get_forcing(wildcards):
     return config["runname_ids"][wildcards.runname]['forcing']
@@ -41,6 +42,12 @@ def get_sfincs_bbox(wildcards):
 def get_dfm_bbox(wildcards):
     bbox = config["runname_ids"][wildcards.runname]["bbox_dfm"]
     return bbox
+
+def get_use_waves(wildcards):
+    return config['runname_ids'][wildcards.runname]['use_waves']
+
+def get_wave_output(wildcards):
+    return config['runname_ids'][wildcards.runname]['wave_output']
     
 def get_dfm_dxy_base(wildcards):
     dfm_dxy_base = config["runname_ids"][wildcards.runname]["dfm_dxy_base"]
@@ -76,6 +83,13 @@ def get_cf_datacatalog(wildcards):
     elif os.name == "posix": #Running on linux
         return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing___linux.yml')
 
+def get_coast_datacatalog(wildcards):
+    if os.name == 'nt': #Running on windows
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_SFINCS_coastal_coupling.yml')
+    elif os.name == "posix": #Running on linux
+        return join(curdir, '..', '03_data_catalogs', 'datacatalog_SFINCS_coastal_coupling___linux.yml')
+
+
 # Define wildcards for path names
 runname_ids = list(config['runname_ids'].keys())
 region = [value['region'] for key, value in config['runname_ids'].items()]
@@ -93,8 +107,8 @@ wildcard_constraints:
     CF_wind=r"-?\d+"  # Ensures only numbers are captured (prevents '10_his.nc')
 
 
-# activate when having multiple CF values!!
-#  Generate all combinations of CF_SLR and CF_wind for each runname
+# Activate when having multiple CF values!!
+# Generate all combinations of CF_SLR and CF_wind for each runname
 run_combinations = []
 for key, value in config['runname_ids'].items():
     for slr, wind in product(value['CF_value_SLR'], value['CF_value_wind']):
@@ -136,7 +150,7 @@ rule make_dfm_model_event:
         start_time      = get_start_time,
         end_time        = get_end_time,
         dfm_bbox        = get_dfm_bbox,
-        sfincs_region   = join(root_dir, dir_models, "{region}", "{tc_name}", "sfincs", "gis", "region.geojson"),
+        sfincs_region   = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
         verif_points    = get_dfm_verification_points,
         data_cat        = get_datacatalog,
         dimrset         = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
@@ -147,7 +161,6 @@ rule make_dfm_model_event:
         mdu_file        = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.mdu"),
         submit_script   = join(root_dir,dir_runs,"{region}", "{runname}","dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",submit_script_system),
     script:
-        join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
         join("..", "04_scripts", "model_building", "dfm", "setup_dfm_event.py")
 
 rule run_dfm:
@@ -169,15 +182,22 @@ rule run_dfm:
             shell("chmod +x {params.submit_script_copy}")
             shell("{params.submit_script_copy}")
 
-rule add_dfm_output_to_catalog:
+rule add_waves_and_output_to_catalog:
     input:
-        his_file     = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
+        his_file       = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "settings_0000_his.nc"),
     params:
-        model_name   = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
-        cf_data_cat  = get_cf_datacatalog,
-        root_dir     = p_dir,
+        model_name     = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
+        cf_data_cat    = get_cf_datacatalog,
+        root_dir       = p_dir,
+        model_name     = "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}",
+        cf_data_cat    = get_cf_datacatalog,
+        root_dir       = p_dir,
+        use_waves      = get_use_waves,
+        coast_data_cat = get_coast_datacatalog,
+        wave_output    = get_wave_output,
+        start_time     = get_start_time,
+        end_time       = get_end_time,
     output:
-        done_file    = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
+        done_file      = join(root_dir, dir_runs, "{region}", "{runname}", "dfm", "event_{dfm_res}_{bathy}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "postprocessing_done.txt"),
     script:
-        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
-        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog.py")
+        join("..", "04_scripts", "postprocessing", "dfm", "output_to_catalog_add_waves.py")

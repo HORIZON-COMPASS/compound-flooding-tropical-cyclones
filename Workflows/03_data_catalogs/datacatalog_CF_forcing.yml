@@ -1,8 +1,8 @@
 meta:
   root: p:\
-ERA5land_Idai_-7:
+ClimateDT_hist:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/ERA5land_Idai_-7.nc
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/climateDT_*_hist_Sofala_20190301_to_20190329.nc
   driver: netcdf
   driver_kwargs:
     chunks:
@@ -12,166 +12,389 @@ ERA5land_Idai_-7:
     combine: by_coords
     decode_times: true
     parallel: true
+  rename:
+    msl: press_msl
+    tp: precip
+    10u: wind10_u
+    10v: wind10_v
+    ssrd: kin
+    2t: temp
+    tisr: kout
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    press_msl: 0.01
+    precip: 1000
+  unit_add:
+    temp: -273.15
   meta:
-    notes: Copied ERA5land_Idai dataset and adjusted with CF value -7%
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth
   crs: 4326
-TAMSAT_Idai_-7:
+ClimateDT_Tplus2K:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/TAMSAT_Idai_-7.nc
-  driver: netcdf
-  meta:
-    notes: Copied TAMSAT_Idai dataset and adjusted with CF value -7%
-  crs: 4326
-dfm_output_MZB_Idai_noSLR2015:
-  data_type: GeoDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_MZB_Idai_SLR2015.his
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/climateDT_*_Tplus2.0K_Sofala_20190301_to_20190329.nc
   driver: netcdf
   driver_kwargs:
     chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10/output/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF-10_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_FES2014_CF-0.14_spw_IBTrACS_CF0_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10/output/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF-10_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0/output/event_450_gebco2024_MZB_FES2014_CF0_spw_IBTrACS_CF0_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF-10/output/settings_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0/output/settings_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF-0.14_spw_IBTrACS_CF0_ISIMIP:
-  data_type: GeoDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/SLR/ISIMIP/dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0_SLR2015.his
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-dfm_output_event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0:
-  data_type: GeoDataset
-  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41opendap_CF0_spw_IBTrACS_CF0/output/settings_0000_his.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      stations: 10
-      time: -1
-  rename:
-    station_x_coordinate: lon
-    station_y_coordinate: lat
-    stations: index
-  meta:
-    category: ocean
-  crs: 4326
-era5_hourly_CF-7_Idai:
-  data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-7_Idai.nc
-  driver: netcdf
-  driver_kwargs:
-    chunks:
-      latitude: 125
-      longitude: 120
-      time: 50
+      latitude: 10
+      longitude: 10
+      time: 30
     combine: by_coords
     decode_times: true
     parallel: true
-    lock: false
+  rename:
+    msl: press_msl
+    tp: precip
+    10u: wind10_u
+    10v: wind10_v
+    ssrd: kin
+    2t: temp
+    tisr: kout
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    press_msl: 0.01
+    precip: 1000
+  unit_add:
+    temp: -273.15
   meta:
-    notes: Copied era5_hourly dataset and adjusted with CF value -7%
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth
+  crs: 4326
+ClimateDT_cont:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/ECMWF_ClimateDT/data/preprocessed/climateDT_*_cont_Sofala_20190301_to_20190329.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 10
+      longitude: 10
+      time: 30
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  rename:
+    msl: press_msl
+    tp: precip
+    10u: wind10_u
+    10v: wind10_v
+    ssrd: kin
+    2t: temp
+    tisr: kout
+  unit_mult:
+    kin: 0.000277778
+    kout: 0.000277778
+    ssr: 0.000277778
+    press_msl: 0.01
+    precip: 1000
+  unit_add:
+    temp: -273.15
+  meta:
+    category: meteo
+    notes: ClimateDT data retrieved from Destination Earth
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF-1/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.05_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.15_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF-5/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF-0.1_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-10/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-1/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF-5/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+  crs: 4326
+dfm_output_event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0_waves:
+  data_type: GeoDataset
+  path: 11210471-001-compass/03_Runs/sofala/Idai/dfm/event_450_gebco2024_MZB_GTSMv41_CF0_era5_hourly_spw_IBTrACS_CF0/output/settings_0000_his_WAVES.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      station: 10
+      time: -1
+  rename:
+    station_x_coordinate: lon
+    station_y_coordinate: lat
+  meta:
+    category: ocean
+    notes: DFM output combined with wave data from SnapWave provided by Fernaldi Gradiyanto
+      & Tim Leijnse
   crs: 4326
 era5_hourly_CF0_Idai:
   data_type: RasterDataset
@@ -189,14 +412,103 @@ era5_hourly_CF0_Idai:
   meta:
     notes: Copied era5_hourly dataset and adjusted with CF value 0%
   crs: 4326
-era5_hourly_zarr_CF-7_Idai:
+era5_hourly_zarr_CF-16_Idai:
   data_type: RasterDataset
-  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-7_Idai.zarr
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-16_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -16%
+  crs: 4326
+era5_hourly_zarr_CF-4_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-4_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -4%
+  crs: 4326
+era5_hourly_zarr_CF-8_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-8_Idai.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks: auto
+  meta:
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
+  crs: 4326
+era5_hourly_CF-8_Freddy:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Freddy.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -8%
+  crs: 4326
+era5_hourly_CF-8_Kenneth:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-8_Kenneth.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -8%
+  crs: 4326
+era5_hourly_zarr_CF-9_EtaIota:
+  data_type: RasterDataset
+  provider: netcdf
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_EtaIota.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  crs: 4326  
+era5_hourly_zarr_CF-9_Iota:
+  data_type: RasterDataset
+  provider: netcdf
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_CF-9_Iota.nc
+  driver: netcdf
+  driver_kwargs:
+    chunks:
+      latitude: 125
+      longitude: 120
+      time: 50
+    combine: by_coords
+    decode_times: true
+    parallel: true
+  meta:
+    notes: Copied era5_hourly dataset and adjusted with CF value -9%
+  crs: 4326
+era5_hourly_zarr_CF-8_Kenneth:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/counterfactuals/precipitation/era5_hourly_zarr_CF-8_Kenneth.zarr
   driver: zarr
   driver_kwargs:
     chunks: auto
   meta:
-    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -7%
+    notes: Copied era5_hourly_zarr dataset and adjusted with CF value -8%
   crs: 4326
 gtsm_codec_future_tide_v1:
   data_type: GeoDataset
@@ -218,3 +530,35 @@ gtsm_codec_future_tide_v1:
     source_url: https://doi.org/10.24381/cds.8c59054f
     source_version: v1
   crs: 4326
+spw_IBTrACS_CF-10_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-10_2019063S18038_ext10d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
+spw_IBTrACS_CF-1_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-1_2019063S18038_ext10d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
+spw_IBTrACS_CF-5_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF-5_2019063S18038_ext10d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time, if CF!=0 adjusted to CF using Mester et al. 2023 method
+spw_IBTrACS_CF0_Idai:
+  data_type: RasterDataset
+  path: 11210471-001-compass/01_Data/SPW_forcing_files/tc_Idai_CF0_2019063S18038_ext9d.spw
+  driver: raster
+  meta:
+    category: meteo
+    notes: IBTrACS data converted to a spw using cht-cyclone py package, extended
+      to match simulation time

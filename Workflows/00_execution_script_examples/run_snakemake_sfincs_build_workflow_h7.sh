@@ -11,7 +11,8 @@ module load pixi
 #Going to the folder where git checkout is
 #ROOT="/u/couasnon/git_repos/COMPASS/COMPASS"
 #ROOT="/u/bovensch/git_repos/COMPASS"
-ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
+ROOT="/u/morenodu/git_repos/compound-flooding-tropical-cyclones/"
+# ROOT="/u/aleksand/compound-flooding-tropical-cyclones/"
 cd "${ROOT}"
 
 # Installing pixi environment
@@ -23,10 +24,10 @@ source hook.sh
 # Navigate to directory where the scripts are
 cd Workflows/02_workflow_rules
 
-#Unlocking the directory for snakemake
+# Unlocking the directory for snakemake
 snakemake --unlock -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml 
 
-# # running workflow with snakemake
+# running workflow with snakemake
 snakemake -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml --forceall --rulegraph | dot -Tpng > dag_smk_sfincs_build.png
 snakemake -s snakefile_sfincs_build.smk --configfile ../01_config_snakemake/config_general_MZB.yml --cores 'all' --latency-wait 60 --wait-for-files --forceall
 

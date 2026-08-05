@@ -195,9 +195,10 @@ cython_debug/
 
 # addded to ignore these files for the main repo
 
-00_execution_script_examples/
+# Anchored to the repo root on purpose: the unanchored form also matched
+# Workflows/00_execution_script_examples/, silently ignoring any new runner added there.
+/00_execution_script_examples/
 migration_ref_files/
-Workflows/04_scripts/preprocessing/
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

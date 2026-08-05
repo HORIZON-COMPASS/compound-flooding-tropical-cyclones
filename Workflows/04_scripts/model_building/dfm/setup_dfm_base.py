@@ -1,5 +1,6 @@
 # This script is based on the ModelBuilder template from dfm_tools v0.31.0 (accessed on 20/01/2025). 
 # Adapted by Natalia Aleksandrova & Doris Vertegaal
+# Use pixi environment compass-snake-dfm
 #%%
 # import packages
 import os

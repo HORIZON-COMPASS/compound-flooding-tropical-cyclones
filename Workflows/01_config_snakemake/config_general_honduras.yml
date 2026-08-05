@@ -34,14 +34,15 @@ runname_ids:
         dfm_verification_points:  test                     # DataCatalog handle for the additional points where D-FM output will be saved for validation purposes - check this  
         
         #Wflow model user-defined settings
-        config_wflow_base: wflow_base_build_HND.yml            # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)    
-        use_bankfull_corr: False    
+        config_wflow_base: wflow_base_build_HND.yml        # name of the wflow configuration file under 05_config_models/01_wflow (default: wflow_base_build.yml)    
         lulc_mapping_wflow: vito_mapping_wflow  
-        
+        use_bankfull_corr: False  
+        bankfull_corr_lulc: gdlc_100m_v3_2019              # Factual landuse when using bankfull correction from 30 yr wflow run 
+
         #SFINCS model user-defined settings
         config_sfincs_base: sfincs_base_build_honduras.yml # name of the SFINCS configuration file (default: sfincs_base_build.yml)             
         sfincs_obs_file: obs_locs_EtaIota.geojson
-        bbox_sfincs: "[-88.07,15.1,-87.6,16.0]"             # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
+        bbox_sfincs: "[-88.07,15.1,-87.6,16.0]"            # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]  
         utmzone: 16p                                       # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html)     
         coastal_ts: gtsm_codec_reanalysis_hourly_v3        # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used   # gtsm_codec_reanalysis until 2018 only
         dfm_coastal_mask: coastal_coupling_msk_HND         # DataCatalog handle for the coastal coupling mask  

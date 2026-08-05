@@ -1,10 +1,7 @@
-# %%
+# %% Use pixi environment compass-wflow
 from datetime import datetime as datetime
 from datetime import timedelta
-from os.path import basename, join
-
-import pandas as pd
-from hydromt.config import configread
+from os.path import  join
 from hydromt.log import setuplog
 from hydromt_wflow import WflowModel
 
@@ -19,11 +16,11 @@ if "snakemake" in locals():
     end_time = snakemake.params.end_time
     data_cat = snakemake.params.data_cat
 else:
-    precip_forcing = "era5_hourly"
+    precip_forcing = "era5_hourly_zarr"
     CF_rain = 0
     CF_rain_txt = "0"
-    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow_test"
-    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow_test/event_precip_{precip_forcing}_CF{CF_rain_txt}"
+    wflow_root_noforcing = "p:/11210471-001-compass/02_Models/sofala/Idai/wflow"
+    wflow_root_forcing = f"p:/11210471-001-compass/03_Runs/sofala/Idai/wflow/event_precip_{precip_forcing}_CF{CF_rain_txt}"
     start_time = "20190309 000000"
     end_time = "20190325 060000"
     data_cat = [
@@ -78,6 +75,7 @@ mod.setup_precip_forcing(**opt["setup_precip_forcing"])
 mod.setup_temp_pet_forcing(**opt["setup_temp_pet_forcing"])
 mod.write_forcing(chunksize=10)
 mod.write_grid()
+mod.set_config("input.vertical.f", "f_")
 mod.write_config()
 
 # %%
