@@ -102,9 +102,9 @@ rule all_wflow:
 rule make_base_model_wflow:
     input:
         #config_file = join(curdir,'..', "05_config_models", "01_wflow", "config_wflow.yml"),
-        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
-        dir_sfincs_model = join(root_dir, dir_models, "{region}", "{runname}", "sfincs"),
-        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
+        region_geom = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "region.geojson"),
+        dir_sfincs_model = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}"),
+        src_file = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_{CF_landuse}", "gis", "dis.geojson"),  # v2 renamed src.geojson -> dis.geojson
         config_file = get_config_wflow  
     params:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}"),
