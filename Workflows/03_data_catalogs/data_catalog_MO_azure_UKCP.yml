@@ -1,11 +1,11 @@
 # meta: # need different roots as moved some data to local
 #   root: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket
-# aster: # not in auto
+# aster:
 #   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/dem.tif
 #   uri_resolver:
 #     name: azure_blob
 #     options:
-#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
 #   provider: azure
 #   data_type: RasterDataset
 #   driver:
@@ -24,7 +24,7 @@ basin_atlas_level12_v10:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -39,107 +39,103 @@ basin_atlas_level12_v10:
     source_url: https://www.hydrosheds.org/hydroatlas
     source_version: 10
 ceh_gear_hourly:
-  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/reprojected_GEAR/CEH-GEAR-1hr-v2_{year}{month:02d}.nc
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/reprojected_GEAR/CEH-GEAR-1hr-v2_*.nc
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
+  data_adapter:
+    rename:
+      rainfall_amount: precip
   data_type: RasterDataset
   driver:
     name: raster_xarray
     options:
+      ext_override: ".nc" 
       chunks:
-        latitude: 250
-        longitude: 240
-        time: 30
+        latitude: 300
+        longitude: 200
+        time: 48
       combine: by_coords
       decode_times: true
       parallel: true
   metadata:
-    crs: 4326
     category: meteo
-    history: null
-    paper_doi: null
-    paper_ref: null
-    source_license: null
-    source_url: null
-    source_version: CEH_GEAR
-  data_adapter:
-    unit_mult:
-      precip: 1
-    rename:
-      rainfall_amount: precip
-ceh_gear_hourly_counterfactual:
-  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t1_{year}{month:02d}.nc
-  uri_resolver:
-    name: azure_blob
-    options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
-  provider: azure
-  data_type: RasterDataset
-  driver:
-    name: raster_xarray
-    options:
-      chunks:
-        latitude: 250
-        longitude: 240
-        time: 30
-      combine: by_coords
-      decode_times: true
-      parallel: true
-  metadata:
     crs: 4326
-    category: meteo
-    history: null
-    paper_doi: null
-    paper_ref: null
-    source_license: null
-    source_url: null
-    source_version: CEH_GEAR
-  data_adapter:
-    unit_mult:
-      precip: 1
-    rename:
-      rainfall_amount: precip
-ceh_gear_hourly_future:
-  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t3_{year}{month:02d}.nc
-  uri_resolver:
-    name: azure_blob
-    options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
-  provider: azure
-  data_type: RasterDataset
-  driver:
-    name: raster_xarray
-    options:
-      chunks:
-        latitude: 250
-        longitude: 240
-        time: 30
-      combine: by_coords
-      decode_times: true
-      parallel: true
-  metadata:
-    crs: 4326
-    category: meteo
-    history: null
-    paper_doi: null
-    paper_ref: null
-    source_license: null
-    source_url: null
-    source_version: CEH_GEAR
-  data_adapter:
-    unit_mult:
-      precip: 1
-    rename:
-      rainfall_amount: precip
-coastal_coupling_msk_SMST: # not in auto
+    source_url: https://catalogue.ceh.ac.uk/documents/fc9423d6-3d54-467f-bb2b-fc7357a3941f
+    source_version: CEH-GEAR-1hr-v2
+    unit: mm
+# ceh_gear_hourly_counterfactual:
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t1_{year}{month:02d}.nc
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
+#   provider: azure
+#   data_type: RasterDataset
+#   driver:
+#     name: raster_xarray
+#     options:
+#       chunks:
+#         latitude: 250
+#         longitude: 240
+#         time: 30
+#       combine: by_coords
+#       decode_times: true
+#       parallel: true
+#   metadata:
+#     crs: 4326
+#     category: meteo
+#     history: null
+#     paper_doi: null
+#     paper_ref: null
+#     source_license: null
+#     source_url: null
+#     source_version: CEH_GEAR
+#   data_adapter:
+#     unit_mult:
+#       precip: 1
+#     rename:
+#       rainfall_amount: precip
+# ceh_gear_hourly_future:
+#   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/forcing/ceh_t3_{year}{month:02d}.nc
+#   uri_resolver:
+#     name: azure_blob
+#     options:
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
+#   provider: azure
+#   data_type: RasterDataset
+#   driver:
+#     name: raster_xarray
+#     options:
+#       chunks:
+#         latitude: 250
+#         longitude: 240
+#         time: 30
+#       combine: by_coords
+#       decode_times: true
+#       parallel: true
+#   metadata:
+#     crs: 4326
+#     category: meteo
+#     history: null
+#     paper_doi: null
+#     paper_ref: null
+#     source_license: null
+#     source_url: null
+#     source_version: CEH_GEAR
+#   data_adapter:
+#     unit_mult:
+#       precip: 1
+#     rename:
+#       rainfall_amount: precip
+coastal_coupling_msk_SMST:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/coastal_bnd_Somerset_5mMSL_polygon.geojson
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -158,7 +154,7 @@ era5_daily:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -208,7 +204,7 @@ era5_hourly:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -247,7 +243,7 @@ era5_orography:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -271,15 +267,21 @@ era5_orography:
       z: elevtn
 fabdem:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/topography/fabdem/fabdem.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
+  provider: azure
+  data_type: RasterDataset
   data_adapter:
     rename:
       fabdem: elevtn
   driver:
+    name: rasterio
     options:
       chunks:
         x: 3600
         y: 3600
-    name: rasterio
   metadata:
     crs: 4326
     category: topography
@@ -288,14 +290,13 @@ fabdem:
     source_license: CC BY-NC-SA 4.0
     source_url: https://data.bris.ac.uk/data/dataset/25wfy0f9ukoge2gs7a5mqpq2j7
     source_version: '1.0'
-  data_type: RasterDataset
 gcn250:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/gcn250/*.tif
   # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/landuse/gcn250/GCN250_*.tif
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -322,7 +323,7 @@ gebco:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   data_adapter:
@@ -348,7 +349,7 @@ gswo:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -369,7 +370,7 @@ gtsm_codec_reanalysis_hourly_v3: # change to 10min version in a bit
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataset
   metadata:
@@ -381,7 +382,7 @@ hydro_lakes:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -406,7 +407,7 @@ hydro_reservoirs:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -443,7 +444,7 @@ ksathorfrac_global:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -470,7 +471,7 @@ ksathorfrac_global:
 #   uri_resolver:
 #     name: azure_blob
 #     options:
-#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
 #   provider: azure
 #   data_type: GeoDataFrame
 #   driver:
@@ -482,7 +483,7 @@ merit_hydro:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -514,7 +515,7 @@ merit_hydro_index:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -530,7 +531,7 @@ modis_lai:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -554,12 +555,12 @@ modis_lai:
     unit_mult:
       LAI: 0.1
 ocean_shape:
-  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/ocean_polygon/water_polygons.shp
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/ocean_polygon/water_polygons.shp # moved to local as reading from the blob store doesn't seem to be able to connect all the extra files that come with a .shp
   # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/11210471-001-compass/01_Data/ocean_polygon/water_polygons.shp
   # uri_resolver:
   #   name: azure_blob
   #   options:
-  #     sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  #     sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -572,7 +573,7 @@ osm_coastlines:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -593,7 +594,7 @@ osm_coastlines:
 #   uri_resolver:
 #     name: azure_blob
 #     options:
-#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
 #   provider: azure
 #   data_type: RasterDataset
 #   driver:
@@ -610,7 +611,7 @@ rivers_lin2019_v1:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -631,54 +632,54 @@ soilgrids:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_adapter:
     rename:
-      BLDFIE_M_sl1_250m_ll: bd_sl1
-      BLDFIE_M_sl2_250m_ll: bd_sl2
-      BLDFIE_M_sl3_250m_ll: bd_sl3
-      BLDFIE_M_sl4_250m_ll: bd_sl4
-      BLDFIE_M_sl5_250m_ll: bd_sl5
-      BLDFIE_M_sl6_250m_ll: bd_sl6
-      BLDFIE_M_sl7_250m_ll: bd_sl7
-      CLYPPT_M_sl1_250m_ll: clyppt_sl1
-      CLYPPT_M_sl2_250m_ll: clyppt_sl2
-      CLYPPT_M_sl3_250m_ll: clyppt_sl3
-      CLYPPT_M_sl4_250m_ll: clyppt_sl4
-      CLYPPT_M_sl5_250m_ll: clyppt_sl5
-      CLYPPT_M_sl6_250m_ll: clyppt_sl6
-      CLYPPT_M_sl7_250m_ll: clyppt_sl7
-      ORCDRC_M_sl1_250m_ll: oc_sl1
-      ORCDRC_M_sl2_250m_ll: oc_sl2
-      ORCDRC_M_sl3_250m_ll: oc_sl3
-      ORCDRC_M_sl4_250m_ll: oc_sl4
-      ORCDRC_M_sl5_250m_ll: oc_sl5
-      ORCDRC_M_sl6_250m_ll: oc_sl6
-      ORCDRC_M_sl7_250m_ll: oc_sl7
-      PHIHOX_M_sl1_250m_ll: ph_sl1
-      PHIHOX_M_sl2_250m_ll: ph_sl2
-      PHIHOX_M_sl3_250m_ll: ph_sl3
-      PHIHOX_M_sl4_250m_ll: ph_sl4
-      PHIHOX_M_sl5_250m_ll: ph_sl5
-      PHIHOX_M_sl6_250m_ll: ph_sl6
-      PHIHOX_M_sl7_250m_ll: ph_sl7
-      SLTPPT_M_sl1_250m_ll: sltppt_sl1
-      SLTPPT_M_sl2_250m_ll: sltppt_sl2
-      SLTPPT_M_sl3_250m_ll: sltppt_sl3
-      SLTPPT_M_sl4_250m_ll: sltppt_sl4
-      SLTPPT_M_sl5_250m_ll: sltppt_sl5
-      SLTPPT_M_sl6_250m_ll: sltppt_sl6
-      SLTPPT_M_sl7_250m_ll: sltppt_sl7
-      SNDPPT_M_sl1_250m_ll: sndppt_sl1
-      SNDPPT_M_sl2_250m_ll: sndppt_sl2
-      SNDPPT_M_sl3_250m_ll: sndppt_sl3
-      SNDPPT_M_sl4_250m_ll: sndppt_sl4
-      SNDPPT_M_sl5_250m_ll: sndppt_sl5
-      SNDPPT_M_sl6_250m_ll: sndppt_sl6
-      SNDPPT_M_sl7_250m_ll: sndppt_sl7
-      SoilThickness_250m_ll: soilthickness
-      TAXOUSDA_250m_ll: tax_usda
+      bd_sl1_250m_ll: bd_sl1
+      bd_sl2_250m_ll: bd_sl2
+      bd_sl3_250m_ll: bd_sl3
+      bd_sl4_250m_ll: bd_sl4
+      bd_sl5_250m_ll: bd_sl5
+      bd_sl6_250m_ll: bd_sl6
+      bd_sl7_250m_ll: bd_sl7
+      clyppt_sl1_250m_ll: clyppt_sl1
+      clyppt_sl2_250m_ll: clyppt_sl2
+      clyppt_sl3_250m_ll: clyppt_sl3
+      clyppt_sl4_250m_ll: clyppt_sl4
+      clyppt_sl5_250m_ll: clyppt_sl5
+      clyppt_sl6_250m_ll: clyppt_sl6
+      clyppt_sl7_250m_ll: clyppt_sl7
+      oc_sl1_250m_ll: oc_sl1
+      oc_sl2_250m_ll: oc_sl2
+      oc_sl3_250m_ll: oc_sl3
+      oc_sl4_250m_ll: oc_sl4
+      oc_sl5_250m_ll: oc_sl5
+      oc_sl6_250m_ll: oc_sl6
+      oc_sl7_250m_ll: oc_sl7
+      ph_sl1_250m_ll: ph_sl1
+      ph_sl2_250m_ll: ph_sl2
+      ph_sl3_250m_ll: ph_sl3
+      ph_sl4_250m_ll: ph_sl4
+      ph_sl5_250m_ll: ph_sl5
+      ph_sl6_250m_ll: ph_sl6
+      ph_sl7_250m_ll: ph_sl7
+      sltppt_sl1_250m_ll: sltppt_sl1
+      sltppt_sl2_250m_ll: sltppt_sl2
+      sltppt_sl3_250m_ll: sltppt_sl3
+      sltppt_sl4_250m_ll: sltppt_sl4
+      sltppt_sl5_250m_ll: sltppt_sl5
+      sltppt_sl6_250m_ll: sltppt_sl6
+      sltppt_sl7_250m_ll: sltppt_sl7
+      sndppt_sl1_250m_ll: sndppt_sl1
+      sndppt_sl2_250m_ll: sndppt_sl2
+      sndppt_sl3_250m_ll: sndppt_sl3
+      sndppt_sl4_250m_ll: sndppt_sl4
+      sndppt_sl5_250m_ll: sndppt_sl5
+      sndppt_sl6_250m_ll: sndppt_sl6
+      sndppt_sl7_250m_ll: sndppt_sl7
+      soilthickness_250m_ll: soilthickness
+      taxousda_250m_ll: tax_usda
   driver:
     options:
       chunks:
@@ -706,7 +707,7 @@ vito:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+      sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -723,12 +724,12 @@ vito:
     source_url: https://land.copernicus.eu/global/products/lc
     source_version: v2.0.2
 vito_mapping:
-  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/vito_mapping.csv
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/vito_mapping.csv # moved to local as there is an issue with .csv extensions
   # uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/11210471-001-compass/01_Data/lulc/vito_mapping.csv
   # uri_resolver:
   #   name: azure_blob
   #   options:
-  #     sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+  #     sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
   provider: azure
   data_type: DataFrame
   driver:
@@ -740,7 +741,7 @@ vito_mapping:
 #   uri_resolver:
 #     name: azure_blob
 #     options:
-#       sas_token: sp=racwdl&st=2026-06-29T11:59:19Z&se=2026-07-05T20:14:19Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-06-29T11:59:19Z&ske=2026-07-05T20:14:19Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=R%2BalS78ARq57v1PMufiTAdP3Imc5Tb6NjAKPYWJj9xA%3D
+#       sas_token: sp=racwdl&st=2026-08-06T11:25:11Z&se=2026-08-12T19:40:11Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-08-06T11:25:11Z&ske=2026-08-12T19:40:11Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=aCHacaniXGgX7KOfaB6yiEodjbYHeOEANHrbr2RYC64%3D
 #   provider: azure
 #   data_type: GeoDataFrame
 #   driver:

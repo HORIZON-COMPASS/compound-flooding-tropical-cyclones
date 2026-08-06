@@ -26,7 +26,7 @@ steps:
 
   - elevation.create:
       elevation_list:
-        - elevation: gebco   # 1st elevation dataset
+        - elevation: fabdem   # 1st elevation dataset
           zmin: 0.001         # only use where values > 0.001
         # the script appends {elevation: <bathy>, reproj_method: bilinear}
 
@@ -49,7 +49,7 @@ steps:
 
   - subgrid.create:
       elevation_list:
-        - elevation: gebco
+        - elevation: fabdem
           zmin: 0.001
         # the script appends {elevation: <bathy>, reproj_method: bilinear}
       roughness_list:
