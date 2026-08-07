@@ -200,6 +200,7 @@ cython_debug/
 # The root-level 00_execution_script_examples/ (local logs only) stays ignored.
 /00_execution_script_examples/
 migration_ref_files/
+Workflows/04_scripts/preprocessing
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
