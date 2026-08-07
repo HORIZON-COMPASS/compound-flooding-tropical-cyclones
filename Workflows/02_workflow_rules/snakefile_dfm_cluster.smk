@@ -99,6 +99,7 @@ tidemodel = [value['tidemodel'] for key, value in config['runname_ids'].items()]
 CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
 wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].items()]
 CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+CF_landuse = [value['CF_landuse'][0] for key, value in config['runname_ids'].items()][0]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -156,7 +157,7 @@ rule make_dfm_model_event:
         start_time      = get_start_time,
         end_time        = get_end_time,
         dfm_bbox        = get_dfm_bbox,
-        sfincs_region   = join(root_dir, dir_models, "{region}", "{runname}", "sfincs", "gis", "region.geojson"),
+        sfincs_region   = join(root_dir, dir_models, "{region}", "{runname}", "sfincs_" + CF_landuse, "gis", "region.geojson"),
         verif_points    = get_dfm_verification_points,
         data_cat        = get_datacatalog,
         dimrset         = join(p_dir, "d-hydro", "dimrset", "weekly", "2.28.06"),
