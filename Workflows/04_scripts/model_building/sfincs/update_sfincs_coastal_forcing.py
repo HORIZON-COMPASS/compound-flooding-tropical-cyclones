@@ -2,12 +2,12 @@
 # Add event forcing (precip / coastal water level / wind / discharge / obs points) to a SFINCS
 # base model — HydroMT v1 / hydromt_sfincs v2. Migrated from the v0 setup_*/opt API: forcing is
 # now applied as a `steps` list of component methods via mod.update(steps=...).
-from datetime import datetime as datetime
-from os.path import basename, join, exists
 import logging
-import shutil
 import os
-import hydromt
+import shutil
+from datetime import datetime as datetime
+from os.path import exists
+
 from hydromt.data_catalog import DataCatalog
 from hydromt_sfincs import SfincsModel
 

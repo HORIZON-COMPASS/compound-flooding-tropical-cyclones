@@ -41,8 +41,28 @@ def get_config_wflow(wildcards):
     config_wflow_base = config["runname_ids"][wildcards.runname]['config_wflow_base']
     return join(curdir, '..', "05_config_models", "01_wflow", config_wflow_base)
 
-def get_river_upa(wildcards):    
+def get_river_upa(wildcards):
     return config["runname_ids"][wildcards.runname]["river_upa"]
+
+def get_landuse(wildcards):
+    # Land-use dataset for setup_lulcmaps. v1 does not (yet) carry the CF_landuse wildcard, so
+    # exactly one scenario is built per run; the configs still write the list form, so unwrap it.
+    # Returns None when unset, leaving the build yml's default in place.
+    lulc = config["runname_ids"][wildcards.runname].get("CF_landuse")
+    if isinstance(lulc, (list, tuple)):
+        if len(lulc) != 1:
+            raise ValueError(
+                f"{wildcards.runname}: CF_landuse has {len(lulc)} entries, but v1 builds a "
+                "single base model per run. Multiple land-use scenarios require the CF_landuse "
+                "wildcard relayout (see branch v1_integrate_62_63)."
+            )
+        lulc = lulc[0]
+    return lulc
+
+def get_lulc_mapping(wildcards):
+    # Reclassification table mapping land-use classes to wflow parameters. Distinct from the
+    # SFINCS table: wflow needs the *_hydromtwflow variant (many parameters, not just Manning).
+    return config["runname_ids"][wildcards.runname].get("lulc_mapping_wflow")
 # def get_dir_model_base(wildcards):
 #     print(wildcards)
 #     return join(root_dir, dir_models, config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
@@ -72,15 +92,21 @@ wildcard_constraints:
 run_combinations = []
 for key, value in config['runname_ids'].items():
     for tp in (value['CF_value_rain']):
-        run_combinations.append((value['region'], key, value['precip_forcing'], tp))
+        run_combinations.append((value['region'], key, value['precip_forcing'], tp,
+                                 value.get('use_bankfull_corr', False)))
 
 # Unpack into separate wildcard lists
-region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
+region, runname_ids, precip_forcing, CF_rain, bankfull_corr = zip(*run_combinations)
 
 rule all_wflow:
     input:
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+        # Only runs with use_bankfull_corr enabled request the bankfull-corrected discharge.
+        # NOTE: rule postprocess_discharge (which produces this file) is currently commented out
+        # below, so a config setting use_bankfull_corr: True cannot yet satisfy this target.
+        [fn for fn, use_bf in zip(
+            expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+            bankfull_corr) if use_bf],
 
 rule make_base_model_wflow:
     input:
@@ -93,7 +119,9 @@ rule make_base_model_wflow:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow"),
         data_cat = get_datacatalog,
         arg_bbox = get_bbox,
-        river_upa = get_river_upa
+        river_upa = get_river_upa,
+        landuse = get_landuse,
+        lulc_mapping_wflow = get_lulc_mapping
     output: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow", 'staticmaps.nc'), 

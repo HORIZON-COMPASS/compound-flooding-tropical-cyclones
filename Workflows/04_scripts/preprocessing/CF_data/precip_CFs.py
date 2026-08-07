@@ -1,12 +1,13 @@
 # %%
 # Importing the necessary packages
-import os
-import zarr
-import xarray
-import hydromt
-import geopandas as gpd
 import copy
+import os
 from datetime import datetime
+
+import geopandas as gpd
+import hydromt
+import xarray
+import zarr
 
 print("--- DIAGNOSTIC PRINTS ---")
 print(f"Zarr version: {zarr.__version__}")

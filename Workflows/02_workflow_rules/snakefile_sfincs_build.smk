@@ -30,8 +30,27 @@ def get_dfm_coastal_mask(wildcards):
     dfm_coastal_mask = config["runname_ids"][wildcards.runname]["dfm_coastal_mask"]
     return dfm_coastal_mask 
 
-def get_river_upa(wildcards):    
+def get_river_upa(wildcards):
     return config["runname_ids"][wildcards.runname]["river_upa"]
+
+def get_landuse(wildcards):
+    # Land-use dataset for the subgrid roughness. v1 does not (yet) carry the CF_landuse
+    # wildcard, so exactly one scenario is built per run; the configs still write the list
+    # form, so unwrap it. Returns None when unset, leaving the build yml's default in place.
+    lulc = config["runname_ids"][wildcards.runname].get("CF_landuse")
+    if isinstance(lulc, (list, tuple)):
+        if len(lulc) != 1:
+            raise ValueError(
+                f"{wildcards.runname}: CF_landuse has {len(lulc)} entries, but v1 builds a "
+                "single base model per run. Multiple land-use scenarios require the CF_landuse "
+                "wildcard relayout (see branch v1_integrate_62_63)."
+            )
+        lulc = lulc[0]
+    return lulc
+
+def get_lulc_mapping(wildcards):
+    # Reclassification table mapping land-use classes to SFINCS Manning values.
+    return config["runname_ids"][wildcards.runname].get("lulc_mapping_sfincs")
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -64,7 +83,9 @@ rule make_base_model_sfincs:
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
-        river_upa = get_river_upa
+        river_upa = get_river_upa,
+        landuse = get_landuse,
+        lulc_mapping_sfincs = get_lulc_mapping
     input:
         config_file = get_config,
     output: 

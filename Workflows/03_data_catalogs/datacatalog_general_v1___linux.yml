@@ -1307,6 +1307,100 @@ gcn250_v1:
     source_url: https://doi.org/10.6084/m9.figshare.7756202.v1
     source_version: v1
   uri: wflow_global/hydromt/landuse/gcn250/GCN250_*.tif
+gdlc10m_mapping_sfincs:
+  data_type: DataFrame
+  driver:
+    name: pandas
+    options:
+      index_col: 0
+  uri: 11210471-001-compass/01_Data/lulc/GDLC10_mapping.csv
+gdlc10m_mapping_wflow:
+  data_adapter:
+    # hydromt_wflow 1.x renamed every land-use parameter; the project CSVs are still in
+    # the v0 column names, so translate them here rather than duplicating the data files.
+    rename:
+      Kext: vegetation_kext
+      N: land_manning_n
+      PathFrac: soil_compacted_fraction
+      RootingDepth: vegetation_root_depth
+      Sl: vegetation_leaf_storage
+      Swood: vegetation_wood_storage
+      WaterFrac: land_water_fraction
+      kc: vegetation_crop_factor
+      alpha_h1: vegetation_feddes_alpha_h1
+      h1: vegetation_feddes_h1
+      h2: vegetation_feddes_h2
+      h3_high: vegetation_feddes_h3_high
+      h3_low: vegetation_feddes_h3_low
+      h4: vegetation_feddes_h4
+      USLE_C: erosion_usle_c
+  data_type: DataFrame
+  driver:
+    name: pandas
+    options:
+      index_col: 0
+  uri: 11210471-001-compass/01_Data/lulc/GDLC10_mapping_hydromtwflow.csv
+gdlc_100m_v3_2019:
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    category: landuse
+    crs: 4326
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v3
+  uri: 11210471-001-compass/01_Data/lulc/PROBAV_LC100_global_v3.0.1_2019-nrt_Discrete-Classification-map_EPSG-4326.tif
+gdlc_100m_v3_2019_HND_CF:
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    category: landuse
+    crs: 4326
+    source_info: modified by Christopher Jack from RCCC to simulate deforestation
+      counterfactual for COMPASS Use Case study.
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v3
+  uri: 11210471-001-compass/01_Data/lulc/landcover_HND/PROBAV_LC100_global_v3.0.1_2019-nrt_Discrete-Classification-map_EPSG-4326_HND_CF_full.tif
+gdlc_10m_v1_2020_HND:
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    category: landuse
+    crs: 4326
+    source_info: 10 m v1 dataset for 2020
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v1
+  uri: 11210471-001-compass/01_Data/lulc/landcover_HND/gdlc_10m/gdlc_10m_2020_v1.vrt
+gdlc_10m_v1_2020_HND_CF:
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  metadata:
+    category: landuse
+    crs: 4326
+    source_info: 10 m v1 dataset for 2020. modified by Christopher Jack from RCCC
+      to simulate deforestation counterfactual for COMPASS Use Case study.
+    source_url: https://land.copernicus.eu/en/products/global-dynamic-land-cover
+    source_version: v1
+  uri: 11210471-001-compass/01_Data/lulc/landcover_HND/from_Chris_RCCC/LCFM_LCM-10_V100_2020_cf.tif
 gdp_world:
   data_adapter:
     rename:
@@ -3430,6 +3524,39 @@ vito_mapping:
     options:
       index_col: 0
   uri: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
+vito_mapping_sfincs:
+  data_type: DataFrame
+  driver:
+    name: pandas
+    options:
+      index_col: 0
+  uri: 11210471-001-compass/01_Data/lulc/vito_mapping.csv
+vito_mapping_wflow:
+  data_adapter:
+    # hydromt_wflow 1.x renamed every land-use parameter; the project CSVs are still in
+    # the v0 column names, so translate them here rather than duplicating the data files.
+    rename:
+      Kext: vegetation_kext
+      N: land_manning_n
+      PathFrac: soil_compacted_fraction
+      RootingDepth: vegetation_root_depth
+      Sl: vegetation_leaf_storage
+      Swood: vegetation_wood_storage
+      WaterFrac: land_water_fraction
+      kc: vegetation_crop_factor
+      alpha_h1: vegetation_feddes_alpha_h1
+      h1: vegetation_feddes_h1
+      h2: vegetation_feddes_h2
+      h3_high: vegetation_feddes_h3_high
+      h3_low: vegetation_feddes_h3_low
+      h4: vegetation_feddes_h4
+      USLE_C: erosion_usle_c
+  data_type: DataFrame
+  driver:
+    name: pandas
+    options:
+      index_col: 0
+  uri: 11210471-001-compass/01_Data/lulc/vito_mapping_hydromtwflow.csv
 wb_countries:
   data_adapter:
     rename:
