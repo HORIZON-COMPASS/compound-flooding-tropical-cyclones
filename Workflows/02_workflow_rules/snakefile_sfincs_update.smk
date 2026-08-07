@@ -131,7 +131,7 @@ rule update_dis_forcing_sfincs:
     input:
         bzs_file              = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.bzs"),
         wflow_output          = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), # do not change!
-        wflow_dis_no_bankfull = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv"),
+        wflow_dis_no_bankfull = join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_bankfull.csv"),
     params:
         dir_run_with_forcing  = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
         wflow_root_forcing    = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}")),
