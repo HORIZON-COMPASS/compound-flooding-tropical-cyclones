@@ -31,7 +31,7 @@ if "snakemake" in locals():
     end_date            = snakemake.params.start_time
 else:
     region              = "sofala"
-    tc_name             = "Idai"
+    tc_name             = "Idai_test"
     dfm_res             = "450"
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap
@@ -53,13 +53,6 @@ else:
     path_data_cat_coast = "C:/Code/COMPASS/Workflows/03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml"
     use_wave            = True
 
-#%%
-script_dir = Path(__file__).resolve().parent
-config_file = script_dir / "../../../01_config_snakemake/config_general_MZB.yml"
-
-with open(config_file, "r") as f:
-    config = yaml.safe_load(f)
-    config = config['runname_ids']['Idai']
 
 # %% Loading the SFINCS coastal coupling data catalog & DFM output path
 datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
@@ -125,13 +118,13 @@ if use_wave:
     ds_wave = ds_wave.drop_vars(["x", "y"])  # Drop x and y coordinates if they exist
     
     # Plot to check data for station 40 as example
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    ds_wave.sel(station=40).plot(ax=axes[0])
-    ds_wave.sel(time=slice(pd.to_datetime("2019-03-24"), pd.to_datetime("2019-03-25 06:00:00")), station=40).plot(ax=axes[1])
-    axes[0].set_title("Full time series (station 40)")
-    axes[1].set_title("Subset time series (station 40)")
-    plt.tight_layout()
-    plt.show()
+    # fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    # ds_wave.sel(station=40).plot(ax=axes[0])
+    # ds_wave.sel(time=slice(pd.to_datetime("2019-03-24"), pd.to_datetime("2019-03-25 06:00:00")), station=40).plot(ax=axes[1])
+    # axes[0].set_title("Full time series (station 40)")
+    # axes[1].set_title("Subset time series (station 40)")
+    # plt.tight_layout()
+    # plt.show()
 
     # Set wave values to 0 after cutoff for all stations due to incorrect data
     cutoff = pd.to_datetime("2019-03-24 21:00:00")
@@ -139,13 +132,13 @@ if use_wave:
     ds_wave = ds_wave.where(ds_wave.time <= cutoff, np.nan)
 
     # Check correction
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    ds_wave.sel(station=40).plot(ax=axes[0])
-    ds_wave.sel(time=slice(pd.to_datetime("2019-03-24"), pd.to_datetime("2019-03-25 06:00:00")), station=40).plot(ax=axes[1])
-    axes[0].set_title("Full time series (station 40)")
-    axes[1].set_title("Subset time series (station 40)")
-    plt.tight_layout()
-    plt.show()
+    # fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    # ds_wave.sel(station=40).plot(ax=axes[0])
+    # ds_wave.sel(time=slice(pd.to_datetime("2019-03-24"), pd.to_datetime("2019-03-25 06:00:00")), station=40).plot(ax=axes[1])
+    # axes[0].set_title("Full time series (station 40)")
+    # axes[1].set_title("Subset time series (station 40)")
+    # plt.tight_layout()
+    # plt.show()
 
     # Get the dfm run output
     print("Loading DFM data")
@@ -285,12 +278,12 @@ if use_wave:
     # Save the updated catalog
     datacatalog.to_yml(path_data_cat, root=root_dir)
 
+ # Loading the SFINCS coastal coupling data catalog & DFM output path
 else:
-    #%% Loading the SFINCS coastal coupling data catalog & DFM output path
     datacatalog = hydromt.DataCatalog(data_libs=[path_data_cat])
     dfm_run = f"dfm_output_{model_name}"
 
-    #%% Specifying the DFM output information for the data catalog entry
+    # Specifying the DFM output information for the data catalog entry
     adapter = hydromt.data_adapter.GeoDatasetAdapter(
         path=os.path.abspath(his_path),
         driver="netcdf",
@@ -316,15 +309,10 @@ else:
     # Save the updated catalog
     datacatalog.to_yml(path_data_cat, root=root_dir)
 
-    #%% Make a file for snakemake to track the cata,log update
-    with open(snake_done, 'w') as file:
-        # Write content to the file
-        file.write("# Empty file used to make the snakemake dfm workflow add_data_to_catalog rule work\n")
-
-    #%% Make a file for snakemake to track the cata,log update
-    with open(snake_done, 'w') as file:
-        # Write content to the file
-        file.write("# Empty file used to make the snakemake dfm workflow add_data_to_catalog rule work\n")
+#%% Make a file for snakemake to track the cata,log update
+with open(snake_done, 'w') as file:
+    # Write content to the file
+    file.write("# Empty file used to make the snakemake dfm workflow add_data_to_catalog rule work\n")
 
 
 #%% ###########################################
@@ -495,3 +483,5 @@ def plot_wave_impact(station_idx = 30):
     # plot_wave_impact()
     # plot_station_wave_components()
 
+
+# %%
