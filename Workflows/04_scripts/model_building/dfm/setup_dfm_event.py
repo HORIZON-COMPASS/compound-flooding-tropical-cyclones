@@ -14,6 +14,9 @@ import shutil
 from datetime import datetime, timedelta
 import hydromt
 import ast
+import platform
+
+prefix = "p:/" if platform.system() == "Windows" else "/p/"
 
 #%%
 if "snakemake" in locals():
@@ -192,7 +195,7 @@ if meteo_type == 'spiderweb_era5_merged':
     shutil.copyfile(spw_file_origin, spw_copy)
 
     # Add uniform wind file to set background wind speed to 0 and enable blending of the spw file with the background wind
-    preprocess_era5_Idai_path = os.path.join("p:/11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_chnk_20190306to20190325_ERA5.nc")
+    preprocess_era5_Idai_path = os.path.join(prefix, "11210471-001-compass/01_Data/ERA5/Idai/dfm_wind/era5_msl_u10n_v10n_20190306to20190325_ERA5.nc")
     preprocess_era5_Idai_file = os.path.basename(preprocess_era5_Idai_path)
     preprocess_era5_Idai_dest = os.path.join(dir_output_main, preprocess_era5_Idai_file)
     shutil.copyfile(preprocess_era5_Idai_path, preprocess_era5_Idai_dest)
