@@ -96,10 +96,9 @@ rule all_wflow:
         # expand(join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}", 'staticmaps.nc'), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
         # Only the runs with use_bankfull_corr enabled request the corrected discharge series.
-        # NOTE: the file is named wflow_dis.csv (renamed from wflow_dis_no_qbankfull.csv) and is
-        # what rule postprocess_discharge actually produces.
+        # NOTE: the file is named wflow_dis_no_bankfull.csv and is what rule postprocess_discharge actually produces.
         [fn for fn, use_bf in zip(
-            expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
+            expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_bankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, CF_landuse=CF_landuse),
             bankfull_corr) if use_bf],
 
 rule make_base_model_wflow:
@@ -194,7 +193,7 @@ rule postprocess_discharge:
     input:
         join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"),
     output:
-        join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis.csv")
+        join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_bankfull.csv")
     params:
         use_bankfull_corr       = get_use_bankfull_corr,
         wflow_root_forcing      = directory(join(root_dir, dir_runs, "{region}", "{runname}", "wflow_{CF_landuse}", "event_precip_{precip_forcing}_CF{CF_rain}")),
