@@ -47,7 +47,7 @@ else:
 if not use_bankfull_corr:
     print('Not using bankfull correction, skipping...')
     df = pd.DataFrame(list())
-    df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis.csv"))
+    df.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_bankfull.csv"))
 
 else:
     from pyextremes import EVA
@@ -142,14 +142,6 @@ else:
     df_F
 
     # %%
-    # We select the first discharge location
-    data_F = df_F["1"]
-    # And have a look at the data
-    plt.figure()
-    ax = data_F.plot()
-    plt.ylabel("Discharge (m³/s)")
-
-    # %%
     # Remove the qbankfull from all discharge values and set to zero if discharge is below 0
     qbankfull_df = qbankfull_df.set_index('gauge')
     qbankfull_df.index = qbankfull_df.index.astype(str)
@@ -163,10 +155,23 @@ else:
             qbankfull_gauge = qbankfull_df.loc[gauge, "return value"]
             df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge] - qbankfull_gauge
             df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
-            df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis.csv"), index=True)
+            df_F_no_bankfull.to_csv(os.path.join(wflow_root_event,"events","run_default","wflow_dis_no_bankfull.csv"), index=True)
 
-    # %%
-    # Plot the masked discharge compared to the full discharge
+
+
+# %% BANKFULL FIGURES
+make_bankfull_figures = False # Set to True if you want to make the figures for the bankfull calculations   
+if make_bankfull_figures:
+    # We select the first discharge location
+    data_F = df_F["1"]
+    # And have a look at the data
+    plt.figure()
+    ax = data_F.plot()
+    plt.ylabel("Discharge (m³/s)")
+
+
+
+    #%% Plot the masked discharge compared to the full discharge
     fig, ax = plt.subplots(figsize=(12, 6))
 
     # Plot both time series
@@ -199,9 +204,9 @@ else:
     fig.savefig(join(results_dir, "fS3.png"), dpi=300, bbox_inches='tight')
     fig.savefig(join(results_dir, "fS3.pdf"), dpi=300, bbox_inches='tight')
 
-    # %%
-    import matplotlib.pyplot as plt
 
+
+    #%%
     # Read the model
     mod = WflowModel(
         root=join(wflow_path_30yr, "warmup"),
