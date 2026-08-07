@@ -11,7 +11,7 @@ runname_ids:
         region: somerset_test_rivers                        # name of the region will be used in naming folders 
         lulc_mapping_sfincs: vito_mapping_sfincs            # land-use -> SFINCS manning mapping table
         lulc_mapping_wflow: vito_mapping_wflow              # land-use -> wflow parameter mapping table
-        wflow_meteo_forcing: era5_daily                      # temp/PET source; ceh_gear has no temp/PET. era5_daily (chunked monthly netCDF) not era5_hourly_zarr (global zarr, chunks:auto) which is pathologically slow for this UK domain
+        meteo_forcing: era5_daily                            # temp/PET source; ceh_gear has no temp/PET. era5_daily (chunked monthly netCDF) not era5_hourly_zarr (global zarr, chunks:auto) which is pathologically slow for this UK domain
         CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         bankfull_corr_lulc: vito          # Factual landuse when using bankfull correction from 30 yr wflow run
         

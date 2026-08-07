@@ -34,6 +34,10 @@ if "snakemake" in locals():
     bathy            = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
     river_upa        = snakemake.params.river_upa
+    # CF_landuse is a path wildcard here (models live in sfincs_{CF_landuse}/), so the land-use
+    # handle comes from the wildcard; only the reclass table is passed as a param.
+    landuse          = getattr(snakemake.wildcards, 'CF_landuse', None)
+    lulc_mapping     = snakemake.params.get('lulc_mapping_sfincs', None)
 else:
     # Durban precip-only test case (config_durban_floods_2022.yml)
     model_dir = "/p/11210471-001-compass/02_Models/durban/Durban2022/sfincs"
@@ -47,6 +51,8 @@ else:
     bathy = "gebco2024_MZB"
     dfm_coastal_mask = "coastal_coupling_msk_MZB"
     river_upa = 30
+    landuse = "vito"
+    lulc_mapping = "vito_mapping_sfincs"
 
 # Check whether model folder exists. If not, make one
 if not exists(model_dir):
@@ -84,6 +90,19 @@ if active_steps:
     active_steps[0]["exclude_polygon"] = dfm_coastal_mask
 for s in find_steps(steps, "mask.create_boundary"):
     s["include_polygon"] = dfm_coastal_mask
+
+# land use -> subgrid.create roughness_list (v2 renamed v0's datasets_rgh). Only the entries the
+# config actually declares are overridden, so a config without CF_landuse / lulc_mapping_sfincs
+# keeps the defaults written in the build yml.
+if landuse or lulc_mapping:
+    for s in find_steps(steps, "subgrid.create"):
+        rgh = s.setdefault("roughness_list", [])
+        if not rgh:
+            rgh.append({})
+        if landuse:
+            rgh[0]["lulc"] = landuse
+        if lulc_mapping:
+            rgh[0]["reclass_table"] = lulc_mapping
 
 # river upstream-area threshold -> river inflow (outflow handled after build, see below)
 for s in find_steps(steps, "rivers.create_river_inflow"):

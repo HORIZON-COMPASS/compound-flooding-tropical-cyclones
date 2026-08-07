@@ -41,8 +41,15 @@ def get_config_wflow(wildcards):
     config_wflow_base = config["runname_ids"][wildcards.runname]['config_wflow_base']
     return join(curdir, '..', "05_config_models", "01_wflow", config_wflow_base)
 
-def get_river_upa(wildcards):    
+def get_river_upa(wildcards):
     return config["runname_ids"][wildcards.runname]["river_upa"]
+
+def get_lulc_mapping(wildcards):
+    # Reclassification table mapping land-use classes to wflow parameters. Distinct from the
+    # SFINCS table: wflow needs the *_hydromtwflow variant (many parameters, not just Manning).
+    # The land-use dataset itself is the {CF_landuse} path wildcard.
+    return config["runname_ids"][wildcards.runname].get("lulc_mapping_wflow")
+
 # def get_dir_model_base(wildcards):
 #     print(wildcards)
 #     return join(root_dir, dir_models, config["runname_ids"][wildcards.runname]['region'], config["runname_ids"][wildcards.runname], "wflow")
@@ -110,7 +117,8 @@ rule make_base_model_wflow:
         dir_model = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}"),
         data_cat = get_datacatalog,
         arg_bbox = get_bbox,
-        river_upa = get_river_upa
+        river_upa = get_river_upa,
+        lulc_mapping_wflow = get_lulc_mapping
     output: 
         toml_file = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}", 'wflow_sbm.toml'),
         staticmaps = join(root_dir, dir_models, "{region}", "{runname}", "wflow_{CF_landuse}", 'staticmaps.nc'), 

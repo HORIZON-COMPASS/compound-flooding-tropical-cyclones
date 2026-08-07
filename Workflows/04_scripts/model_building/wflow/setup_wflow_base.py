@@ -26,6 +26,10 @@ if "snakemake" in locals():
     region_geom      = snakemake.input.region_geom
     dir_sfincs_model = snakemake.input.dir_sfincs_model
     river_upa        = snakemake.params.river_upa
+    # CF_landuse is a path wildcard here (models live in wflow_{CF_landuse}/), so the land-use
+    # handle comes from the wildcard; only the reclass table is passed as a param.
+    landuse          = getattr(snakemake.wildcards, 'CF_landuse', None)
+    lulc_mapping     = snakemake.params.get('lulc_mapping_wflow', None)
 else:
     model_dir        = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/wflow_v1_test"
     config_file      = "../../../05_config_models/01_wflow/wflow_base_build_v1.yml"
@@ -36,6 +40,8 @@ else:
     region_geom      = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs_v1/gis/region.geojson"
     dir_sfincs_model = "/p/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs_v1"
     river_upa        = 30
+    landuse          = "vito"
+    lulc_mapping     = "vito_mapping_wflow"
 
 # Check whether model folder exists
 if not exists(model_dir):
@@ -56,6 +62,15 @@ for s in find_steps(steps, "setup_basemaps"):
     s["region"] = {"basin": region}
 for s in find_steps(steps, "setup_rivers"):
     s["river_upa"] = river_upa
+
+# land use -> setup_lulcmaps. Without lulc_mapping_fn hydromt_wflow falls back to its own built-in
+# reclassification table rather than the project's calibrated one, so pass it whenever the config
+# declares it. Entries the config leaves unset keep the build yml's defaults.
+for s in find_steps(steps, "setup_lulcmaps"):
+    if landuse:
+        s["lulc_fn"] = landuse
+    if lulc_mapping:
+        s["lulc_mapping_fn"] = lulc_mapping
 
 # Add a setup_gauges step based on the SFINCS inflow river points. Insert it before
 # setup_config_output_timeseries (which references the gauge map by name).

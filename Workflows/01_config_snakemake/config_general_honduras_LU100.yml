@@ -15,7 +15,7 @@ runname_ids:
         start_time: 20201101 000000                        # Start time of the model run in format: YYYYMMDD HHMMSS                     
         end_time: 20201130 000000                          # End time of the model run in format: YYYYMMDD HHMMSS              
         precip_forcing: era5_hourly_zarr                   # DataCatalog handle for forcing dataset for the rainfall data  
-        wflow_meteo_forcing: era5_hourly_zarr              # forcing dataset containing temperature, in- and out-going radiation   
+        meteo_forcing: era5_hourly_zarr                    # forcing dataset containing temperature, in- and out-going radiation   
         wind_forcing: no_wind                              # wind and pressure dataset (used for coastal surge modelling)     
         
         # Cross-model settings

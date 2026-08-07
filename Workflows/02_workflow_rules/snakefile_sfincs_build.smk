@@ -31,8 +31,13 @@ def get_dfm_coastal_mask(wildcards):
     dfm_coastal_mask = config["runname_ids"][wildcards.runname]["dfm_coastal_mask"]
     return dfm_coastal_mask 
 
-def get_river_upa(wildcards):    
+def get_river_upa(wildcards):
     return config["runname_ids"][wildcards.runname]["river_upa"]
+
+def get_lulc_mapping(wildcards):
+    # Reclassification table mapping land-use classes to SFINCS Manning values. The land-use
+    # dataset itself is the {CF_landuse} path wildcard, so only the table is passed here.
+    return config["runname_ids"][wildcards.runname].get("lulc_mapping_sfincs")
 
 def get_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
@@ -74,7 +79,8 @@ rule make_base_model_sfincs:
         data_cats = get_datacatalog,
         bathy = get_bathy,
         dfm_coastal_mask = get_dfm_coastal_mask,
-        river_upa = get_river_upa
+        river_upa = get_river_upa,
+        lulc_mapping_sfincs = get_lulc_mapping
     input:
         config_file = get_config,
     output: 

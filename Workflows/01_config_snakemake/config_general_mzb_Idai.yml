@@ -11,7 +11,8 @@ runname_ids:
         region: sofala                                      # name of the region will be used in naming folders 
         lulc_mapping_sfincs: vito_mapping_sfincs            # land-use -> SFINCS manning mapping table
         lulc_mapping_wflow: vito_mapping_wflow              # land-use -> wflow parameter mapping table
-        wflow_meteo_forcing: era5_hourly_zarr               # forcing dataset containing temperature, in- and out-going radiation
+        meteo_forcing: era5_hourly_zarr                     # temp/PET source for wflow. Key is `meteo_forcing`: that is what
+                                                    # snakefile_wflow.smk reads; `wflow_meteo_forcing` is silently ignored
         CF_landuse: [vito]                                  # data catalog handles of land use scenarios
         sid: 2019063S18038                                  # Storm id from IBTrACS
             
@@ -42,13 +43,13 @@ runname_ids:
 
         # SFINCS model user-defined settings
         bbox_sfincs: "[34.33,-20.12,34.95,-19.30]"          # Bounding box for the flood model in format: [lon_min, lat_min, lon_max, lat_max]
-        config_sfincs_base: sfincs_base_build.yml           # name of the SFINCS configuration file (default: sfincs_base_build.yml)
+        config_sfincs_base: sfincs_base_build_v1.yml        # HydroMT v1 SFINCS build config
         sfincs_obs_file: obs_locs_sofala.geojson            # SFINCS timeseries output points, stored in 01_Data/sfincs_obs_points/
         utmzone: 36s                                        # UTM zone (needed by SFINCS, see https://www.latlong.net/lat-long-utm.html) 
         coastal_ts: gtsm_codec_reanalysis                   # DataCatalog handle for the coastal boundary conditions if D-FM is NOT used
         
         # wflow model user-defined settings
-        config_wflow_base: wflow_base_build_general.yml             # name of the wflow configuration file under 05_config_models/01_wflow 
+        config_wflow_base: wflow_base_build_v1.yml          # HydroMT v1 Wflow build config
         use_bankfull_corr: True                             # use bankfull correction for the discharge output (True/False)
         bankfull_corr_lulc: vito                            # Factual landuse when using bankfull correction from 30 yr wflow run 
 

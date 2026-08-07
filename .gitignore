@@ -197,6 +197,7 @@ cython_debug/
 
 # Anchored to the repo root on purpose: the unanchored form also matched
 # Workflows/00_execution_script_examples/, silently ignoring any new runner added there.
+# The root-level 00_execution_script_examples/ (local logs only) stays ignored.
 /00_execution_script_examples/
 migration_ref_files/
 # PyCharm
