@@ -44,7 +44,12 @@ runname_ids:
         CF_value_rain:    [0]
         CF_value_SLR:     [0]
         CF_value_wind:    [0]
-        CF_landuse:       [0]
+        CF_landuse:       [vito]        # a land-use handle, not a number: it is
+                                        # substituted into sfincs_/wflow_ directory names
+        use_bankfull_corr: False
+        bankfull_corr_lulc: vito        # land use of the decoupled 30-yr bankfull run
+        use_waves:        False         # SnapWave coupling (optional)
+        wave_output:      SNAPWAVE_test_setup
         # misc
         utmzone:          36s
         use_dfm:          false

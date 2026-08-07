@@ -136,7 +136,14 @@ if wind_forcing_str not in SKIP_WIND_KEYWORDS:
     logger.info(f"Adding wind forcing using: {wind_forcing}")
     if 'spw' in wind_forcing_str:  # spiderweb file
         logger.info(f"Setting up SPIDERWEB wind forcing for: {wind_forcing}")
-        spw_input = data_cat.get_source(wind_forcing).uri   # v1: .path -> get_source().uri
+        # The spiderweb handle is CONSTRUCTED from the CF wind value and the TC name;
+        # `wind_forcing` only selects this branch and is not itself a catalog key
+        # (no catalog defines e.g. 'era5_hourly_spw_IBTrACS'). This mirrors v0's
+        # data_cat[f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"].
+        spw_key = f"spw_IBTrACS_CF{CF_wind_txt}_{tc_name}"
+        # .full_uri, not .uri: .uri is the raw catalog string ("11210471-.../x.spw"),
+        # whereas .full_uri applies the catalog root ("/p/") as v0's .path did.
+        spw_input = data_cat.get_source(spw_key).full_uri
         spw_file = os.path.basename(spw_input)
         spw_copy = os.path.join(sfincs_mod_with_forcing, spw_file)
         shutil.copyfile(spw_input, spw_copy)
