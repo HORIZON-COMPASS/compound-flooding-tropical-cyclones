@@ -49,6 +49,7 @@ wind_forcing = [value['wind_forcing'] for key, value in config['runname_ids'].it
 CF_rain = [value['CF_value_rain'] for key, value in config['runname_ids'].items()]
 CF_SLR = [value['CF_value_SLR'] for key, value in config['runname_ids'].items()]
 CF_wind = [value['CF_value_wind'] for key, value in config['runname_ids'].items()]
+CF_landuse = [value['CF_landuse'] for key, value in config['runname_ids'].items()]
 
 # To prevent unwanted wildcard underscore splitting
 wildcard_constraints:
@@ -60,41 +61,41 @@ wildcard_constraints:
 
 run_combinations = []
 for key, value in config['runname_ids'].items():
-    for tp, slr, wind in product(value['CF_value_rain'], value['CF_value_SLR'], value['CF_value_wind']):
-        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['precip_forcing'], tp, value['tidemodel'], slr, value['wind_forcing'], wind))
+    for tp, slr, wind, landuse in product(value['CF_value_rain'], value['CF_value_SLR'], value['CF_value_wind'], value['CF_landuse']):
+        run_combinations.append((value['region'], key, value['dfm_res'], value['bathy'], value['precip_forcing'], tp, value['tidemodel'], slr, value['wind_forcing'], wind, landuse))
 
 # Unpack into separate wildcard lists
-region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR, wind_forcing, CF_wind = zip(*run_combinations)
+region, runname_ids, dfm_res, bathy, precip_forcing, CF_rain, tidemodel, CF_SLR, wind_forcing, CF_wind, CF_landuse = zip(*run_combinations)
 
 
 rule all_fiat_model:
     input:
-        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "spatial.fgb"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind),
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind, CF_landuse=CF_landuse),
+        expand(join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "spatial.fgb"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain, tidemodel=tidemodel, CF_SLR=CF_SLR, wind_forcing=wind_forcing, CF_wind=CF_wind, CF_landuse=CF_landuse),
 
 rule build_fiat_model:
     input:
-        floodmap             = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "floodmap.tif")
+        floodmap             = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "plot_output", "floodmap.tif")
     params:
-        dir_run_with_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
+        dir_run_with_forcing = directory(join(root_dir, dir_runs, "{region}", "{runname}", "sfincs_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}")),
         datacat_fiat         = get_datacatalog,
-        model_folder         = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}"),
+        model_folder         = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}"),
         continent            = get_continent,
         country              = get_country,
         config               = get_config,
     output:
-        fiat_settings        = join(root_dir,  dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
+        fiat_settings        = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
     script:
         join( '..', "04_scripts", "model_building", "fiat", "setup_fiat.py")
 
 
 rule run_fiat_model:
     input:
-        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
+        fiat_settings = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "settings.toml"),
     params:
-        dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "fiat", f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
+        dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, f"fiat_{wildcards.CF_landuse}", f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
     output:
-        out = join(root_dir, dir_runs, "{region}", "{runname}", "fiat", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "spatial.fgb")
+        out = join(root_dir, dir_runs, "{region}", "{runname}", "fiat_{CF_landuse}", "event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "output", "spatial.fgb")
     run:
         if os.name == 'nt':  # For Windows
             import subprocess
