@@ -14,6 +14,7 @@ def get_local_vector_data(file, bbox, data_cat):
         data_like = file,
         bbox = bbox)
     return vector
+
 # %%
 if "snakemake" in locals():
     model_dir        = snakemake.params.dir_model_sfincs
@@ -22,24 +23,25 @@ if "snakemake" in locals():
     bbox             = ast.literal_eval(snakemake.params.arg_bbox)
     bathy            = snakemake.params.bathy
     dfm_coastal_mask = snakemake.params.dfm_coastal_mask
-    river_upa = snakemake.params.river_upa
+    river_upa        = snakemake.params.river_upa
     region_name      = snakemake.wildcards.region
     landuse          = snakemake.wildcards.CF_landuse
     lulc_mapping     = snakemake.params.lulc_mapping_sfincs
 else:
-    model_dir = 'p:/11210471-001-compass/02_Models/somerset/SomersetLevels/sfincs'
-    config_file = r'../../05_config_models/02_sfincs/sfincs_base_build.yml'
-    data_cats = [
-        r'../../03_data_catalogs/datacatalog_general.yml',
-        r'../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
-        r'../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
+    region_name      = 'sofala'
+    model_dir        = f'p:/11210471-001-compass/02_Models/{region_name}/Idai/sfincs_test'
+    config_file      = r'../../../05_config_models/02_sfincs/sfincs_base_build.yml'
+    data_cats        = [
+        r'../../../03_data_catalogs/datacatalog_general.yml',
+        r'../../../03_data_catalogs/datacatalog_SFINCS_obspoints.yml',
+        r'../../../03_data_catalogs/datacatalog_SFINCS_coastal_coupling.yml',
         ]
-    bbox =[-3.16169,51.06687,-2.867119,51.258058]
-    bathy = 'gebco'
-    dfm_coastal_mask = 'coastal_coupling_msk_SMST'
-    river_upa = 30
-    landuse = 'vito'
-    lulc_mapping = 'vito_mapping'
+    bbox             = [34.33,-20.12,34.95,-19.30]
+    bathy            = 'gebco2024_MZB'
+    dfm_coastal_mask = 'coastal_coupling_msk_MZB'
+    river_upa        = 100
+    landuse          = 'vito'
+    lulc_mapping     = 'vito_mapping'
 
 # Check whether model folder exists. If not, make one
 if not exists(model_dir):
