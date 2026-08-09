@@ -28,7 +28,7 @@ if "snakemake" in locals():
     path_data_cat_coast = os.path.abspath(snakemake.params.coast_data_cat)
     wave_output         = snakemake.params.wave_output
     start_date          = snakemake.params.start_time
-    end_date            = snakemake.params.start_time
+    end_date            = snakemake.params.end_time
 else:
     region              = "sofala"
     tc_name             = "Idai"
