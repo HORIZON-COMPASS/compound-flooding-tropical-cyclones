@@ -31,7 +31,7 @@ if "snakemake" in locals():
     end_date            = snakemake.params.start_time
 else:
     region              = "sofala"
-    tc_name             = "Idai_test"
+    tc_name             = "Idai"
     dfm_res             = "450"
     bathy               = "gebco2024_MZB"
     tidemodel           = 'GTSMv41' # tidemodel: FES2014, FES2012, EOT20, GTSMv41, GTSMv41opendap

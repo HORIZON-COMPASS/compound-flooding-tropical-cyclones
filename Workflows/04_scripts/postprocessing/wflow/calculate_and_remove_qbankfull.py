@@ -46,7 +46,7 @@ else:
 # The 30-yr run is decoupled: it lives under its own land-use directory and is not
 # necessarily the same land use as the event run.
 wflow_path_30yr = join(wflow_root_30yr, f"wflow_{landuse_30yr}", f"event_precip_{precip_forcing}_CF0_30yr")
-dis_out = os.path.join(wflow_root_event, "events", "run_default", "wflow_dis.csv")
+dis_out = os.path.join(wflow_root_event, "events", "run_default", "wflow_dis_no_bankfull.csv")
 
 if not use_bankfull_corr:
     # Still emit the file the workflow expects, so downstream rules have a stable input.
@@ -138,14 +138,6 @@ df_F = mod_F.output_scalar.data['Q'].to_pandas()
 df_F
 
 # %%
-# We select the first discharge location
-data_F = df_F["1"]
-# And have a look at the data
-plt.figure()
-ax = data_F.plot()
-plt.ylabel("Discharge (m³/s)")
-
-# %%
 # Remove the qbankfull from all discharge values and set to zero if discharge is below 0
 qbankfull_df = qbankfull_df.set_index('gauge')
 qbankfull_df.index = qbankfull_df.index.astype(str)
@@ -161,22 +153,32 @@ for gauge in df_F_no_bankfull.columns:
         df_F_no_bankfull[gauge] = df_F_no_bankfull[gauge].clip(lower=0)     # ensures all values below 0 are set to 0
         df_F_no_bankfull.to_csv(dis_out, index=True)
 
-# %%
-# Plot the masked discharge compared to the full discharge
-fig, ax = plt.subplots(figsize=(12, 6))
+# %% BANKFULL FIGURES
+# Off by default: the plotting stack does not work in the compass-wflow pixi env, and this
+# script runs as a snakemake rule where the figures are not needed.
+make_bankfull_figures = False  # Set to True to produce the bankfull calculation figures
+if make_bankfull_figures:
+    # We select the first discharge location and have a look at the data
+    data_F = df_F["1"]
+    plt.figure()
+    ax = data_F.plot()
+    plt.ylabel("Discharge (m³/s)")
 
-# Plot both time series on same axis
-df_F['1'].plot(ax=ax, label='Original', color='blue')
-df_F_no_bankfull['1'].plot(ax=ax, label='Masked', color='orange')
+    # %% Plot the masked discharge compared to the full discharge
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-# Add horizontal bankfull line
-ax.axhline(qbankfull_df.loc['1', 'return value'], color='red', linestyle=':', linewidth=2, label='Bankfull Q')
+    # Plot both time series on same axis
+    df_F['1'].plot(ax=ax, label='Original', color='blue')
+    df_F_no_bankfull['1'].plot(ax=ax, label='Masked', color='orange')
 
-ax.set_ylabel("Discharge (m³/s)")
-ax.set_title("Discharge with Bankfull Threshold for Gauge 1")
-ax.legend()
+    # Add horizontal bankfull line
+    ax.axhline(qbankfull_df.loc['1', 'return value'], color='red', linestyle=':', linewidth=2, label='Bankfull Q')
 
-plt.tight_layout()
-plt.show()
+    ax.set_ylabel("Discharge (m³/s)")
+    ax.set_title("Discharge with Bankfull Threshold for Gauge 1")
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 # %%
