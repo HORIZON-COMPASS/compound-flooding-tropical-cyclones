@@ -30,7 +30,7 @@ More info: https://destine.ecmwf.int/news/the-fast-development-of-destines-clima
 import earthkit.data
 from earthkit.plots.interactive import Chart
 from polytope.api import Client
-from earthkit.plots.geo import domains
+# from earthkit.plots.geo import domains
 import os
 import time
 import os
@@ -40,6 +40,7 @@ import shutil
 print("TMPDIR:", os.environ.get("TMPDIR"))
 print("tempdir:", tempfile.gettempdir())
 
+#%%
 for p in ["/tmp", tempfile.gettempdir(), "/var/lib/containers"]:
     try:
         usage = shutil.disk_usage(p)
@@ -120,40 +121,40 @@ for param in params:
                     max_retries = 3
                     for attempt in range(max_retries):
                         try:
-                            data = earthkit.data.from_source("polytope", "destination-earth", request,
-                                                             address='polytope.mn5.apps.dte.destination-earth.eu', stream=False)
+                            data = earthkit.data.from_source(
+                                "polytope",
+                                "destination-earth",
+                                request,
+                                address="polytope.mn5.apps.dte.destination-earth.eu",
+                                stream=False,
+                            )
 
-                            # check data integrity
-                            if is_valid_earthkit_data(data):
-                                break
-                            else:
-                                print(f"⚠️ Empty dataset (attempt {attempt+1})")
+                            print(data)
+                            print(type(data))
+
+                            ds = data.to_xarray(add_earthkit_attrs=False)
+
+                            print(ds)
+                            print(ds.coords)
+
+                            break
 
                         except Exception as e:
-                            print(f"⚠️ Download error (attempt {attempt+1}): {e}")
-
-                        time.sleep(5)  # wait before retry
+                            print(f"Attempt {attempt+1} failed: {e}")
+                            time.sleep(5)
 
                     else:
-                        # log failure and skip gracefully
-                        with open("failed_requests.txt", "a") as f:
-                            f.write(f"{request}\n")
                         print("Skipping request after retries:", request)
                         continue
-                    
-                    if len(data) == 0:
-                        print("❌ No valid GRIB messages, skipping:", request)
-                        continue
 
-                    # Subset to bbox and save to disk
-                    ds = data.to_xarray(add_earthkit_attrs=False)
-                    ds_sel = ds.where((ds.longitude < bbox[2]) & (ds.longitude > bbox[0]) &
-                                    (ds.latitude < bbox[3]) & (ds.latitude > bbox[1]), 
-                                    drop=True)
-                    ds_sel = ds_sel.rename({'forecast_reference_time':'time'})
-                    ds_sel.attrs['experiment'] = experiment
-                    ds_sel.attrs['bbox'] = bbox
-                    
+                    ds_sel = ds
+
+                    if "forecast_reference_time" in ds_sel:
+                        ds_sel = ds_sel.rename(
+                            {"forecast_reference_time": "time"}
+                        )
+
+                    ds_sel.attrs["experiment"] = experiment
+                    ds_sel.attrs["bbox"] = bbox
+
                     ds_sel.to_netcdf(data_file_nc)
-
-                    time.sleep(2)
