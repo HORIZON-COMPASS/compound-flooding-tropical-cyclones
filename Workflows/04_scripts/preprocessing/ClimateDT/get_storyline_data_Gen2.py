@@ -1,7 +1,7 @@
 '''
 Script to access and view the storyline data from Climate DT.
 
-Author: aleksand
+Author: aleksand 
 
 Based on examples from: polytope-examples GitHub page
 
@@ -24,6 +24,7 @@ Guide to scenarios:
 - "Tplus2.0K" - 2 degree warming, SSP3.7.0
 
 More info: https://destine.ecmwf.int/news/the-fast-development-of-destines-climate-change-adaptation-digital-twin/
+and https://platform.destine.eu/services/documents-and-api/doc/?service_name=climate-dt-user-guide
 '''
 
 #%%
@@ -87,6 +88,11 @@ units = {235055:'kg m**-2 s**-1', 151:'Pa', 165:'m/s', 166:'m/s',
 dates = ["20190301/to/20190309", "20190310/to/20190319", "20190320/to/20190329"]
 experiments = ["cont","hist","Tplus2.0K"]
 
+# Params at pressue levels (pl)
+params_pl = [60, 129, 131, 132] # potential vorticity, geopotential, U component wind, V component wind
+varnames_pl = {60:'pv', 129:'z', 131:'u', 132:'v'}
+units_pl = {60:'K m**2 kg**-1 s**-1', 129:'m**2 s**-2', 131:'m/s', 132:'m/s'}
+
 plots = False
 
 # Parameters available at: https://confluence.ecmwf.int/display/DDCZ/Climate+DT+Phase+1+data+catalogue
@@ -95,7 +101,7 @@ request = {
      "class": "d1",
      "dataset": "climate-dt",
      "generation": "2",
-     "levtype": "sfc",
+     "levtype": "pl",   # sfc for surface, pl for pressure levels
      "model": "ifs-fesom",
      "expver": "0001",
      "resolution": "high",
@@ -112,14 +118,14 @@ request = {
  }
 
 #%% Trying to access via GRIB file
-for param in params:
-    varname = varnames[param]
+for param in params_pl:
+    varname = varnames_pl[param]
     request['param'] = param
     bbox = bbox_idai
 
-    for experiment in experiments:
+    for experiment in experiments[1:2]:  # Only hist
         request['experiment'] = experiment
-        for realization in range(1,6):
+        for realization in range(1):
             request['realization'] = str(realization)
             for dd, daterange in enumerate(dates):
                 request['date'] = daterange

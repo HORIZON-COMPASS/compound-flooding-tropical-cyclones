@@ -16,13 +16,16 @@ module load pixi
 # module load python/3.10
 
 # Installing pixi environment
-pixi install --environment compass-wflow
-pixi shell-hook --environment compass-wflow > hook.sh
+pixi install --environment compass-climatedt
+pixi shell-hook --environment compass-climatedt > hook.sh
 source hook.sh
 
 # Run your script
-cd ../04_scripts/postprocessing/sfincs/
+echo "Running Python script..."
+echo "Current directory: $(pwd)"
 
-python -u sfincs_postprocess.py
+cd 04_scripts/preprocessing/ClimateDT
+
+python -u get_storyline_data_Gen2.py
 
 echo "Finished at $(date)"
