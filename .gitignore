@@ -38,8 +38,6 @@ SFINCS/results
 *.snakemake
 *.svg
 *.pdf
-*.png
-**/*.png
 
 DelftFIAT/scripts/cache
 
