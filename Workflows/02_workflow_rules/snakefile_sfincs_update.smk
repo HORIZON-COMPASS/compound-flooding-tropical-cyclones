@@ -7,9 +7,9 @@ from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    root_dir = join("p:/",config['root_dir'])
+    root_dir = config['root_dir']
 elif os.name == "posix": #Running on linux
-    root_dir = join("/p", config['root_dir'])
+    root_dir = config['root_dir']
 
 # define other directories:
 dir_data   = config["dir_data"]
@@ -47,11 +47,14 @@ def get_datacatalog(wildcards):
             join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing.yml")
         ]
     elif os.name == "posix": #Running on linux
+        # NOTE: order matters - later catalogs override earlier ones for duplicate keys, so the
+        # Azure/MO catalog (which holds the local UK sources such as ceh_gear_hourly) comes last.
         return [
             join(curdir, '..', "03_data_catalogs", "datacatalog_general_v1___linux.yml"),
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_coastal_coupling_v1___linux.yml"),
             join(curdir, '..', "03_data_catalogs", "datacatalog_SFINCS_obspoints_v1___linux.yml"),
-            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml")
+            join(curdir, '..', "03_data_catalogs", "datacatalog_CF_forcing_v1___linux.yml"),
+            join(curdir, '..', "03_data_catalogs", "data_catalog_MO_azure_UKCP.yml"),
         ]
 
 def get_use_dfm(wildcards):

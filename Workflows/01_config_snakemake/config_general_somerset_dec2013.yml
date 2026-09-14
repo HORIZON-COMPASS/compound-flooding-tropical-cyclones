@@ -11,8 +11,8 @@ runname_ids:
     SomersetLevels_dec:
         tc_name: winterstorm
         region: somerset
-        start_time: 20131220 000000
-        end_time: 20131223 000000                           # 3-day Dec-2013 window
+        start_time: 20131203 000000
+        end_time: 20131203 010000                           # 1-hour Dec-2013 window
         precip_forcing: ceh_gear_hourly                     # local CEH-GEAR-1hr-v2 (Dec 2013)
         meteo_forcing: era5_daily                           # wflow temp/PET (warmup spans 2012-2013)
         wind_forcing: no_wind

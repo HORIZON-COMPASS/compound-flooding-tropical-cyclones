@@ -71,6 +71,18 @@ steps:
       keep_rivers_geom: true
       # the script sets river_upa: <river_upa>
 
+  # attempted placeholders for adding defences
+
+  # if use levees with z
+  # - SfincsWeirs.create:
+  #     locations: levees
+
+  # if use Spatial_Flood_Defences without z
+  # - SfincsWeirs.create:
+  #     locations: somerset_flood_defences
+  #     dep: highres_DEM
+  #     dz: 8 # inferred from levees file
+
   # NOTE: river outflow is NOT a registered build step in hydromt_sfincs 2.0.0rc3
   # (create_river_outflow lacks @hydromt_step). The build script calls it directly
   # after build() instead — see setup_sfincs_base.py.

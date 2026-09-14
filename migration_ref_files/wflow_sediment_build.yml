@@ -36,8 +36,6 @@ steps:
       reservoirs_fn: hydro_lakes      # source for lakes based on hydroLAKES: {hydro_lakes}
       min_area: 1.0              # minimum reservoir area to consider [km2]
 
-  - setup_riverbedsed:
-
   - setup_lulcmaps:
       lulc_fn: globcover_2009        # source for lulc maps: {globcover, vito, corine}
       lulc_mapping_fn: globcover_mapping_default  # default mapping for lulc classes

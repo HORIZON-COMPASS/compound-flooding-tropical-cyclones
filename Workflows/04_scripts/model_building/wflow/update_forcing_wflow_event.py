@@ -5,6 +5,7 @@
 # the warmup staticmaps via input.path_static, so we do NOT rewrite the grid). setup_config uses
 # the Wflow.jl v1 TOML keys (time.* section; model.reinit -> model.cold_start__flag).
 from os.path import join
+import numpy as np
 from hydromt_wflow import WflowSbmModel
 from datetime import datetime as datetime
 from datetime import timedelta
@@ -77,6 +78,20 @@ else:
 # Relocate to the events run dir, apply steps without writing, then write forcing + config only
 # (the event reuses the warmup staticmaps, so we deliberately do not rewrite the grid).
 mod.update(model_out=join(wflow_root_forcing, "events"), steps=steps, write=False, forceful_overwrite=True)
+
+# The CEH-GEAR netCDFs flag missing (offshore) cells with the netCDF default fill value
+# 9.96921e+36 but do not declare a `_FillValue`/`missing_value` attribute, so hydromt reads them
+# as real rainfall. setup_precip_forcing casts to float32 and time-resamples with
+# conserve_mass=True; the sentinel overflows float32 and ends up as +inf in inmaps.nc. Wflow then
+# turns that into NaN and dies with `InexactError: Int64(NaN)` in unsatzone_flow_layer.
+# Estuary/sea cells inside the basin mask get 0 mm; NaN outside the basin mask is left untouched.
+precip = mod.forcing.data["precip"]
+bad = np.isinf(precip) | (precip > 1e5)  # NaN compares False in both, so the basin mask survives
+n_bad = int(bad.sum())
+if n_bad:
+    print(f"Replacing {n_bad} non-physical precip values (fill-value overflow) with 0 mm")
+    mod.forcing.set(precip.where(~bad, 0.0), name="precip")
+
 mod.forcing.write()
 mod.config.write()
 # %%

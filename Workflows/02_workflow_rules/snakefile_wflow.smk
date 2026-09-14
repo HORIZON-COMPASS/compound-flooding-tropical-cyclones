@@ -6,9 +6,9 @@ from itertools import product
 
 curdir = os.getcwd()
 if os.name == 'nt': #Running on windows
-    root_dir = join("p:/",config['root_dir'])
+    root_dir = config['root_dir']
 elif os.name == "posix": #Running on linux
-    root_dir = join("/p", config['root_dir'])
+    root_dir = config['root_dir']
 dir_runs = config['dir_runs']
 dir_models = config['dir_models']
 
@@ -80,7 +80,7 @@ region, runname_ids, precip_forcing, CF_rain = zip(*run_combinations)
 rule all_wflow:
     input:
         expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow", "event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "output_scalar.nc"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
-        expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
+        # expand(join(root_dir, dir_runs, "{region}", "{runname}", "wflow","event_precip_{precip_forcing}_CF{CF_rain}", "events", "run_default", "wflow_dis_no_qbankfull.csv"), zip, region=region, runname=runname_ids, precip_forcing=precip_forcing, CF_rain=CF_rain),
 
 rule make_base_model_wflow:
     input:

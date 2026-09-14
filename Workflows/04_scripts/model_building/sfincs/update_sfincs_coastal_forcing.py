@@ -7,6 +7,7 @@ from os.path import basename, join, exists
 import logging
 import shutil
 import os
+import numpy as np
 import hydromt
 from hydromt.data_catalog import DataCatalog
 from hydromt_sfincs import SfincsModel
@@ -175,14 +176,31 @@ else:
 steps.insert(0, {"config.update": config_data})
 
 # %%
-# Read the base model and apply the forcing steps, writing to the event run directory
+# Read the base model and apply the forcing steps. We write=False here so the precip can be
+# sanitised (see below) before anything hits disk.
 mod = SfincsModel(root=sfincs_mod_no_forcing, data_libs=data_cats, mode="r")
 mod.update(
     model_out=sfincs_mod_with_forcing,
-    write=True,
+    write=False,
     forceful_overwrite=True,
     steps=steps,
 )
+
+# The CEH-GEAR netCDFs flag missing (offshore) cells with the netCDF default fill value
+# 9.96921e+36 but do not declare a `_FillValue`/`missing_value` attribute, so hydromt reads them
+# as real rainfall. precipitation.create only does .fillna(0), which does not catch the sentinel,
+# so it survives into sfincs_netampr.nc and overflows to +inf once written as float32. SFINCS then
+# either blows up or floods the whole domain. Replace the sentinel with 0 mm/hr; genuine NaN
+# (outside the data extent) is left untouched.
+precip_var = "precip_2d" if "precip_2d" in mod.precipitation.data else "precip"
+precip = mod.precipitation.data[precip_var]
+bad = np.isinf(precip) | (precip > 1e5)  # NaN compares False in both, so NaN is preserved
+n_bad = int(bad.sum())
+if n_bad:
+    print(f"Replacing {n_bad} non-physical precip values (fill-value overflow) with 0 mm/hr")
+    mod.precipitation.set(precip.where(~bad, 0.0), name=precip_var)
+
+mod.write()
 mod.plot_forcing()
 
 # %%
