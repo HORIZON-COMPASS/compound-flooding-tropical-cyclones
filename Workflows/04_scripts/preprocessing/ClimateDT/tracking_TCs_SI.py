@@ -2,13 +2,19 @@
 # https://github.com/MRibberink/OpheliaPaperCode/blob/main/hurricane_funcs.py
 #%%
 
-def import_ibtracs_period(start="2019-01-01", end="2019-02-01"):
+def import_ibtracs_period(start="2017-01-01", end="2026-07-01"):
     import xarray as xr
     import pandas as pd
     from os.path import join
     import numpy as np
+    import platform
+    from pathlib import Path
 
-    path = ("/projects/prjs2226/data/IBTrACS/")
+    if platform.system() == "Windows":
+        path = Path("P:/11210471-001-compass/01_Data/IBTrACS/")
+    else: # Linux (e.g. Snellius)
+        path = Path("/projects/prjs2226/data/IBTrACS/")
+
     tracks = xr.open_dataset(join(path, "IBTrACS.SI.v04r01.nc"))
 
     storms = {}
@@ -27,7 +33,6 @@ def import_ibtracs_period(start="2019-01-01", end="2019-02-01"):
             name = name.decode("utf-8").strip()
         else:
             name = str(name).strip()
-
 
         tc = {
             "time": time[valid],
@@ -147,7 +152,6 @@ def storm_tracker(data,best_track,model,s_size):
     return min_p
 
 
-
 def plot_tracks(track, tc_idai_climatedt, scenarios):
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
@@ -197,7 +201,6 @@ def plot_tracks(track, tc_idai_climatedt, scenarios):
     plt.show()
 
 
-
 def plot_tracks_all(storms, tc_climatedt, figure_path="figures"):
     import os
     import numpy as np
@@ -205,10 +208,11 @@ def plot_tracks_all(storms, tc_climatedt, figure_path="figures"):
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     import pandas as pd
+    import platform
 
     os.makedirs(figure_path, exist_ok=True)
 
-    scenarios = ["hist", "cont", "Tplus2.0K"]
+    scenarios = ["cont", "hist", "Tplus2.0K"]
     colors = plt.cm.tab10.colors
 
     for storm_name, track in storms.items():
@@ -248,7 +252,7 @@ def plot_tracks_all(storms, tc_climatedt, figure_path="figures"):
             ax.plot(track["lon"], track["lat"], "k-", lw=2.5, transform=ccrs.PlateCarree(), label="IBTrACS")
 
             # Start of track
-            ax.plot(track.lon.iloc[0], track.lat.iloc[0], marker="o", color="red", markersize=8,
+            ax.plot(track.lon.iloc[0], track.lat.iloc[0], marker="o", color="red", markersize=3,
                     transform=ccrs.PlateCarree(), zorder=10, label="Track start")
 
             for i, realization in enumerate(["1", "2", "3", "4", "5"]):
@@ -269,13 +273,17 @@ def plot_tracks_all(storms, tc_climatedt, figure_path="figures"):
             gl.top_labels = False
             gl.right_labels = False
 
-        max_wind = track.wind.max()
+        max_wind = track.wind.max() * 0.514444  # convert from knots to m/s
 
         # TC category at maximum wind
         idx_max = track.wind.idxmax()
         tc_strength = track.usa_sshs.loc[idx_max]
-
         start_date = pd.to_datetime(track.time.min()).strftime("%Y-%m-%d")
+
+        # Max intensity point
+        axes[1].scatter(track.lon.loc[idx_max], track.lat.loc[idx_max], color="blue", s=30,
+                        marker="o", edgecolor="black", linewidth=0.5, transform=ccrs.PlateCarree(),
+                        zorder=5, label=f"Max intensity (SSHS={tc_strength})")
 
         fig.suptitle(f"{storm_name} | {start_date} | Max wind: {max_wind:.1f} m/s | {tc_strength}")
 
@@ -289,12 +297,62 @@ def plot_tracks_all(storms, tc_climatedt, figure_path="figures"):
         fig.savefig(outfile, bbox_inches="tight")
 
         print(f"Saved {outfile}")
+        if platform.system() == "Windows":
+            plt.show()
 
         plt.close(fig)
 
 
+def plot_ibtracs_context(storms, tc_climatedt):
+    import platform
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import pandas as pd
+
+    # Only storms that have ClimateDT tracks
+    model_storms = {key[-1] for key in tc_climatedt.keys()}
+
+    for storm_name in model_storms:
+        fig = plt.figure(figsize=(10, 8))
+        ax = plt.axes(projection=ccrs.PlateCarree())
+
+        ax.set_extent([10, 130, -40, 0])
+        ax.add_feature(cfeature.COASTLINE)
+        ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+
+        # Plot all IBTrACS tracks in grey
+        for name, track in storms.items():
+            track = track.dropna(subset=["lon", "lat"])
+
+            if len(track) == 0:
+                continue
+
+            ax.plot(track.lon, track.lat, color="#CCCCCC", linewidth=1.5,
+                    transform=ccrs.PlateCarree(), zorder=1)
+
+        # Highlight selected storm
+        if storm_name in storms:
+            track = storms[storm_name].dropna(subset=["lon", "lat"]) 
+
+            ax.plot(track.lon, track.lat, color="red", linewidth=2.5,
+                    transform=ccrs.PlateCarree(), zorder=3)
+
+            # Annotation
+            ax.annotate(storm_name, (track.lon.iloc[0], track.lat.iloc[0]),
+                        xytext=(5, 10), textcoords="offset points", fontsize=12,
+                        color="red", fontweight="bold")
+
+        ax.set_title(f"TC {storm_name} within South Indian Ocean Basin (IBTrACS tracks)")
+
+        fig.tight_layout()
+        if platform.system() == "Windows":
+            plt.show()
+        fig.savefig(f"ibtracs_context_{storm_name}.png", dpi=300)
+        plt.close(fig)
+
         
-def process_member(args):
+def process_member_tracking(args):
     import os
     import glob
     import pickle
@@ -368,30 +426,199 @@ def process_member(args):
     return pkl_file
 
 
-def main(run_tracking=False):
+def process_member_wind(args):
+    import os
+    import glob
+    import pickle
+    import numpy as np
+    import xarray as xr
+
+    scen, realization, input_file, data_path, output_path, radius_km, use_ibtracs_rmw = args
+
+    output_file = os.path.join(output_path,
+        f"storms_{scen}_r{realization}_wind_{radius_km}km.pkl")
+
+    if os.path.exists(output_file):
+        print(f"SKIP {scen} r{realization}: wind file exists", flush=True)
+        return output_file
+
+    print(f"START {scen} r{realization}", flush=True)
+
+    with open(input_file, "rb") as f:
+        member_tracks = pickle.load(f)
+
+    u_files = sorted(glob.glob(
+                     os.path.join(data_path, "10u", scen, f"r{realization}",
+                     f"climateDT_10u_{scen}_r{realization}_*.nc",)))
+
+    v_files = sorted(glob.glob(
+                     os.path.join(data_path, "10v", scen, f"r{realization}",
+                     f"climateDT_10v_{scen}_r{realization}_*.nc")))
+
+    if not u_files or not v_files:
+        print(f"Missing wind files: {scen} r{realization}", flush=True)
+        return None
+
+    data = xr.open_mfdataset(u_files + v_files, combine="by_coords", 
+                             data_vars="minimal", coords="minimal",
+                             compat="override", parallel=False)
+
+    try:
+        wind_speed = np.hypot(data["u10"], data["v10"])
+
+        results = {}
+        for key, track in member_tracks.items():
+            storm_name = key[2] if isinstance(key, tuple) else str(key)
+
+            if use_ibtracs_rmw and storm_name in storms:
+                print(f"Using IBTrACS RMW for wind radius for {storm_name}", flush=True)
+                rmw = storms[storm_name]["rmw"].max()
+
+                if not np.isnan(rmw):
+                    search_radius = rmw * 1.852 + 20
+                else:
+                    print(f"IBTrACS RMW is NaN for {storm_name}, using default radius of {radius_km} km", flush=True)
+                    search_radius = radius_km
+
+            else:
+                print(f"Using default radius of {radius_km} km for {storm_name}", flush=True)
+                search_radius = radius_km
+
+            try:
+                results[key] = add_max_wind_within_radius(track=track,
+                                                          wind_speed=wind_speed,
+                                                          radius_km=search_radius)
+
+                print(f"DONE {scen} r{realization}: {storm_name}", flush=True)
+
+            except Exception as error:
+                print(f"FAILED {scen} r{realization} {storm_name}: {error}",
+                      flush=True)
+
+                results[key] = track.copy()
+
+    finally:
+        data.close()
+
+    with open(output_file, "wb") as f:
+        pickle.dump(results, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    size_gb = os.path.getsize(output_file) / 1024**3
+
+    print(f"SAVED {scen} r{realization}: {len(results)} storms, {size_gb:.3f} GB",
+          flush=True)
+
+    del wind_speed
+    del member_tracks
+    del results
+    del data
+
+    return output_file
+
+
+def add_max_wind_within_radius(track, wind_speed, radius_km=200, time_col="time", 
+                               lat_col="lat", lon_col="lon"):
+    import numpy as np
+    import pandas as pd
+    import xarray as xr
+
+    wind_col = f"max_wind_model"
+    rmw_col = "rmw_model_km"
+
+    track[wind_col] = np.nan
+    track[rmw_col] = np.nan
+    track["rmw_lat"] = np.nan
+    track["rmw_lon"] = np.nan
+
+    r_deg = radius_km / 111.0
+
+    for idx, point in track.iterrows():
+        time = pd.Timestamp(point[time_col])
+        lat0 = point[lat_col]
+        lon0 = point[lon_col]
+
+        if pd.isna(lat0) or pd.isna(lon0):
+            continue
+        
+        wind_ts = wind_speed.sel(time=time, method="nearest")
+
+        subset = wind_ts.sel(latitude=slice(lat0 + r_deg, lat0 - r_deg),
+                             longitude=slice(lon0 - r_deg, lon0 + r_deg))
+        if subset.size == 0:
+            continue
+
+        lat2d, lon2d = xr.broadcast(subset.latitude, subset.longitude)
+
+        dx = (lon2d - lon0) * np.cos(np.deg2rad(lat0)) * 111.0 # approximate conversion to km
+        dy = (lat2d - lat0) * 111.0 # approximate conversion to km
+
+        distance_km = np.sqrt(dx**2 + dy**2)
+
+        masked = subset.where(distance_km <= radius_km)
+
+        masked_values = masked.values
+
+        if np.all(np.isnan(masked_values)):
+            continue
+
+        iy, ix = np.unravel_index(np.nanargmax(masked_values), masked_values.shape)
+
+        # Write the maximum wind and RMW back to the original track DataFrame
+        track.loc[idx, wind_col] = float(masked_values[iy, ix])
+        track.loc[idx, rmw_col] = float(distance_km.values[iy, ix])
+
+        track.loc[idx, "rmw_lat"] = float(subset.latitude.values[iy])
+        track.loc[idx, "rmw_lon"] = float(subset.longitude.values[ix])
+
+    return track
+
+
+def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_context=False, 
+         wind_radius_km=200, use_ibtracs_rmw=False):
     import os
     import glob
     import pickle
     import pandas as pd
     from multiprocessing import Pool
+    import platform
+    from pathlib import Path
 
-    data_path = "/projects/prjs2226/data/ClimateDT/sfc/raw/msl"
-    processed_path = "/projects/prjs2226/data/ClimateDT/sfc/processed/msl/tracked"
-    figure_path = os.path.join(processed_path, "figures")
+    if platform.system() == "Windows":
+        data_path_base = Path("c:/Code/test/ClimateDT/")
+        processed_path = Path("P:/11210471-001-compass/01_Data/ECMWF_ClimateDT/analysis_output/")
+        processed_path_tracks = os.path.join(processed_path, "SI_tracked_storms")
+        processed_path_tracked_wind = os.path.join(processed_path, "SI_tracked_storms")
+        figure_path = processed_path / "figures"
+    else:
+        data_path_base = Path("/projects/prjs2226/data/ClimateDT/sfc/raw/")
+        processed_path = Path("/projects/prjs2226/data/ClimateDT/sfc/processed/")
+        processed_path_tracks = Path(os.path.join(processed_path, "msl", "tracked"))
+        processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked"))
+        figure_path = processed_path / "figures"
 
     os.makedirs(processed_path, exist_ok=True)
     os.makedirs(figure_path, exist_ok=True)
+    os.makedirs(os.path.join(processed_path_tracks), exist_ok=True)
+    os.makedirs(os.path.join(processed_path_tracked_wind), exist_ok=True)
+
 
     start_time = "2017-01-01"
     end_time = "2026-08-01"
 
-    track_file = os.path.join(processed_path, f"storms_tracked_{start_time}_{end_time}.pkl")
+    # output files
+    track_file = os.path.join(processed_path_tracks,
+                              f"storms_tracked_{start_time}_{end_time}.pkl")
 
-    table_file = os.path.join(processed_path, f"storms_tracked_{start_time}_{end_time}.parquet")
+    wind_track_file = os.path.join(processed_path_tracked_wind,
+        f"storms_tracked_max_wind_{wind_radius_km}km_{start_time}_{end_time}.pkl")
 
+    # Loading IBTrACS data in SI basin for the specified period
     print("Importing IBTrACS data...")
     storms = import_ibtracs_period(start=start_time, end=end_time)
 
+    # --------------------------------------------------
+    # Track storms in ClimateDT data
+    # --------------------------------------------------
     if run_tracking:
         experiments = ["hist", "cont", "Tplus2.0K"]
         realizations = ["1", "2", "3", "4", "5"]
@@ -399,29 +626,27 @@ def main(run_tracking=False):
         jobs = []
         for scen in experiments:
             for realization in realizations:
-                pkl_file = os.path.join(processed_path, f"storms_{scen}_r{realization}.pkl")
+                pkl_file = os.path.join(processed_path_tracks, f"storms_{scen}_r{realization}.pkl")
 
                 if os.path.exists(pkl_file):
                     print(f"SKIP {scen} r{realization}", flush=True)
                     continue
 
-                jobs.append((scen, realization, storms, data_path, processed_path))
+                data_path_msl = data_path_base / "msl"
+                jobs.append((scen, realization, storms, data_path_msl, processed_path_tracks))
 
         print(f"Submitting {len(jobs)} jobs", flush=True)
 
         saved_files = []
         with Pool(processes=5) as pool:
-            for result in pool.imap_unordered(process_member, jobs):
+            for result in pool.imap_unordered(process_member_tracking, jobs):
                 print(f"worker returned: {os.path.basename(result)}", flush=True,)
 
                 saved_files.append(result)
 
-        # --------------------------------------------------
         # Load completed results
-        # --------------------------------------------------
         tc_climatedt = {}
-
-        for pkl_file in sorted(glob.glob(os.path.join( processed_path, "storms_*_r*.pkl",))):   
+        for pkl_file in sorted(glob.glob(os.path.join(processed_path_tracks, "storms_*_r*.pkl",))):   
             print(f"Loading {os.path.basename(pkl_file)}", flush=True,)
 
             with open(pkl_file, "rb") as f:
@@ -429,48 +654,154 @@ def main(run_tracking=False):
 
         print(f"Loaded {len(tc_climatedt)} tracks", flush=True,)
 
-        # --------------------------------------------------
         # PLOT FIRST
-        # --------------------------------------------------
-        plot_tracks_all(storms, tc_climatedt, figure_path=figure_path,)
+        print("Plotting all tracks...", flush=True)
+        if plot_tracks:
+            plot_tracks_all(storms, tc_climatedt, figure_path=figure_path)
 
-        # --------------------------------------------------
+        # Plot context of IBTrACS tracks and highlight the selected storm
+        if plot_track_context:
+            print("Plotting IBTrACS context...")
+            plot_ibtracs_context(storms, tc_climatedt)
+
         # SAVE COMBINED PICKLE
-        # --------------------------------------------------
         with open(track_file, "wb") as f:
             pickle.dump(tc_climatedt, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-        # --------------------------------------------------
-        # SAVE COMBINED PARQUET
-        # --------------------------------------------------
-
-        all_tracks = []
-        for (scen, realization, storm_name), track in tc_climatedt.items():
-            table = track.copy()
-            table["scenario"] = scen
-            table["realization"] = realization
-            table["storm_name"] = storm_name
-
-            all_tracks.append(table)
-
-        if all_tracks:
-            tracks_df = pd.concat(all_tracks, ignore_index=True)
-            # tracks_df.to_parquet(table_file, index=False)
-
-            print(f"Saved {len(tracks_df)} track points", flush=True)
 
         print(f"Saved {len(tc_climatedt)} tracks", flush=True)
 
     else:
+        print(f"Loading existing track file: {track_file}", flush=True)
         with open(track_file, "rb") as f:
             tc_climatedt = pickle.load(f)
 
-        plot_tracks_all(storms, tc_climatedt, figure_path=figure_path)
+        if plot_tracks:
+            print("Plotting all tracks...", flush=True)
+            plot_tracks_all(storms, tc_climatedt, figure_path=figure_path)
+
+        # Plot context of IBTrACS tracks and highlight the selected storm
+        if plot_track_context:
+            print("Plotting IBTrACS context...")
+            plot_ibtracs_context(storms, tc_climatedt)
+
+    # --------------------------------------------------
+    # Add wind speed within tracked TC centre radius
+    # --------------------------------------------------
+    if add_wind:
+        experiments = ["hist", "cont", "Tplus2.0K"]
+        realizations = ["1", "2", "3", "4", "5"]
+
+        jobs = []
+        for scen in experiments:
+            for realization in realizations:
+                input_file = os.path.join(processed_path_tracks,
+                             f"storms_{scen}_r{realization}.pkl")
+
+                if not os.path.exists(input_file):
+                    print(f"Missing tracking file: {input_file}", flush=True)
+                    continue
+
+                jobs.append((scen, realization, input_file, data_path_base,
+                             processed_path_tracked_wind, wind_radius_km, use_ibtracs_rmw))
+
+        wind_files = []
+        with Pool(processes=5) as pool:
+            for result in pool.imap_unordered(process_member_wind, jobs):
+                if result is not None:
+                    wind_files.append(result)
+
+        tc_climatedt_wind = {}
+        for wind_file in sorted(wind_files):
+            with open(wind_file, "rb") as f:
+                tc_climatedt_wind.update(pickle.load(f))
+
+        wind_track_file = os.path.join(processed_path_tracked_wind,
+                                       f"storms_tracked_max_wind_{radius_km}km_"
+                                       f"{start_time}_{end_time}.pkl")
+
+        with open(wind_track_file, "wb") as f:
+            pickle.dump(tc_climatedt_wind, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+        size_gb = os.path.getsize(wind_track_file) / 1024**3
+
+        print(f"Saved {len(tc_climatedt_wind)} tracks to "
+              f"{wind_track_file} ({size_gb:.3f} GB)", flush=True)
+
+        tc_climatedt = tc_climatedt_wind
+
+    else:
+        print(f"Loading existing wind track file: {wind_track_file}", flush=True)
+        with open(wind_track_file, "rb") as f:
+            tc_climatedt = pickle.load(f)
+
 
     return storms, tc_climatedt
 
+
 if __name__ == "__main__":
-    storms, tc_climatedt = main(run_tracking=True)
+    storms, tc_climatedt = main(run_tracking=False, add_wind=True, 
+                                plot_tracks=False, plot_track_context=False, 
+                                wind_radius_km=200)
+
+
+# %%
+
+
+
+
+
+
+#%%
+# import os
+# import glob
+# import xarray as xr
+# from pathlib import Path
+# import numpy as np
+
+# data_path = Path("c:/Code/test/ClimateDT/")
+# processed_path = Path("P:/11210471-001-compass/01_Data/ECMWF_ClimateDT/analysis_output/SI_tracked_storms")
+# figure_path = processed_path / "figures"
+
+# ds_10u = os.path.join(data_path, f"climateDT_10u_hist_r1_201901.nc")
+# ds_10v = os.path.join(data_path, f"climateDT_10v_hist_r1_201901.nc")
+# ds_tp = os.path.join(data_path, f"climateDT_avg_tprate_hist_r1_201901.nc")
+# files = sorted(glob.glob(ds_10u)) + sorted(glob.glob(ds_10v)) + sorted(glob.glob(ds_tp))
+# data = xr.open_mfdataset(files, combine="by_coords", data_vars="minimal", coords="minimal", 
+#                              compat="override", parallel=False)
+# data['wind_speed'] = np.sqrt(data['u10']**2 + data['v10']**2)
+# data['tp'] = data['avg_tprate'] * 3600 # convert from kg/m2/s to mm/hr
+
+
+
+
+# %%
+# storm_name = "DESMOND"
+# scenario = "hist"
+# realization = "1"
+
+# tc_desmond = storms["DESMOND"]
+# rmw = storms["DESMOND"].rmw.max() * 1.852 # convert from nautical miles to km
+# search_radius = rmw + 20 # adding 20 km for safety
+# model_tracks = tc_climatedt[(scenario, realization, "DESMOND")]
+
+# track_with_wind_200km = add_max_wind_within_radius(model_tracks, data['wind_speed'], radius_km=200)
+# track_with_wind_rmw = add_max_wind_within_radius(model_tracks, data['wind_speed'], radius_km=search_radius)
+
+# %%
+# import matplotlib.pyplot as plt
+# fig = plt.figure(figsize=(10, 5))
+
+# fig.suptitle("Comparison of Maximum Wind Speed")
+
+# plt.plot(track_with_wind_200km['time'], track_with_wind_200km['max_wind_model'].values)  # Model wind speed
+# # plt.plot(track_with_wind_rmw['time'], track_with_wind_rmw['max_wind_model'].values)  # Model wind speed
+# plt.plot(storms['DESMOND']['time'], storms['DESMOND']['wind'].values * 0.514444)  # Convert knots to m/s
+
+# plt.xlabel("Time")
+# plt.ylabel("Wind Speed (m/s)")
+# plt.legend(["Model (200km)", "Model (RMW)", "Observed"])
+
+
 
 
 # %%
