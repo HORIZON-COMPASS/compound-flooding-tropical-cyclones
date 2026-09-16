@@ -432,6 +432,7 @@ def process_member_wind(args):
     import pickle
     import numpy as np
     import xarray as xr
+    import traceback
 
     scen, realization, input_file, data_path, output_path, radius_km, use_ibtracs_rmw = args
 
@@ -497,6 +498,11 @@ def process_member_wind(args):
 
                 results[key] = track.copy()
 
+    except Exception:
+        print(f"REALIZATION FAILED {scen} r{realization}", flush=True)
+        traceback.print_exc()
+        raise
+
     finally:
         data.close()
 
@@ -533,42 +539,61 @@ def add_max_wind_within_radius(track, wind_speed, radius_km=200, time_col="time"
     r_deg = radius_km / 111.0
 
     for idx, point in track.iterrows():
-        time = pd.Timestamp(point[time_col])
-        lat0 = point[lat_col]
-        lon0 = point[lon_col]
+        try:
+            time = pd.Timestamp(point[time_col])
+            lat0 = point[lat_col]
+            lon0 = point[lon_col]
 
-        if pd.isna(lat0) or pd.isna(lon0):
-            continue
-        
-        wind_ts = wind_speed.sel(time=time, method="nearest")
+            if pd.isna(lat0) or pd.isna(lon0):
+                continue
+            
+            wind_ts = wind_speed.sel(time=time, method="nearest")
 
-        subset = wind_ts.sel(latitude=slice(lat0 + r_deg, lat0 - r_deg),
-                             longitude=slice(lon0 - r_deg, lon0 + r_deg))
-        if subset.size == 0:
-            continue
+            subset = wind_ts.sel(latitude=slice(lat0 + r_deg, lat0 - r_deg),
+                                longitude=slice(lon0 - r_deg, lon0 + r_deg))
+            if subset.size == 0:
+                print(f"No grid cells found "
+                      f"time={time} "
+                      f"lat={lat0:.2f} "
+                      f"lon={lon0:.2f}", flush=True)
+                continue
 
-        lat2d, lon2d = xr.broadcast(subset.latitude, subset.longitude)
+            lat2d, lon2d = xr.broadcast(subset.latitude, subset.longitude)
 
-        dx = (lon2d - lon0) * np.cos(np.deg2rad(lat0)) * 111.0 # approximate conversion to km
-        dy = (lat2d - lat0) * 111.0 # approximate conversion to km
+            dx = (lon2d - lon0) * np.cos(np.deg2rad(lat0)) * 111.0 # approximate conversion to km
+            dy = (lat2d - lat0) * 111.0 # approximate conversion to km
 
-        distance_km = np.sqrt(dx**2 + dy**2)
+            distance_km = np.sqrt(dx**2 + dy**2)
 
-        masked = subset.where(distance_km <= radius_km)
+            masked = subset.where(distance_km <= radius_km)
 
-        masked_values = masked.values
+            masked_values = masked.values
 
-        if np.all(np.isnan(masked_values)):
-            continue
+            if np.all(np.isnan(masked_values)):
+                print(f"All winds NaN "
+                      f"time={time} "
+                      f"lat={lat0:.2f} "
+                      f"lon={lon0:.2f}", flush=True)
+                continue
 
-        iy, ix = np.unravel_index(np.nanargmax(masked_values), masked_values.shape)
+            if np.all(np.isnan(masked_values)):
+                continue
 
-        # Write the maximum wind and RMW back to the original track DataFrame
-        track.loc[idx, wind_col] = float(masked_values[iy, ix])
-        track.loc[idx, rmw_col] = float(distance_km.values[iy, ix])
+            iy, ix = np.unravel_index(np.nanargmax(masked_values), masked_values.shape)
 
-        track.loc[idx, "rmw_lat"] = float(subset.latitude.values[iy])
-        track.loc[idx, "rmw_lon"] = float(subset.longitude.values[ix])
+            # Write the maximum wind and RMW back to the original track DataFrame
+            track.loc[idx, wind_col] = float(masked_values[iy, ix])
+            track.loc[idx, rmw_col] = float(distance_km.values[iy, ix])
+
+            track.loc[idx, "rmw_lat"] = float(subset.latitude.values[iy])
+            track.loc[idx, "rmw_lon"] = float(subset.longitude.values[ix])
+
+        except Exception as error:
+            print(f"FAILED timestep {idx} "
+                  f"time={time} "
+                  f"lat={lat0} "
+                  f"lon={lon0}: {error}", flush=True)
+            raise
 
     return track
 
