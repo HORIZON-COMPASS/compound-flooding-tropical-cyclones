@@ -612,30 +612,33 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
         data_path_base = Path("c:/Code/test/ClimateDT/")
         processed_path = Path("P:/11210471-001-compass/01_Data/ECMWF_ClimateDT/analysis_output/")
         processed_path_tracks = os.path.join(processed_path, "SI_tracked_storms")
-        processed_path_tracked_wind = os.path.join(processed_path, "SI_tracked_storms")
         figure_path = processed_path / "figures"
     else:
         data_path_base = Path("/projects/prjs2226/data/ClimateDT/sfc/raw/")
         processed_path = Path("/projects/prjs2226/data/ClimateDT/sfc/processed/")
         processed_path_tracks = Path(os.path.join(processed_path, "msl", "tracked"))
-        processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked"))
         figure_path = processed_path / "figures"
 
     os.makedirs(processed_path, exist_ok=True)
     os.makedirs(figure_path, exist_ok=True)
     os.makedirs(os.path.join(processed_path_tracks), exist_ok=True)
-    os.makedirs(os.path.join(processed_path_tracked_wind), exist_ok=True)
-
 
     start_time = "2017-01-01"
     end_time = "2026-08-01"
+
+    experiments = ["hist", "cont", "Tplus2.0K"]
+    realizations = ["1", "2", "3", "4", "5"]
 
     # output files
     track_file = os.path.join(processed_path_tracks,
                               f"storms_tracked_{start_time}_{end_time}.pkl")
 
-    wind_track_file = os.path.join(processed_path_tracked_wind,
-        f"storms_tracked_max_wind_{wind_radius_km}km_{start_time}_{end_time}.pkl")
+    if use_ibtracs_rmw:
+        processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked_rmw"))
+    else:
+        processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked_200km"))
+                        
+    os.makedirs(os.path.join(processed_path_tracked_wind), exist_ok=True)
 
     # Loading IBTrACS data in SI basin for the specified period
     print("Importing IBTrACS data...")
@@ -645,9 +648,7 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
     # Track storms in ClimateDT data
     # --------------------------------------------------
     if run_tracking:
-        experiments = ["hist", "cont", "Tplus2.0K"]
-        realizations = ["1", "2", "3", "4", "5"]
-
+        print(f"Tracking storms in ClimateDT data for {len(storms)} storms...", flush=True)
         jobs = []
         for scen in experiments:
             for realization in realizations:
@@ -713,9 +714,7 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
     # Add wind speed within tracked TC centre radius
     # --------------------------------------------------
     if add_wind:
-        experiments = ["hist", "cont", "Tplus2.0K"]
-        realizations = ["1", "2", "3", "4", "5"]
-
+        print(f"Adding maximum wind speed to model tracks...", flush=True)
         jobs = []
         for scen in experiments:
             for realization in realizations:
@@ -740,9 +739,12 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
             with open(wind_file, "rb") as f:
                 tc_climatedt_wind.update(pickle.load(f))
 
-        wind_track_file = os.path.join(processed_path_tracked_wind,
-                                       f"storms_tracked_max_wind_{radius_km}km_"
-                                       f"{start_time}_{end_time}.pkl")
+        if use_ibtracs_rmw:
+            wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_rmw_"
+                                           f"{start_time}_{end_time}.pkl")
+        else:
+            wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_{wind_radius_km}km_"
+                                           f"{start_time}_{end_time}.pkl")
 
         with open(wind_track_file, "wb") as f:
             pickle.dump(tc_climatedt_wind, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -759,14 +761,13 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
         with open(wind_track_file, "rb") as f:
             tc_climatedt = pickle.load(f)
 
-
     return storms, tc_climatedt
 
 
 if __name__ == "__main__":
     storms, tc_climatedt = main(run_tracking=False, add_wind=True, 
                                 plot_tracks=False, plot_track_context=False, 
-                                wind_radius_km=200)
+                                wind_radius_km=200, use_ibtracs_rmw=False)
 
 
 # %%
