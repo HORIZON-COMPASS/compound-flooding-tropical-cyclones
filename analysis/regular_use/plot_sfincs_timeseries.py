@@ -58,8 +58,8 @@ from shapely import contains_xy
 warnings.filterwarnings("ignore")
 
 # ── CONFIGURATION ─────────────────────────────────────────────────────────────
-BASE  = Path("/home/azureuser/cloudfiles/code/Users/eloise.matthews/data/output_jul26")
-OUT   = Path("/home/azureuser/cloudfiles/code/Users/eloise.matthews/hydromt_v1_somerset/analysis/plots")
+BASE  = Path("/home/azureuser/cloudfiles/code/Users/eloise.matthews/output_jul26")
+OUT   = Path("/home/azureuser/cloudfiles/code/Users/eloise.matthews/hydromt_v1_somerset/analysis/uc2deliverable/plots")
 SHP_PATH = Path("/home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/static/somerset_shape/new_shape2.shp")
 
 # Scenarios to plot.  Each entry: (display_label, hex_colour).
