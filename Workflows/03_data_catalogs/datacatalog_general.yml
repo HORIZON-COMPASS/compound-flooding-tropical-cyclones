@@ -533,6 +533,34 @@ lisboa_2020:
     paper_ref: Lisboa et al (2024)
     source_url: https://www.sciencedirect.com/science/article/pii/S1569843224002589?via%3Dihub
   crs: 4326
+lisboa_2020_notmerged:
+  data_type: RasterDataset
+  path: 11210471-001-compass/MSc_internship/Poppy/LULC_data/lulc_map_2020_BC_wgs84_reclassed5.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    paper_doi: 10.1016/j.jag.2024.103904
+    paper_ref: Lisboa et al (2024)
+    source_url: https://www.sciencedirect.com/science/article/pii/S1569843224002589?via%3Dihub
+  crs: 4326
+lisboa_2020_esa_merged:
+  data_type: RasterDataset
+  path: 11210471-001-compass/MSc_internship/Poppy/LULC_data/lisboa_2020_esa_merged.tif
+  driver: raster
+  driver_kwargs:
+    chunks:
+      x: 3600
+      y: 3600
+  meta:
+    category: landuse
+    paper_doi: 10.1016/j.jag.2024.103904
+    paper_ref: Lisboa et al (2024) merged with ESA WorldCover 2020
+    source_url: https://www.sciencedirect.com/science/article/pii/S1569843224002589?via%3Dihub
+  crs: 4326
 merit:
   data_type: RasterDataset
   path: wflow_global/hydromt/topography/merit/merit.nc
@@ -812,6 +840,13 @@ vito_mapping_wflow:
   data_type: DataFrame
   provider: user
   path: 11210471-001-compass/01_Data/lulc/vito_mapping_hydromtwflow.csv
+  driver: csv
+  driver_kwargs:
+    index_col: 0
+vito_esa_mapping_wflow:
+  data_type: DataFrame
+  provider: user
+  path: 11210471-001-compass/01_Data/lulc/vito_esa_mapping_hydromtwflow.csv
   driver: csv
   driver_kwargs:
     index_col: 0
