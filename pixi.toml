@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "COMPASS_UC3"
 version = "0.1.0"
 description = "This environment is for running scripts for the COMPASS UC3 for Mozambique tropical cyclones"
@@ -55,6 +55,7 @@ hydromt = ">=0.10.0, <1.0.0"
 hydromt_wflow = ">=0.7.0, <0.7.1"
 pyflwdir = "=0.5.8"
 contextily  = "*"
+affine = "2.*"
 
 [feature.wflow_extra.pypi-dependencies]
 gwwapi = "*"
