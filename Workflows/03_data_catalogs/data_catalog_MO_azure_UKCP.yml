@@ -86,7 +86,7 @@ coastal_coupling_msk_SMST:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -100,6 +100,30 @@ coastal_coupling_msk_SMST:
     source_license: na
     source_url: none
     source_version: 1.0
+emodnet:
+  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/E4_2024.tif
+  uri_resolver:
+    name: azure_blob
+    options:
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
+  provider: azure
+  data_type: RasterDataset
+  driver:
+    name: rasterio
+    options:
+      chunks:
+        x: 3600
+        y: 3600
+  data_adapter:
+    rename:
+      elevation: elevtn
+  metadata:
+    category: topography
+    crs: 4326
+    source_license: https://emodnet.ec.europa.eu/en/bathymetry#bathymetry-services
+    source_url: https://emodnet.ec.europa.eu/geoviewer/
+    source_version: '2024'
+    unit: m+LAT
 era5_daily:
   uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/era5_{year}_daily.nc
   data_type: RasterDataset
@@ -208,7 +232,7 @@ fabdem:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   data_adapter:
@@ -233,7 +257,7 @@ gcn250:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -260,7 +284,7 @@ gebco:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   data_adapter:
@@ -286,7 +310,7 @@ gswo:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -320,8 +344,8 @@ gtsm_codec_reanalysis_10min_v3: # original
     crs: 4326
     category: ocean
     source_version: v3
-# factual_gtsm_codec_reanalysis_10min_v3: # placeholder for factual
-#   uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/FACTUAL_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
+# factual_relative_gtsm_codec_reanalysis_10min_v3:
+#   uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/FACTUAL_RELATIVE_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
 #   data_type: GeoDataset
 #   data_adapter:
 #     rename:
@@ -338,8 +362,8 @@ gtsm_codec_reanalysis_10min_v3: # original
 #     crs: 4326
 #     category: ocean
 #     source_version: v3
-# counterfactual_gtsm_codec_reanalysis_10min_v3: # placeholder for counterfactual - might have two versions based on each of geocentric and relative HCC. Future will come later
-#   uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/CF_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
+# counterfactual_relative_gtsm_codec_reanalysis_10min_v3:
+#   uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/COUNTERFACTUAL_ST_RELATIVE_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
 #   data_type: GeoDataset
 #   data_adapter:
 #     rename:
@@ -356,12 +380,48 @@ gtsm_codec_reanalysis_10min_v3: # original
 #     crs: 4326
 #     category: ocean
 #     source_version: v3
-highres_dem: # haven't tried a run with this yet
+factual_geocentric_gtsm_codec_reanalysis_10min_v3:
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/FACTUAL_GEOCENTRIC_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
+  data_type: GeoDataset
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    crs: 4326
+    category: ocean
+    source_version: v3
+counterfactual_geocentric_gtsm_codec_reanalysis_10min_v3:
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/forcing/gtsm_codec_10min/COUNTERFACTUAL_ST_GEOCENTRIC_reanalysis_waterlevel_10min_{year}_{month:02d}_v3.nc
+  data_type: GeoDataset
+  data_adapter:
+    rename:
+      station_x_coordinate: lon
+      station_y_coordinate: lat
+      stations: index
+  driver:
+    name: geodataset_xarray
+    options:
+      chunks:
+        stations: 10
+        time: -1
+  metadata:
+    crs: 4326
+    category: ocean
+    source_version: v3
+highres_dem:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/static/dem.tif
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -373,13 +433,20 @@ highres_dem: # haven't tried a run with this yet
   metadata:
     crs: 4326
     category: topography
+    unit: m+ODN
+    # The GeoTIFF is int16 with NO nodata tag; sea/void cells are stored as a
+    # literal 0. Declaring it here makes hydromt mask them to NaN *before*
+    # reprojection, so bilinear resampling does not smear 0 into coastal land
+    # cells. The NaNs are then filled by the bathy dataset in elevation.create /
+    # subgrid.create (and by rio_idw for whatever is left).
+    nodata: 0
     # possibly need some more stuff about the source
 hydro_lakes:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/lakes/lake-db.fgb
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -404,7 +471,7 @@ hydro_reservoirs:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -441,7 +508,7 @@ ksathorfrac_global:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -470,12 +537,15 @@ levees: # haven't tried a run with these yet
     name: pyogrio
   metadata:
     crs: 4326
+  data_adapter:
+    rename:
+      z: elevation   # hydromt_sfincs v2 weirs.create reads crest height from 'elevation'; 'z' is silently dropped (-> 0 m)
 merit_hydro:
   uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/topography/merit_hydro/*.tif
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -507,7 +577,7 @@ merit_hydro_index:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -523,7 +593,7 @@ modis_lai:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -559,7 +629,7 @@ osm_coastlines:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: GeoDataFrame
   driver:
@@ -580,7 +650,7 @@ osm_coastlines:
 #   uri_resolver:
 #     name: azure_blob
 #     options:
-#       sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+#       sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
 #   provider: azure
 #   data_type: RasterDataset
 #   driver:
@@ -593,12 +663,7 @@ osm_coastlines:
 #     crs: 4326 # "RasterDataset: CRS from data catalog does not match CRS of data. The original CRS will be used. Please check your catalog."
 #     category: pop_exposure
 rivers_lin2019_v1:
-  uri: https://saokcu5pj5uokvy02.blob.core.windows.net/default/bucket/data_static/wflow_global/hydromt/hydrography/rivers_lin2019/rivers_ge30m.fgb
-  uri_resolver:
-    name: azure_blob
-    options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
-  provider: azure
+  uri: /home/azureuser/cloudfiles/code/Users/eloise.matthews/local_data/static/rivers_modified.gpkg
   data_type: GeoDataFrame
   driver:
     name: pyogrio
@@ -618,7 +683,7 @@ soilgrids:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_adapter:
     rename:
@@ -700,7 +765,7 @@ vito:
   uri_resolver:
     name: azure_blob
     options:
-      sas_token: sp=racwdli&st=2026-09-14T07:53:17Z&se=2026-09-20T16:08:17Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-09-14T07:53:17Z&ske=2026-09-20T16:08:17Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=3XpPHc3poFemS6%2FkPZoA4pEiaPb%2F6XPnuLjHSp9Ozi0%3D
+      sas_token: sp=racwdli&st=2026-10-26T12:52:14Z&se=2026-11-01T21:07:14Z&skoid=f7722725-91c9-406d-b28e-a408e8cf1767&sktid=17f18161-20d7-4746-87fd-50fe3e3b6619&skt=2026-10-26T12:52:14Z&ske=2026-11-01T21:07:14Z&sks=b&skv=2026-02-06&spr=https&sv=2026-02-06&sr=c&sig=iPirm5Jxs%2BpgCTFAD0qEZFG200w6eNF1sc4UFAiJg00%3D
   provider: azure
   data_type: RasterDataset
   driver:
@@ -730,3 +795,6 @@ walls: # haven't tried a run with these yet
     name: pyogrio
   metadata:
     crs: 4326
+  data_adapter:
+    rename:
+      z: elevation   # hydromt_sfincs v2 weirs.create reads crest height from 'elevation'; 'z' is silently dropped (-> 0 m)

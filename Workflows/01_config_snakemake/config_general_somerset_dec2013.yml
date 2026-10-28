@@ -1,7 +1,7 @@
-# Somerset December-2013 compound test on HydroMT v1 — the real event window, fully local data:
+# Somerset December-2013 compound flooding using HydroMT v1 — test event window, mix of local and blobstore data:
 #   coastal = GTSM-ERA5 10-min archive (gtsm_codec_reanalysis_10min_v3, covers 2013)
 #   precip  = local CEH-GEAR-1hr-v2 (ceh_gear_hourly, Dec 2013)
-#   + Wflow discharge coupling + SFINCS. CF0. Short 3-day window for a quick run.
+#   + Wflow discharge coupling + SFINCS. CF0.
 root_dir:    /home/azureuser/cloudfiles/code/Users/eloise.matthews
 dir_data:    01_Data
 dir_models:  02_Models
@@ -16,7 +16,7 @@ runname_ids:
         precip_forcing: ceh_gear_hourly                     # local CEH-GEAR-1hr-v2 (Dec 2013)
         meteo_forcing: era5_daily                           # wflow temp/PET (warmup spans 2012-2013)
         wind_forcing: no_wind
-        bathy: gebco
+        bathy: emodnet
         river_upa: 5
         use_dfm: False
         use_waves: False
