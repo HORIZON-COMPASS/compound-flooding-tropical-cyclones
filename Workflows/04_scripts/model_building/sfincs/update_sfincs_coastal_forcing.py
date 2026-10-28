@@ -82,7 +82,8 @@ steps = []
 
 # Base config (replaces setup_config): time + output settings
 config_data = {
-    'dtout': 3600,
+    'dtout': 3600,       # hourly snapshots in sfincs_map.nc (written as dtmapout)
+    'dtmaxout': 86400,   # 24-h zsmax windows; sfincs_postprocess.py plots one map per window
     'dthisout': 3600,
     'storemeteo': 1,
     'utmzone': utmzone,
@@ -204,11 +205,11 @@ mod.write()
 mod.plot_forcing()
 
 # %%
-# Copy the subgrid folder from the base model to the event model for result postprocessing
-if not os.path.exists(os.path.join(sfincs_mod_with_forcing, 'subgrid')):
-    shutil.copytree(os.path.join(sfincs_mod_no_forcing, 'subgrid'),
-                    os.path.join(sfincs_mod_with_forcing, 'subgrid'))
-else:
-    print(f"Folder already exists: {os.path.join(sfincs_mod_with_forcing, 'subgrid')}")
+# Copy the subgrid folder from the base model to the event model for result postprocessing.
+# Always overwrite: a stale dep_subgrid.tif from an earlier build would no longer match
+# sfincs_subgrid.nc and give misleading downscaled flood maps.
+shutil.copytree(os.path.join(sfincs_mod_no_forcing, 'subgrid'),
+                os.path.join(sfincs_mod_with_forcing, 'subgrid'),
+                dirs_exist_ok=True)
 
 # %%

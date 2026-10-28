@@ -49,9 +49,11 @@ steps:
 
   - subgrid.create:
       elevation_list:
-        - elevation: fabdem
+        - elevation: fabdem   # keep identical to elevation.create
           zmin: 0.001
         # the script appends {elevation: <bathy>, reproj_method: bilinear}
+      river_list:
+        - centerlines: rivers_lin2019_v1   # provides rivwth + rivbed attributes
       roughness_list:
         - lulc: vito
           reclass_table: vito_mapping
@@ -71,17 +73,11 @@ steps:
       keep_rivers_geom: true
       # the script sets river_upa: <river_upa>
 
-  # attempted placeholders for adding defences
+  - weirs.create:
+      locations: levees
 
-  # if use levees with z
-  # - SfincsWeirs.create:
-  #     locations: levees
-
-  # if use Spatial_Flood_Defences without z
-  # - SfincsWeirs.create:
-  #     locations: somerset_flood_defences
-  #     dep: highres_DEM
-  #     dz: 8 # inferred from levees file
+  - weirs.create:
+      locations: walls
 
   # NOTE: river outflow is NOT a registered build step in hydromt_sfincs 2.0.0rc3
   # (create_river_outflow lacks @hydromt_step). The build script calls it directly

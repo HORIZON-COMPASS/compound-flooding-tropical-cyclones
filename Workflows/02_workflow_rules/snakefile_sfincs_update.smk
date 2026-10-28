@@ -157,7 +157,7 @@ rule run_sfincs_model:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
                                                                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),
         exe = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
-        sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
+        sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_v2.4.1.sif"),
     output:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs_map.nc"),
     run:
@@ -170,7 +170,8 @@ rule run_sfincs_model:
                 print("Finished running")
         if os.name == 'posix':
             # No docker on this host; run the SFINCS container via apptainer with the local .sif
-            shell("apptainer run --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
+            # OMP_NUM_THREADS is pinned to 1 job-wide (submit script); give SFINCS the rule's threads.
+            shell("apptainer run --env OMP_NUM_THREADS={threads} --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
 
 
 

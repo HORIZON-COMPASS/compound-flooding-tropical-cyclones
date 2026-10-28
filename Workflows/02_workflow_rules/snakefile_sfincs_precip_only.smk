@@ -175,7 +175,7 @@ rule run_sfincs_model:
                  f"event_precip_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.wind_forcing}")
         ),
         exe = join(root_dir, dir_models, "00_executables", "SFINCS_v2.1.1_Dollerup_release_exe", 'sfincs.exe'),
-        sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_latest.sif"),
+        sfincs_sif = join(root_dir, dir_models, "00_executables", "sfincs-cpu_v2.4.1.sif"),
     output:
         mapout = join(root_dir, dir_runs, "{region}", "{runname}", "sfincs",
                      "event_precip_{precip_forcing}_CF{CF_rain}_{wind_forcing}",
@@ -189,7 +189,8 @@ rule run_sfincs_model:
         if os.name == 'posix':
             # This host has no docker; run the SFINCS container via apptainer/singularity
             # using the local .sif image (deltares/sfincs-cpu). Bind the run dir to /data.
-            shell("apptainer run --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
+            # OMP_NUM_THREADS is pinned to 1 job-wide (submit script); give SFINCS the rule's threads.
+            shell("apptainer run --env OMP_NUM_THREADS={threads} --bind {params.dir_run_with_forcing}:/data --pwd /data {params.sfincs_sif}")
 
 # Rule 3: Post-process and visualize flood maps
 rule sfincs_plot_floodmap:

@@ -59,8 +59,24 @@ da_dep = mod.data_catalog.get_rasterdataset(depfile)
 # v1: model.region component is gone; use the grid component's region geometry
 gswo = mod.data_catalog.get_rasterdataset("gswo", geom=mod.grid.region, buffer=1000)
 
-# reading in the model results (v1: results are the `output` component)
-mod.output.read()
+# reading in the model results directly from sfincs_map.nc. mod.output.read() also parses
+# sfincs_his.nc, which crashes when SFINCS writes a his file without observation points
+# (only weir/structure info and zero time steps).
+ds_map, _ = utils.read_sfincs_map_results(mapfile, ds_like=mod.grid.mask)
+
+# Guard against a stale/mismatched dep_subgrid.tif (e.g. left over from an older build):
+# its per-cell minimum must equal the bed level (zb = subgrid zmin) the simulation used,
+# otherwise the downscaled flood map does not represent this model run.
+da_zb = ds_map["zb"]
+da_dep_cellmin = da_dep.raster.reproject_like(da_zb, method="min")
+valid = da_zb.notnull() & da_dep_cellmin.notnull()
+frac_mismatch = float((abs(da_dep_cellmin - da_zb) > 0.01).where(valid).mean())
+if frac_mismatch > 0.01:
+    raise ValueError(
+        f"{depfile} does not match the subgrid used by this run "
+        f"({frac_mismatch:.1%} of cells differ from zb in sfincs_map.nc). "
+        "Rebuild the model / copy the dep_subgrid.tif that belongs to sfincs_subgrid.nc."
+    )
 
 #%%
 ### PLOT BASEMAP
@@ -77,7 +93,7 @@ _ = mod.plot_forcing(
 #%%
 ### PLOT MAX INUNDATION
 # compute the maximum water level over all time steps
-da_zsmax = mod.output.data["zsmax"].max(dim="timemax")
+da_zsmax = ds_map["zsmax"].max(dim="timemax")
 
 # we set a threshold to mask minimum flood depth
 hmin = 0.05
@@ -110,8 +126,8 @@ fig, ax = mod.plot_basemap(
     cbar_kwargs={"shrink": 0.6, "anchor": (0, 0)},
 )
 
-tstart = np.datetime_as_string(mod.output.data['zs'].time.values[0],'m').replace('T',' ')
-tend = np.datetime_as_string(mod.output.data['zs'].time.values[-1],'m').replace('T',' ')
+tstart = np.datetime_as_string(ds_map['zs'].time.values[0],'m').replace('T',' ')
+tend = np.datetime_as_string(ds_map['zs'].time.values[-1],'m').replace('T',' ')
 ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_hmax_AllTime.png'))
 del da_zsmax
@@ -122,8 +138,8 @@ da_hmax_masked.raster.to_raster(floodmap)  # This creates the expected floodmap.
 
 ### PLOT MAX INUNDATION PER TIMEMAX TIMESTAMP
 # repeat the same steps as above, but for individual timesteps of timemax variable
-for ii,timestamp in enumerate(mod.output.data['zsmax'].timemax.values):
-    da_zsmax = mod.output.data["zsmax"].isel(timemax=ii)
+for ii,timestamp in enumerate(ds_map['zsmax'].timemax.values):
+    da_zsmax = ds_map["zsmax"].isel(timemax=ii)
     da_hmax = utils.downscale_floodmap(
         zsmax=da_zsmax,
         dep=da_dep,
@@ -146,10 +162,10 @@ for ii,timestamp in enumerate(mod.output.data['zsmax'].timemax.values):
         cbar_kwargs={"shrink": 0.6, "anchor": (0, 0)},
     )
     if ii==0:
-        tstart = np.datetime_as_string(mod.output.data['zs'].time.values[0],'m').replace('T',' ')
+        tstart = np.datetime_as_string(ds_map['zs'].time.values[0],'m').replace('T',' ')
     else:
-        tstart = np.datetime_as_string(mod.output.data['zsmax'].timemax.values[ii-1],'m').replace('T',' ')
-    tend = np.datetime_as_string(mod.output.data['zsmax'].timemax.values[ii],'m').replace('T',' ')
+        tstart = np.datetime_as_string(ds_map['zsmax'].timemax.values[ii-1],'m').replace('T',' ')
+    tend = np.datetime_as_string(ds_map['zsmax'].timemax.values[ii],'m').replace('T',' ')
     ax.set_title(f"SFINCS masked maximum water depth \n Period: {tstart} to {tend}")
 
     figname_ext = f'period_{tstart}_to_{tend}'
@@ -162,17 +178,20 @@ for ii,timestamp in enumerate(mod.output.data['zsmax'].timemax.values):
 
 
 ### PLOT TIMESERIES OUTPUT POINTS
-if os.path.exists(join(dir_run,"sfincs_his.nc")):
-    hisfile = os.path.join(dir_run,"sfincs_his.nc")
-    ds_his = xr.open_dataset(hisfile)
-    ds_his["station_id"] = ds_his["station_id"].astype(int)
+hisfile = os.path.join(dir_run, "sfincs_his.nc")
+ds_his = xr.open_dataset(hisfile) if os.path.exists(hisfile) else None
+if ds_his is not None and "point_zs" in ds_his and ds_his.sizes.get("time", 0) > 0:
+    if "station_id" in ds_his:
+        station_ids = ds_his["station_id"].values.astype(int)
+    else:
+        station_ids = np.arange(1, ds_his.sizes["stations"] + 1)
 
-    for ii,loc_id in enumerate(ds_his['station_id'].values):
+    for ii,loc_id in enumerate(station_ids):
         fig, ax = plt.subplots(1,1,figsize=(10,5))
         ax.plot(ds_his.time,ds_his['point_zs'].isel(stations=ii),color='r',label=f'')
         ax.grid()
         ax.set_title(f"Timeseries of water levels \n Location: {loc_id}")
         ax.set_ylabel("Inundation height [m]")
         fig.savefig(os.path.join(os.path.abspath(os.path.dirname(outfile)),f'sfincs_output_TS_loc_{loc_id}.png'))
-    else:
-        print("No sfincs_his.nc file found in model run directory. Skipping timeseries plots.")
+else:
+    print("No observation-point timeseries in sfincs_his.nc. Skipping timeseries plots.")
