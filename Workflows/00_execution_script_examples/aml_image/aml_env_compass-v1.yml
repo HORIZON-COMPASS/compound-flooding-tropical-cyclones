@@ -1,0 +1,66 @@
+# Conda translation of the pixi `compass-v1` environment
+# (pixi.toml: compass-v1 = { features = ["v1", "dataviz", "snake", "wflow_extra"],
+#                            no-default-feature = true })
+#
+# The pixi env itself (.pixi/envs/compass-v1) cannot be shipped to an AzureML cluster:
+# it is a 6+ GB prefix with hard-coded absolute paths. AzureML builds a Docker image
+# from this spec instead.
+name: compass-v1
+channels:
+  - conda-forge
+  # snakemake is published on bioconda, not conda-forge (pixi.toml lists both).
+  - bioconda
+  - nodefaults
+dependencies:
+  # Versions pinned to those resolved in .pixi/envs/compass-v1, the environment the
+  # project is known to work with. Loose `>=` pins let conda float above it (pyflwdir
+  # 0.5.12 breaks numba typing of affine.Affine in pyflwdir/gis_utils.py).
+  # NOTE: no space before the version specifier -- AzureML's conda parser misreads
+  # `pkg >=1.0` and rejects the build with "Version  > is invalid".
+  # --- feature.v1 ---
+  - python=3.12.13
+  - pip
+  - gdal=3.12.3
+  - libgdal-hdf5=3.12.3
+  - libgdal-netcdf=3.12.3
+  - rasterio=1.4.4
+  # Transitive (via rasterio), pinned because affine 3.x is not a namedtuple and numba
+  # cannot type it: "Cannot determine Numba type of <class 'affine.Affine'>" in pyflwdir.
+  - affine=2.4.0
+  - netcdf4=1.7.4
+  - geopandas=1.1.4
+  - pyogrio=0.12.1
+  - pyproj=3.7.2
+  - shapely=2.1.2
+  - xarray=2026.4.0
+  - dask=2026.6.0
+  - numba=0.65.1
+  - numpy=2.4.6
+  - pandas=2.3.3
+  - scipy=1.18.0
+  - pyflwdir=0.5.11
+  - xugrid=0.15.3
+  - zarr=3.2.1
+  - rioxarray=0.22.0
+  - bottleneck=1.6.0
+  - pyarrow=24.0.0
+  - pooch=1.9.0
+  # --- feature.dataviz ---
+  - ffmpeg=8.1.2
+  - cartopy=0.25.0
+  - matplotlib=3.8.4
+  # --- feature.snake ---
+  - snakemake=8.10.8
+  - graphviz=14.1.2
+  - pygraphviz=1.14
+  # --- AzureML job plumbing (needed for run tracking inside the container) ---
+  - pip:
+      # feature.v1 pypi-dependencies
+      - hydromt[io]==1.4.0
+      - hydromt_wflow==1.0.2
+      - hydromt_sfincs==2.0.0rc3
+      # feature.wflow_extra pypi-dependencies
+      - gwwapi
+      # AzureML SDK bits so the job streams logs/metrics back to the workspace
+      - mlflow
+      - azureml-mlflow
