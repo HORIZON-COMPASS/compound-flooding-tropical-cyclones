@@ -123,8 +123,8 @@ snakemake_cmd = (
 )
 
 command_job = command(
-    display_name="somerset-dec2013-wflow-sfincs",
-    experiment_name="compass-somerset",
+    display_name="cluster_test",
+    experiment_name="compass-somerset-tests",
     description="Snakemake all_wflow_sfincs workflow, Somerset Dec-2013 compound event (CF0).",
     code=str(CODE_DIR),
     command=snakemake_cmd,

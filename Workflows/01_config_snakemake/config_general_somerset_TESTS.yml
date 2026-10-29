@@ -22,8 +22,9 @@ runname_ids:
         use_waves: False
         use_wflow: True
         use_bankfull_corr: False
-        skip_coastal_forcing: False                         # coastal ON (GTSM archive)
-        skip_discharge_forcing: True                        # discharge from Wflow coupling
+        skip_precip_forcing: False                          # direct rain on SFINCS grid (Wflow always uses precip_forcing)
+        skip_coastal_forcing: False                         # coastal (GTSM archive)
+        skip_discharge_forcing: False                       # discharge from Wflow coupling
         dfm_res: '100'
         dfm_coastal_mask: coastal_coupling_msk_SMST
         dfm_obs_file: coastal_coupling_DFM_obs_points_SMST

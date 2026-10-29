@@ -69,6 +69,19 @@ def get_skip_coastal_forcing(wildcards):
 def get_skip_discharge_forcing(wildcards):
     return config['runname_ids'][wildcards.runname].get('skip_discharge_forcing', False)
 
+def get_skip_precip_forcing(wildcards):
+    # Only removes direct rainfall on the SFINCS grid; Wflow (discharge) still uses precip_forcing.
+    return config['runname_ids'][wildcards.runname].get('skip_precip_forcing', False)
+
+def get_sfincs_run_input(wildcards):
+    # With skip_discharge_forcing the Wflow coupling (sfincs.dis) is not needed, so SFINCS runs
+    # straight from sfincs.inp and Wflow is not triggered.
+    run_dir = join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs",
+                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")
+    if get_skip_discharge_forcing(wildcards):
+        return join(run_dir, "sfincs.inp")
+    return join(run_dir, "sfincs.dis")
+
 def get_cf_datacatalog(wildcards):
     if os.name == 'nt': #Running on windows
         return join(curdir, '..', '03_data_catalogs', 'datacatalog_CF_forcing.yml')
@@ -124,6 +137,7 @@ rule add_forcing_coastal_meteo_sfincs:
         sfincs_obs_points = lambda wildcards: join(root_dir, dir_data, "sfincs_obs_points", config["runname_ids"][wildcards.runname]["sfincs_obs_file"]),
         skip_coastal_forcing = get_skip_coastal_forcing,
         skip_discharge_forcing = get_skip_discharge_forcing,
+        skip_precip_forcing = get_skip_precip_forcing,
     output:
         # sfincs.inp is always produced (with or without coastal forcing); sfincs.bzs only exists
         # when coastal water levels are added, so use sfincs.inp as the rule's output to allow
@@ -152,7 +166,7 @@ rule update_dis_forcing_sfincs:
 rule run_sfincs_model:
     threads: 16 # increase when using more vcpu's
     input:
-        dis_file = join(root_dir,  dir_runs, "{region}", "{runname}", "sfincs","event_tp_{precip_forcing}_CF{CF_rain}_{tidemodel}_CF{CF_SLR}_{wind_forcing}_CF{CF_wind}", "sfincs.dis"),
+        forcing_file = get_sfincs_run_input,
     params:
         dir_run_with_forcing = lambda wildcards: directory(join(root_dir, dir_runs, wildcards.region, wildcards.runname, "sfincs", 
                                                                   f"event_tp_{wildcards.precip_forcing}_CF{wildcards.CF_rain}_{wildcards.tidemodel}_CF{wildcards.CF_SLR}_{wildcards.wind_forcing}_CF{wildcards.CF_wind}")),

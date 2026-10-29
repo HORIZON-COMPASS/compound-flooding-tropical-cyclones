@@ -34,6 +34,7 @@ if "snakemake" in locals():
     obs_points              = snakemake.params.sfincs_obs_points
     skip_coastal_forcing    = snakemake.params.get('skip_coastal_forcing', False)
     skip_discharge_forcing  = snakemake.params.get('skip_discharge_forcing', False)
+    skip_precip_forcing     = snakemake.params.get('skip_precip_forcing', False)
     # Optional wildcards for counterfactual scenarios (may not exist in simplified workflows)
     CF_wind_txt             = getattr(snakemake.wildcards, 'CF_wind', '0')
     CF_rain                 = float(snakemake.wildcards.CF_rain)
@@ -64,6 +65,7 @@ else:
     use_waves               = False
     skip_coastal_forcing    = True
     skip_discharge_forcing  = True
+    skip_precip_forcing     = False
     sfincs_mod_no_forcing   = f"/p/11210471-001-compass/02_Models/{region}/Durban2022/sfincs"
     sfincs_mod_with_forcing = f"/p/11210471-001-compass/03_Runs/{region}/Durban2022/sfincs/event_precip_{precip_forcing}_CF{CF_rain_txt}_{wind_forcing}"
     obs_points              = "/p/11210471-001-compass/01_Data/sfincs_obs_points/obs_locs_durban.geojson"
@@ -93,13 +95,16 @@ config_data = {
 }
 
 # Rainfall forcing (setup_precip_forcing_from_grid -> precipitation.create)
-if CF_rain is None:
+if skip_precip_forcing:
+    logger.info("Skipping precipitation forcing on the SFINCS grid (skip_precip_forcing=True)")
+elif CF_rain is None:
     print("Error: CF_rain value not found")
-elif CF_rain == 0:
-    precip_name = precip_forcing
 else:
-    precip_name = f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}'
-steps.append({"precipitation.create": dict(precip=precip_name, aggregate=False)})
+    if CF_rain == 0:
+        precip_name = precip_forcing
+    else:
+        precip_name = f'{precip_forcing}_CF{CF_rain_txt}_{tc_name}'
+    steps.append({"precipitation.create": dict(precip=precip_name, aggregate=False)})
 
 # Coastal water level forcing (setup_waterlevel_forcing -> water_level.create)
 if not skip_coastal_forcing:
@@ -193,13 +198,19 @@ mod.update(
 # so it survives into sfincs_netampr.nc and overflows to +inf once written as float32. SFINCS then
 # either blows up or floods the whole domain. Replace the sentinel with 0 mm/hr; genuine NaN
 # (outside the data extent) is left untouched.
-precip_var = "precip_2d" if "precip_2d" in mod.precipitation.data else "precip"
-precip = mod.precipitation.data[precip_var]
-bad = np.isinf(precip) | (precip > 1e5)  # NaN compares False in both, so NaN is preserved
-n_bad = int(bad.sum())
-if n_bad:
-    print(f"Replacing {n_bad} non-physical precip values (fill-value overflow) with 0 mm/hr")
-    mod.precipitation.set(precip.where(~bad, 0.0), name=precip_var)
+if not skip_precip_forcing:
+    precip_var = "precip_2d" if "precip_2d" in mod.precipitation.data else "precip"
+    precip = mod.precipitation.data[precip_var]
+    bad = np.isinf(precip) | (precip > 1e5)  # NaN compares False in both, so NaN is preserved
+    n_bad = int(bad.sum())
+    if n_bad:
+        print(f"Replacing {n_bad} non-physical precip values (fill-value overflow) with 0 mm/hr")
+        mod.precipitation.set(precip.where(~bad, 0.0), name=precip_var)
+
+# The base model carries river source points (sfincs.src) and a placeholder sfincs.dis, normally
+# overwritten by the Wflow coupling. Without discharge forcing, drop them so SFINCS gets no inflow.
+if skip_discharge_forcing:
+    mod.discharge_points.clear()
 
 mod.write()
 mod.plot_forcing()
