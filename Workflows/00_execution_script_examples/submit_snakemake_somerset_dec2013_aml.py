@@ -1,7 +1,7 @@
 """
-Submit the Somerset Dec-2013 Snakemake workflow to the AzureML `eloise-cluster`.
+Submit the Somerset winter 2013-14 Snakemake workflow to the AzureML `eloise-cluster`.
 
-This is the AzureML equivalent of
+This is the AzureML equivalent of e.g.
     00_execution_script_examples/run_snakemake_all_workflow_somerset_dec2013.sh
 
 The heavy work runs on the `eloise-cluster` AmlCompute cluster; this script only submits.
@@ -43,7 +43,7 @@ CODE_DIR = REPO_ROOT / "Workflows"                    # snapshot uploaded with t
 # other file in it (e.g. this script) would trigger a full image rebuild when edited.
 DOCKER_DIR = Path(__file__).parent / "aml_image"
 
-CONFIG_FILE = "config_general_somerset_TESTS.yml"
+CONFIG_FILE = "config_general_somerset_TESTS.yml"     # point to configuration file for the run
 SNAKEFILE = "snakefile_all_wflow_sfincs.smk"
 N_CORES = 16                                          # Standard_E16ds_v4
 
@@ -125,7 +125,7 @@ snakemake_cmd = (
 command_job = command(
     display_name="cluster_test",
     experiment_name="compass-somerset-tests",
-    description="Snakemake all_wflow_sfincs workflow, Somerset Dec-2013 compound event (CF0).",
+    description="Snakemake all_wflow_sfincs workflow, Somerset winter 2013-14 compound event.",
     code=str(CODE_DIR),
     command=snakemake_cmd,
     environment=compass_v1_env,

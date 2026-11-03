@@ -34,7 +34,7 @@ runname_ids:
         config_sfincs_base: sfincs_base_build_v1.yml
         config_wflow_base: wflow_base_build_v1.yml
         sfincs_obs_file: obs_locs_somerset.geojson
-        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]"
+        bbox_sfincs: "[-3.16169,51.06687,-2.867119,51.258058]" # used to pick river basins for model region
         utmzone: 30u
         CF_value_rain: [0]
         CF_value_wind: [0]

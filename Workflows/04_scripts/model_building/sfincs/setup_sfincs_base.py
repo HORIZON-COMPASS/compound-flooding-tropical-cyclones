@@ -56,7 +56,7 @@ with open(config_file) as f:
 steps = cfg["steps"]
 
 # %%
-# Build the model region from the basin atlas, clipped to the bbox
+# Build the model region from the basin atlas, selecting basins that touch the bbox
 region = get_local_vector_data(
     file="basin_atlas_level12_v10",
     bbox=bbox,
