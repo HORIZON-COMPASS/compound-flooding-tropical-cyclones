@@ -20,7 +20,7 @@ steps:
   - grid.create_from_region:
       region:
         geom: null       # injected by the script (region GeoDataFrame)
-      res: 100           # model resolution [m]
+      res: 60            # model resolution [m]
       crs: utm           # model CRS (UTM zone)
       rotated: false     # allow a rotated grid
 
@@ -49,15 +49,15 @@ steps:
 
   - subgrid.create:
       elevation_list:
-        - elevation: fabdem   # keep identical to elevation.create
+        - elevation: lidar_10m
           zmin: 0.001
         # the script appends {elevation: <bathy>, reproj_method: bilinear}
-      river_list:
-        - centerlines: rivers_lin2019_v1   # provides rivwth + rivbed attributes
+      # river_list:
+      #   - centerlines: rivers_lin2019_v1   # provides rivwth + rivbed attributes
       roughness_list:
         - lulc: vito
           reclass_table: vito_mapping
-      nr_subgrid_pixels: 4
+      nr_subgrid_pixels: 6
       write_dep_tif: true            # save a cloud-optimized geotiff of subgrid topo
       write_man_tif: true
       nrmax: 5000                    # tile size (default 2000) to speed up processing
