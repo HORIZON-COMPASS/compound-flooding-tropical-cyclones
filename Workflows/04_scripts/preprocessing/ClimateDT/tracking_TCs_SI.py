@@ -61,25 +61,15 @@ def dist(a, b):
     return xr.apply_ufunc(func, a, b)
 
 
-def storm_tracker(data,best_track,model,s_size):
+def storm_tracker(data,best_track,s_size):
     import numpy as np
     import xarray as xr
     import pandas as pd
     import datetime as dt
     import bisect
 
-    if model=='RACMO' or model=='RV':
-        variables=data.mslp
-    elif model=='OPER':
-        variables=data.msl
-    elif model=='ERA5' or model=='ClimateDT':
-        data=data.rename({'latitude':'lat','longitude':'lon'})
-        variables=data.msl
-    elif model=="GFS":
-        data=data.rename({'latitude':'lat','longitude':'lon'})
-        variables=data.mslet
-    else:
-        raise Exception(model+" not recognized. Options are: 'fcst','OPER','HRES','RACMO','deg2','ERA5','ClimateDT'.")
+    data=data.rename({'latitude':'lat','longitude':'lon'})
+    variables=data.msl
 
     best_track["time"] = pd.to_datetime(best_track["time"].dt.floor("h"))
     enter=max([variables.time[0], best_track.loc[best_track[["lat", "lon", "min_pres"]].notna().all(axis=1), "time"].iloc[0]])
@@ -88,7 +78,7 @@ def storm_tracker(data,best_track,model,s_size):
     idx_enter=bisect.bisect_left(timesteps, enter) #Index of entrance time
     idx_exit=bisect.bisect(timesteps, exit)        #Index of dissipation time
 
-    mod_time=timesteps[idx_enter:idx_exit]         #Times actually plotted
+    track_time=timesteps[idx_enter:idx_exit]         #Times actually plotted
 
     # find mslp minima in box around first point. In case of multiple minima, find the closest to the IBTrACS point
 
@@ -125,7 +115,7 @@ def storm_tracker(data,best_track,model,s_size):
 
     #After this we extrapolate based on the previous 2 points
     s_a=xr.concat([s_a,search_area2], dim='time', join="outer")
-    for i in np.arange(2,len(mod_time)):
+    for i in np.arange(2,len(track_time)):
 
         #print(i)
         c_frame=variables.sel(time=enter+(data.time[i]-data.time[0])).compute()
@@ -398,7 +388,7 @@ def process_member_tracking(args):
                 print(f"START {scen} r{realization}: {storm_name}", flush=True)
 
                 results[(scen, realization, storm_name)
-                ] = storm_tracker(data, track.copy(), model="ClimateDT", s_size=1.5)
+                ] = storm_tracker(data, track.copy(), s_size=1.5)
 
                 print(f"DONE {scen} r{realization}: {storm_name} ({time.time()-storm_start:.1f}s)", 
                       flush=True)
@@ -434,7 +424,7 @@ def process_member_wind(args):
     import xarray as xr
     import traceback
 
-    scen, realization, input_file, data_path, output_path, radius_km, use_ibtracs_rmw = args
+    scen, realization, input_file, data_path, output_path, radius_km, use_ibtracs_rmw, storms = args
 
     output_file = os.path.join(output_path,
         f"storms_{scen}_r{realization}_wind_{radius_km}km.pkl")
@@ -607,6 +597,7 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
     from multiprocessing import Pool
     import platform
     from pathlib import Path
+    import argparse
 
     if platform.system() == "Windows":
         data_path_base = Path("c:/Code/test/ClimateDT/")
@@ -626,8 +617,19 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
     start_time = "2017-01-01"
     end_time = "2026-08-01"
 
-    experiments = ["hist", "cont", "Tplus2.0K"]
-    realizations = ["1", "2", "3", "4", "5"]
+    # experiments = ["hist", "cont", "Tplus2.0K"]
+    # realizations = ["1", "2", "3", "4", "5"]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scen", required=True)
+    parser.add_argument("--realization", type=int, required=True)
+    args = parser.parse_args()
+
+    experiments = [str(args.scen)]
+    realizations = [str(args.realization)]
+
+    print(experiments[0])
+    print(realizations[0])
 
     # output files
     track_file = os.path.join(processed_path_tracks,
@@ -635,8 +637,12 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
 
     if use_ibtracs_rmw:
         processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked_rmw"))
+        wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_rmw_"
+                                       f"{start_time}_{end_time}.pkl")
     else:
         processed_path_tracked_wind = Path(os.path.join(processed_path, "wind", "tracked_200km"))
+        wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_{wind_radius_km}km_"
+                                       f"{start_time}_{end_time}.pkl")
                         
     os.makedirs(os.path.join(processed_path_tracked_wind), exist_ok=True)
 
@@ -726,10 +732,10 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
                     continue
 
                 jobs.append((scen, realization, input_file, data_path_base,
-                             processed_path_tracked_wind, wind_radius_km, use_ibtracs_rmw))
+                             processed_path_tracked_wind, wind_radius_km, use_ibtracs_rmw, storms))
 
         wind_files = []
-        with Pool(processes=5) as pool:
+        with Pool(processes=1) as pool:
             for result in pool.imap_unordered(process_member_wind, jobs):
                 if result is not None:
                     wind_files.append(result)
@@ -738,13 +744,6 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
         for wind_file in sorted(wind_files):
             with open(wind_file, "rb") as f:
                 tc_climatedt_wind.update(pickle.load(f))
-
-        if use_ibtracs_rmw:
-            wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_rmw_"
-                                           f"{start_time}_{end_time}.pkl")
-        else:
-            wind_track_file = os.path.join(processed_path_tracked_wind, f"storms_tracked_max_wind_{wind_radius_km}km_"
-                                           f"{start_time}_{end_time}.pkl")
 
         with open(wind_track_file, "wb") as f:
             pickle.dump(tc_climatedt_wind, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -767,7 +766,7 @@ def main(run_tracking=False, add_wind=False, plot_tracks=False, plot_track_conte
 if __name__ == "__main__":
     storms, tc_climatedt = main(run_tracking=False, add_wind=True, 
                                 plot_tracks=False, plot_track_context=False, 
-                                wind_radius_km=200, use_ibtracs_rmw=False)
+                                wind_radius_km=200, use_ibtracs_rmw=True)
 
 
 # %%
