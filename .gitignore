@@ -28,6 +28,8 @@ Workflows/02_workflow_rules/cache
 Workflows/02_workflow_rules/*.pdf
 Workflows/04_scripts/preprocessing/ClimateDT/data/*
 Workflows/04_scripts/preprocessing/ClimateDT/figures/*
+Workflows/04_scripts/preprocessing/ClimateDT/results/*
+Workflows/04_scripts/preprocessing/ClimateDT/scripts/tests/results/*
 Attribution_results/figures/*
 Attribution_results/data/*
 Socio-economic
